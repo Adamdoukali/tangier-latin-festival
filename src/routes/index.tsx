@@ -787,9 +787,11 @@ function Home() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-center text-center gap-6">
             <a href={localizedHref("#home")} className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gold grid place-items-center text-primary-foreground font-display text-2xl font-bold">
-                T
-              </div>
+              <img
+                src="/favicon.png"
+                alt="Tangier Latin Festival Icon"
+                className="h-12 w-12 object-contain"
+              />
               <div className="leading-tight text-left">
                 <div className="font-display text-xl tracking-wide">Tangier</div>
                 <div className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
