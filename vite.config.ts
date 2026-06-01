@@ -5,6 +5,8 @@ import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { cloudflare } from "@cloudflare/vite-plugin";
 
+const isVercel = !!process.env.VERCEL || !!process.env.NOW_BUILDER || process.env.NITRO_PRESET === "vercel";
+
 export default defineConfig({
   plugins: [
     tanstackStart({
@@ -13,7 +15,7 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
     tsConfigPaths(),
-    cloudflare(),
+    ...(!isVercel ? [cloudflare()] : []),
   ],
   resolve: {
     alias: {
