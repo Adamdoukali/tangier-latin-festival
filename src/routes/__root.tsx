@@ -86,23 +86,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         { title: dict.seoHomeTitle },
         { name: "description", content: dict.seoHomeDesc },
-        { name: "author", content: "Lovable" },
+        { name: "author", content: "Adamdoukali" },
         { property: "og:title", content: dict.seoHomeTitle },
         { property: "og:description", content: dict.seoHomeDesc },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary" },
-        { name: "twitter:site", content: "@Lovable" },
+        { name: "twitter:site", content: "@Adamdoukali" },
         { name: "twitter:title", content: dict.seoHomeTitle },
         { name: "twitter:description", content: dict.seoHomeDesc },
         {
           property: "og:image",
-          content:
-            "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8b70460-640c-4559-8101-45feee3141e4/id-preview-55644603--c8dbfb35-3fef-48e1-bf42-aae0a0c37227.lovable.app-1779371020161.png",
+          content: "/favicon.png",
         },
         {
           name: "twitter:image",
-          content:
-            "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d8b70460-640c-4559-8101-45feee3141e4/id-preview-55644603--c8dbfb35-3fef-48e1-bf42-aae0a0c37227.lovable.app-1779371020161.png",
+          content: "/favicon.png",
         },
       ],
       links: [
