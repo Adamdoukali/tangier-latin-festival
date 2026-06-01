@@ -1,0 +1,1106 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import {
+  MapPin,
+  Calendar,
+  Mail,
+  Phone,
+  Instagram,
+  Facebook,
+  Youtube,
+  Check,
+  Play,
+  Quote,
+  X,
+  User,
+  Globe,
+  Users,
+  ChevronDown,
+  CheckCircle2,
+  Sparkles,
+} from "lucide-react";
+import heroImg from "@/assets/hero.jpg";
+import about2Img from "@/assets/about2.jpg";
+import about3Img from "@/assets/about3.jpg";
+import tangierVideoThumb from "@/assets/tangier-video-thumb.png";
+import a1 from "@/assets/artist1.jpg";
+import a2 from "@/assets/artist2.jpg";
+import a3 from "@/assets/artist3.jpg";
+import a4 from "@/assets/artist4.jpg";
+import g1 from "@/assets/gallery1.jpg";
+import g2 from "@/assets/gallery2.jpg";
+import g3 from "@/assets/gallery3.jpg";
+import g4 from "@/assets/gallery4.jpg";
+import partnerSalsero from "@/assets/partner-salsero.png";
+import partnerSalsaGroup from "@/assets/partner-salsagroup.png";
+import partnerSummerBachata from "@/assets/partner-summerbachata.png";
+import partnerBachataSpain from "@/assets/partner-bachataspain.png";
+import partnerBachataWorld from "@/assets/partner-bachataworld.png";
+import partnerAllIn from "@/assets/partner-allin.png";
+import { Countdown } from "@/components/Countdown";
+import { Nav } from "@/components/Nav";
+import { useLanguage } from "@/hooks/useLanguage";
+import {
+  translations,
+  translatedStats,
+  translatedPacks,
+  translatedTestimonials,
+  translatedHomeProgramme,
+  Language,
+} from "@/lib/translations";
+
+export const Route = createFileRoute("/")({
+  head: (ctx) => {
+    const search = (ctx.search || {}) as { lang?: string };
+    const lang = (search?.lang || "en") as Language;
+    const dict = translations[lang] || translations.en;
+    return {
+      meta: [
+        { title: dict.seoHomeTitle },
+        { name: "description", content: dict.seoHomeDesc },
+        { property: "og:title", content: dict.seoHomeTitle },
+        { property: "og:description", content: dict.seoHomeDesc },
+      ],
+    };
+  },
+  component: Home,
+});
+
+const artists = [
+  { name: "Talal", style: "Salsa", img: a1 },
+  { name: "Vaneska Lopez", style: "Salsa", img: a2 },
+  { name: "Junior", style: "Bachata", img: a3 },
+  { name: "Andy & Saray", style: "Bachata", img: a4 },
+];
+
+function Home() {
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [selectedPack, setSelectedPack] = useState<{
+    name: string;
+    sub: string;
+    price: string;
+  } | null>(null);
+  const { lang, t } = useLanguage();
+
+  const langSuffix = lang && lang !== "en" ? `?lang=${lang}` : "";
+  const localizedHref = (href: string) => {
+    if (href.includes("#")) {
+      const [path, hash] = href.split("#");
+      return `${path}${langSuffix}#${hash}`;
+    }
+    return `${href}${langSuffix}`;
+  };
+
+  const stats = translatedStats[lang] || translatedStats.en;
+  const packs = translatedPacks[lang] || translatedPacks.en;
+  const testimonials = translatedTestimonials[lang] || translatedTestimonials.en;
+  const programme = translatedHomeProgramme[lang] || translatedHomeProgramme.en;
+
+  return (
+    <div className="min-h-screen">
+      <Nav />
+
+      {/* HERO */}
+      <section id="home" className="relative overflow-hidden min-h-screen flex items-center">
+        {/* YouTube video background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <iframe
+            src="https://www.youtube.com/embed/QN8LsEhzxy0?autoplay=1&mute=1&loop=1&playlist=QN8LsEhzxy0&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3"
+            title="Hero background video"
+            allow="autoplay; encrypted-media"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] min-w-full h-[56.25vw] min-h-full pointer-events-none"
+          />
+          {/* Dark overlay so text stays readable */}
+          <div className="absolute inset-0 hero-overlay" />
+        </div>
+
+        {/* Hero content */}
+        <div className="relative w-full mx-auto max-w-7xl px-6 pt-20 pb-32 md:pt-32 md:pb-40 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-primary">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            {t("heroEdition")}
+          </div>
+
+          <h1 className="mt-8 font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-5xl mx-auto text-white">
+            {t("heroTitlePart1")}
+            <br />
+            {t("heroTitlePart2")} <span className="text-gold italic">{t("heroTitleSub")}</span>
+          </h1>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm tracking-[0.25em] uppercase text-white/80">
+            <span className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" /> {t("overviewDates")},{" "}
+              {t("overviewYear")}
+            </span>
+            <span className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" /> {t("overviewLocation")}
+            </span>
+          </div>
+
+          <p className="mt-6 text-primary tracking-[0.4em] text-xs uppercase">
+            Salsa · Bachata · Kizomba · Competition
+          </p>
+
+          {/* Big play button */}
+          <div className="mt-12 flex flex-col items-center gap-3">
+            <button
+              id="hero-play-btn"
+              onClick={() => setVideoOpen(true)}
+              aria-label="Watch the festival recap"
+              className="group relative flex items-center justify-center h-20 w-20 rounded-full bg-white/15 backdrop-blur-sm border-2 border-white/60 hover:bg-white/25 hover:border-white transition-all duration-300 hover:scale-110 shadow-gold cursor-pointer"
+            >
+              {/* Pulsing ring */}
+              <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
+              <Play className="h-8 w-8 text-white fill-white translate-x-0.5" />
+            </button>
+            <span className="text-white/70 text-xs tracking-[0.25em] uppercase">
+              {t("watchRecap")}
+            </span>
+          </div>
+
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <a
+              href={localizedHref("/#packs")}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-gold hover:opacity-90 transition"
+            >
+              {t("ctaGetPackBtn")}
+            </a>
+          </div>
+
+          <div className="mt-16">
+            <Countdown />
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background pointer-events-none" />
+      </section>
+
+      {/* VIDEO MODAL */}
+      {videoOpen && (
+        <div
+          id="video-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVideoOpen(false);
+          }}
+        >
+          <div className="relative w-full max-w-5xl">
+            {/* Close button */}
+            <button
+              onClick={() => setVideoOpen(false)}
+              aria-label="Close video"
+              className="absolute -top-12 right-0 text-white/70 hover:text-white text-sm tracking-widest uppercase transition cursor-pointer"
+            >
+              {t("closeBtn")}
+            </button>
+            <div className="relative rounded-2xl overflow-hidden shadow-gold border border-white/10">
+              <div className="aspect-video">
+                <iframe
+                  src="https://www.youtube.com/embed/QN8LsEhzxy0?autoplay=1&rel=0&modestbranding=1"
+                  title={t("recapsTitle")}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OVERVIEW */}
+      <section id="festival" className="py-28">
+        <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-2 gap-4">
+            <img
+              src={about2Img}
+              alt="Festival dancers"
+              width={1024}
+              height={683}
+              loading="lazy"
+              className="rounded-2xl object-cover h-72 w-full shadow-soft"
+            />
+            <img
+              src={about3Img}
+              alt="Festival atmosphere"
+              width={800}
+              height={600}
+              loading="lazy"
+              className="rounded-2xl object-cover h-72 w-full mt-12 shadow-soft"
+            />
+            <img
+              src={g1}
+              alt="Festival hall"
+              width={1024}
+              height={768}
+              loading="lazy"
+              className="rounded-2xl object-cover h-72 w-full -mt-8 shadow-soft"
+            />
+            <img
+              src={g2}
+              alt="Stage"
+              width={1024}
+              height={768}
+              loading="lazy"
+              className="rounded-2xl object-cover h-72 w-full shadow-soft"
+            />
+          </div>
+
+          <div>
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
+              {t("overviewSubtitle")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl leading-tight">
+              Welcome to the{" "}
+              <span className="text-gold italic">
+                {t("heroTitlePart1")} {t("heroTitlePart2")}
+              </span>
+            </h2>
+            <p className="mt-6 text-muted-foreground leading-relaxed">{t("overviewDesc1")}</p>
+            <p className="mt-4 text-muted-foreground leading-relaxed">{t("overviewDesc2")}</p>
+
+            <div className="mt-10 grid grid-cols-2 gap-6">
+              <div className="border-l-2 border-primary pl-5">
+                <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
+                  {t("overviewWhere")}
+                </p>
+                <p className="mt-2 font-display text-xl">{t("overviewHotel")}</p>
+                <p className="text-sm text-muted-foreground">{t("overviewLocation")}</p>
+              </div>
+              <div className="border-l-2 border-primary pl-5">
+                <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
+                  {t("overviewWhen")}
+                </p>
+                <p className="mt-2 font-display text-xl">{t("overviewDates")}</p>
+                <p className="text-sm text-muted-foreground">{t("overviewYear")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TANGIER VIDEO */}
+      <section className="py-16 bg-card/30">
+        <div className="mx-auto max-w-5xl px-6">
+          <div
+            className="relative rounded-2xl overflow-hidden shadow-gold cursor-pointer group animate-pulse hover:animate-none"
+            onClick={() => setVideoOpen(true)}
+          >
+            <img
+              src={tangierVideoThumb}
+              alt="Tangier Latin Festival Video"
+              className="w-full object-cover h-80 md:h-[460px] group-hover:scale-105 transition duration-700"
+            />
+            <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur border-2 border-white grid place-items-center group-hover:scale-110 transition">
+                <Play className="h-8 w-8 text-white fill-white ml-1" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="py-20 border-y border-border/40 bg-card/30">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-8 text-center">
+            {stats.map((s) => (
+              <div key={s.l}>
+                <div className="font-display text-3xl md:text-4xl text-gold">{s.v}</div>
+                <div className="mt-2 text-[10px] tracking-[0.25em] uppercase text-muted-foreground leading-tight">
+                  {s.l}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ARTISTS */}
+      <section id="artists" className="py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
+            <div>
+              <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+                {t("lineupSubtitle")}
+              </p>
+              <h2 className="font-display text-4xl md:text-5xl">
+                Discover our <span className="text-gold italic">artists</span>
+              </h2>
+              <p className="mt-4 text-muted-foreground max-w-xl">{t("lineupDesc")}</p>
+            </div>
+            <Link
+              to={localizedHref("/artists")}
+              className="text-sm tracking-[0.2em] uppercase text-primary hover:opacity-80 transition self-start md:self-auto"
+            >
+              {t("seeAllArtistsBtn")}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {artists.map((a) => (
+              <article
+                key={a.name}
+                className="group relative overflow-hidden rounded-2xl bg-card border border-border/50"
+              >
+                <div className="aspect-[3/4] overflow-hidden">
+                  <img
+                    src={a.img}
+                    alt={a.name}
+                    width={768}
+                    height={1024}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <p className="text-[10px] tracking-[0.3em] uppercase text-primary">{a.style}</p>
+                  <h3 className="mt-1 font-display text-2xl">{a.name}</h3>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10 text-center">
+            <Link
+              to={localizedHref("/artists")}
+              className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-foreground text-background text-sm font-bold tracking-widest uppercase hover:opacity-80 transition cursor-pointer"
+            >
+              {t("viewAllArtistsBtn")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gold opacity-95" />
+        <div className="relative mx-auto max-w-5xl px-6 text-center text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase mb-4 opacity-80">{t("ctaSubtitle")}</p>
+          <h2 className="font-display text-4xl md:text-6xl leading-tight">{t("ctaTitle")}</h2>
+          <p className="mt-6 max-w-2xl mx-auto opacity-90">{t("ctaDesc")}</p>
+          <a
+            href={localizedHref("/#packs")}
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-medium text-foreground hover:opacity-90 transition shadow-soft"
+          >
+            {t("ctaGetPackBtn")}
+          </a>
+        </div>
+      </section>
+
+      {/* PROGRAMME */}
+      <section id="programme" className="py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              {t("programmeSubtitle")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl">{t("programmeTitle")}</h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">{t("programmeDesc")}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {programme.map((d) => (
+              <div
+                key={d.day}
+                className="rounded-2xl border border-border/60 bg-card/60 p-8 hover:border-primary/50 transition"
+              >
+                <div className="flex items-baseline justify-between border-b border-border/60 pb-5">
+                  <span className="font-display text-3xl text-gold">{d.day}</span>
+                  <span className="text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+                    {d.date}
+                  </span>
+                </div>
+                <ul className="mt-6 space-y-6">
+                  {d.items.map((i) => (
+                    <li key={i.t}>
+                      <p className="font-display text-xl">{i.t}</p>
+                      <p className="mt-1 text-xs text-primary tracking-[0.2em] uppercase">
+                        {i.time}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{i.place}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link
+              to={localizedHref("/program")}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3.5 text-sm font-medium text-primary-foreground shadow-gold hover:opacity-90 transition cursor-pointer"
+            >
+              {t("viewFullScheduleBtn")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* PACKS */}
+      <section id="packs" className="py-28 bg-card/30 border-y border-border/40">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-16">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              {t("packsSubtitle")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl">{t("packsTitle")}</h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("packsDesc")}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {packs.map((p, i) => {
+              // Per-pack classic color themes: Basic/Básico=black-chrome, Silver=silver/platinum, Gold=gold/amber
+              const themes = [
+                {
+                  // Black Chrome (Obsidian / Dark Charcoal)
+                  border: "border-zinc-800 hover:border-zinc-650 transition-all duration-300",
+                  bg: "bg-gradient-to-b from-zinc-900/20 via-card/60 to-card/90",
+                  accent: "from-zinc-700 via-zinc-500 to-zinc-850",
+                  price: "text-zinc-950 dark:text-zinc-100 font-bold",
+                  check: "text-zinc-400",
+                  badge: "",
+                  btn: "border border-zinc-400 text-zinc-800 hover:bg-zinc-950 hover:text-white dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white shadow-black-chrome",
+                  glow: "shadow-[0_0_50px_-15px_rgba(255,255,255,0.05)] hover:shadow-black-chrome",
+                  icon: "bg-black-chrome",
+                  iconText: "text-white font-extrabold",
+                },
+                {
+                  // Silver (Platinum / Silver Metallic)
+                  border: "border-slate-700/40 hover:border-slate-400 transition-all duration-300",
+                  bg: "bg-gradient-to-b from-slate-800/10 via-card/60 to-card/90",
+                  accent: "from-slate-400 via-slate-200 to-slate-500",
+                  price: "text-slate-800 dark:text-silver font-bold",
+                  check: "text-slate-350",
+                  badge:
+                    "absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-silver px-5 py-1.5 text-[10px] tracking-[0.25em] uppercase text-zinc-950 font-bold shadow-lg shadow-silver/40 border border-slate-300/30",
+                  btn: "bg-silver text-zinc-950 font-extrabold hover:opacity-90 shadow-lg shadow-silver/30 transition-opacity",
+                  glow: "shadow-[0_0_50px_-10px_rgba(203,213,225,0.15)] hover:shadow-silver",
+                  icon: "bg-silver",
+                  iconText: "text-zinc-950 font-extrabold",
+                },
+                {
+                  // Gold (Royal Gold / Amber Luxury)
+                  border: "border-amber-900/60 hover:border-amber-400 transition-all duration-300",
+                  bg: "bg-gradient-to-b from-amber-900/10 via-card/60 to-card/90",
+                  accent: "from-amber-500 via-yellow-200 to-amber-600",
+                  price: "text-amber-600 dark:text-gold font-bold",
+                  check: "text-amber-550",
+                  badge: "",
+                  btn: "border border-amber-400 text-amber-650 hover:bg-amber-450 hover:text-white dark:border-amber-400/40 dark:text-amber-400 dark:hover:bg-amber-400/10 dark:hover:border-amber-400/70 shadow-gold",
+                  glow: "shadow-[0_0_50px_-10px_rgba(245,158,11,0.12)] hover:shadow-gold",
+                  icon: "bg-gold",
+                  iconText: "text-zinc-950 font-extrabold",
+                },
+              ];
+              const theme = themes[i] || themes[0];
+
+              return (
+                <div
+                  key={p.name}
+                  className={`relative rounded-2xl border p-8 flex flex-col transition-all duration-300 ${theme.border} ${theme.bg} ${theme.glow} ${
+                    p.popular ? "scale-[1.02] md:-mt-2 md:mb-[-8px]" : ""
+                  }`}
+                >
+                  {/* Colored top accent line */}
+                  <div
+                    className={`absolute top-0 left-6 right-6 h-1 rounded-b-full bg-gradient-to-r ${theme.accent}`}
+                  />
+
+                  {/* Popular badge */}
+                  {p.popular && <span className={theme.badge}>{t("popularBadge")}</span>}
+
+                  {/* Pack icon */}
+                  <div
+                    className={`h-11 w-11 rounded-xl ${theme.icon} grid place-items-center mb-5`}
+                  >
+                    <span
+                      className={`font-display text-lg ${theme.iconText || "text-white font-bold"}`}
+                    >
+                      {p.name.charAt(0)}
+                    </span>
+                  </div>
+
+                  <h3 className="font-display text-3xl">{p.name}</h3>
+                  <p className="text-xs tracking-[0.25em] uppercase text-zinc-600 dark:text-zinc-400 font-medium mt-1">
+                    {p.sub}
+                  </p>
+                  <div className="mt-6 flex items-baseline gap-2">
+                    <span className={`font-display text-5xl ${theme.price}`}>{p.price}</span>
+                    <span className="text-xs tracking-[0.25em] uppercase text-zinc-550 dark:text-zinc-450 font-semibold">
+                      MAD / {t("perPackLabel")}
+                    </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className={`mt-6 h-px bg-gradient-to-r ${theme.accent} opacity-20`} />
+
+                  <ul className="mt-6 space-y-3 flex-1">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-start gap-3 text-sm">
+                        <Check className={`h-4 w-4 ${theme.check} mt-0.5 shrink-0`} />
+                        <span className="text-foreground/90">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() =>
+                      setSelectedPack({
+                        name: p.name,
+                        sub: p.sub,
+                        price: p.price,
+                      })
+                    }
+                    className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 cursor-pointer ${theme.btn}`}
+                  >
+                    {p.popular ? t("getStartedBtn") : t("choosePackBtn")} →
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* PACK BOOKING MODAL */}
+      {selectedPack && (
+        <PackBookingModal pack={selectedPack} onClose={() => setSelectedPack(null)} />
+      )}
+
+      {/* DANCE PARTNERS */}
+      <section className="py-20 border-y border-border/40">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-12">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              {t("partnersSubtitle")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl">{t("partnersTitle")}</h2>
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("partnersDesc")}</p>
+          </div>
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
+            <a
+              href="https://www.salsero.es/index"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition"
+            >
+              <img
+                src={partnerSalsero}
+                alt="Salsero"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+            <a href="#" className="hover:opacity-70 transition">
+              <img
+                src={partnerSalsaGroup}
+                alt="Salsa Group"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+            <a
+              href="https://www.facebook.com/BachataSummer/?locale=fr_CA"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition"
+            >
+              <img
+                src={partnerSummerBachata}
+                alt="Summer Bachata"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+            <a
+              href="https://www.instagram.com/bachataspain_official/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition"
+            >
+              <img
+                src={partnerBachataSpain}
+                alt="Bachata Spain"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+            <a
+              href="https://www.instagram.com/bachata_alltheworld/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition"
+            >
+              <img
+                src={partnerBachataWorld}
+                alt="Bachata All The World"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+            <a
+              href="https://kizomba-festival.fr/fr/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-70 transition"
+            >
+              <img
+                src={partnerAllIn}
+                alt="All In Kizomba"
+                className="h-14 object-contain grayscale hover:grayscale-0 transition"
+              />
+            </a>
+          </div>
+          <div className="mt-12 text-center">
+            <Link
+              to={localizedHref("/partners")}
+              className="inline-flex items-center gap-2 rounded-full border border-border/80 hover:border-gold hover:text-gold px-8 py-3.5 text-sm font-medium transition cursor-pointer"
+            >
+              {t("viewAllPartnersBtn")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* GALLERY */}
+      <section id="gallery" className="py-28">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-14">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">Gallery</p>
+            <h2 className="font-display text-4xl md:text-5xl">
+              Memories in <span className="text-gold italic">images</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[g1, g2, g3, g4, g4, g3, g2, g1].map((src, i) => (
+              <div
+                key={i}
+                className={`overflow-hidden rounded-xl ${i % 3 === 0 ? "row-span-2" : ""}`}
+              >
+                <img
+                  src={src}
+                  alt=""
+                  width={1024}
+                  height={768}
+                  loading="lazy"
+                  className="h-full w-full object-cover hover:scale-105 transition duration-700"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="py-28 bg-card/30 border-y border-border/40">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="text-center mb-14">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              {t("testimonialsSubtitle")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl max-w-3xl mx-auto">
+              {t("testimonialsTitle")}
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((tItem) => (
+              <figure
+                key={tItem.name}
+                className="rounded-2xl border border-border/60 bg-card p-8 flex flex-col"
+              >
+                <Quote className="h-8 w-8 text-primary opacity-60" />
+                <blockquote className="mt-4 text-foreground/90 leading-relaxed flex-1">
+                  "{tItem.quote}"
+                </blockquote>
+                <figcaption className="mt-6 pt-6 border-t border-border/60">
+                  <div className="font-display text-lg">{tItem.name}</div>
+                  <div className="text-xs tracking-[0.25em] uppercase text-muted-foreground mt-1">
+                    {tItem.where}
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" className="py-28">
+        <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              {t("overviewWhere")}
+            </p>
+            <h2 className="font-display text-4xl md:text-5xl">
+              Join our <span className="text-gold italic">event</span>
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-lg">
+              Discover our central location in Tangier, ideally situated to welcome you. Take
+              advantage of the accessibility and proximity of the city's cultural and tourist sites.
+            </p>
+
+            <div className="mt-10 space-y-6">
+              <div className="flex gap-4">
+                <div className="h-10 w-10 rounded-full border border-primary/40 grid place-items-center text-primary shrink-0">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">
+                    Address
+                  </p>
+                  <p className="mt-1">168 Mohammed VI Avenue, Tangier 90000</p>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="h-10 w-10 rounded-full border border-primary/40 grid place-items-center text-primary shrink-0">
+                  <Mail className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">Email</p>
+                  <a
+                    href="mailto:contact@tangierlatinfestival.com"
+                    className="mt-1 block hover:text-primary transition"
+                  >
+                    contact@tangierlatinfestival.com
+                  </a>
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="h-10 w-10 rounded-full border border-primary/40 grid place-items-center text-primary shrink-0">
+                  <Phone className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-xs tracking-[0.3em] uppercase text-muted-foreground">Phones</p>
+                  <a href="tel:+212664630632" className="mt-1 block hover:text-primary transition">
+                    +212 6 64 63 06 32
+                  </a>
+                  <a href="tel:+212664010279" className="block hover:text-primary transition">
+                    +212 6 64 01 02 79
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ContactForm />
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-border/40 bg-card/40 pt-16 pb-8">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="flex flex-col items-center text-center gap-6">
+            <a href={localizedHref("#home")} className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-gold grid place-items-center text-primary-foreground font-display text-2xl font-bold">
+                T
+              </div>
+              <div className="leading-tight text-left">
+                <div className="font-display text-xl tracking-wide">Tangier</div>
+                <div className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
+                  Latin Festival
+                </div>
+              </div>
+            </a>
+            <p className="max-w-2xl text-sm text-muted-foreground italic">
+              An internationally renowned cultural event on the lands of Tangier.
+            </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://www.instagram.com/tangierlatinfestival.official"
+                aria-label="Instagram"
+                className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.facebook.com/TangierInternationalLatinfestival/"
+                aria-label="Facebook"
+                className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a
+                href="https://www.youtube.com/@tangierlatinfestival1622"
+                aria-label="YouTube"
+                className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
+            </div>
+          </div>
+          <div className="mt-12 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Tangier International Latin Festival. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function ContactForm() {
+  const { t } = useLanguage();
+  const [sent, setSent] = useState(false);
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-8">
+      <h3 className="font-display text-2xl">{t("contactTitle")}</h3>
+      <p className="mt-2 text-sm text-muted-foreground">{t("contactDesc")}</p>
+      <form
+        className="mt-6 space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSent(true);
+        }}
+      >
+        <div>
+          <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
+            {t("contactFormName")}
+          </label>
+          <input
+            type="text"
+            required
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+          />
+        </div>
+        <div>
+          <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
+            {t("contactFormEmail")}
+          </label>
+          <input
+            type="email"
+            required
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+          />
+        </div>
+        <div>
+          <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
+            {t("contactFormMsg")}
+          </label>
+          <textarea
+            required
+            rows={4}
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+          />
+        </div>
+        <button
+          type="submit"
+          className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer"
+        >
+          {sent ? "✓ Sent" : t("contactFormSendBtn")}
+        </button>
+        {sent && (
+          <p className="text-xs text-primary mt-2 text-center font-semibold">
+            {t("contactFormSuccess")}
+          </p>
+        )}
+      </form>
+    </div>
+  );
+}
+
+function PackBookingModal({
+  pack,
+  onClose,
+}: {
+  pack: { name: string; sub: string; price: string };
+  onClose: () => void;
+}) {
+  const { t } = useLanguage();
+  const [submitted, setSubmitted] = useState(false);
+
+  return (
+    <div
+      id="pack-booking-modal"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-gold animate-in fade-in zoom-in-95 duration-300"
+        style={{ animationFillMode: "both" }}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-card/80 border border-border/40 hover:bg-card hover:border-primary/40 transition cursor-pointer text-muted-foreground hover:text-foreground"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {/* Header with golden accent */}
+        <div className="relative overflow-hidden px-8 pt-8 pb-6">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gold" />
+          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <p className="text-xs tracking-[0.3em] uppercase text-primary font-semibold">
+                {t("packFormTitle")}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground">{t("packFormDesc")}</p>
+          </div>
+
+          {/* Selected pack badge */}
+          <div className="mt-5 flex items-center gap-4 p-4 rounded-2xl border border-primary/20 bg-primary/5">
+            <div className="h-12 w-12 rounded-xl bg-gold grid place-items-center shrink-0">
+              <span className="text-primary-foreground font-display text-lg font-bold">
+                {pack.name.charAt(0)}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
+                {t("packFormSelectedPack")}
+              </p>
+              <p className="font-display text-xl truncate">{pack.name}</p>
+              <p className="text-xs text-muted-foreground">{pack.sub}</p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-display text-2xl text-gold">{pack.price}</span>
+              <span className="text-xs text-muted-foreground block">MAD</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Form or Success */}
+        {submitted ? (
+          <div className="px-8 pb-10 text-center">
+            <div className="mx-auto h-20 w-20 rounded-full bg-primary/10 border-2 border-primary/30 grid place-items-center mb-6">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="font-display text-2xl mb-3">{t("packFormTitle")}</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+              {t("packFormSuccess")}
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-8 py-3 text-sm font-medium text-primary-foreground hover:opacity-90 transition cursor-pointer shadow-gold"
+            >
+              {t("packFormClose")}
+            </button>
+          </div>
+        ) : (
+          <form
+            className="px-8 pb-8 space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSubmitted(true);
+            }}
+          >
+            {/* Name & Email row */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <User className="h-3 w-3" />
+                  {t("packFormFullName")}
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  placeholder="John Doe"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Mail className="h-3 w-3" />
+                  {t("packFormEmail")}
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  placeholder="john@example.com"
+                />
+              </div>
+            </div>
+
+            {/* Phone & Country */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Phone className="h-3 w-3" />
+                  {t("packFormPhone")}
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  placeholder="+212 6 XX XX XX XX"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Globe className="h-3 w-3" />
+                  {t("packFormCountry")}
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  placeholder="Morocco"
+                />
+              </div>
+            </div>
+
+            {/* People & Level */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Users className="h-3 w-3" />
+                  {t("packFormNumPeople")}
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  defaultValue="1"
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <ChevronDown className="h-3 w-3" />
+                  {t("packFormDanceLevel")}
+                </label>
+                <select
+                  required
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition appearance-none cursor-pointer"
+                >
+                  <option value="beginner">{t("packFormDanceLevelBeginner")}</option>
+                  <option value="intermediate">{t("packFormDanceLevelIntermediate")}</option>
+                  <option value="advanced">{t("packFormDanceLevelAdvanced")}</option>
+                  <option value="pro">{t("packFormDanceLevelPro")}</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="block text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                {t("packFormNotes")}
+              </label>
+              <textarea
+                rows={3}
+                className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition resize-none placeholder:text-muted-foreground/50"
+                placeholder="..."
+              />
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition shadow-gold cursor-pointer tracking-wide"
+            >
+              {t("packFormSubmitBtn")}
+            </button>
+
+            <p className="text-center text-[10px] text-muted-foreground/60 tracking-wide">
+              contact@tangierlatinfestival.com · +212 6 64 01 02 79
+            </p>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
