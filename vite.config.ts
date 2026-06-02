@@ -10,7 +10,9 @@ const isVercel = !!process.env.VERCEL || !!process.env.NOW_BUILDER || process.en
 export default defineConfig({
   plugins: [
     tanstackStart({
-      server: { entry: "src/server.ts" },
+      ...(isVercel
+        ? { server: { preset: "vercel" } }
+        : { server: { entry: "src/server.ts" } }),
     }),
     viteReact(),
     tailwindcss(),
