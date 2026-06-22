@@ -43,7 +43,7 @@ interface GalleryPhoto {
   category: Category;
 }
 
-const GALLERY_PHOTOS: GalleryPhoto[] = [
+export const GALLERY_PHOTOS: GalleryPhoto[] = [
   // 1. Black Party (16 photos)
   {
     url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-06-at-00.46.06.jpeg",
@@ -535,22 +535,22 @@ function GalleryPage() {
       <Nav />
 
       {/* HERO SECTION */}
-      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40">
+      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40 bg-slate-950">
         <div className="absolute inset-0 select-none">
           <img src={heroImg} alt="" className="h-full w-full object-cover opacity-25" />
-          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-background via-background/80 to-transparent" />
+          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
         </div>
         <div className="relative mx-auto max-w-5xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4 flex items-center justify-center gap-2">
             <Camera className="h-3.5 w-3.5 text-gold" />
             {t("galleryHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-glow mb-6">
+          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg mb-6">
             {t("galleryHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("galleryHeroTitlePart2")}</span>{" "}
             {t("galleryHeroTitlePart3")}
           </h1>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto leading-relaxed text-sm md:text-base">
+          <p className="mt-6 text-slate-300 max-w-2xl mx-auto leading-relaxed text-sm md:text-base drop-shadow-md">
             {t("galleryHeroDesc")}
           </p>
         </div>

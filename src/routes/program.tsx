@@ -34,7 +34,7 @@ const translatedDays: Record<Language, Day[]> = {
   en: [
     {
       day: "Day 1",
-      date: "Friday · January 22, 2027",
+      date: "Thursday · January 7, 2027",
       items: [
         { title: "Check-in", time: "From 2:00 PM", place: "Hotel Solazur" },
         { title: "Dinner (Buffet)", time: "19:00 — 23:00", place: "Hotel Solazur" },
@@ -43,7 +43,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Day 2",
-      date: "Saturday · January 23, 2027",
+      date: "Friday · January 8, 2027",
       items: [
         { title: "Buffet Breakfast", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { title: "Workshops", time: "15:00 — 19:00", place: "Hotel Solazur" },
@@ -59,7 +59,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Day 3",
-      date: "Sunday · January 24, 2027",
+      date: "Saturday · January 9, 2027",
       items: [
         { title: "Buffet Breakfast", time: "05:00 — 10:00", place: "Hotel Solazur" },
         {
@@ -84,7 +84,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Day 4",
-      date: "Monday · January 25, 2027",
+      date: "Sunday · January 10, 2027",
       items: [
         { title: "Buffet Breakfast", time: "05:00 — 11:00", place: "Hotel Solazur" },
         {
@@ -103,7 +103,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Day 5",
-      date: "Tuesday · January 26, 2027",
+      date: "Monday · January 11, 2027",
       items: [
         { title: "Buffet Breakfast", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { title: "Check-out", time: "From 13:00", place: "Hotel Solazur" },
@@ -113,7 +113,7 @@ const translatedDays: Record<Language, Day[]> = {
   fr: [
     {
       day: "Jour 1",
-      date: "Vendredi · 22 Janvier, 2027",
+      date: "Jeudi · 7 Janvier, 2027",
       items: [
         { title: "Enregistrement", time: "À partir de 14:00", place: "Hôtel Solazur" },
         { title: "Dîner (Buffet)", time: "19:00 — 23:00", place: "Hôtel Solazur" },
@@ -127,7 +127,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Jour 2",
-      date: "Samedi · 23 Janvier, 2027",
+      date: "Vendredi · 8 Janvier, 2027",
       items: [
         { title: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Solazur" },
         { title: "Workshops / Cours", time: "15:00 — 19:00", place: "Hôtel Solazur" },
@@ -143,7 +143,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Jour 3",
-      date: "Dimanche · 24 Janvier, 2027",
+      date: "Samedi · 9 Janvier, 2027",
       items: [
         { title: "Petit-déjeuner Buffet", time: "05:00 — 10:00", place: "Hôtel Solazur" },
         {
@@ -177,7 +177,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Jour 4",
-      date: "Lundi · 25 Janvier, 2027",
+      date: "Dimanche · 10 Janvier, 2027",
       items: [
         { title: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Solazur" },
         {
@@ -201,7 +201,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Jour 5",
-      date: "Mardi · 26 Janvier, 2027",
+      date: "Lundi · 11 Janvier, 2027",
       items: [
         { title: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Solazur" },
         { title: "Enregistrement de départ", time: "À partir de 13:00", place: "Hôtel Solazur" },
@@ -211,7 +211,7 @@ const translatedDays: Record<Language, Day[]> = {
   es: [
     {
       day: "Día 1",
-      date: "Viernes · 22 de Enero, 2027",
+      date: "Jueves · 7 de Enero, 2027",
       items: [
         { title: "Check-in", time: "Desde las 14:00", place: "Hotel Solazur" },
         { title: "Cena (Buffet)", time: "19:00 — 23:00", place: "Hotel Solazur" },
@@ -225,7 +225,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Día 2",
-      date: "Sábado · 23 de Enero, 2027",
+      date: "Viernes · 8 de Enero, 2027",
       items: [
         { title: "Desayuno Buffet", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { title: "Talleres (Workshops)", time: "15:00 — 19:00", place: "Hotel Solazur" },
@@ -241,7 +241,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Día 3",
-      date: "Domingo · 24 de Enero, 2027",
+      date: "Sábado · 9 de Enero, 2027",
       items: [
         { title: "Desayuno Buffet", time: "05:00 — 10:00", place: "Hotel Solazur" },
         {
@@ -271,7 +271,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Día 4",
-      date: "Lunes · 25 de Enero, 2027",
+      date: "Domingo · 10 de Enero, 2027",
       items: [
         { title: "Desayuno Buffet", time: "05:00 — 11:00", place: "Hotel Solazur" },
         {
@@ -295,7 +295,7 @@ const translatedDays: Record<Language, Day[]> = {
     },
     {
       day: "Día 5",
-      date: "Martes · 26 de Enero, 2027",
+      date: "Lunes · 11 de Enero, 2027",
       items: [
         { title: "Desayuno Buffet", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { title: "Check-out (Salida)", time: "Desde las 13:00", place: "Hotel Solazur" },
@@ -317,34 +317,50 @@ function ProgramPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40">
-        <div className="absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.62_0.18_30/0.3),transparent_50%),radial-gradient(circle_at_70%_60%,oklch(0.78_0.13_75/0.2),transparent_50%)]" />
+      <section className="relative py-20 md:py-32 border-b border-border/20 overflow-hidden flex items-center min-h-[70vh]">
+        <div className="absolute inset-0 -z-10 bg-slate-950">
+          <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gold/15 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-primary/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
+          <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '12s' }} />
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(212,175,55,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
         </div>
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
-            {t("programHeroSubtitle")}
-          </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
-            {t("programHeroTitle")}
-          </h1>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">{t("programHeroDesc")}</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a
-              href="https://www.tangierlatinfestival.com/wp-content/uploads/2025/08/Program-en.pdf"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-gold px-7 py-3.5 text-sm font-medium text-primary-foreground shadow-gold hover:opacity-90 transition cursor-pointer"
-            >
-              <Download className="h-4 w-4" /> {t("programDownloadPdf")}
-            </a>
-            <Link
-              to={localizedHref("/")}
-              hash="packs"
-              className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-background/40 backdrop-blur px-7 py-3.5 text-sm font-medium hover:border-primary/60 hover:text-primary transition cursor-pointer"
-            >
-              {t("programSeePacks")}
-            </Link>
+        
+        <div className="mx-auto max-w-5xl px-4 md:px-6 relative z-10 w-full">
+          <div className="rounded-3xl border border-gold/20 bg-black/40 backdrop-blur-2xl p-8 md:p-16 text-center shadow-2xl relative overflow-hidden group">
+            {/* Hover flare effect inside card */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gold/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-gold/20 via-primary/20 to-purple-500/20 blur-xl opacity-0 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" />
+            
+            <p className="relative text-xs tracking-[0.4em] uppercase text-primary mb-6 flex items-center justify-center gap-4">
+              <span className="w-12 h-[1px] bg-gradient-to-r from-transparent to-primary/50 hidden sm:block" />
+              {t("programHeroSubtitle")}
+              <span className="w-12 h-[1px] bg-gradient-to-l from-transparent to-primary/50 hidden sm:block" />
+            </p>
+            <h1 className="relative font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-white drop-shadow-lg">
+              {t("programHeroTitle")}
+            </h1>
+            <p className="relative mt-8 text-slate-300 max-w-2xl mx-auto leading-relaxed text-sm md:text-base">{t("programHeroDesc")}</p>
+            
+            <div className="relative mt-12 flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
+              <a
+                href="https://www.tangierlatinfestival.com/wp-content/uploads/2025/08/Program-en.pdf"
+                target="_blank"
+                rel="noreferrer"
+                className="group/btn relative inline-flex items-center justify-center gap-3 rounded-full bg-gold px-8 py-4 text-sm font-bold text-primary-foreground shadow-[0_0_20px_rgba(212,175,55,0.3)] overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] active:scale-95"
+              >
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-out rounded-full" />
+                <Download className="relative z-10 h-4.5 w-4.5 group-hover/btn:animate-bounce" /> 
+                <span className="relative z-10 tracking-wide uppercase">{t("programDownloadPdf")}</span>
+              </a>
+              <Link
+                to={localizedHref("/")}
+                hash="packs"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-gold/30 bg-gold/5 backdrop-blur-md px-8 py-4 text-sm font-bold text-gold hover:bg-gold/10 hover:border-gold/50 transition-all hover:scale-105 active:scale-95 tracking-wide uppercase"
+              >
+                {t("programSeePacks")}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -385,8 +401,8 @@ function ProgramPage() {
                             </span>
                           )}
                         </h3>
-                        <span className="inline-flex items-center gap-2 text-xs tracking-[0.2em] uppercase text-primary">
-                          <Clock className="h-3.5 w-3.5" /> {it.time}
+                        <span className="inline-flex items-center justify-center gap-2 text-xs tracking-[0.2em] uppercase text-primary">
+                          <Clock className="h-3.5 w-3.5 align-middle" /> {it.time}
                         </span>
                       </div>
                       <p className="mt-2 inline-flex items-center gap-2 text-sm text-muted-foreground">

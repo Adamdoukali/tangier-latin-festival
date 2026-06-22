@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Poppins:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600&display=swap");
 @import "tailwindcss" source(none);
 @import "tw-animate-css";
 @source "../src";
@@ -74,7 +74,7 @@
   --shadow-silver: 0 20px 60px -20px oklch(0.75 0 0 / 0.25);
   --shadow-black-chrome: 0 20px 60px -20px oklch(0.2 0 0 / 0.45);
   --shadow-soft: 0 30px 60px -30px oklch(0 0 0 / 0.12);
-  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -139,7 +139,9 @@
   h5,
   h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 }
 
@@ -219,5 +221,428 @@
       radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.65 0.14 60 / 0.06), transparent 60%),
       radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.62 0.18 30 / 0.04), transparent 70%);
     background-attachment: fixed;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLIP COUNTDOWN – Premium Split-Flap Ticker
+   ═══════════════════════════════════════════════════════════ */
+
+/* Wrapper card */
+.countdown-wrapper {
+  --cd-digit-w: 40px;
+  --cd-digit-h: 58px;
+  --cd-font: 1.8rem;
+  --cd-gap: 4px;
+  --cd-radius: 8px;
+
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 12px 16px;
+  border-radius: 18px;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  background: oklch(0.08 0.02 60 / 0.55);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow:
+    0 30px 80px -20px oklch(0 0 0 / 0.5),
+    inset 0 1px 0 oklch(1 0 0 / 0.06);
+  position: relative;
+}
+
+/* Subtle gold light at the top */
+.countdown-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(0.75 0.15 65 / 0.7), transparent);
+}
+
+/* Grid: cells + separators */
+.countdown-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Single cell: two digits + label */
+.countdown-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.countdown-digits {
+  display: flex;
+  gap: var(--cd-gap);
+}
+
+.countdown-label {
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: oklch(0.75 0.15 65 / 0.8);
+}
+
+/* ── Colon separator ──────────────────────────────────── */
+.countdown-separator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: var(--cd-digit-h);
+  padding: 0 2px;
+}
+
+.countdown-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: oklch(0.75 0.15 65 / 0.6);
+  animation: dot-pulse 1s ease-in-out infinite alternate;
+}
+
+.countdown-dot:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes dot-pulse {
+  0% { opacity: 0.3; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Single flip digit card ───────────────────────────── */
+.flip-digit {
+  position: relative;
+  width: var(--cd-digit-w);
+  height: var(--cd-digit-h);
+  perspective: 400px;
+  font-family: var(--font-display);
+  font-size: var(--cd-font);
+  font-weight: 800;
+  color: oklch(0.97 0.01 70);
+  user-select: none;
+}
+
+/* Shared half-card styling */
+.flip-digit-top,
+.flip-digit-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  border-radius: var(--cd-radius);
+}
+
+.flip-digit-top {
+  top: 0;
+  background: linear-gradient(180deg, oklch(0.18 0.02 60), oklch(0.14 0.02 60));
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0.5px solid oklch(0 0 0 / 0.7);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
+}
+
+.flip-digit-top span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: var(--cd-digit-h);
+}
+
+.flip-digit-bottom {
+  bottom: 0;
+  background: linear-gradient(180deg, oklch(0.12 0.02 60), oklch(0.15 0.02 60));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top: 0.5px solid oklch(1 0 0 / 0.03);
+}
+
+.flip-digit-bottom span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: var(--cd-digit-h);
+  margin-top: calc(var(--cd-digit-h) * -0.5);
+}
+
+/* ── Animated flaps ───────────────────────────────────── */
+.flip-digit-flap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--cd-radius);
+}
+
+/* Top flap: flips downward from previous value */
+.flip-digit-flap-top {
+  top: 0;
+  background: linear-gradient(180deg, oklch(0.18 0.02 60), oklch(0.14 0.02 60));
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  transform-origin: bottom center;
+  animation: flip-top 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+  z-index: 3;
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.4);
+}
+
+.flip-digit-flap-top span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: var(--cd-digit-h);
+}
+
+/* Bottom flap: unfolds to show new value */
+.flip-digit-flap-bottom {
+  bottom: 0;
+  background: linear-gradient(180deg, oklch(0.12 0.02 60), oklch(0.15 0.02 60));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  transform-origin: top center;
+  animation: flip-bottom 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+  z-index: 2;
+}
+
+.flip-digit-flap-bottom span {
+  display: block;
+  width: 100%;
+  text-align: center;
+  line-height: var(--cd-digit-h);
+  margin-top: calc(var(--cd-digit-h) * -0.5);
+}
+
+@keyframes flip-top {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(-90deg);
+  }
+}
+
+@keyframes flip-bottom {
+  0% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+/* ── Screen-reader only ───────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Responsive ───────────────────────────────────────── */
+@media (min-width: 640px) {
+  .countdown-wrapper {
+    --cd-digit-w: 64px;
+    --cd-digit-h: 88px;
+    --cd-font: 3rem;
+    --cd-gap: 8px;
+    padding: 28px 32px 24px;
+  }
+
+  .countdown-grid {
+    gap: 12px;
+  }
+
+  .countdown-label {
+    font-size: 0.65rem;
+  }
+
+  .countdown-separator {
+    padding: 0 4px;
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .countdown-wrapper {
+    --cd-digit-w: 76px;
+    --cd-digit-h: 100px;
+    --cd-font: 3.5rem;
+    --cd-gap: 10px;
+    padding: 32px 40px 28px;
+  }
+
+  .countdown-grid {
+    gap: 16px;
+  }
+
+  .countdown-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+  }
+
+  .countdown-separator {
+    padding: 0 6px;
+    gap: 16px;
+  }
+
+  .countdown-dot {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATS SECTION – Rolling Numbers
+   ═══════════════════════════════════════════════════════════ */
+
+.stats-card {
+  position: relative;
+  text-align: center;
+  padding: 28px 16px 24px;
+  border-radius: 16px;
+  border: 1px solid oklch(0.65 0.14 60 / 0.12);
+  background: oklch(0.97 0.005 80 / 0.5);
+  backdrop-filter: blur(10px);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  overflow: hidden;
+  animation: stats-fade-in 0.6s ease-out both;
+}
+
+.dark .stats-card {
+  background: oklch(0.14 0.02 60 / 0.5);
+  border-color: oklch(1 0 0 / 0.07);
+}
+
+.stats-card:hover {
+  border-color: oklch(0.65 0.14 60 / 0.35);
+  transform: translateY(-4px);
+  box-shadow:
+    0 20px 50px -15px oklch(0.65 0.14 60 / 0.15),
+    0 0 0 1px oklch(0.65 0.14 60 / 0.08);
+}
+
+/* Gold accent line at top */
+.stats-card-accent {
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, transparent, oklch(0.75 0.15 65 / 0.6), transparent);
+  transition: all 0.4s ease;
+}
+
+.stats-card:hover .stats-card-accent {
+  left: 10%;
+  right: 10%;
+  background: linear-gradient(90deg, transparent, oklch(0.75 0.15 65), transparent);
+}
+
+/* Number value */
+.stats-value {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  /* Gold gradient text */
+  color: oklch(0.65 0.14 60);
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Rolling number span */
+.rolling-number {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Label */
+.stats-label {
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: oklch(0.52 0.03 60);
+  line-height: 1.4;
+}
+
+.dark .stats-label {
+  color: oklch(0.65 0.02 60);
+}
+
+/* Fade-in-up animation */
+@keyframes stats-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gallery mosaic crossfade */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .stats-value {
+    font-size: 2.8rem;
+  }
+
+  .stats-card {
+    padding: 32px 20px 28px;
+  }
+
+  .stats-label {
+    font-size: 0.65rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-value {
+    font-size: 3.2rem;
+  }
+
+  .stats-card {
+    padding: 36px 24px 32px;
+  }
+
+  .stats-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.28em;
   }
 }

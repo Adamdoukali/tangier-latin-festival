@@ -42,10 +42,10 @@ function TourismPage() {
       city: "Chefchaouen",
       date:
         lang === "fr"
-          ? "Dimanche · 25 Janvier, 2026"
+          ? "Dimanche · 10 Janvier, 2027"
           : lang === "es"
-            ? "Domingo · 25 de Enero, 2026"
-            : "Sunday · January 25, 2026",
+            ? "Domingo · 10 de Enero, 2027"
+            : "Sunday · January 10, 2027",
       images: [
         "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-20.54.30.jpeg",
         "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/aaaaa-e1720209971548.jpeg",
@@ -89,10 +89,10 @@ function TourismPage() {
       city: "Asilah",
       date:
         lang === "fr"
-          ? "Samedi · 24 Janvier, 2026"
+          ? "Samedi · 9 Janvier, 2027"
           : lang === "es"
-            ? "Sábado · 24 de Enero, 2026"
-            : "Saturday · January 24, 2026",
+            ? "Sábado · 9 de Enero, 2027"
+            : "Saturday · January 9, 2027",
       images: [
         "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS1.jpg",
         "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS2.jpg",
@@ -133,10 +133,10 @@ function TourismPage() {
       city: "Tangier",
       date:
         lang === "fr"
-          ? "Samedi · 24 Janvier, 2026"
+          ? "Samedi · 9 Janvier, 2027"
           : lang === "es"
-            ? "Sábado · 24 de Enero, 2026"
-            : "Saturday · January 24, 2026",
+            ? "Sábado · 9 de Enero, 2027"
+            : "Saturday · January 9, 2027",
       images: [
         "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.40-e1720217925119.jpeg",
         "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-2-e1720218051604.jpeg",
@@ -182,21 +182,21 @@ function TourismPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden">
+      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-slate-950">
         <div className="absolute inset-0 -z-10 opacity-30">
           <img src={tangierImg} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 hero-overlay" />
+          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
         </div>
         <div className="mx-auto max-w-5xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
             {t("tourismHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
+          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
             {t("tourismHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("tourismHeroTitlePart2")}</span>{" "}
             {t("tourismHeroTitlePart3")}
           </h1>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">{t("tourismHeroDesc")}</p>
+          <p className="mt-6 text-slate-300 max-w-2xl mx-auto drop-shadow-md">{t("tourismHeroDesc")}</p>
         </div>
       </section>
 

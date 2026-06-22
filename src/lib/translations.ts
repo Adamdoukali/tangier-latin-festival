@@ -15,34 +15,35 @@ export const translations = {
     navPacks: "Packs",
     navContact: "Contact",
     navGallery: "Gallery",
+    navReels: "Reels",
     navTestimonials: "Testimonials",
     buyPackBtn: "Buy a pack →",
     backHomeBtn: "Back to Home",
     closeBtn: "✕ Close",
 
     // SEO Head Metadata
-    seoHomeTitle: "Tangier International Latin Festival 2026 — Salsa, Bachata, Kizomba",
+    seoHomeTitle: "Tangier International Latin Festival 2027 — Salsa, Bachata, Kizomba",
     seoHomeDesc:
-      "5 unforgettable days of salsa, bachata and kizomba in Tangier, Morocco. January 22–26, 2026 at Kenzi Solazur Hotel.",
-    seoArtistsTitle: "Artists — Tangier International Latin Festival 2026",
+      "5 unforgettable days of salsa, bachata and kizomba in Tangier, Morocco. January 07–11, 2027 at Kenzi Solazur Hotel.",
+    seoArtistsTitle: "Artists — Tangier International Latin Festival 2027",
     seoArtistsDesc:
-      "Discover all international artists performing at the Tangier Latin Festival 2026. Salsa, Bachata, Kizomba and more.",
-    seoProgramTitle: "Programme — Tangier International Latin Festival 2026",
+      "Discover all international artists performing at the Tangier Latin Festival 2027. Salsa, Bachata, Kizomba and more.",
+    seoProgramTitle: "Programme — Tangier International Latin Festival 2027",
     seoProgramDesc:
-      "Full 5-day programme of the Tangier International Latin Festival, January 22–26, 2026 at Hotel Solazur.",
-    seoCompetitionTitle: "Competition — Tangier International Latin Festival 2026",
+      "Full 5-day programme of the Tangier International Latin Festival, January 07–11, 2027 at Hotel Solazur.",
+    seoCompetitionTitle: "Competition — Tangier International Latin Festival 2027",
     seoCompetitionDesc:
       "International Salsa & Bachata Competition in Tangier — direct access to the Spain final and the Oaxaca Paramount Cup in Mexico.",
-    seoHotelTitle: "Hotel Solazur — Tangier International Latin Festival 2026",
+    seoHotelTitle: "Hotel Solazur — Tangier International Latin Festival 2027",
     seoHotelDesc:
       "Kenzi Solazur — the official festival hotel. Overlooking the Strait of Gibraltar and Tangier Bay, with outdoor pool, spa and gourmet restaurants.",
-    seoTourismTitle: "Tourism — Tangier International Latin Festival 2026",
+    seoTourismTitle: "Tourism — Tangier International Latin Festival 2027",
     seoTourismDesc:
       "Optional group excursions to Chefchaouen, Asilah and Tangier during the festival. Discover Morocco between dance sessions.",
-    seoTestimonialsTitle: "Testimonials — Tangier International Latin Festival 2026",
+    seoTestimonialsTitle: "Testimonials — Tangier International Latin Festival 2027",
     seoTestimonialsDesc:
       "Hear what our international artists and dancers say about their experience at the Tangier International Latin Festival.",
-    seoPartnersTitle: "Partners — Tangier International Latin Festival 2026",
+    seoPartnersTitle: "Partners — Tangier International Latin Festival 2027",
     seoPartnersDesc:
       "Meet the dance partners who make the Tangier International Latin Festival possible.",
 
@@ -56,7 +57,7 @@ export const translations = {
     heroEdition: "8th Edition · Morocco",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
-    heroTitleSub: "— Morocco —",
+    heroTitleSub: "Morocco",
     watchRecap: "Watch the recap",
     recapsTitle: "Tangier International Latin Festival — Recap Video",
 
@@ -71,8 +72,8 @@ export const translations = {
     overviewWhen: "When",
     overviewHotel: "Kenzi Solazur Hotel",
     overviewLocation: "Tangier, Morocco",
-    overviewDates: "January 22 → 26",
-    overviewYear: "2026",
+    overviewDates: "January 07 → 11",
+    overviewYear: "2027",
 
     // Artists Home Section
     lineupSubtitle: "Line-up",
@@ -80,7 +81,7 @@ export const translations = {
     lineupDesc:
       "Every year we bring together internationally renowned artists and emerging talents to deliver breathtaking, innovative performances.",
     seeAllArtistsBtn: "See all artists →",
-    viewAllArtistsBtn: "View All 32+ Artists →",
+    viewAllArtistsBtn: "View more artists →",
 
     // CTA Home Section
     ctaSubtitle: "First come, first served",
@@ -149,10 +150,24 @@ export const translations = {
     contactFormSendBtn: "Send message →",
     contactFormSuccess: "Thank you! We'll get back to you shortly.",
 
+    // Missing UI
+    seeAllPacksBtn: "See all packs",
+    galleryTitlePart1: "Memories in",
+    galleryTitlePart2: "images",
+    viewFullGalleryBtn: "View Full Gallery →",
+    joinEventPart1: "Join our",
+    joinEventPart2: "event",
+    joinEventDesc: "Discover our central location in Tangier, ideally situated to welcome you. Take advantage of the accessibility and proximity of the city's cultural and tourist sites.",
+    addressLabel: "Address",
+    emailLabel: "Email",
+    phonesLabel: "Phones",
+    footerDesc: "An internationally renowned cultural event on the lands of Tangier.",
+    footerCopyright: "All rights reserved.",
+
     // ──────────────────────────────────────────
     // Route: Artists Page
     // ──────────────────────────────────────────
-    artistsHeroSubtitle: "January 22 – 26, 2026 · Tangier, Morocco",
+    artistsHeroSubtitle: "January 22 – 26, 2027 · Tangier, Morocco",
     artistsHeroTitle: "Our Artists",
     artistsHeroDesc:
       "Every year, we bring together internationally renowned artists and emerging talents to deliver breathtaking, innovative performances across salsa, bachata, kizomba and zouk.",
@@ -163,7 +178,7 @@ export const translations = {
     artistsClearFilters: "Clear filters",
     artistsCtaSubtitle: "Don't miss it",
     artistsCtaTitle: "Experience the Magic Live",
-    artistsCtaDesc: "January 22 – 26, 2026 · Kenzi Solazur Hotel, Tangier, Morocco",
+    artistsCtaDesc: "January 22 – 26, 2027 · Kenzi Solazur Hotel, Tangier, Morocco",
     artistsCtaBtn: "Get Your Pack",
 
     // ──────────────────────────────────────────
@@ -172,7 +187,7 @@ export const translations = {
     programHeroSubtitle: "Festival Programme",
     programHeroTitle: "Our Programme",
     programHeroDesc:
-      "Five days of dance, music and discovery. January 22 — 26, 2026 at Hotel Solazur, Tangier.",
+      "Five days of dance, music and discovery. January 07–11, 2027 at Hotel Solazur, Tangier.",
     programDownloadPdf: "Download PDF",
     programSeePacks: "See packs →",
     programMoments: "moments",
@@ -314,7 +329,7 @@ export const translations = {
     galleryLightboxClose: "Close",
     galleryLightboxPrev: "Previous",
     galleryLightboxNext: "Next",
-    seoGalleryTitle: "Gallery — Tangier International Latin Festival 2026",
+    seoGalleryTitle: "Gallery — Tangier International Latin Festival 2027",
     seoGalleryDesc:
       "Relive the magical moments of the Tangier International Latin Festival. Photos of workshops, shows, themed parties, and competition.",
   },
@@ -330,34 +345,35 @@ export const translations = {
     navPacks: "Packs",
     navContact: "Contact",
     navGallery: "Galerie",
+    navReels: "Reels",
     navTestimonials: "Avis",
     buyPackBtn: "Acheter un pack →",
     backHomeBtn: "Retour à l'accueil",
     closeBtn: "✕ Fermer",
 
     // SEO Head Metadata
-    seoHomeTitle: "Tangier International Latin Festival 2026 — Salsa, Bachata, Kizomba",
+    seoHomeTitle: "Tangier International Latin Festival 2027 — Salsa, Bachata, Kizomba",
     seoHomeDesc:
-      "5 jours inoubliables de salsa, bachata et kizomba à Tanger, Maroc. Du 22 au 26 janvier 2026 à l'Hôtel Kenzi Solazur.",
-    seoArtistsTitle: "Artistes — Tangier International Latin Festival 2026",
+      "5 jours inoubliables de salsa, bachata et kizomba à Tanger, Maroc. Du 07 au 11 janvier 2027 à l'Hôtel Kenzi Solazur.",
+    seoArtistsTitle: "Artistes — Tangier International Latin Festival 2027",
     seoArtistsDesc:
-      "Découvrez tous les artistes internationaux présents au Tangier Latin Festival 2026. Salsa, Bachata, Kizomba et plus.",
-    seoProgramTitle: "Programme — Tangier International Latin Festival 2026",
+      "Découvrez tous les artistes internationaux présents au Tangier Latin Festival 2027. Salsa, Bachata, Kizomba et plus.",
+    seoProgramTitle: "Programme — Tangier International Latin Festival 2027",
     seoProgramDesc:
-      "Programme complet de 5 jours du Tangier International Latin Festival, du 22 au 26 janvier 2026 à l'Hôtel Solazur.",
-    seoCompetitionTitle: "Compétition — Tangier International Latin Festival 2026",
+      "Programme complet de 5 jours du Tangier International Latin Festival, Du 07 au 11 janvier 2027 à l'Hôtel Solazur.",
+    seoCompetitionTitle: "Compétition — Tangier International Latin Festival 2027",
     seoCompetitionDesc:
       "Compétition Internationale de Salsa & Bachata à Tanger — accès direct à la finale en Espagne et à la Oaxaca Paramount Cup au Mexique.",
-    seoHotelTitle: "Hôtel Solazur — Tangier International Latin Festival 2026",
+    seoHotelTitle: "Hôtel Solazur — Tangier International Latin Festival 2027",
     seoHotelDesc:
       "Kenzi Solazur — l'hôtel officiel du festival. Surplombant le détroit de Gibraltar et la baie de Tanger, avec piscine extérieure, spa et restaurants gastronomiques.",
-    seoTourismTitle: "Tourisme — Tangier International Latin Festival 2026",
+    seoTourismTitle: "Tourisme — Tangier International Latin Festival 2027",
     seoTourismDesc:
       "Excursions de groupe optionnelles à Chefchaouen, Asilah et Tanger pendant le festival. Découvrez le Maroc entre deux sessions de danse.",
-    seoTestimonialsTitle: "Témoignages — Tangier International Latin Festival 2026",
+    seoTestimonialsTitle: "Témoignages — Tangier International Latin Festival 2027",
     seoTestimonialsDesc:
       "Découvrez les retours de nos artistes et participants internationaux sur leur expérience à Tanger.",
-    seoPartnersTitle: "Partenaires — Tangier International Latin Festival 2026",
+    seoPartnersTitle: "Partenaires — Tangier International Latin Festival 2027",
     seoPartnersDesc:
       "Découvrez les partenaires de danse qui rendent le Tangier International Latin Festival possible.",
 
@@ -371,7 +387,7 @@ export const translations = {
     heroEdition: "8ème Édition · Maroc",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
-    heroTitleSub: "— Maroc —",
+    heroTitleSub: "Maroc",
     watchRecap: "Voir le récapitulatif",
     recapsTitle: "Tangier International Latin Festival — Vidéo Récap",
 
@@ -386,8 +402,8 @@ export const translations = {
     overviewWhen: "Quand",
     overviewHotel: "Hôtel Kenzi Solazur",
     overviewLocation: "Tanger, Maroc",
-    overviewDates: "22 → 26 Janvier",
-    overviewYear: "2026",
+    overviewDates: "07 → 11 Janvier",
+    overviewYear: "2027",
 
     // Artists Home Section
     lineupSubtitle: "Line-up",
@@ -395,7 +411,7 @@ export const translations = {
     lineupDesc:
       "Chaque année, nous réunissons des artistes de renommée internationale et des talents émergents pour offrir des performances époustouflantes et innovantes.",
     seeAllArtistsBtn: "Voir tous les artistes →",
-    viewAllArtistsBtn: "Voir les 32+ Artistes →",
+    viewAllArtistsBtn: "Voir plus d'artistes →",
 
     // CTA Home Section
     ctaSubtitle: "Premier arrivé, premier servi",
@@ -464,8 +480,22 @@ export const translations = {
     contactFormSendBtn: "Envoyer le message →",
     contactFormSuccess: "Merci ! Nous vous recontacterons très prochainement.",
 
+    // Missing UI
+    seeAllPacksBtn: "Voir tous les packs",
+    galleryTitlePart1: "Souvenirs en",
+    galleryTitlePart2: "images",
+    viewFullGalleryBtn: "Voir la Galerie Complète →",
+    joinEventPart1: "Rejoignez notre",
+    joinEventPart2: "événement",
+    joinEventDesc: "Découvrez notre emplacement central à Tanger, idéalement situé pour vous accueillir. Profitez de l'accessibilité et de la proximité des sites culturels et touristiques de la ville.",
+    addressLabel: "Adresse",
+    emailLabel: "Email",
+    phonesLabel: "Téléphones",
+    footerDesc: "Un événement culturel de renommée internationale sur les terres de Tanger.",
+    footerCopyright: "Tous droits réservés.",
+
     // Artists Page
-    artistsHeroSubtitle: "22 – 26 Janvier, 2026 · Tanger, Maroc",
+    artistsHeroSubtitle: "07–11 Janvier, 2027 · Tanger, Maroc",
     artistsHeroTitle: "Nos Artistes",
     artistsHeroDesc:
       "Chaque année, nous réunissons des artistes de renommée internationale et des talents émergents pour offrir des performances époustouflantes en salsa, bachata, kizomba et zouk.",
@@ -476,14 +506,14 @@ export const translations = {
     artistsClearFilters: "Effacer les filtres",
     artistsCtaSubtitle: "Ne le manquez pas",
     artistsCtaTitle: "Vivez la magie en direct",
-    artistsCtaDesc: "22 – 26 Janvier, 2026 · Hôtel Kenzi Solazur, Tanger, Maroc",
+    artistsCtaDesc: "07–11 Janvier, 2027 · Hôtel Kenzi Solazur, Tanger, Maroc",
     artistsCtaBtn: "Obtenir votre Pack",
 
     // Program Page
     programHeroSubtitle: "Programme du Festival",
     programHeroTitle: "Notre Programme",
     programHeroDesc:
-      "Cinq jours de danse, de musique et de découverte. Du 22 au 26 janvier 2026 à l'Hôtel Solazur, Tanger.",
+      "Cinq jours de danse, de musique et de découverte. Du 07 au 11 janvier 2027 à l'Hôtel Solazur, Tanger.",
     programDownloadPdf: "Télécharger le PDF",
     programSeePacks: "Voir les packs →",
     programMoments: "moments",
@@ -615,7 +645,7 @@ export const translations = {
     galleryLightboxClose: "Fermer",
     galleryLightboxPrev: "Précédent",
     galleryLightboxNext: "Suivant",
-    seoGalleryTitle: "Galerie — Tangier International Latin Festival 2026",
+    seoGalleryTitle: "Galerie — Tangier International Latin Festival 2027",
     seoGalleryDesc:
       "Revivez les moments magiques du Tangier International Latin Festival. Photos des workshops, spectacles, soirées à thème et compétition.",
   },
@@ -631,34 +661,35 @@ export const translations = {
     navPacks: "Packs",
     navContact: "Contacto",
     navGallery: "Galería",
+    navReels: "Reels",
     navTestimonials: "Testimonios",
     buyPackBtn: "Comprar un pack →",
     backHomeBtn: "Volver al inicio",
     closeBtn: "✕ Cerrar",
 
     // SEO Head Metadata
-    seoHomeTitle: "Tangier International Latin Festival 2026 — Salsa, Bachata, Kizomba",
+    seoHomeTitle: "Tangier International Latin Festival 2027 — Salsa, Bachata, Kizomba",
     seoHomeDesc:
-      "5 días inolvidables de salsa, bachata y kizomba en Tánger, Marruecos. Del 22 al 26 de enero de 2026 en el Hotel Kenzi Solazur.",
-    seoArtistsTitle: "Artistas — Tangier International Latin Festival 2026",
+      "5 días inolvidables de salsa, bachata y kizomba en Tánger, Marruecos. Del 07 al 11 de enero de 2027 en el Hotel Kenzi Solazur.",
+    seoArtistsTitle: "Artistas — Tangier International Latin Festival 2027",
     seoArtistsDesc:
-      "Descubre todos los artistas internacionales en el Tangier Latin Festival 2026. Salsa, Bachata, Kizomba y más.",
-    seoProgramTitle: "Programa — Tangier International Latin Festival 2026",
+      "Descubre todos los artistas internacionales en el Tangier Latin Festival 2027. Salsa, Bachata, Kizomba y más.",
+    seoProgramTitle: "Programa — Tangier International Latin Festival 2027",
     seoProgramDesc:
-      "Programa completo de 5 días del Tangier International Latin Festival, del 22 al 26 de enero de 2026 en el Hotel Solazur.",
-    seoCompetitionTitle: "Competición — Tangier International Latin Festival 2026",
+      "Programa completo de 5 días del Tangier International Latin Festival, Del 07 al 11 de enero de 2027 en el Hotel Solazur.",
+    seoCompetitionTitle: "Competición — Tangier International Latin Festival 2027",
     seoCompetitionDesc:
       "Competición Internacional de Salsa y Bachata en Tánger — acceso directo a la final en España y a la Oaxaca Paramount Cup en México.",
-    seoHotelTitle: "Hotel Solazur — Tangier International Latin Festival 2026",
+    seoHotelTitle: "Hotel Solazur — Tangier International Latin Festival 2027",
     seoHotelDesc:
       "Kenzi Solazur — el hotel oficial del festival. Con vistas al estrecho de Gibraltar y la bahía de Tánger, con piscina al aire libre, spa y restaurantes gourmet.",
-    seoTourismTitle: "Turismo — Tangier International Latin Festival 2026",
+    seoTourismTitle: "Turismo — Tangier International Latin Festival 2027",
     seoTourismDesc:
       "Excursiones opcionales en grupo a Chefchaouen, Asilah y Tánger durante el festival. Descubre Marruecos entre sesiones de baile.",
-    seoTestimonialsTitle: "Testimonios — Tangier International Latin Festival 2026",
+    seoTestimonialsTitle: "Testimonios — Tangier International Latin Festival 2027",
     seoTestimonialsDesc:
       "Descubre lo que opinan los bailarines y artistas internacionales sobre el Tangier International Latin Festival.",
-    seoPartnersTitle: "Socios — Tangier International Latin Festival 2026",
+    seoPartnersTitle: "Socios — Tangier International Latin Festival 2027",
     seoPartnersDesc:
       "Conoce a los socios de baile que hacen posible el Tangier International Latin Festival.",
 
@@ -672,7 +703,7 @@ export const translations = {
     heroEdition: "8ª Edición · Marruecos",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
-    heroTitleSub: "— Marruecos —",
+    heroTitleSub: "Marruecos",
     watchRecap: "Ver vídeo resumen",
     recapsTitle: "Tangier International Latin Festival — Vídeo Resumen",
 
@@ -687,8 +718,8 @@ export const translations = {
     overviewWhen: "Cuándo",
     overviewHotel: "Hotel Kenzi Solazur",
     overviewLocation: "Tánger, Marruecos",
-    overviewDates: "22 → 26 de Enero",
-    overviewYear: "2026",
+    overviewDates: "07 → 11 de Enero",
+    overviewYear: "2027",
 
     // Artists Home Section
     lineupSubtitle: "Line-up",
@@ -696,7 +727,7 @@ export const translations = {
     lineupDesc:
       "Cada año, reunimos a artistas de renombre internacional y a talentos emergentes para ofrecer actuaciones espectaculares e innovadoras.",
     seeAllArtistsBtn: "Ver todos los artistas →",
-    viewAllArtistsBtn: "Ver todos los 32+ Artistas →",
+    viewAllArtistsBtn: "Ver más artistas →",
 
     // CTA Home Section
     ctaSubtitle: "Primeras plazas limitadas",
@@ -763,10 +794,24 @@ export const translations = {
     contactFormEmail: "Email",
     contactFormMsg: "Mensaje",
     contactFormSendBtn: "Enviar mensaje →",
-    contactFormSuccess: "¡Gracias! Nos pondremos en contacto contigo muy pronto.",
+    contactFormSuccess: "¡Gracias! Nos pondremos en contacto con usted en breve.",
+
+    // Missing UI
+    seeAllPacksBtn: "Ver todos los packs",
+    galleryTitlePart1: "Recuerdos en",
+    galleryTitlePart2: "imágenes",
+    viewFullGalleryBtn: "Ver Galería Completa →",
+    joinEventPart1: "Únase a nuestro",
+    joinEventPart2: "evento",
+    joinEventDesc: "Descubra nuestra ubicación central en Tánger, idealmente situada para recibirle. Aproveche la accesibilidad y proximidad a los sitios culturales y turísticos de la ciudad.",
+    addressLabel: "Dirección",
+    emailLabel: "Correo",
+    phonesLabel: "Teléfonos",
+    footerDesc: "Un evento cultural de renombre internacional en las tierras de Tánger.",
+    footerCopyright: "Todos los derechos reservados.",
 
     // Artists Page
-    artistsHeroSubtitle: "22 – 26 de Enero, 2026 · Tánger, Marruecos",
+    artistsHeroSubtitle: "07–11 de Enero, 2027 · Tánger, Marruecos",
     artistsHeroTitle: "Nuestros Artistas",
     artistsHeroDesc:
       "Cada año reunimos a artistas de renombre internacional y a talentos emergentes para ofrecer espectáculos espectaculares en salsa, bachata, kizomba y zouk.",
@@ -777,14 +822,14 @@ export const translations = {
     artistsClearFilters: "Limpiar filtros",
     artistsCtaSubtitle: "No te lo pierdas",
     artistsCtaTitle: "Vive la magia en directo",
-    artistsCtaDesc: "22 – 26 de Enero, 2026 · Hotel Kenzi Solazur, Tánger, Marruecos",
+    artistsCtaDesc: "07–11 de Enero, 2027 · Hotel Kenzi Solazur, Tánger, Marruecos",
     artistsCtaBtn: "Consigue tu Pack",
 
     // Program Page
     programHeroSubtitle: "Programa del Festival",
     programHeroTitle: "Nuestro Programa",
     programHeroDesc:
-      "Cinco días de baile, música y descubrimiento. Del 22 al 26 de enero de 2026 en el Hotel Solazur, Tánger.",
+      "Cinco días de baile, música y descubrimiento. Del 07 al 11 de enero de 2027 en el Hotel Solazur, Tánger.",
     programDownloadPdf: "Descargar PDF",
     programSeePacks: "Ver packs →",
     programMoments: "momentos",
@@ -915,7 +960,7 @@ export const translations = {
     galleryLightboxClose: "Cerrar",
     galleryLightboxPrev: "Anterior",
     galleryLightboxNext: "Siguiente",
-    seoGalleryTitle: "Galería — Tangier International Latin Festival 2026",
+    seoGalleryTitle: "Galería — Tangier International Latin Festival 2027",
     seoGalleryDesc:
       "Revive los momentos mágicos del Tangier International Latin Festival. Fotos de talleres, espectáculos, fiestas temáticas y competición.",
   },
@@ -1134,7 +1179,7 @@ export const translatedHomeProgramme = {
   en: [
     {
       day: "Day 1",
-      date: "Friday · January 22, 2026",
+      date: "Thursday · January 7, 2027",
       items: [
         { t: "Check-in", time: "From 2:00 PM", place: "Hotel Solazur" },
         { t: "Buffet Dinner", time: "19:00 — 23:00", place: "Hotel Solazur" },
@@ -1143,7 +1188,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Day 2",
-      date: "Saturday · January 23, 2026",
+      date: "Friday · January 8, 2027",
       items: [
         { t: "Buffet Breakfast", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { t: "Workshops", time: "15:00 — 19:00", place: "Hotel Solazur" },
@@ -1152,7 +1197,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Day 3",
-      date: "Sunday · January 24, 2026",
+      date: "Saturday · January 9, 2027",
       items: [
         { t: "City Tour", time: "10:00 — 14:00", place: "Tangier Medina" },
         { t: "Workshops", time: "15:00 — 19:00", place: "Hotel Solazur" },
@@ -1163,7 +1208,7 @@ export const translatedHomeProgramme = {
   fr: [
     {
       day: "Jour 1",
-      date: "Vendredi · 22 Janvier, 2026",
+      date: "Jeudi · 7 Janvier, 2027",
       items: [
         { t: "Enregistrement", time: "À partir de 14:00", place: "Hôtel Solazur" },
         { t: "Dîner Buffet", time: "19:00 — 23:00", place: "Hôtel Solazur" },
@@ -1172,7 +1217,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Jour 2",
-      date: "Samedi · 23 Janvier, 2026",
+      date: "Vendredi · 8 Janvier, 2027",
       items: [
         { t: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Solazur" },
         { t: "Workshops / Cours", time: "15:00 — 19:00", place: "Hôtel Solazur" },
@@ -1181,7 +1226,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Jour 3",
-      date: "Dimanche · 24 Janvier, 2026",
+      date: "Samedi · 9 Janvier, 2027",
       items: [
         { t: "Visite de la ville", time: "10:00 — 14:00", place: "Médina de Tanger" },
         { t: "Workshops / Cours", time: "15:00 — 19:00", place: "Hôtel Solazur" },
@@ -1192,7 +1237,7 @@ export const translatedHomeProgramme = {
   es: [
     {
       day: "Día 1",
-      date: "Viernes · 22 de Enero, 2026",
+      date: "Jueves · 7 de Enero, 2027",
       items: [
         { t: "Check-in", time: "Desde las 14:00", place: "Hotel Solazur" },
         { t: "Cena Buffet", time: "19:00 — 23:00", place: "Hotel Solazur" },
@@ -1201,7 +1246,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Día 2",
-      date: "Sábado · 23 de Enero, 2026",
+      date: "Viernes · 8 de Enero, 2027",
       items: [
         { t: "Desayuno Buffet", time: "05:00 — 11:00", place: "Hotel Solazur" },
         { t: "Talleres", time: "15:00 — 19:00", place: "Hotel Solazur" },
@@ -1210,7 +1255,7 @@ export const translatedHomeProgramme = {
     },
     {
       day: "Día 3",
-      date: "Domingo · 24 de Enero, 2026",
+      date: "Sábado · 9 de Enero, 2027",
       items: [
         { t: "Tour por la Ciudad", time: "10:00 — 14:00", place: "Medina de Tánger" },
         { t: "Talleres", time: "15:00 — 19:00", place: "Hotel Solazur" },

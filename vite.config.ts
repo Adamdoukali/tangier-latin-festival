@@ -7,6 +7,7 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 import { nitro } from "nitro/vite";
 
 const isVercel = !!process.env.VERCEL || !!process.env.NOW_BUILDER || process.env.NITRO_PRESET === "vercel";
+const isLocalDev = !isVercel && !process.env.CF_PAGES;
 
 export default defineConfig({
   plugins: [
@@ -19,7 +20,8 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
     tsConfigPaths(),
-    ...(!isVercel ? [cloudflare()] : []),
+    // Skip Cloudflare plugin for local dev — workerd has issues with Bun on Windows
+    ...(!isVercel && !isLocalDev ? [cloudflare()] : []),
   ],
   resolve: {
     alias: {

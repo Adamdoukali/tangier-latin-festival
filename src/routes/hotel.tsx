@@ -230,32 +230,58 @@ function HotelPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative h-[65vh] min-h-[460px] flex items-end border-b border-border/40 overflow-hidden select-none">
-        <div className="absolute inset-0 -z-10">
+      <section className="relative h-[65vh] min-h-[460px] flex items-end border-b border-border/40 overflow-hidden select-none bg-slate-950">
+        <style>{`
+          @keyframes kenburns {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+          }
+          @keyframes float-badge {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+          }
+        `}</style>
+        <div className="absolute inset-0 -z-10 bg-black">
           <img
             src={exteriorImg}
             alt="Hotel Solazur Tangier"
-            className="h-full w-full object-cover opacity-35"
+            className="h-full w-full object-cover opacity-45"
+            style={{ animation: 'kenburns 30s ease-in-out infinite alternate' }}
           />
           <div className="absolute inset-0 hero-overlay" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-6 pb-16 w-full">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4 flex items-center gap-2">
-            <Star className="h-3.5 w-3.5 fill-gold text-gold" />
-            {t("hotelHeroSubtitle")}
-          </p>
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-4xl text-white">
-            {lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}{" "}
-            <span className="text-gold italic">Solazur</span>
-          </h1>
-          <div className="mt-6 flex items-center gap-2 text-muted-foreground">
-            <MapPin className="h-4 w-4 text-primary animate-bounce" />
-            <span className="text-sm">{t("hotelHeroLocation")}</span>
-            <span className="mx-3 text-border">|</span>
-            <div className="flex gap-0.5">
+        <div className="relative mx-auto max-w-7xl px-6 pb-16 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="flex-1">
+            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4 flex items-center gap-2">
+              <Star className="h-3.5 w-3.5 fill-gold text-gold" />
+              {t("hotelHeroSubtitle")}
+            </p>
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-4xl text-white drop-shadow-xl">
+              {lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}{" "}
+              <span className="text-gold italic drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">Solazur</span>
+            </h1>
+            <div className="mt-6 flex items-center gap-2 text-white/90 backdrop-blur-md bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10 shadow-lg">
+              <MapPin className="h-4 w-4 text-primary animate-bounce" />
+              <span className="text-sm tracking-wide">{t("hotelHeroLocation")}</span>
+              <span className="mx-3 text-white/30">|</span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-gold text-gold" />
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Floating Badge */}
+          <div className="hidden md:flex flex-col items-center justify-center p-6 rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xl shadow-2xl shrink-0" style={{ animation: 'float-badge 6s ease-in-out infinite' }}>
+            <div className="text-gold font-display text-3xl font-bold flex items-center gap-1">
+              9.2 <span className="text-lg">/10</span>
+            </div>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/70 mt-1 font-semibold">Exceptional</p>
+            <div className="flex gap-1 mt-3">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" />
+                <Star key={i} className="h-3 w-3 fill-gold text-gold" />
               ))}
             </div>
           </div>

@@ -160,10 +160,10 @@ function TestimonialsPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden">
+      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-slate-950">
         <div className="absolute inset-0 -z-10 opacity-30">
           <img src={tangierImg} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 hero-overlay" />
+          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
         </div>
         <div className="mx-auto max-w-5xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
@@ -173,10 +173,10 @@ function TestimonialsPage() {
                 ? "TESTIMONIOS DE ARTISTAS"
                 : "WHAT THEY SAY"}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] uppercase">
+          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] uppercase text-white drop-shadow-lg">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+          <p className="mt-6 text-slate-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed drop-shadow-md">
             {lang === "fr"
               ? "Découvrez les retours exclusifs de nos artistes internationaux et professeurs sur leur incroyable expérience au Tangier International Latin Festival."
               : lang === "es"
@@ -328,11 +328,11 @@ function VideoTestimonial() {
   };
 
   return (
-    <div className="relative rounded-3xl overflow-hidden bg-black shadow-gold group border border-border/40 max-w-4xl mx-auto mb-8">
+    <div className="relative rounded-3xl overflow-hidden bg-black shadow-gold group border border-border/40 max-w-sm mx-auto mb-8 aspect-[9/16]">
       <video
         ref={videoRef}
         src="https://www.tangierlatinfestival.com/wp-content/uploads/2025/08/TESTIMONIALS-2.mov"
-        className="w-full h-[300px] md:h-[480px] object-cover"
+        className="w-full h-full object-cover"
         loop
         playsInline
         onClick={togglePlay}

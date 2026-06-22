@@ -130,34 +130,35 @@ function ArtistsPage() {
       <Nav />
 
       {/* ── Hero Banner ─────────────────────────────── */}
-      <section className="pt-16 relative overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-800 text-white">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-500 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-violet-500 rounded-full blur-3xl" />
+      <section className="relative pt-24 pb-20 overflow-hidden bg-slate-950 border-b border-border/20 min-h-[50vh] flex items-center justify-center">
+        {/* Dynamic Background Glows */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-[40%] h-[60%] bg-gold/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-0 right-1/4 w-[40%] h-[60%] bg-primary/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(212,175,55,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
         </div>
-        <div className="relative max-w-4xl mx-auto px-6 py-20 text-center">
-          <p className="text-xs font-bold tracking-[0.35em] uppercase text-rose-400 mb-4">
-            {t("artistsHeroSubtitle")}
-          </p>
-          <h1 className="font-['Playfair_Display'] text-5xl md:text-7xl font-bold leading-tight mb-6">
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-gold/20 bg-gold/5 backdrop-blur-sm mb-6">
+            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+            <p className="text-xs font-bold tracking-[0.4em] uppercase text-gold">
+              {t("artistsHeroSubtitle")}
+            </p>
+          </div>
+          
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white drop-shadow-2xl">
             {t("artistsHeroTitle")}
           </h1>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto leading-relaxed">
+          
+          <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             {t("artistsHeroDesc")}
           </p>
-          <div className="mt-6 text-sm font-semibold text-white/60">
+          
+          <div className="mt-8 text-sm font-bold tracking-widest uppercase text-gold/80 bg-gold/5 inline-flex px-6 py-2 rounded-full border border-gold/10 backdrop-blur-md shadow-lg">
             {ALL_ARTISTS.length}+ {t("artistsCountLabel")}
           </div>
         </div>
-        {/* Wave divider */}
-        <svg
-          className="relative w-full -mb-1"
-          viewBox="0 0 1440 60"
-          preserveAspectRatio="none"
-          fill="white"
-        >
-          <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" />
-        </svg>
       </section>
 
       {/* ── Filters ─────────────────────────────────── */}

@@ -11,13 +11,22 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TourismRouteImport } from './routes/tourism'
 import { Route as TestimonialsRouteImport } from './routes/testimonials'
+import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as ProgramRouteImport } from './routes/program'
 import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as PacksRouteImport } from './routes/packs'
 import { Route as HotelRouteImport } from './routes/hotel'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CompetitionRouteImport } from './routes/competition'
 import { Route as ArtistsRouteImport } from './routes/artists'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminPacksRouteImport } from './routes/admin/packs'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminInviteRouteImport } from './routes/admin/invite'
+import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 
 const TourismRoute = TourismRouteImport.update({
   id: '/tourism',
@@ -29,6 +38,16 @@ const TestimonialsRoute = TestimonialsRouteImport.update({
   path: '/testimonials',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReelsRoute = ReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProgramRoute = ProgramRouteImport.update({
   id: '/program',
   path: '/program',
@@ -37,6 +56,11 @@ const ProgramRoute = ProgramRouteImport.update({
 const PartnersRoute = PartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksRoute = PacksRouteImport.update({
+  id: '/packs',
+  path: '/packs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HotelRoute = HotelRouteImport.update({
@@ -59,22 +83,61 @@ const ArtistsRoute = ArtistsRouteImport.update({
   path: '/artists',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPacksRoute = AdminPacksRouteImport.update({
+  id: '/packs',
+  path: '/packs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInviteRoute = AdminInviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
+  '/packs': typeof PacksRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
+  '/redeem': typeof RedeemRoute
+  '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
   '/tourism': typeof TourismRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/invite': typeof AdminInviteRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packs': typeof AdminPacksRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -82,35 +145,61 @@ export interface FileRoutesByTo {
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
+  '/packs': typeof PacksRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
+  '/redeem': typeof RedeemRoute
+  '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
   '/tourism': typeof TourismRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/invite': typeof AdminInviteRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packs': typeof AdminPacksRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
+  '/packs': typeof PacksRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
+  '/redeem': typeof RedeemRoute
+  '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
   '/tourism': typeof TourismRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/invite': typeof AdminInviteRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packs': typeof AdminPacksRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/artists'
     | '/competition'
     | '/gallery'
     | '/hotel'
+    | '/packs'
     | '/partners'
     | '/program'
+    | '/redeem'
+    | '/reels'
     | '/testimonials'
     | '/tourism'
+    | '/admin/bookings'
+    | '/admin/invite'
+    | '/admin/login'
+    | '/admin/packs'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -118,31 +207,52 @@ export interface FileRouteTypes {
     | '/competition'
     | '/gallery'
     | '/hotel'
+    | '/packs'
     | '/partners'
     | '/program'
+    | '/redeem'
+    | '/reels'
     | '/testimonials'
     | '/tourism'
+    | '/admin/bookings'
+    | '/admin/invite'
+    | '/admin/login'
+    | '/admin/packs'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/artists'
     | '/competition'
     | '/gallery'
     | '/hotel'
+    | '/packs'
     | '/partners'
     | '/program'
+    | '/redeem'
+    | '/reels'
     | '/testimonials'
     | '/tourism'
+    | '/admin/bookings'
+    | '/admin/invite'
+    | '/admin/login'
+    | '/admin/packs'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ArtistsRoute: typeof ArtistsRoute
   CompetitionRoute: typeof CompetitionRoute
   GalleryRoute: typeof GalleryRoute
   HotelRoute: typeof HotelRoute
+  PacksRoute: typeof PacksRoute
   PartnersRoute: typeof PartnersRoute
   ProgramRoute: typeof ProgramRoute
+  RedeemRoute: typeof RedeemRoute
+  ReelsRoute: typeof ReelsRoute
   TestimonialsRoute: typeof TestimonialsRoute
   TourismRoute: typeof TourismRoute
 }
@@ -163,6 +273,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestimonialsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reels': {
+      id: '/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/program': {
       id: '/program'
       path: '/program'
@@ -175,6 +299,13 @@ declare module '@tanstack/react-router' {
       path: '/partners'
       fullPath: '/partners'
       preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs': {
+      id: '/packs'
+      path: '/packs'
+      fullPath: '/packs'
+      preLoaderRoute: typeof PacksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hotel': {
@@ -205,6 +336,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ArtistsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -212,17 +350,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/packs': {
+      id: '/admin/packs'
+      path: '/packs'
+      fullPath: '/admin/packs'
+      preLoaderRoute: typeof AdminPacksRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invite': {
+      id: '/admin/invite'
+      path: '/invite'
+      fullPath: '/admin/invite'
+      preLoaderRoute: typeof AdminInviteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminInviteRoute: typeof AdminInviteRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminPacksRoute: typeof AdminPacksRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminBookingsRoute: AdminBookingsRoute,
+  AdminInviteRoute: AdminInviteRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminPacksRoute: AdminPacksRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   ArtistsRoute: ArtistsRoute,
   CompetitionRoute: CompetitionRoute,
   GalleryRoute: GalleryRoute,
   HotelRoute: HotelRoute,
+  PacksRoute: PacksRoute,
   PartnersRoute: PartnersRoute,
   ProgramRoute: ProgramRoute,
+  RedeemRoute: RedeemRoute,
+  ReelsRoute: ReelsRoute,
   TestimonialsRoute: TestimonialsRoute,
   TourismRoute: TourismRoute,
 }

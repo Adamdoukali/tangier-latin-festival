@@ -64,7 +64,7 @@ function CompetitionPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40">
+      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40 bg-slate-950">
         <div className="absolute inset-0">
           <img src={competitionImg} alt="" className="h-full w-full object-cover opacity-30" />
           <div className="absolute inset-0 hero-overlay" />
@@ -74,12 +74,12 @@ function CompetitionPage() {
             <Trophy className="inline h-3.5 w-3.5 mr-2 -mt-0.5" />
             {t("competitionHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
+          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
             {t("competitionHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("competitionHeroTitlePart2")}</span>{" "}
             {t("competitionHeroTitlePart3")}
           </h1>
-          <p className="mt-6 text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-6 text-slate-300 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
             {t("competitionHeroDesc")}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

@@ -100,18 +100,49 @@ function PartnersPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40">
-        <div className="absolute inset-0 -z-10 opacity-40 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,oklch(0.62_0.18_30/0.3),transparent_50%),radial-gradient(circle_at_70%_60%,oklch(0.78_0.13_75/0.2),transparent_50%)]" />
+      <section className="relative py-28 md:py-40 border-b border-border/20 overflow-hidden min-h-[60vh] flex flex-col justify-center">
+        <style>{`
+          @keyframes marquee-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          @keyframes slide-up-fade {
+            0% { transform: translateY(40px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+          }
+          .animate-slide-up-1 { animation: slide-up-fade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+          .animate-slide-up-2 { animation: slide-up-fade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.2s; opacity: 0; }
+          .animate-slide-up-3 { animation: slide-up-fade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.4s; opacity: 0; }
+        `}</style>
+
+        {/* Network / Grid Background */}
+        <div className="absolute inset-0 -z-20 bg-slate-950">
+          <div className="absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent)] bg-[linear-gradient(rgba(212,175,55,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full bg-[radial-gradient(ellipse_at_top,oklch(0.62_0.18_30/0.15),transparent_60%)]" />
         </div>
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
-            {t("partnersPageHeroSubtitle")}
-          </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95]">
+
+        {/* Infinite Faded Logo Marquee Background */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 -z-10 flex overflow-hidden opacity-10 blur-[2px] pointer-events-none select-none">
+          <div className="flex shrink-0 gap-16 items-center pr-16" style={{ animation: 'marquee-left 40s linear infinite', width: 'max-content' }}>
+            {[...partners, ...partners].map((p, i) => (
+              <img key={i} src={p.logo} alt="" className="h-16 md:h-24 w-auto object-contain grayscale" />
+            ))}
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-gold/20 bg-gold/5 backdrop-blur-sm mb-6 animate-slide-up-1 shadow-lg">
+            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+            <p className="text-xs tracking-[0.4em] uppercase text-gold font-bold">
+              {t("partnersPageHeroSubtitle")}
+            </p>
+          </div>
+          
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-white drop-shadow-2xl animate-slide-up-2">
             {t("partnersPageHeroTitle")}
           </h1>
-          <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">
+          
+          <p className="mt-8 text-slate-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed animate-slide-up-3 drop-shadow-md">
             {t("partnersPageHeroDesc")}
           </p>
         </div>
