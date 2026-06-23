@@ -72,7 +72,7 @@ export const translations = {
     overviewWhen: "When",
     overviewHotel: "Kenzi Solazur Hotel",
     overviewLocation: "Tangier, Morocco",
-    overviewDates: "January 07 → 11",
+    overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
     // Artists Home Section
@@ -402,7 +402,7 @@ export const translations = {
     overviewWhen: "Quand",
     overviewHotel: "Hôtel Kenzi Solazur",
     overviewLocation: "Tanger, Maroc",
-    overviewDates: "07 → 11 Janvier",
+    overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
     // Artists Home Section
@@ -718,7 +718,7 @@ export const translations = {
     overviewWhen: "Cuándo",
     overviewHotel: "Hotel Kenzi Solazur",
     overviewLocation: "Tánger, Marruecos",
-    overviewDates: "07 → 11 de Enero",
+    overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
     // Artists Home Section

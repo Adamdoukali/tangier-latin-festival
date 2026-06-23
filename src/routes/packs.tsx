@@ -47,102 +47,85 @@ function PacksPage() {
       {/* PACKS GRID */}
       <section className="py-24 bg-card/30">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {packs.map((p, i) => {
-              // Alternate themes
-              const themes = [
-                {
-                  border: "border-zinc-800 hover:border-zinc-650 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-zinc-900/20 via-card/60 to-card/90",
-                  accent: "from-zinc-700 via-zinc-500 to-zinc-850",
-                  price: "text-zinc-950 dark:text-zinc-100 font-bold",
-                  check: "text-zinc-400",
-                  badge: "",
-                  btn: "border border-zinc-400 text-zinc-800 hover:bg-zinc-950 hover:text-white dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white shadow-black-chrome",
-                  glow: "shadow-[0_0_50px_-15px_rgba(255,255,255,0.05)] hover:shadow-black-chrome",
-                  icon: "bg-black-chrome",
-                  iconText: "text-white font-extrabold",
-                },
-                {
-                  border: "border-slate-700/40 hover:border-slate-400 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-slate-800/10 via-card/60 to-card/90",
-                  accent: "from-slate-400 via-slate-200 to-slate-500",
-                  price: "text-slate-800 dark:text-silver font-bold",
-                  check: "text-slate-350",
-                  badge: "absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-silver px-5 py-1.5 text-[10px] tracking-[0.25em] uppercase text-zinc-950 font-bold shadow-lg shadow-silver/40 border border-slate-300/30",
-                  btn: "bg-silver text-zinc-950 font-extrabold hover:opacity-90 shadow-lg shadow-silver/30 transition-opacity",
-                  glow: "shadow-[0_0_50px_-10px_rgba(203,213,225,0.15)] hover:shadow-silver",
-                  icon: "bg-silver",
-                  iconText: "text-zinc-950 font-extrabold",
-                },
-                {
-                  border: "border-amber-900/60 hover:border-amber-400 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-amber-900/10 via-card/60 to-card/90",
-                  accent: "from-amber-500 via-yellow-200 to-amber-600",
-                  price: "text-amber-600 dark:text-gold font-bold",
-                  check: "text-amber-550",
-                  badge: "",
-                  btn: "border border-amber-400 text-amber-650 hover:bg-amber-450 hover:text-white dark:border-amber-400/40 dark:text-amber-400 dark:hover:bg-amber-400/10 dark:hover:border-amber-400/70 shadow-gold",
-                  glow: "shadow-[0_0_50px_-10px_rgba(245,158,11,0.12)] hover:shadow-gold",
-                  icon: "bg-gold",
-                  iconText: "text-zinc-950 font-extrabold",
-                },
-              ];
-              const theme = themes[i % 3];
-
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {packs.map((p) => {
+              const isPopular = p.popular;
               return (
                 <div
-                  key={p.id}
-                  className={`relative rounded-2xl border p-8 flex flex-col transition-all duration-300 ${theme.border} ${theme.bg} ${theme.glow} ${
-                    p.popular ? "scale-[1.02] md:-mt-2 md:mb-[-8px] z-10" : ""
+                  key={p.id || `${p.name}-${p.sub}`}
+                  className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
+                    isPopular
+                      ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 z-10 md:-mt-4 md:mb-[-16px]"
+                      : "bg-card/30 backdrop-blur-md border border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10"
                   }`}
                 >
-                  <div className={`absolute top-0 left-6 right-6 h-1 rounded-b-full bg-gradient-to-r ${theme.accent}`} />
-                  
-                  {p.popular && <span className={theme.badge}>{t("popularBadge")}</span>}
+                  {/* Glassmorphism reflection highlight */}
+                  <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                  <div className={`h-11 w-11 rounded-xl ${theme.icon} grid place-items-center mb-5`}>
-                    <span className={`font-display text-lg ${theme.iconText}`}>
-                      {p.name.charAt(0)}
-                    </span>
+                  {isPopular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-primary/40">
+                      {t("popularBadge")}
+                    </div>
+                  )}
+
+                  <div className="relative z-10 flex flex-col flex-1">
+                    <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                      {p.name}
+                    </h3>
+                    <p className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground mt-3 font-semibold">
+                      {p.sub}
+                    </p>
+
+                    <div className="mt-8 md:mt-10 flex items-end gap-2">
+                      <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
+                        {p.price}
+                      </span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                        {p.currency || "€"} / {t("perPackLabel")}
+                      </span>
+                    </div>
+
+                    <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
+
+                    <ul className="space-y-4 md:space-y-5 flex-1">
+                      {p.features.map((f: string) => (
+                        <li key={f} className="flex items-start gap-4">
+                          <div
+                            className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
+                              isPopular
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
+                            }`}
+                          >
+                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 stroke-[3]" />
+                          </div>
+                          <span className="text-sm md:text-base font-medium text-foreground/90 leading-snug">
+                            {f}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      onClick={() =>
+                        setSelectedPack({
+                          name: p.name,
+                          sub: p.sub,
+                          price: p.price,
+                          currency: p.currency,
+                        })
+                      }
+                      className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${
+                        isPopular
+                          ? "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_-5px_rgba(212,175,55,0.6)] hover:scale-[1.03]"
+                          : "bg-card border border-border/80 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.03]"
+                      }`}
+                    >
+                      <span className="relative z-10">
+                        {isPopular ? t("getStartedBtn") : t("choosePackBtn")}
+                      </span>
+                    </button>
                   </div>
-
-                  <h3 className="font-display text-3xl">{p.name}</h3>
-                  <p className="text-xs tracking-[0.25em] uppercase text-zinc-600 dark:text-zinc-400 font-medium mt-1">
-                    {p.sub}
-                  </p>
-                  
-                  <div className="mt-6 flex items-baseline gap-2">
-                    <span className={`font-display text-5xl ${theme.price}`}>{p.price}</span>
-                    <span className="text-xs tracking-[0.25em] uppercase text-zinc-550 dark:text-zinc-450 font-semibold">
-                      {p.currency || "€"} / {t("perPackLabel")}
-                    </span>
-                  </div>
-
-                  <div className={`mt-6 h-px bg-gradient-to-r ${theme.accent} opacity-20`} />
-
-                  <ul className="mt-6 space-y-3 flex-1">
-                    {p.features.map((f: string) => (
-                      <li key={f} className="flex items-start gap-3 text-sm">
-                        <Check className={`h-4 w-4 ${theme.check} mt-0.5 shrink-0`} />
-                        <span className="text-foreground/90">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() =>
-                      setSelectedPack({
-                        name: p.name,
-                        sub: p.sub,
-                        price: p.price,
-                        currency: p.currency
-                      })
-                    }
-                    className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 cursor-pointer ${theme.btn}`}
-                  >
-                    {p.popular ? t("getStartedBtn") : t("choosePackBtn")} →
-                  </button>
                 </div>
               );
             })}

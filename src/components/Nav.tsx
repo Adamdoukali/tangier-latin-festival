@@ -51,7 +51,7 @@ export function TopBar() {
           <span className="flex items-center gap-2 text-primary">
             <Calendar className="h-3.5 w-3.5" />
             <span className="uppercase">
-              {t("overviewDates")}, {t("overviewYear")}
+              {t("overviewDates")} {t("overviewYear")}
             </span>
           </span>
         </div>
@@ -85,7 +85,6 @@ export function Nav() {
     { href: "/reels", label: t("navReels"), isNew: true },
     { href: "/testimonials", label: t("navTestimonials") },
     { href: "/artists", label: t("navArtists") },
-    { href: "/#packs", label: t("navPacks") },
     { href: "/#contact", label: t("navContact") },
   ];
 
@@ -149,7 +148,7 @@ export function Nav() {
             </div>
 
             <a
-              href={localizedHref("/#packs")}
+              href={localizedHref("/packs")}
               className="inline-flex items-center gap-1.5 xl:gap-2 rounded-full bg-gold px-3 py-1.5 xl:px-5 xl:py-2.5 text-xs xl:text-sm font-medium text-primary-foreground shadow-gold hover:opacity-90 transition"
             >
               {t("buyPackBtn")}
@@ -253,7 +252,7 @@ export function Nav() {
             </div>
 
             <a
-              href={localizedHref("/#packs")}
+              href={localizedHref("/packs")}
               onClick={() => setMobileMenuOpen(false)}
               className="w-full text-center inline-flex items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-sm font-semibold text-primary-foreground shadow-gold hover:opacity-90 active:scale-95 transition duration-300"
             >

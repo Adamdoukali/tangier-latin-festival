@@ -31,45 +31,91 @@ export const Route = createFileRoute("/artists")({
 });
 
 const BASE = "https://www.tangierlatinfestival.com/wp-content/uploads/2024/04/";
+const BASE24 = "https://www.tangierlatinfestival.com/wp-content/uploads/2024/";
 const BASE25 = "https://www.tangierlatinfestival.com/wp-content/uploads/2025/";
 
 const ALL_ARTISTS = [
+  { name: "Sandrine", style: "Kizomba", img: BASE + "image-228-2.png" },
+  { name: "Alicia", style: "Bachata", img: BASE + "image-235.png" },
   { name: "Talal", style: "Salsa", img: a1 },
-  { name: "Vaneska Lopez", style: "Salsa", img: a2 },
-  { name: "Junior", style: "Bachata", img: a3 },
-  { name: "Andy & Saray", style: "Bachata", img: a4 },
-  { name: "Sandrine", style: "Salsa", img: BASE + "image-228-2.png" },
-  { name: "Alicia", style: "Salsa", img: BASE + "image-235.png" },
   { name: "Abdel Zouk", style: "Zouk", img: BASE + "image-232.png" },
   { name: "Adil & Elo", style: "Bachata", img: BASE + "image-233.png" },
   { name: "Edu & Silvana", style: "Bachata", img: BASE + "image-237.png" },
   { name: "Malick & Carla", style: "Kizomba", img: BASE + "image-234.png" },
-  { name: "Mervil", style: "Zouk", img: BASE + "image-238-2.png" },
+  { name: "Vaneska Lopez", style: "Salsa", img: a2 },
+  { name: "Mervil", style: "Kizomba", img: BASE + "image-238-2.png" },
   { name: "Cyra's Team", style: "Salsa", img: BASE + "image-242.png" },
   { name: "Asier & Aleksandra", style: "Bachata", img: BASE + "image-239.png" },
   { name: "Jesus & Maria", style: "Bachata", img: BASE + "image-243.png" },
-  { name: "Jose Pablo & Cyntia", style: "Salsa", img: BASE + "image-244.png" },
-  { name: "Juanma & Tania", style: "Salsa", img: BASE + "image-245.png" },
+  { name: "Andy & Saray", style: "Bachata", img: a4 },
+  { name: "Jose Pablo & Cyntia", style: "Bachata", img: BASE + "image-244.png" },
+  { name: "Juanma & Tania", style: "Bachata", img: BASE + "image-245.png" },
   { name: "Cebo & Emmanuelle", style: "Kizomba", img: BASE25 + "07/Cebo-Emmanuelle.jpg" },
-  { name: "Kal & Aurore", style: "Kizomba", img: BASE + "image-252.png" },
-  { name: "JJ Pachanga", style: "Salsa", img: BASE + "image-247.png" },
+  { name: "Junior", style: "Bachata", img: a3 },
+  { name: "Kal & Aurore", style: "Bachata", img: BASE + "image-252.png" },
+  { name: "Jj Pachanga", style: "Salsa", img: BASE + "image-247.png" },
   { name: "Manu & Elena", style: "Salsa", img: BASE + "image-255.png" },
-  { name: "Keco & Monica", style: "Bachata", img: BASE + "image-248.png" },
+  { name: "Keco & Monica", style: "Kizomba", img: BASE + "image-248.png" },
   { name: "Robert & Angela", style: "Bachata", img: BASE + "image-253.png" },
   { name: "Mambo Family", style: "Salsa", img: BASE + "image-250.png" },
-  { name: "Mario & Lidia", style: "Salsa", img: BASE + "image-254.png" },
+  { name: "Mario & Lidia", style: "Bachata", img: BASE + "image-254.png" },
   { name: "Oleg & Isa", style: "Bachata", img: BASE + "image-256.png" },
-  { name: "Merembé", style: "Kizomba", img: BASE + "image-260.png" },
+  { name: "Merembé", style: "Salsa", img: BASE + "image-260.png" },
   { name: "Toni & Alicia", style: "Bachata", img: BASE + "image-259.png" },
   { name: "Alberto & Marta", style: "Bachata", img: BASE + "image-263.png" },
   { name: "Rafa & Sheila", style: "Salsa", img: BASE + "image-257.png" },
-  {
-    name: "Abdel & Houds",
-    style: "Zouk",
-    img: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/08/ABDEL-HOUDS.png",
-  },
-  { name: "Pedro & Maria", style: "Salsa", img: BASE + "image-258.png" },
+  { name: "Abdel & Houds", style: "Salsa", img: BASE24 + "08/ABDEL-HOUDS.png" },
+  { name: "Pedro & Maria", style: "Bachata", img: BASE + "image-258.png" },
   { name: "Athéna", style: "Kizomba", img: BASE25 + "08/Athena.jpg" },
+  { name: "Manu & Olivia", style: "Bachata", img: BASE25 + "08/Manu-Olivia-scaled.jpg" },
+  { name: "Francis, Dulce & Francis Jr", style: "Salsa", img: BASE25 + "07/Francis-Dulce-e1753134778111.jpg" },
+  { name: "Cia Women Revolution", style: "Bachata", img: BASE25 + "10/CIA-Women-Revolution-1.jpg" },
+  { name: "Hajar Pocahontas", style: "Salsa", img: BASE + "image-268.png" },
+  { name: "Diego & Lidia", style: "Bachata", img: BASE25 + "07/Diego-Lidia-e1753134809562.jpg" },
+  { name: "Nicky & Sofia", style: "Bachata", img: BASE25 + "10/Nicky-Sofia.jpg" },
+  { name: "Ahmedy & Caro", style: "Bachata", img: BASE + "image-264.png" },
+  { name: "Fabz", style: "Kizomba", img: BASE25 + "08/Fabz.jpg" },
+  { name: "Quijano Brothers", style: "Salsa", img: BASE25 + "10/Quijano-Brothers.jpg" },
+  { name: "Juanen & Jezabel", style: "Bachata", img: BASE + "image-270.png" },
+  { name: "Joris & Sofia", style: "Bachata", img: BASE25 + "07/Joris-Sofia.jpg" },
+  { name: "Jordi & Sara", style: "Bachata", img: BASE25 + "10/Jordi-Sara.png" },
+  { name: "Marcelo & Maribel", style: "Salsa", img: BASE + "image-272.png" },
+  { name: "Omar & Pamela", style: "Bachata", img: BASE25 + "07/Omar-Pamela.jpg" },
+  { name: "Fanny Mujica", style: "Salsa", img: BASE25 + "07/Fanny-Mujica.jpg" },
+  { name: "Morowa Dance", style: "Salsa", img: BASE + "image-275.png" },
+  { name: "Abir", style: "Salsa", img: BASE + "image-279.png" },
+  { name: "Coello & Alba", style: "Bachata", img: BASE25 + "07/Coello-Alba.jpg" },
+  { name: "Ivan & Coral", style: "Bachata", img: BASE + "image-273.png" },
+  { name: "Ruben Y Blanca", style: "Bachata", img: BASE + "image-277.png" },
+  { name: "Oscar Rodriguez & Sophia", style: "Salsa", img: BASE25 + "07/Oscar-Rodriguez-Sophia.jpg" },
+  { name: "Yasmine", style: "Salsa", img: BASE25 + "07/IMG_6842-e1753134853717.jpg" },
+  { name: "Rodri & Elena", style: "Kizomba", img: BASE25 + "07/Rodri-Elena-e1753135099695.jpg" },
+  { name: "Armando & Erika", style: "Bachata", img: BASE25 + "07/Armando-Erika.jpg" },
+  { name: "DJ W", style: "DJ", img: BASE25 + "08/DJ-ABDELO.jpg" },
+  { name: "DJ KECO", style: "DJ", img: BASE24 + "07/DJ-KECO.png" },
+  { name: "DJ BAD", style: "DJ", img: BASE24 + "07/DJ-BAD.png" },
+  { name: "DJ MISTER T", style: "DJ", img: BASE24 + "07/DJ-MISTER-T.png" },
+  { name: "DJ EL MAESTRO", style: "DJ", img: BASE24 + "07/DJ-EL-MAESTRO.png" },
+  { name: "DJ MYSTER YOUSS", style: "DJ", img: BASE24 + "07/DJ-MYSTER-YOUSS.png" },
+  { name: "DJ KITO", style: "DJ", img: BASE24 + "07/DJ-KITO.png" },
+  { name: "DJ NMK", style: "DJ", img: BASE24 + "07/DJ-NMK.png" },
+  { name: "DJ TEMAZO", style: "DJ", img: BASE24 + "07/DJ-TEMAZO.png" },
+  { name: "Dj Puto X", style: "DJ", img: BASE25 + "08/Dj-Puto-X-scaled.jpg" },
+  { name: "DJ YOUSS", style: "DJ", img: BASE24 + "07/DJ-YOUSS.png" },
+  { name: "DJ JALS", style: "DJ", img: BASE24 + "07/DJ-JALS.png" },
+  { name: "DJs Nene & Sandy", style: "DJ", img: BASE24 + "07/DJ-NENE-SANDY.png" },
+  { name: "Fika Dance Crew", style: "Ecole", img: BASE25 + "08/Fika-Dance-Crew.jpg" },
+  { name: "Latin Dance Evolution", style: "Ecole", img: BASE24 + "07/LATIN-DANCE-EVOLUTION.png" },
+  { name: "Yes We Dance Amateur By Andy & Saray", style: "Ecole", img: BASE24 + "07/YES-WE-DANCE-AMATEUR-BY-ANDY-SARAY.png" },
+  { name: "Tumbala Ladies", style: "Ecole", img: BASE24 + "07/TUMBALA-LADIES.png" },
+  { name: "Evoladies Salsa By Vaneska Lopez", style: "Ecole", img: BASE24 + "07/EVOLADIES-SALSA-BY-VANESKA-LOPEZ.png" },
+  { name: "Ginadance Academy Urban Dance", style: "Ecole", img: BASE24 + "07/GINADANCE-ACADEMY-URBAN-DANCE.png" },
+  { name: "Shaonda Ladies", style: "Ecole", img: BASE25 + "08/Shaonda-Ladies.jpg" },
+  { name: "Wafa’s Secret Team", style: "Ecole", img: BASE24 + "07/WAFAS-SECRET-TEAM.png" },
+  { name: "Murcia Mambocompany", style: "Ecole", img: BASE24 + "07/MURCIA-MAMBOCOMPANY.png" },
+  { name: "B.mambo", style: "Ecole", img: BASE24 + "07/B.MAMBO_.png" },
+  { name: "Jafe Team", style: "Ecole", img: BASE24 + "07/JAFE-TEAM.png" },
+  { name: "Pedro Y María José School", style: "Ecole", img: BASE24 + "07/PEDRO-Y-MARIA-JOSE-SCHOOL.png" },
 ];
 
 const styleColors: Record<string, string> = {
@@ -77,6 +123,8 @@ const styleColors: Record<string, string> = {
   Bachata: "from-purple-600 to-violet-500",
   Kizomba: "from-amber-600 to-orange-500",
   Zouk: "from-teal-600 to-emerald-500",
+  DJ: "from-blue-600 to-cyan-500",
+  Ecole: "from-pink-600 to-rose-400",
 };
 
 function ArtistCard({ name, style, img }: { name: string; style: string; img: string }) {
@@ -116,7 +164,7 @@ function ArtistsPage() {
   const langSuffix = lang && lang !== "en" ? `?lang=${lang}` : "";
   const localizedHref = (href: string) => `${href}${langSuffix}`;
 
-  const STYLES = [t("artistsStyleAll"), "Salsa", "Bachata", "Kizomba", "Zouk"];
+  const STYLES = [t("artistsStyleAll"), "Salsa", "Bachata", "Kizomba", "Zouk", "DJ", "Ecole"];
 
   const visible = ALL_ARTISTS.filter((a) => {
     const matchStyle = filter === "All" || filter === t("artistsStyleAll") || a.style === filter;

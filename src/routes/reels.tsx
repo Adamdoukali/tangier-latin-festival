@@ -45,7 +45,7 @@ function ReelsPage() {
 
       {/* Main scrolling container */}
       <div 
-        className="flex-1 overflow-y-scroll snap-y snap-mandatory h-screen pt-20 pb-0"
+        className="flex-1 overflow-y-scroll snap-y snap-mandatory h-screen pt-0 md:pt-20 pb-0"
         style={{ height: "100dvh" }}
       >
         {REELS_DATA.map((reel, index) => (
@@ -135,8 +135,7 @@ function ReelItem({
   return (
     <div 
       ref={containerRef}
-      className="snap-start snap-always relative w-full flex justify-center items-center bg-black"
-      style={{ height: "calc(100dvh - 80px)" }} // Minus Nav height approx
+      className="snap-start snap-always relative w-full flex justify-center items-center bg-black h-full"
     >
       <div className="relative w-full h-full max-w-lg mx-auto bg-slate-900 overflow-hidden group">
         <video

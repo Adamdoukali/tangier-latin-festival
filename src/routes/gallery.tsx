@@ -29,21 +29,16 @@ export const Route = createFileRoute("/gallery")({
   component: GalleryPage,
 });
 
-type Category =
-  | "all"
-  | "black-party"
-  | "competition"
-  | "friday-shows"
-  | "saturday-shows"
-  | "white-party"
-  | "workshops";
+type Category = string;
 
 interface GalleryPhoto {
   url: string;
   category: Category;
+  label?: string;
 }
 
 export const GALLERY_PHOTOS: GalleryPhoto[] = [
+
   // 1. Black Party (16 photos)
   {
     url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-06-at-00.46.06.jpeg",
@@ -447,6 +442,88 @@ export const GALLERY_PHOTOS: GalleryPhoto[] = [
     url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/WK1.jpg",
     category: "workshops",
   },
+
+
+  // black-party (16 photos)
+  { url: "/gallery/black-party/482241576_974139544896953_1363265038457908845_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/482247734_974139694896938_824674460454534476_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/484621332_974138518230389_5838389938590321336_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/484652122_974139918230249_4144431781966730075_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/484678216_974138564897051_596179778175502867_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/485192802_974139868230254_646964208326267218_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641130527_1241964604781111_3059750143824501204_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641179966_1241960638114841_5487906735749687798_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641332475_1241961981448040_2259109581872086683_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641373119_1241961681448070_9140970345875187508_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641603879_1241964528114452_7129046464782138635_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641642437_1241960634781508_7326037486339140399_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641647079_1241961468114758_4697222910101202809_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/641681085_1241960558114849_8736507399916920313_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/642350838_1241960701448168_6516119351979049662_n.jpg", category: "black-party", label: "Black party" },
+  { url: "/gallery/black-party/643520796_1241961868114718_4389617442928473631_n.jpg", category: "black-party", label: "Black party" },
+  // competition (9 photos)
+  { url: "/gallery/competition/640391165_1241967454780826_7954660383228391589_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641143187_1241967638114141_3154458121773931448_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641198874_1241967854780786_6019103900656973299_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641236165_1241963434781228_662252990987459054_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641308414_1241967868114118_4491875716475556629_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641326426_1241964481447790_6564052407782059652_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641330274_1241963594781212_4567827867266343448_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641368101_1241967528114152_6151146995162483693_n.jpg", category: "competition", label: "competition" },
+  { url: "/gallery/competition/641539520_1241967261447512_6880565136864487815_n.jpg", category: "competition", label: "competition" },
+  // shows-samedi (9 photos)
+  { url: "/gallery/shows-samedi/482245556_974140464896861_6201295921456837146_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/482250810_974143561563218_904850889461143835_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/484582044_974139638230277_6101682043560405349_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/484977540_974140474896860_3253671084275221035_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/485361009_974143651563209_4564133886494234672_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/640290403_1241960708114834_7148791227128415136_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/641230118_1241965531447685_7614769116868105544_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/641244217_1241967984780773_903808272494658247_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  { url: "/gallery/shows-samedi/641676673_1241968034780768_2651676942068330174_n.jpg", category: "saturday-shows", label: "shows samedi" },
+  // shows-vendredi (16 photos)
+  { url: "/gallery/shows-vendredi/481902017_2946367652206889_7803251200575266978_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/481919101_2946366155540372_2552330177287678337_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482201679_2946368198873501_993881522741055458_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482243758_974143891563185_6598273605567733569_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482246181_974143794896528_4730294075525090850_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482246607_974143764896531_4298680092875612314_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482273115_970085988635642_8701866590938313152_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482277722_970087085302199_3738499960317910158_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482324033_2946366348873686_2962926771470512696_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/482347818_970085881968986_6429817414370393873_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/483637536_970085981968976_5919759351833649360_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/483839652_970087031968871_6179957826901482241_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/484806543_974142664896641_3652576900449196820_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/484809366_974142691563305_3440230228246560828_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/641417072_1241967218114183_3564104903330139309_n.jpg", category: "friday-shows", label: "shows vendredi" },
+  { url: "/gallery/shows-vendredi/shows vendredi.jpg", category: "friday-shows", label: "shows vendredi" },
+  // white-party (16 photos)
+  { url: "/gallery/white-party/482244468_974140748230166_4372799665926051910_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/484794565_974140448230196_6057030061441567152_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/484810394_974143908229850_8742822966146422519_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/484812176_974138568230384_3875348434903989915_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/484876796_974139848230256_254426090774277201_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/484906517_974140604896847_7889872899943100902_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641164273_1241961968114708_3452780470515282382_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641205314_1241968978114007_5210038652571349810_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641347494_1241969134780658_5427357105001957177_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641369012_1241961881448050_8190247546662602293_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641397123_1241962828114622_6558464604183306359_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641400023_1241969018114003_4175809438466758752_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641418956_1241965574781014_7061987985811021372_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/641534815_1241968571447381_472066430845152877_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/642762483_1241966194780952_224053409941459672_n.jpg", category: "white-party", label: "white party" },
+  { url: "/gallery/white-party/643226088_1241960648114840_3991260053064399282_n.jpg", category: "white-party", label: "white party" },
+  // workshops (8 photos)
+  { url: "/gallery/workshops/484155548_974284004882507_4327610748608762561_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/484190941_974284241549150_4154434091300494758_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/484304981_974284034882504_2775831831349952270_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/484550485_974284008215840_5848244643945264849_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/484873494_974138338230407_4853441629612086562_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/484918372_974284314882476_5469472148023855609_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/640493026_1241967041447534_1847981653265578352_n.jpg", category: "workshops", label: "workshops" },
+  { url: "/gallery/workshops/workshop 2.jpg", category: "workshops", label: "workshops" },
 ];
 
 function GalleryPage() {
@@ -458,39 +535,30 @@ function GalleryPage() {
   const filteredPhotos =
     activeTab === "all" ? GALLERY_PHOTOS : GALLERY_PHOTOS.filter((p) => p.category === activeTab);
 
+  // Derive unique categories and format their labels nicely
+  const categories = Array.from(new Set(GALLERY_PHOTOS.map((p) => p.category)));
+  
+  // Format labels nicely (e.g. "shows-samedi" -> "Shows Samedi", "white party" -> "White Party")
+  const formatLabel = (label: string) => {
+    return label
+      .replace(/-/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Tab definitions
-  const tabs: { id: Category; label: string; count: number }[] = [
-    { id: "all", label: t("galleryTabAll"), count: GALLERY_PHOTOS.length },
-    {
-      id: "black-party",
-      label: t("galleryTabBlackParty"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "black-party").length,
-    },
-    {
-      id: "competition",
-      label: t("galleryTabCompetition"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "competition").length,
-    },
-    {
-      id: "friday-shows",
-      label: t("galleryTabFridayShows"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "friday-shows").length,
-    },
-    {
-      id: "saturday-shows",
-      label: t("galleryTabSaturdayShows"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "saturday-shows").length,
-    },
-    {
-      id: "white-party",
-      label: t("galleryTabWhiteParty"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "white-party").length,
-    },
-    {
-      id: "workshops",
-      label: t("galleryTabWorkshops"),
-      count: GALLERY_PHOTOS.filter((p) => p.category === "workshops").length,
-    },
+  const tabs: { id: string; label: string; count: number }[] = [
+    { id: "all", label: t("galleryTabAll") || "All", count: GALLERY_PHOTOS.length },
+    ...categories.map((catId) => {
+      const photos = GALLERY_PHOTOS.filter((p) => p.category === catId);
+      const photoLabel = photos[0]?.label || catId;
+      return {
+        id: catId,
+        label: formatLabel(photoLabel),
+        count: photos.length,
+      };
+    }),
   ];
 
   // Lightbox navigation functions

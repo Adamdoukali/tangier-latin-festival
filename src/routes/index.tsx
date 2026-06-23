@@ -140,7 +140,7 @@ function Home() {
         </div>
 
         {/* Hero content */}
-        <div className="relative w-full mx-auto max-w-7xl px-6 pt-20 pb-32 md:pt-32 md:pb-40 text-center">
+        <div className="relative w-full mx-auto max-w-7xl px-6 pt-12 md:pt-32 pb-32 md:pb-40 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-primary">
             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             {t("heroEdition")}
@@ -156,8 +156,7 @@ function Home() {
 
           <div className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm tracking-[0.25em] uppercase text-white/80">
             <span className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" /> {t("overviewDates")},{" "}
-              {t("overviewYear")}
+              <Calendar className="h-4 w-4 text-primary" /> {t("overviewDates")} {t("overviewYear")}
             </span>
             <span className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" /> {t("overviewLocation")}
@@ -510,113 +509,84 @@ function Home() {
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("packsDesc")}</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {packs.slice(0, 3).map((p, i) => {
-              // Per-pack classic color themes: Basic/Básico=black-chrome, Silver=silver/platinum, Gold=gold/amber
-              const themes = [
-                {
-                  // Black Chrome (Obsidian / Dark Charcoal)
-                  border: "border-zinc-800 hover:border-zinc-650 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-zinc-900/20 via-card/60 to-card/90",
-                  accent: "from-zinc-700 via-zinc-500 to-zinc-850",
-                  price: "text-zinc-950 dark:text-zinc-100 font-bold",
-                  check: "text-zinc-400",
-                  badge: "",
-                  btn: "border border-zinc-400 text-zinc-800 hover:bg-zinc-950 hover:text-white dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white shadow-black-chrome",
-                  glow: "shadow-[0_0_50px_-15px_rgba(255,255,255,0.05)] hover:shadow-black-chrome",
-                  icon: "bg-black-chrome",
-                  iconText: "text-white font-extrabold",
-                },
-                {
-                  // Silver (Platinum / Silver Metallic)
-                  border: "border-slate-700/40 hover:border-slate-400 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-slate-800/10 via-card/60 to-card/90",
-                  accent: "from-slate-400 via-slate-200 to-slate-500",
-                  price: "text-slate-800 dark:text-silver font-bold",
-                  check: "text-slate-350",
-                  badge:
-                    "absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-silver px-5 py-1.5 text-[10px] tracking-[0.25em] uppercase text-zinc-950 font-bold shadow-lg shadow-silver/40 border border-slate-300/30",
-                  btn: "bg-silver text-zinc-950 font-extrabold hover:opacity-90 shadow-lg shadow-silver/30 transition-opacity",
-                  glow: "shadow-[0_0_50px_-10px_rgba(203,213,225,0.15)] hover:shadow-silver",
-                  icon: "bg-silver",
-                  iconText: "text-zinc-950 font-extrabold",
-                },
-                {
-                  // Gold (Royal Gold / Amber Luxury)
-                  border: "border-amber-900/60 hover:border-amber-400 transition-all duration-300",
-                  bg: "bg-gradient-to-b from-amber-900/10 via-card/60 to-card/90",
-                  accent: "from-amber-500 via-yellow-200 to-amber-600",
-                  price: "text-amber-600 dark:text-gold font-bold",
-                  check: "text-amber-550",
-                  badge: "",
-                  btn: "border border-amber-400 text-amber-650 hover:bg-amber-450 hover:text-white dark:border-amber-400/40 dark:text-amber-400 dark:hover:bg-amber-400/10 dark:hover:border-amber-400/70 shadow-gold",
-                  glow: "shadow-[0_0_50px_-10px_rgba(245,158,11,0.12)] hover:shadow-gold",
-                  icon: "bg-gold",
-                  iconText: "text-zinc-950 font-extrabold",
-                },
-              ];
-              const theme = themes[i] || themes[0];
-
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {packs.slice(0, 3).map((p) => {
+              const isPopular = p.popular;
               return (
                 <div
                   key={p.id || `${p.name}-${p.sub}`}
-                  className={`relative rounded-2xl border p-8 flex flex-col transition-all duration-300 ${theme.border} ${theme.bg} ${theme.glow} ${
-                    p.popular ? "scale-[1.02] md:-mt-2 md:mb-[-8px]" : ""
+                  className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
+                    isPopular
+                      ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 md:-mt-4 md:mb-[-16px]"
+                      : "bg-card/30 backdrop-blur-md border border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10"
                   }`}
                 >
-                  {/* Colored top accent line */}
-                  <div
-                    className={`absolute top-0 left-6 right-6 h-1 rounded-b-full bg-gradient-to-r ${theme.accent}`}
-                  />
+                  {/* Glassmorphism reflection highlight */}
+                  <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                  {/* Popular badge */}
-                  {p.popular && <span className={theme.badge}>{t("popularBadge")}</span>}
+                  {isPopular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-primary/40">
+                      {t("popularBadge")}
+                    </div>
+                  )}
 
-                  {/* Pack icon */}
-                  <div
-                    className={`h-11 w-11 rounded-xl ${theme.icon} grid place-items-center mb-5`}
-                  >
-                    <span
-                      className={`font-display text-lg ${theme.iconText || "text-white font-bold"}`}
+                  <div className="relative z-10 flex flex-col flex-1">
+                    <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                      {p.name}
+                    </h3>
+                    <p className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground mt-3 font-semibold">
+                      {p.sub}
+                    </p>
+
+                    <div className="mt-8 md:mt-10 flex items-end gap-2">
+                      <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
+                        {p.price}
+                      </span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                        {p.currency || "€"} / {t("perPackLabel")}
+                      </span>
+                    </div>
+
+                    <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
+
+                    <ul className="space-y-4 md:space-y-5 flex-1">
+                      {p.features.map((f) => (
+                        <li key={f} className="flex items-start gap-4">
+                          <div
+                            className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
+                              isPopular
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
+                            }`}
+                          >
+                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 stroke-[3]" />
+                          </div>
+                          <span className="text-sm md:text-base font-medium text-foreground/90 leading-snug">
+                            {f}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <button
+                      onClick={() =>
+                        setSelectedPack({
+                          name: p.name,
+                          sub: p.sub,
+                          price: p.price,
+                        })
+                      }
+                      className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${
+                        isPopular
+                          ? "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_-5px_rgba(212,175,55,0.6)] hover:scale-[1.03]"
+                          : "bg-card border border-border/80 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.03]"
+                      }`}
                     >
-                      {p.name.charAt(0)}
-                    </span>
+                      <span className="relative z-10">
+                        {isPopular ? t("getStartedBtn") : t("choosePackBtn")}
+                      </span>
+                    </button>
                   </div>
-
-                  <h3 className="font-display text-3xl">{p.name}</h3>
-                  <p className="text-xs tracking-[0.25em] uppercase text-zinc-600 dark:text-zinc-400 font-medium mt-1">
-                    {p.sub}
-                  </p>
-                  <div className="mt-6 flex items-baseline gap-2">
-                    <span className={`font-display text-5xl ${theme.price}`}>{p.price}</span>
-                    <span className="text-xs tracking-[0.25em] uppercase text-zinc-550 dark:text-zinc-450 font-semibold">
-                      {p.currency || "€"} / {t("perPackLabel")}
-                    </span>
-                  </div>
-
-                  {/* Divider */}
-                  <div className={`mt-6 h-px bg-gradient-to-r ${theme.accent} opacity-20`} />
-
-                  <ul className="mt-6 space-y-3 flex-1">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-start gap-3 text-sm">
-                        <Check className={`h-4 w-4 ${theme.check} mt-0.5 shrink-0`} />
-                        <span className="text-foreground/90">{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    onClick={() =>
-                      setSelectedPack({
-                        name: p.name,
-                        sub: p.sub,
-                        price: p.price,
-                      })
-                    }
-                    className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 cursor-pointer ${theme.btn}`}
-                  >
-                    {p.popular ? t("getStartedBtn") : t("choosePackBtn")} →
-                  </button>
                 </div>
               );
             })}
@@ -648,74 +618,82 @@ function Home() {
             <h2 className="font-display text-4xl md:text-5xl">{t("partnersTitle")}</h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("partnersDesc")}</p>
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-items-center">
-            <a
-              href="https://www.salsero.es/index"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition"
-            >
-              <img
-                src={partnerSalsero}
-                alt="Salsero"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
-            <a href="#" className="hover:opacity-70 transition">
-              <img
-                src={partnerSalsaGroup}
-                alt="Salsa Group"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
-            <a
-              href="https://www.facebook.com/BachataSummer/?locale=fr_CA"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition"
-            >
-              <img
-                src={partnerSummerBachata}
-                alt="Summer Bachata"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
-            <a
-              href="https://www.instagram.com/bachataspain_official/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition"
-            >
-              <img
-                src={partnerBachataSpain}
-                alt="Bachata Spain"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
-            <a
-              href="https://www.instagram.com/bachata_alltheworld/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition"
-            >
-              <img
-                src={partnerBachataWorld}
-                alt="Bachata All The World"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
-            <a
-              href="https://kizomba-festival.fr/fr/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition"
-            >
-              <img
-                src={partnerAllIn}
-                alt="All In Kizomba"
-                className="h-14 object-contain grayscale hover:grayscale-0 transition"
-              />
-            </a>
+          <div className="relative flex overflow-hidden w-full max-w-full group [mask-image:_linear-gradient(to_right,transparent_0,_black_64px,_black_calc(100%-64px),transparent_100%)] md:[mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
+            {[0, 1].map((i) => (
+              <div
+                key={i}
+                className="flex animate-marquee shrink-0 items-center justify-around gap-12 md:gap-24 px-6 md:px-12 min-w-full hover:[animation-play-state:paused]"
+                aria-hidden={i === 1}
+              >
+                <a
+                  href="https://www.salsero.es/index"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerSalsero}
+                    alt="Salsero"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+                <a href="#" className="hover:opacity-70 transition shrink-0">
+                  <img
+                    src={partnerSalsaGroup}
+                    alt="Salsa Group"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+                <a
+                  href="https://www.facebook.com/BachataSummer/?locale=fr_CA"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerSummerBachata}
+                    alt="Summer Bachata"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+                <a
+                  href="https://www.instagram.com/bachataspain_official/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerBachataSpain}
+                    alt="Bachata Spain"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+                <a
+                  href="https://www.instagram.com/bachata_alltheworld/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerBachataWorld}
+                    alt="Bachata All The World"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+                <a
+                  href="https://kizomba-festival.fr/fr/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerAllIn}
+                    alt="All In Kizomba"
+                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                  />
+                </a>
+              </div>
+            ))}
           </div>
           <div className="mt-12 text-center">
             <Link
