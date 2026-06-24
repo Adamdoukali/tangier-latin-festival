@@ -257,7 +257,7 @@ function HotelPage() {
               <Star className="h-3.5 w-3.5 fill-gold text-gold" />
               {t("hotelHeroSubtitle")}
             </p>
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-4xl text-white drop-shadow-xl">
+            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-4xl text-white drop-shadow-xl">
               {lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}{" "}
               <span className="text-gold italic drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">Solazur</span>
             </h1>
@@ -324,7 +324,7 @@ function HotelPage() {
               <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
                 {t("hotelStaySubtitle")}
               </p>
-              <h2 className="font-display text-4xl md:text-5xl leading-tight text-glow">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight text-glow">
                 HÔTEL <span className="text-gold italic">Solazur</span>
               </h2>
               <div className="mt-6 space-y-5 text-muted-foreground leading-relaxed text-sm md:text-base border-l-2 border-gold/30 pl-4">
@@ -338,7 +338,7 @@ function HotelPage() {
             {/* Equipments (Facilities) List Grid */}
             <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-8 shadow-soft">
               <h3 className="font-display text-lg tracking-wider text-primary uppercase mb-6 flex items-center gap-2 font-bold">
-                <Star className="h-4.5 w-4.5 text-gold" />
+                <Star className="h-4.5 w-4.5 fill-current text-gold" />
                 {t("hotelFacilitiesTitle")}
               </h3>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -396,7 +396,7 @@ function HotelPage() {
             {/* Highlights Lists */}
             <div className="rounded-2xl border border-border/60 bg-card/40 p-8 shadow-soft space-y-6">
               <h3 className="font-display text-lg tracking-wider text-primary uppercase flex items-center gap-2 font-bold">
-                <Star className="h-4.5 w-4.5 text-gold animate-pulse" />
+                <Star className="h-4.5 w-4.5 fill-current text-gold animate-pulse" />
                 {t("hotelHighlightsTitle")}
               </h3>
               <div className="grid sm:grid-cols-2 gap-4">

@@ -243,7 +243,7 @@ function ProgramPage() {
               {t("programHeroSubtitle")}
               <span className="w-12 h-[1px] bg-gradient-to-l from-transparent to-primary/50 hidden sm:block" />
             </p>
-            <h1 className="relative font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-white drop-shadow-lg">
+            <h1 className="relative font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-white drop-shadow-lg">
               {t("programHeroTitle")}
             </h1>
             <p className="relative mt-8 text-slate-300 max-w-2xl mx-auto leading-relaxed text-sm md:text-base">{t("programHeroDesc")}</p>

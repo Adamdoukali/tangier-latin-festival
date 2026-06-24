@@ -173,7 +173,7 @@ function TestimonialsPage() {
                 ? "TESTIMONIOS DE ARTISTAS"
                 : "WHAT THEY SAY"}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] uppercase text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[0.95] uppercase text-white drop-shadow-lg">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
           <p className="mt-6 text-slate-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed drop-shadow-md">
@@ -238,7 +238,7 @@ function TestimonialsPage() {
 
                 <div className="space-y-6">
                   {/* Testimonial Quote */}
-                  <p className="text-foreground/90 text-sm leading-relaxed italic">
+                  <p className="text-foreground/90 text-xs md:text-sm leading-relaxed italic">
                     "{item.quote}"
                   </p>
                 </div>

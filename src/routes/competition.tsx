@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trophy, Star, Globe2, Flame } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { Nav } from "@/components/Nav";
+import { RollingNumber } from "@/components/RollingNumber";
 import competitionImg from "@/assets/competition.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
@@ -74,7 +75,7 @@ function CompetitionPage() {
             <Trophy className="inline h-3.5 w-3.5 mr-2 -mt-0.5" />
             {t("competitionHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
             {t("competitionHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("competitionHeroTitlePart2")}</span>{" "}
             {t("competitionHeroTitlePart3")}
@@ -144,14 +145,11 @@ function CompetitionPage() {
                           {label}
                         </p>
                       </div>
-                      <span className="font-display text-2xl text-gold tabular-nums">{value}%</span>
+                      <span className="font-display text-2xl text-gold tabular-nums">
+                        <RollingNumber value={value.toString()} />%
+                      </span>
                     </div>
-                    <div className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden border border-border/20">
-                      <div
-                        className="h-full bg-gradient-to-r from-gold/70 to-gold rounded-full transition-all duration-700 shadow-gold"
-                        style={{ width: `${value}%` }}
-                      />
-                    </div>
+                    <AnimatedProgress value={value} />
                   </div>
                 ))}
               </div>
@@ -298,12 +296,46 @@ function Field({
         {required && <span className="text-primary ml-1">*</span>}
       </label>
       <input
+        type={type}
         id={name}
         name={name}
-        type={type}
         required={required}
-        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+        className="w-full rounded-xl border border-border/60 bg-background/50 px-4 py-3 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition placeholder:text-muted-foreground/50 text-foreground"
       />
+    </div>
+  );
+}
+
+function AnimatedProgress({ value }: { value: number }) {
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden border border-border/20">
+      <div
+        className="relative h-full bg-gradient-to-r from-gold/70 to-gold rounded-full transition-all duration-[1500ms] shadow-gold ease-out overflow-hidden"
+        style={{ width: inView ? `${value}%` : "0%" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-[200%] animate-progress-shimmer" />
+      </div>
     </div>
   );
 }

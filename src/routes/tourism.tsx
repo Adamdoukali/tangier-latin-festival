@@ -191,7 +191,7 @@ function TourismPage() {
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
             {t("tourismHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
             {t("tourismHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("tourismHeroTitlePart2")}</span>{" "}
             {t("tourismHeroTitlePart3")}

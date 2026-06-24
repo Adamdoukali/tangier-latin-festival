@@ -203,7 +203,7 @@ function ArtistsPage() {
             {t("artistsHeroDesc")}
           </p>
           
-          <div className="mt-8 text-sm font-bold tracking-widest uppercase text-gold/80 bg-gold/5 inline-flex px-6 py-2 rounded-full border border-gold/10 backdrop-blur-md shadow-lg">
+          <div className="mt-8 text-sm font-bold tracking-widest uppercase text-white bg-red-600/90 inline-flex px-6 py-2 rounded-full border border-red-500 backdrop-blur-md shadow-lg shadow-red-500/20">
             {ALL_ARTISTS.length}+ {t("artistsCountLabel")}
           </div>
         </div>

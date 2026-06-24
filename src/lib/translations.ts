@@ -597,7 +597,7 @@ export const translations = {
     // Tourism Page
     tourismHeroSubtitle: "Tourisme",
     tourismHeroTitlePart1: "Découvrez le",
-    tourismHeroTitlePart2: "Morocco",
+    tourismHeroTitlePart2: "Maroc",
     tourismHeroTitlePart3: "avec nous",
     tourismHeroDesc:
       "Trois excursions de groupe optionnelles pendant le festival — des ruelles bleues de Chefchaouen aux plages atlantiques d'Asilah et à la Kasbah historique de Tanger.",
@@ -912,7 +912,7 @@ export const translations = {
     // Tourism Page
     tourismHeroSubtitle: "Turismo",
     tourismHeroTitlePart1: "Descubre",
-    tourismHeroTitlePart2: "Morocco",
+    tourismHeroTitlePart2: "Marruecos",
     tourismHeroTitlePart3: "con nosotros",
     tourismHeroDesc:
       "Tres excursiones opcionales en grupo durante el festival: desde las calles azules de Chefchaouen hasta la costa atlántica de Asilah y la histórica Kasbah de Tánger.",
