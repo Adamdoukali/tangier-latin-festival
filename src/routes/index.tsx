@@ -329,8 +329,9 @@ function Home() {
                 />
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="h-20 w-20 rounded-full bg-white/20 backdrop-blur border-2 border-white grid place-items-center group-hover:scale-110 transition animate-pulse">
-                    <Play className="h-8 w-8 text-white fill-white ml-1" />
+                  <div className="relative flex items-center justify-center h-20 w-20 rounded-full bg-white/20 backdrop-blur border-2 border-white group-hover:scale-110 transition shadow-gold">
+                    <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
+                    <Play className="h-8 w-8 text-white fill-white translate-x-0.5" />
                   </div>
                 </div>
               </>
