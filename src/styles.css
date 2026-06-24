@@ -222,6 +222,14 @@
     0% { transform: translateX(0); }
     100% { transform: translateX(-100%); }
   }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer base {
@@ -467,6 +475,34 @@
 }
 
 /* ── Responsive ───────────────────────────────────────── */
+@media (max-width: 639px) {
+  .countdown-wrapper {
+    --cd-digit-w: 26px;
+    --cd-digit-h: 38px;
+    --cd-font: 1.25rem;
+    --cd-gap: 3px;
+    padding: 14px 6px 12px;
+  }
+
+  .countdown-grid {
+    gap: 6px;
+  }
+
+  .countdown-label {
+    font-size: 0.45rem;
+    letter-spacing: 0.15em;
+  }
+
+  .countdown-separator {
+    padding: 0 2px;
+    gap: 8px;
+  }
+
+  .countdown-dot {
+    width: 4px;
+    height: 4px;
+  }
+}
 @media (min-width: 640px) {
   .countdown-wrapper {
     --cd-digit-w: 64px;
@@ -570,7 +606,7 @@
 /* Number value */
 .stats-value {
   font-family: var(--font-display);
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;

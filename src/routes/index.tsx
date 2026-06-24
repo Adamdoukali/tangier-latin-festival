@@ -141,8 +141,8 @@ function Home() {
 
         {/* Hero content */}
         <div className="relative w-full mx-auto max-w-7xl px-6 pt-12 md:pt-32 pb-32 md:pb-40 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-primary">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-white">
+            <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
             {t("heroEdition")}
           </div>
 
@@ -151,7 +151,7 @@ function Home() {
             <br />
             {t("heroTitlePart2")}
             <br />
-            <span className="text-gold italic">{t("heroTitleSub")}</span>
+            <span className="text-gold italic pr-4">{t("heroTitleSub")}</span>
           </h1>
 
           <div className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm tracking-[0.25em] uppercase text-white/80">
@@ -205,7 +205,7 @@ function Home() {
       {videoOpen && (
         <div
           id="video-modal"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) setVideoOpen(false);
           }}
@@ -215,11 +215,11 @@ function Home() {
             <button
               onClick={() => setVideoOpen(false)}
               aria-label="Close video"
-              className="absolute -top-12 right-0 text-white/70 hover:text-white text-sm tracking-widest uppercase transition cursor-pointer"
+              className="absolute -top-10 md:-top-12 right-2 md:right-0 z-10 text-white hover:text-white/80 text-xs md:text-sm tracking-widest uppercase transition cursor-pointer"
             >
               {t("closeBtn")}
             </button>
-            <div className="relative rounded-2xl overflow-hidden shadow-gold border border-white/10">
+            <div className="relative rounded-none md:rounded-2xl overflow-hidden shadow-gold border-y md:border border-white/10">
               <div className="aspect-video">
                 <iframe
                   src="https://www.youtube.com/embed/QN8LsEhzxy0?autoplay=1&rel=0&modestbranding=1"

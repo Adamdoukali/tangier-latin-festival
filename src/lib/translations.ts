@@ -54,7 +54,7 @@ export const translations = {
     seconds: "Seconds",
 
     // Hero Section
-    heroEdition: "8th Edition · Morocco",
+    heroEdition: "9th Edition · Morocco",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
     heroTitleSub: "Morocco",
@@ -318,7 +318,7 @@ export const translations = {
     galleryHeroTitlePart2: "Photo",
     galleryHeroTitlePart3: "Gallery",
     galleryHeroDesc:
-      "Relive the magical highlights, workshops, shows, and themed nights of the 8th edition of the Tangier International Latin Festival.",
+      "Relive the magical highlights, workshops, shows, and themed nights of the 9th edition of the Tangier International Latin Festival.",
     galleryTabAll: "All Photos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Competition",
@@ -384,10 +384,10 @@ export const translations = {
     seconds: "Secondes",
 
     // Hero Section
-    heroEdition: "8ème Édition · Maroc",
+    heroEdition: "9ème Édition · Morocco",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
-    heroTitleSub: "Maroc",
+    heroTitleSub: "Morocco",
     watchRecap: "Voir le récapitulatif",
     recapsTitle: "Tangier International Latin Festival — Vidéo Récap",
 
@@ -401,7 +401,7 @@ export const translations = {
     overviewWhere: "Où",
     overviewWhen: "Quand",
     overviewHotel: "Hôtel Kenzi Solazur",
-    overviewLocation: "Tanger, Maroc",
+    overviewLocation: "Tanger, Morocco",
     overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
@@ -495,7 +495,7 @@ export const translations = {
     footerCopyright: "Tous droits réservés.",
 
     // Artists Page
-    artistsHeroSubtitle: "07–11 Janvier, 2027 · Tanger, Maroc",
+    artistsHeroSubtitle: "07–11 Janvier, 2027 · Tanger, Morocco",
     artistsHeroTitle: "Nos Artistes",
     artistsHeroDesc:
       "Chaque année, nous réunissons des artistes de renommée internationale et des talents émergents pour offrir des performances époustouflantes en salsa, bachata, kizomba et zouk.",
@@ -506,7 +506,7 @@ export const translations = {
     artistsClearFilters: "Effacer les filtres",
     artistsCtaSubtitle: "Ne le manquez pas",
     artistsCtaTitle: "Vivez la magie en direct",
-    artistsCtaDesc: "07–11 Janvier, 2027 · Hôtel Kenzi Solazur, Tanger, Maroc",
+    artistsCtaDesc: "07–11 Janvier, 2027 · Hôtel Kenzi Solazur, Tanger, Morocco",
     artistsCtaBtn: "Obtenir votre Pack",
 
     // Program Page
@@ -597,7 +597,7 @@ export const translations = {
     // Tourism Page
     tourismHeroSubtitle: "Tourisme",
     tourismHeroTitlePart1: "Découvrez le",
-    tourismHeroTitlePart2: "Maroc",
+    tourismHeroTitlePart2: "Morocco",
     tourismHeroTitlePart3: "avec nous",
     tourismHeroDesc:
       "Trois excursions de groupe optionnelles pendant le festival — des ruelles bleues de Chefchaouen aux plages atlantiques d'Asilah et à la Kasbah historique de Tanger.",
@@ -634,7 +634,7 @@ export const translations = {
     galleryHeroTitlePart2: "Photos du",
     galleryHeroTitlePart3: "Festival",
     galleryHeroDesc:
-      "Revivez les moments magiques, les workshops, les spectacles et les soirées à thème de la 8ème édition du Tangier International Latin Festival.",
+      "Revivez les moments magiques, les workshops, les spectacles et les soirées à thème de la 9ème édition du Tangier International Latin Festival.",
     galleryTabAll: "Toutes les photos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Compétition",
@@ -700,10 +700,10 @@ export const translations = {
     seconds: "Segundos",
 
     // Hero Section
-    heroEdition: "8ª Edición · Marruecos",
+    heroEdition: "9ª Edición · Morocco",
     heroTitlePart1: "Tangier International",
     heroTitlePart2: "Latin Festival",
-    heroTitleSub: "Marruecos",
+    heroTitleSub: "Morocco",
     watchRecap: "Ver vídeo resumen",
     recapsTitle: "Tangier International Latin Festival — Vídeo Resumen",
 
@@ -717,7 +717,7 @@ export const translations = {
     overviewWhere: "Dónde",
     overviewWhen: "Cuándo",
     overviewHotel: "Hotel Kenzi Solazur",
-    overviewLocation: "Tánger, Marruecos",
+    overviewLocation: "Tánger, Morocco",
     overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
@@ -912,7 +912,7 @@ export const translations = {
     // Tourism Page
     tourismHeroSubtitle: "Turismo",
     tourismHeroTitlePart1: "Descubre",
-    tourismHeroTitlePart2: "Marruecos",
+    tourismHeroTitlePart2: "Morocco",
     tourismHeroTitlePart3: "con nosotros",
     tourismHeroDesc:
       "Tres excursiones opcionales en grupo durante el festival: desde las calles azules de Chefchaouen hasta la costa atlántica de Asilah y la histórica Kasbah de Tánger.",
@@ -949,7 +949,7 @@ export const translations = {
     galleryHeroTitlePart2: "Fotos del",
     galleryHeroTitlePart3: "Festival",
     galleryHeroDesc:
-      "Revive los momentos mágicos, talleres, espectáculos y noches temáticas de la 8ª edición del Tangier International Latin Festival.",
+      "Revive los momentos mágicos, talleres, espectáculos y noches temáticas de la 9ª edición del Tangier International Latin Festival.",
     galleryTabAll: "Todas las fotos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Competición",
@@ -976,7 +976,7 @@ export const translatedStats = {
     { v: "+35", l: "Nationalities" },
     { v: "4", l: "Dance Evenings" },
     { v: "3", l: "Dance Halls" },
-    { v: "1", l: "International Competition" },
+    { v: "2", l: "International Competitions" },
   ],
   fr: [
     { v: "+1500", l: "Danseurs Internationaux" },
@@ -986,7 +986,7 @@ export const translatedStats = {
     { v: "+35", l: "Nationalités" },
     { v: "4", l: "Soirées Dansantes" },
     { v: "3", l: "Salles de Danse" },
-    { v: "1", l: "Compétition Internationale" },
+    { v: "2", l: "Compétitions Internationales" },
   ],
   es: [
     { v: "+1500", l: "Bailarines Internacionales" },
@@ -996,7 +996,7 @@ export const translatedStats = {
     { v: "+35", l: "Nacionalidades" },
     { v: "4", l: "Noches de Baile" },
     { v: "3", l: "Salas de Baile" },
-    { v: "1", l: "Competición Internacional" },
+    { v: "2", l: "Competiciones Internacionales" },
   ],
 };
 

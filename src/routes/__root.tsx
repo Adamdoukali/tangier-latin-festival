@@ -10,6 +10,8 @@ import {
 import { z } from "zod";
 import { translations, Language } from "../lib/translations";
 
+import { WhatsAppButton } from "../components/WhatsAppButton";
+
 import appCss from "../styles.css?url";
 
 const rootSearchSchema = z.object({
@@ -130,6 +132,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <WhatsAppButton />
         <Scripts />
       </body>
     </html>

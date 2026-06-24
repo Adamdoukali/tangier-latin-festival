@@ -599,7 +599,7 @@ function GalleryPage() {
   }, [activeImageIndex, filteredPhotos]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-clip">
       <Nav />
 
       {/* HERO SECTION */}
@@ -625,9 +625,9 @@ function GalleryPage() {
       </section>
 
       {/* SEGMENTED TAB SWITCHER */}
-      <section className="py-8 bg-card/10 border-b border-border/20 backdrop-blur-sm sticky top-20 z-30">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="flex flex-wrap justify-center gap-2.5">
+      <section className="py-4 md:py-6 bg-background/80 border-b border-border/20 backdrop-blur-xl sticky top-16 md:top-20 z-40 shadow-sm">
+        <div className="mx-auto max-w-7xl px-4 md:px-6">
+          <div className="flex overflow-x-auto hide-scrollbar md:flex-wrap md:justify-center gap-2.5 pb-2 md:pb-0 snap-x">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -635,7 +635,7 @@ function GalleryPage() {
                   setActiveTab(tab.id);
                   setActiveImageIndex(null);
                 }}
-                className={`px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${
+                className={`flex-none snap-center px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${
                   activeTab === tab.id
                     ? "bg-gold text-primary-foreground shadow-gold font-bold scale-[1.02]"
                     : "border border-border/40 bg-card/60 text-muted-foreground hover:text-foreground hover:border-gold/50"
