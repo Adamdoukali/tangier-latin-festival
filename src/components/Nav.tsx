@@ -11,21 +11,21 @@ export function TopBar() {
       <div className="mx-auto max-w-7xl px-6 py-2 flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-3">
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/tangierlatinfestival.official"
             aria-label="Instagram"
             className="hover:text-primary transition"
           >
             <Instagram className="h-4 w-4" />
           </a>
           <a
-            href="https://facebook.com"
+            href="https://www.facebook.com/TangierInternationalLatinfestival/"
             aria-label="Facebook"
             className="hover:text-primary transition"
           >
             <Facebook className="h-4 w-4" />
           </a>
           <a
-            href="https://youtube.com"
+            href="https://www.youtube.com/@tangierlatinfestival1622"
             aria-label="YouTube"
             className="hover:text-primary transition"
           >
