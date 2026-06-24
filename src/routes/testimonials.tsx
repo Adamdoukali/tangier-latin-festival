@@ -331,7 +331,7 @@ function VideoTestimonial() {
     <div className="relative rounded-3xl overflow-hidden bg-black shadow-gold group border border-border/40 max-w-sm mx-auto mb-8 aspect-[9/16]">
       <video
         ref={videoRef}
-        src="https://www.tangierlatinfestival.com/wp-content/uploads/2025/08/TESTIMONIALS-2.mov"
+        src="/mot_sur_le_festival.mp4"
         className="w-full h-full object-cover"
         loop
         playsInline
