@@ -870,8 +870,10 @@ function Home() {
               </a>
             </div>
           </div>
-          <div className="mt-12 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Tangier International Latin Festival. {t("footerCopyright") || "All rights reserved."}
+          <div className="mt-12 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span>© {new Date().getFullYear()} Tangier International Latin Festival. {t("footerCopyright") || "All rights reserved."}</span>
+            <span className="hidden sm:inline">•</span>
+            <span>Made with love by <a href="https://clarodigi.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition underline decoration-primary/50">Claro</a></span>
           </div>
         </div>
       </footer>

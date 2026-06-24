@@ -20,16 +20,16 @@ export const Route = createFileRoute("/reels")({
 });
 
 const REELS_DATA = [
-  { id: "1", title: "Festival Shows", src: "/reels/TLF - Shows.mov" },
-  { id: "2", title: "After Shows", src: "/reels/TLF - After Shows.mov" },
-  { id: "3", title: "Salsa Room", src: "/reels/TLF - Salsa Room.mov" },
-  { id: "4", title: "Bachata Room", src: "/reels/TLF - Bachata Room.mov" },
-  { id: "5", title: "Kizomba Room", src: "/reels/TLF - Kizomba Room.mov" },
-  { id: "6", title: "White Party", src: "/reels/TLF - White Party.mov" },
-  { id: "7", title: "Black Party", src: "/reels/TLF - Black Party.mov" },
-  { id: "8", title: "Workshops", src: "/reels/TLF - Workshops.mov" },
-  { id: "9", title: "Excursion", src: "/reels/Excursion.mov" },
-  { id: "10", title: "Behind The Scenes", src: "/reels/TLF - Behind the scenes.mov" },
+  { id: "1", title: "Festival Shows", src: "/reels/TLF - Shows.mp4" },
+  { id: "2", title: "After Shows", src: "/reels/TLF - After Shows.mp4" },
+  { id: "3", title: "Salsa Room", src: "/reels/TLF - Salsa Room.mp4" },
+  { id: "4", title: "Bachata Room", src: "/reels/TLF - Bachata Room.mp4" },
+  { id: "5", title: "Kizomba Room", src: "/reels/TLF - Kizomba Room.mp4" },
+  { id: "6", title: "White Party", src: "/reels/TLF - White Party.mp4" },
+  { id: "7", title: "Black Party", src: "/reels/TLF - Black Party.mp4" },
+  { id: "8", title: "Workshops", src: "/reels/TLF - Workshops.mp4" },
+  { id: "9", title: "Excursion", src: "/reels/Excursion.mp4" },
+  { id: "10", title: "Behind The Scenes", src: "/reels/TLF - Behind the scenes.mp4" },
 ];
 
 function ReelsPage() {
