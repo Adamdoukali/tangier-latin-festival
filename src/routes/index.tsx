@@ -105,19 +105,22 @@ function Home() {
     translatedPacks[lang] || translatedPacks.en
   );
   useEffect(() => {
-    const adminPacks = getActivePacks();
-    if (adminPacks.length > 0) {
-      setDynamicPacks(
-        adminPacks.map((p) => ({
-          id: p.id,
-          name: p.name,
-          sub: p.sub,
-          price: p.price,
-          features: p.features,
-          popular: p.popular,
-        }))
-      );
-    }
+    const fetchPacks = async () => {
+      const adminPacks = await getActivePacks();
+      if (adminPacks.length > 0) {
+        setDynamicPacks(
+          adminPacks.map((p) => ({
+            id: p.id,
+            name: p.name,
+            sub: p.sub,
+            price: p.price,
+            features: p.features,
+            popular: p.popular,
+          }))
+        );
+      }
+    };
+    fetchPacks();
   }, []);
   const testimonials = translatedTestimonials[lang] || translatedTestimonials.en;
   const programme = translatedHomeProgramme[lang] || translatedHomeProgramme.en;

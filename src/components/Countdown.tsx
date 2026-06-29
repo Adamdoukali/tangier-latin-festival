@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const TARGET = new Date("2027-01-07T14:00:00").getTime();
@@ -19,89 +19,6 @@ function diff(): TimeState {
   return { d, h, m, s };
 }
 
-/* ── Single flip digit ───────────────────────────────────── */
-function FlipDigit({ value }: { value: string }) {
-  const [current, setCurrent] = useState(value);
-  const [previous, setPrevious] = useState(value);
-  const [flipping, setFlipping] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (value !== current) {
-      setPrevious(current);
-      setFlipping(true);
-
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-      timeoutRef.current = setTimeout(() => {
-        setCurrent(value);
-        setFlipping(false);
-      }, 500);
-    }
-  }, [value, current]);
-
-  return (
-    <div className="flip-digit" aria-hidden="true">
-      {/* Top half – shows current value */}
-      <div className="flip-digit-top">
-        <span>{current}</span>
-      </div>
-
-      {/* Bottom half – shows current value */}
-      <div className="flip-digit-bottom">
-        <span>{current}</span>
-      </div>
-
-      {/* Animated top-flap: starts showing previous, flips down to reveal current */}
-      {flipping && (
-        <div className="flip-digit-flap flip-digit-flap-top" key={`top-${value}`}>
-          <span>{previous}</span>
-        </div>
-      )}
-
-      {/* Animated bottom-flap: starts hidden, flips to show current */}
-      {flipping && (
-        <div className="flip-digit-flap flip-digit-flap-bottom" key={`bot-${value}`}>
-          <span>{value}</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── A countdown cell: digits + label ────────────────────── */
-function Cell({
-  value,
-  label,
-  minDigits = 2,
-}: {
-  value: number;
-  label: string;
-  minDigits?: number;
-}) {
-  const str = value.toString().padStart(minDigits, "0");
-  return (
-    <div className="countdown-cell">
-      <div className="countdown-digits">
-        {str.split("").map((ch, i) => (
-          <FlipDigit key={i} value={ch} />
-        ))}
-      </div>
-      <span className="countdown-label">{label}</span>
-    </div>
-  );
-}
-
-/* ── Colon separator ─────────────────────────────────────── */
-function Separator() {
-  return (
-    <div className="countdown-separator" aria-hidden="true">
-      <span className="countdown-dot" />
-      <span className="countdown-dot" />
-    </div>
-  );
-}
-
 /* ── Main Countdown ──────────────────────────────────────── */
 export function Countdown() {
   const { t } = useLanguage();
@@ -115,27 +32,56 @@ export function Countdown() {
     return () => clearInterval(id);
   }, []);
 
-  if (!isMounted) return <div className="countdown-wrapper" aria-hidden="true" style={{ minHeight: "120px" }} />;
+  if (!isMounted) return <div className="w-full min-h-[120px]" aria-hidden="true" />;
 
-  // Determine how many digits for days (at least 2, up to 3)
-  const dayDigits = timeState.d >= 100 ? 3 : 2;
+  const dStr = timeState.d.toString().padStart(timeState.d >= 100 ? 3 : 2, "0");
+  const hStr = timeState.h.toString().padStart(2, "0");
+  const mStr = timeState.m.toString().padStart(2, "0");
+  const sStr = timeState.s.toString().padStart(2, "0");
 
   return (
-    <div className="countdown-wrapper" role="timer" aria-label="Event countdown">
+    <div className="w-full flex justify-center mt-12 md:mt-16" role="timer" aria-label="Event countdown">
       {/* Screenreader-only text */}
       <span className="sr-only">
-        {timeState.d} {t("days")}, {timeState.h} {t("hours")}, {timeState.m}{" "}
-        {t("minutes")}, {timeState.s} {t("seconds")}
+        {timeState.d} {t("days")}, {timeState.h} {t("hours")}, {timeState.m} {t("minutes")}, {timeState.s} {t("seconds")}
       </span>
 
-      <div className="countdown-grid">
-        <Cell value={timeState.d} label={t("days")} minDigits={dayDigits} />
-        <Separator />
-        <Cell value={timeState.h} label={t("hours")} />
-        <Separator />
-        <Cell value={timeState.m} label={t("minutes")} />
-        <Separator />
-        <Cell value={timeState.s} label={t("seconds")} />
+      <div className="flex items-center gap-4 md:gap-8 lg:gap-12">
+        <div className="flex flex-col items-center">
+          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-foreground font-bold tracking-tighter">
+            {dStr}
+          </span>
+          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
+            {t("days")}
+          </span>
+        </div>
+        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
+        <div className="flex flex-col items-center">
+          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-foreground font-bold tracking-tighter">
+            {hStr}
+          </span>
+          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
+            {t("hours")}
+          </span>
+        </div>
+        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
+        <div className="flex flex-col items-center">
+          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-gold font-bold tracking-tighter">
+            {mStr}
+          </span>
+          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
+            {t("minutes")}
+          </span>
+        </div>
+        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
+        <div className="flex flex-col items-center">
+          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-gold font-bold tracking-tighter">
+            {sStr}
+          </span>
+          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
+            {t("seconds")}
+          </span>
+        </div>
       </div>
     </div>
   );

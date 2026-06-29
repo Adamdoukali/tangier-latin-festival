@@ -36,7 +36,7 @@ interface PackFormData {
 const emptyForm: PackFormData = {
   name: "",
   sub: "",
-  category: "Hotel Packs (Double)",
+  category: "chambre double",
   price: "",
   currency: "€",
   features: [""],
@@ -51,7 +51,7 @@ function AdminPacks() {
   const [form, setForm] = useState<PackFormData>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const reload = () => setPacks(getPacks());
+  const reload = async () => setPacks(await getPacks());
 
   useEffect(() => {
     reload();
@@ -68,7 +68,7 @@ function AdminPacks() {
     setForm({
       name: pack.name,
       sub: pack.sub,
-      category: pack.category || "Hotel Packs (Double)",
+      category: pack.category || "chambre double",
       price: pack.price,
       currency: pack.currency || "€",
       features: pack.features.length ? [...pack.features] : [""],
@@ -78,33 +78,33 @@ function AdminPacks() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanFeatures = form.features.filter((f) => f.trim() !== "");
     if (!form.name.trim() || !form.price.trim() || cleanFeatures.length === 0) return;
 
     if (editingId) {
-      updatePack(editingId, { ...form, features: cleanFeatures });
+      await updatePack(editingId, { ...form, features: cleanFeatures });
     } else {
-      addPack({ ...form, features: cleanFeatures });
+      await addPack({ ...form, features: cleanFeatures });
     }
     setShowForm(false);
     setEditingId(null);
     reload();
   };
 
-  const handleDelete = (id: string) => {
-    deletePack(id);
+  const handleDelete = async (id: string) => {
+    await deletePack(id);
     setDeleteConfirm(null);
     reload();
   };
 
-  const toggleActive = (pack: Pack) => {
-    updatePack(pack.id, { active: !pack.active });
+  const toggleActive = async (pack: Pack) => {
+    await updatePack(pack.id, { active: !pack.active });
     reload();
   };
 
-  const togglePopular = (pack: Pack) => {
-    updatePack(pack.id, { popular: !pack.popular });
+  const togglePopular = async (pack: Pack) => {
+    await updatePack(pack.id, { popular: !pack.popular });
     reload();
   };
 

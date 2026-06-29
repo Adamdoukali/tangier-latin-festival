@@ -117,7 +117,7 @@ function PartnersPage() {
         `}</style>
 
         {/* Network / Grid Background */}
-        <div className="absolute inset-0 -z-20 bg-slate-950">
+        <div className="absolute inset-0 -z-20 bg-white">
           <div className="absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent)] bg-[linear-gradient(rgba(212,175,55,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full bg-[radial-gradient(ellipse_at_top,oklch(0.62_0.18_30/0.15),transparent_60%)]" />
         </div>
@@ -139,11 +139,11 @@ function PartnersPage() {
             </p>
           </div>
           
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-white drop-shadow-2xl animate-slide-up-2">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-slate-950 drop-shadow-md animate-slide-up-2">
             {t("partnersPageHeroTitle")}
           </h1>
           
-          <p className="mt-8 text-slate-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed animate-slide-up-3 drop-shadow-md">
+          <p className="mt-8 text-slate-600 max-w-2xl mx-auto text-sm md:text-base leading-relaxed animate-slide-up-3">
             {t("partnersPageHeroDesc")}
           </p>
         </div>

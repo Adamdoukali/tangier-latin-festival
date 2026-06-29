@@ -7,7 +7,7 @@ import { RollingNumber } from "@/components/RollingNumber";
 import competitionImg from "@/assets/competition.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
-import { countries } from "@/lib/countries";
+import { countries, getFlagEmoji } from "@/lib/countries";
 
 const competitionSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -77,11 +77,10 @@ function CompetitionPage() {
             <Trophy className="h-6 w-6 md:h-8 md:w-8" />
             {t("competitionHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-[7rem] leading-tight text-white drop-shadow-xl py-2">
-            {t("competitionHeroTitlePart1")}{" "}
-            <span className="text-gold italic">{t("competitionHeroTitlePart2")}</span>{" "}
-            <br className="hidden md:block" />
-            {t("competitionHeroTitlePart3")}
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-[4.5rem] leading-[1.1] text-white drop-shadow-xl py-2">
+            <span className="block">{t("competitionHeroTitlePart1")}</span>
+            <span className="block text-gold italic pr-6 whitespace-nowrap">{t("competitionHeroTitlePart2")}</span>
+            <span className="block">{t("competitionHeroTitlePart3")}</span>
           </h1>
           <p className="mt-6 text-slate-300 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
             {t("competitionHeroDesc")}
@@ -115,8 +114,10 @@ function CompetitionPage() {
 
           {/* Right Column: Title, Description, and Embedded Criteria Progress Bars */}
           <div>
-            <h2 className="font-display text-3xl md:text-4xl text-gold leading-tight">
-              {t("competitionOverviewTitle")}
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] mb-6">
+              <span className="block">{t("competitionHeroTitlePart1")}</span>
+              <span className="block text-gold italic pr-6 whitespace-nowrap">{t("competitionHeroTitlePart2")}</span>
+              <span className="block">{t("competitionHeroTitlePart3")}</span>
             </h2>
             <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed text-sm md:text-base">
               <p>{t("competitionOverviewDesc1")}</p>
@@ -243,14 +244,17 @@ function CompetitionPage() {
                 <div className="flex">
                   <select
                     name="phone_country"
-                    defaultValue="+212"
-                    className="rounded-l-xl border border-border/60 border-r-0 bg-background/50 px-3 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition text-foreground max-w-[120px]"
+                    defaultValue={`${getFlagEmoji("MA")} +212`}
+                    className="rounded-l-xl border border-border/60 border-r-0 bg-background/50 px-3 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition text-foreground max-w-[140px]"
                   >
-                    {countries.map(c => (
-                      <option key={c.code} value={c.dial_code}>
-                        {c.dial_code.replace('+', '')} ({c.code})
-                      </option>
-                    ))}
+                    {countries.map(c => {
+                      const flag = getFlagEmoji(c.code);
+                      return (
+                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
+                          {flag} {c.dial_code.replace('+', '')} ({c.code})
+                        </option>
+                      );
+                    })}
                   </select>
                   <input
                     id="form-phone"

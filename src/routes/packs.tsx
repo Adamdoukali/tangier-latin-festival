@@ -11,7 +11,38 @@ export const Route = createFileRoute("/packs")({
 });
 
 function PacksPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
+
+  const translateDynamic = (text: string) => {
+    const dict: Record<string, { en: string; fr: string; es: string }> = {
+      "chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+      "chambre single": { en: "Single Room", fr: "Chambre Simple", es: "Habitación Individual" },
+      "full pass": { en: "Full Pass", fr: "Full Pass", es: "Full Pass" },
+      "basic ticket": { en: "Basic Ticket", fr: "Billet Basique", es: "Entrada Básica" },
+      "couple pass": { en: "Couple Pass", fr: "Pass Couple", es: "Pase Pareja" },
+      "party pass": { en: "Party Pass", fr: "Pass Soirée", es: "Pase Fiesta" },
+      "day pass": { en: "Day Pass", fr: "Pass Journée", es: "Pase de Día" },
+      "solazur hotel tangier (2 nights)": { en: "SOLAZUR HOTEL TANGIER (2 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (2 NUITS)", es: "HOTEL SOLAZUR TÁNGER (2 NOCHES)" },
+      "solazur hotel tangier (3 nights)": { en: "SOLAZUR HOTEL TANGIER (3 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (3 NUITS)", es: "HOTEL SOLAZUR TÁNGER (3 NOCHES)" },
+      "solazur hotel tangier (4 nights)": { en: "SOLAZUR HOTEL TANGIER (4 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (4 NUITS)", es: "HOTEL SOLAZUR TÁNGER (4 NOCHES)" },
+      "without accommodation": { en: "WITHOUT ACCOMMODATION", fr: "SANS HÉBERGEMENT", es: "SIN ALOJAMIENTO" },
+      "2 nights": { en: "2 NIGHTS", fr: "2 NUITS", es: "2 NOCHES" },
+      "3 nights": { en: "3 NIGHTS", fr: "3 NUITS", es: "3 NOCHES" },
+      "4 nights": { en: "4 NIGHTS", fr: "4 NUITS", es: "4 NOCHES" },
+      "breakfast": { en: "BREAKFAST", fr: "PETIT-DÉJEUNER", es: "DESAYUNO" },
+      "dinner": { en: "DINNER", fr: "DÎNER", es: "CENA" },
+      "all workshops": { en: "ALL WORKSHOPS", fr: "TOUS LES WORKSHOPS", es: "TODOS LOS TALLERES" },
+      "shows": { en: "SHOWS", fr: "SHOWS", es: "SHOWS" },
+      "social parties": { en: "SOCIAL PARTIES", fr: "SOIRÉES SOCIALES", es: "FIESTAS SOCIALES" },
+      "pool parties": { en: "POOL PARTIES", fr: "POOL PARTIES", es: "POOL PARTIES" },
+      "1 leader + 1 follower": { en: "1 LEADER + 1 FOLLOWER", fr: "1 LEADER + 1 FOLLOWER", es: "1 LEADER + 1 FOLLOWER" },
+      "shows & parties": { en: "SHOWS & PARTIES", fr: "SHOWS & SOIRÉES", es: "SHOWS & FIESTAS" },
+      "(no workshops)": { en: "(NO WORKSHOPS)", fr: "(SANS WORKSHOPS)", es: "(SIN TALLERES)" },
+      "pool parties (1 day only)": { en: "POOL PARTIES (1 DAY ONLY)", fr: "POOL PARTIES (1 JOUR SEULEMENT)", es: "POOL PARTIES (SOLO 1 DÍA)" }
+    };
+    const key = text.trim().toLowerCase();
+    return dict[key]?.[lang as "en" | "fr" | "es"] || text;
+  };
   const [packs, setPacks] = useState<any[]>([]);
   const [selectedPack, setSelectedPack] = useState<{
     name: string;
@@ -57,19 +88,19 @@ function PacksPage() {
               return acc;
             }, {} as Record<string, any[]>)
           ).map(([category, catPacks]) => (
-            <div key={category} className="mb-24 last:mb-0">
-              <div className="text-center mb-16">
+            <div key={translateDynamic(category)} className="mb-24 last:mb-0">
+              <div className="text-left mb-16">
                 <h2 className="font-display text-3xl md:text-5xl uppercase font-bold text-foreground">
                   {category}
                 </h2>
-                <div className="h-1 w-24 bg-gold mx-auto mt-6 rounded-full" />
+                <div className="h-1 w-24 bg-gold mt-6 rounded-full" />
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {catPacks.map((p) => {
                   const isPopular = p.popular;
                   return (
                     <div
-                      key={p.id || `${p.name}-${p.sub}`}
+                      key={p.id || `${translateDynamic(p.name)}-${translateDynamic(p.sub)}`}
                       className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
                         isPopular
                           ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 z-10 md:-mt-4 md:mb-[-16px]"
@@ -85,7 +116,7 @@ function PacksPage() {
                         </div>
                       )}
 
-                      <div className="relative z-10 flex flex-col flex-1">
+                      <div className="relative z-10 flex flex-col flex-1 text-left">
                         <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
                           {p.name}
                         </h3>
@@ -104,9 +135,9 @@ function PacksPage() {
 
                         <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
 
-                        <ul className="space-y-4 md:space-y-5 flex-1">
-                          {p.features.map((f: string) => (
-                            <li key={f} className="flex items-start gap-4">
+                        <ul className="mt-8 md:mt-10 space-y-4 md:space-y-5 flex-1 text-left">
+                          {p.features.map((f: string, i: number) => (
+                            <li key={i} className="flex items-start gap-4">
                               <div
                                 className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
                                   isPopular
@@ -117,7 +148,7 @@ function PacksPage() {
                                 <Check className="h-3.5 w-3.5 md:h-4 md:w-4 stroke-[3]" />
                               </div>
                               <span className="text-sm md:text-base font-medium text-foreground/90 leading-snug">
-                                {f}
+                                {translateDynamic(f)}
                               </span>
                             </li>
                           ))}

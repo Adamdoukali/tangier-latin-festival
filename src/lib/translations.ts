@@ -63,6 +63,8 @@ export const translations = {
 
     // Overview Section
     overviewSubtitle: "Overview",
+    overviewWelcome: "Welcome to the",
+    discoverArtists: "Discover our",
     overviewTitlePrefix: "Welcome to the",
     overviewTitle: "Welcome to the Tangier International Latin Festival",
     overviewDesc1:
@@ -247,7 +249,7 @@ export const translations = {
     // ──────────────────────────────────────────
     hotelHeroSubtitle: "Official festival hotel",
     hotelHeroTitle: "Hôtel Solazur",
-    hotelHeroLocation: "Tangier · Overlooking the Strait of Gibraltar",
+    hotelHeroLocation: "Tangier, Morocco",
     hotelRatingLabel: "Guest rating",
     hotelRatingSub: "An ideal location",
     hotelStaySubtitle: "Where you'll stay",
@@ -283,7 +285,7 @@ export const translations = {
     tourismHeroTitlePart2: "Morocco",
     tourismHeroTitlePart3: "with us",
     tourismHeroDesc:
-      "Three optional group excursions during the festival — from the blue streets of Chefchaouen to the Atlantic shores of Asilah and the historic Kasbah of Tangier.",
+      "Three optional group excursions during the festival from the blue streets of Chefchaouen to the Atlantic shores of Asilah and the historic Kasbah of Tangier.",
     tourismTourGroup: "Group tour",
     tourismPlacesVisited: "Places visited",
     tourismReserveBtn: "Reserve this tour →",
@@ -396,6 +398,8 @@ export const translations = {
 
     // Overview Section
     overviewSubtitle: "Aperçu",
+    overviewWelcome: "Bienvenue au",
+    discoverArtists: "Découvrez nos",
     overviewTitlePrefix: "Bienvenue au",
     overviewTitle: "Bienvenue au Tangier International Latin Festival",
     overviewDesc1:
@@ -570,7 +574,7 @@ export const translations = {
     // Hotel Page
     hotelHeroSubtitle: "Hôtel officiel du festival",
     hotelHeroTitle: "Hôtel Solazur",
-    hotelHeroLocation: "Tanger · Surplombant le détroit de Gibraltar",
+    hotelHeroLocation: "Tanger, Maroc",
     hotelRatingLabel: "Évaluation client",
     hotelRatingSub: "Un emplacement idéal",
     hotelStaySubtitle: "Où vous séjournerez",
@@ -604,7 +608,7 @@ export const translations = {
     tourismHeroTitlePart2: "Maroc",
     tourismHeroTitlePart3: "avec nous",
     tourismHeroDesc:
-      "Trois excursions de groupe optionnelles pendant le festival — des ruelles bleues de Chefchaouen aux plages atlantiques d'Asilah et à la Kasbah historique de Tanger.",
+      "Trois excursions de groupe optionnelles pendant le festival des ruelles bleues de Chefchaouen aux plages atlantiques d'Asilah et à la Kasbah historique de Tanger.",
     tourismTourGroup: "Excursion de groupe",
     tourismPlacesVisited: "Lieux visités",
     tourismReserveBtn: "Réserver cette excursion →",
@@ -713,6 +717,8 @@ export const translations = {
 
     // Overview Section
     overviewSubtitle: "Resumen",
+    overviewWelcome: "Bienvenido al",
+    discoverArtists: "Descubre a nuestros",
     overviewTitle: "Bienvenidos al Tangier International Latin Festival",
     overviewDesc1:
       "Un evento excepcional en Tánger, en el norte de Marruecos. Sumérgete en 5 días inolvidables, llenos de intensas emociones, espectáculos asombrosos, noches ardientes que duran hasta el amanecer, talleres especiales para perfeccionar tu estilo, viajes emocionantes y sorpresas agradables en cada esquina.",
@@ -886,7 +892,7 @@ export const translations = {
     // Hotel Page
     hotelHeroSubtitle: "Hotel oficial del festival",
     hotelHeroTitle: "Hôtel Solazur",
-    hotelHeroLocation: "Tánger · Con vistas al estrecho de Gibraltar",
+    hotelHeroLocation: "Tánger, Marruecos",
     hotelRatingLabel: "Valoración de huéspedes",
     hotelRatingSub: "Una ubicación ideal",
     hotelStaySubtitle: "Dónde te alojarás",
@@ -919,7 +925,7 @@ export const translations = {
     tourismHeroTitlePart2: "Marruecos",
     tourismHeroTitlePart3: "con nosotros",
     tourismHeroDesc:
-      "Tres excursiones opcionales en grupo durante el festival: desde las calles azules de Chefchaouen hasta la costa atlántica de Asilah y la histórica Kasbah de Tánger.",
+      "Tres excursiones opcionales en grupo durante el festival desde las calles azules de Chefchaouen hasta la costa atlántica de Asilah y la histórica Kasbah de Tánger.",
     tourismTourGroup: "Excursión en grupo",
     tourismPlacesVisited: "Lugares visitados",
     tourismReserveBtn: "Reservar excursión →",

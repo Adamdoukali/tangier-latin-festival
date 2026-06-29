@@ -176,7 +176,7 @@ function TestimonialsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <style>{floatUpStyle}</style>
       <Nav />
 
@@ -186,7 +186,7 @@ function TestimonialsPage() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/4 w-[40%] h-[60%] bg-gold/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
           <div className="absolute bottom-0 right-1/4 w-[40%] h-[60%] bg-white/5 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
@@ -198,11 +198,11 @@ function TestimonialsPage() {
             <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "800ms" }} />
           </div>
           
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 drop-shadow-2xl mb-8 leading-[1.1]">
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-slate-950 drop-shadow-md mb-8 leading-[1.1]">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
           
-          <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed drop-shadow-md">
+          <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
             {lang === "fr"
               ? "Découvrez les retours exclusifs de nos artistes internationaux et professeurs sur leur incroyable expérience au Tangier International Latin Festival."
               : lang === "es"
@@ -224,7 +224,7 @@ function TestimonialsPage() {
                   <p className="text-xs tracking-[0.3em] uppercase text-gold font-bold mb-3">
                      {lang === "fr" ? "Avis Vidéo" : lang === "es" ? "Vídeo Testimonio" : "Featured Video"}
                   </p>
-                  <h2 className="font-display text-3xl md:text-4xl uppercase text-white">
+                  <h2 className="font-display text-3xl md:text-4xl uppercase text-slate-950">
                      {lang === "fr" ? "Vibe du Festival" : lang === "es" ? "Energía del Festival" : "Festival Energy"}
                   </h2>
                </div>
@@ -237,7 +237,7 @@ function TestimonialsPage() {
                   <p className="text-xs tracking-[0.3em] uppercase text-gold font-bold mb-3">
                      {lang === "fr" ? "Témoignages Écrits" : lang === "es" ? "Opiniones Escritas" : "Written Reviews"}
                   </p>
-                  <h2 className="font-display text-3xl md:text-4xl uppercase text-white">
+                  <h2 className="font-display text-3xl md:text-4xl uppercase text-slate-950">
                      {lang === "fr" ? "Partager c'est vivre" : lang === "es" ? "Compartir es vivir" : "Sharing is Living"}
                   </h2>
                </div>
@@ -246,29 +246,27 @@ function TestimonialsPage() {
                   {testimonials.map((item) => (
                      <div
                         key={item.id}
-                        className="break-inside-avoid relative bg-white/5 backdrop-blur-md border border-white/10 hover:border-gold/30 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:bg-white/10 rounded-[2rem] p-8 transition-all duration-500 group flex flex-col mb-6"
+                        className="break-inside-avoid relative bg-slate-50 backdrop-blur-md border border-slate-200 hover:border-gold/50 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:bg-slate-100 rounded-[2rem] p-8 transition-all duration-500 group flex flex-col mb-6"
                      >
-                        <div className="absolute top-6 right-6 text-gold/10 group-hover:text-gold/20 transition-colors duration-300">
-                           <Quote className="h-12 w-12 rotate-180 fill-current" />
-                        </div>
 
-                        <p className="text-gray-300 text-base leading-relaxed italic relative z-10 mb-8">
+
+                        <p className="text-slate-700 text-base leading-relaxed italic relative z-10 mb-8">
                            "{item.quote}"
                         </p>
 
-                        <div className="flex items-center gap-4 mt-auto pt-6 border-t border-white/10">
+                        <div className="flex items-center gap-4 mt-auto pt-6 border-t border-slate-200">
                            <div className="relative">
                               <div className="absolute inset-0 bg-gold rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
                               <img
                                  src={item.avatar}
                                  alt={item.name}
-                                 className="relative w-12 h-12 rounded-full object-cover border-2 border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-500"
+                                 className="relative w-12 h-12 rounded-full object-cover border-2 border-white shadow-md group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy"
                               />
                            </div>
                            <div>
-                              <h4 className="font-bold text-white tracking-wide group-hover:text-gold transition-colors">{item.name}</h4>
-                              <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">
+                              <h4 className="font-bold text-slate-950 tracking-wide group-hover:text-gold transition-colors">{item.name}</h4>
+                              <p className="text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">
                                  {item.country}
                               </p>
                            </div>
@@ -283,7 +281,7 @@ function TestimonialsPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────── */}
-      <section className="relative py-24 md:py-32 border-t border-white/10 overflow-hidden">
+      <section className="relative py-24 md:py-32 border-t border-slate-200 overflow-hidden">
          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gold/5" />
          <div className="mx-auto max-w-4xl px-6 text-center space-y-6 relative z-10">
             <p className="text-xs tracking-[0.4em] uppercase text-gold font-bold">
@@ -293,14 +291,14 @@ function TestimonialsPage() {
                   ? "¡Plazas limitadas!"
                   : "First come, first served!"}
             </p>
-            <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight text-white drop-shadow-xl">
+            <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight text-slate-950 drop-shadow-sm">
                {lang === "fr"
                ? "Vous n'avez pas encore réservé votre place ?"
                : lang === "es"
                   ? "¿Aún no has reservado tu plaza?"
                   : "Haven't booked your spot yet?"}
             </h2>
-            <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base">
+            <p className="text-slate-600 max-w-lg mx-auto text-sm md:text-base">
                {lang === "fr"
                ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
                : lang === "es"
@@ -359,6 +357,18 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
         playsInline
       />
       
+      {/* Click-to-play overlay */}
+      <div 
+        className="absolute inset-0 z-20 cursor-pointer" 
+        onClick={() => {
+          if (videoRef.current) {
+            if (isPlaying) videoRef.current.pause();
+            else videoRef.current.play();
+            setIsPlaying(!isPlaying);
+          }
+        }} 
+      />
+      
       {/* Reactions Overlay */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
         {reactions.map(r => (
@@ -387,18 +397,23 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
           </p>
         </div>
         <div className="flex flex-col gap-4 pointer-events-auto">
-          <button
-            onClick={() => {
-              if (videoRef.current) {
-                if (isPlaying) videoRef.current.pause();
-                else videoRef.current.play();
-                setIsPlaying(!isPlaying);
-              }
-            }}
-            className="flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-gold hover:text-black hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
-          >
-            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
-          </button>
+          <div className="relative">
+            {!isPlaying && (
+              <span className="absolute inset-0 rounded-full animate-ping bg-gold/60" />
+            )}
+            <button
+              onClick={() => {
+                if (videoRef.current) {
+                  if (isPlaying) videoRef.current.pause();
+                  else videoRef.current.play();
+                  setIsPlaying(!isPlaying);
+                }
+              }}
+              className="relative flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-gold hover:text-black hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
+            </button>
+          </div>
           <button
             onClick={() => {
               if (videoRef.current) {
@@ -415,7 +430,7 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
 
       {/* Giant Play button when paused */}
       {!isPlaying && (
-         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto bg-black/10 backdrop-blur-[1px] transition-all">
+         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/10 backdrop-blur-[1px] transition-all">
             <button
                onClick={() => {
                   if (videoRef.current) {
@@ -423,7 +438,7 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
                      setIsPlaying(true);
                   }
                }}
-               className="bg-gold/90 text-slate-950 w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
+               className="bg-gold/90 text-slate-950 w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 active:scale-95 transition-all duration-300 pointer-events-auto"
             >
                <Play className="h-10 w-10 ml-2" />
             </button>

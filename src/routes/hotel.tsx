@@ -265,11 +265,9 @@ function HotelPage() {
         </div>
         <div className="relative z-10 mx-auto max-w-7xl px-6 pb-16 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="flex-1">
-            <h1 className="font-display font-bold text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[1.1] max-w-4xl text-white drop-shadow-xl tracking-tight">
-              {lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}{" "}
-              <span className="text-gold italic uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] pr-4 inline-block">KENZI</span>
-              <br />
-              <span className="text-gold italic uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] pr-4 inline-block">SOLAZUR</span>
+            <h1 className="font-display font-bold text-4xl sm:text-5xl md:text-6xl lg:text-8xl leading-[1.1] max-w-4xl text-white drop-shadow-xl tracking-tight">
+              <span className="block">{lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}</span>
+              <span className="block text-gold italic uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] pr-6 whitespace-nowrap">KENZI SOLAZUR</span>
             </h1>
             <div className="mt-6 flex items-center gap-2 text-white/90 backdrop-blur-md bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10 shadow-lg">
               <MapPin className="h-4 w-4 text-primary animate-bounce" />
@@ -293,7 +291,7 @@ function HotelPage() {
       {/* CONTENT GRID */}
       <section className="py-20 md:py-28">
         <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16 items-start">
-          {/* Left Column: Image Carousel and Collage */}
+          {/* Left Column: Image Carousel and Collage + Map + Highlights */}
           <div className="space-y-8">
             <ImageCarousel />
 
@@ -317,61 +315,6 @@ function HotelPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Right Column: Hotel solazur detailed description, equipments list, google maps, highlights */}
-          <div className="space-y-12">
-            <div>
-              <p className="text-lg md:text-xl font-bold tracking-[0.3em] uppercase text-primary mb-4">
-                {t("hotelStaySubtitle")}
-              </p>
-              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight text-glow">
-                HÔTEL <span className="text-gold italic uppercase">KENZI SOLAZUR</span>
-              </h2>
-              <div className="mt-6 space-y-5 text-muted-foreground leading-relaxed text-sm md:text-base border-l-2 border-gold/30 pl-4">
-                <p>{t("hotelStayDesc1")}</p>
-                <p>{t("hotelStayDesc2")}</p>
-                <p>{t("hotelStayDesc3")}</p>
-                <p>{t("hotelStayDesc4")}</p>
-              </div>
-            </div>
-
-            {/* Equipments (Facilities) List Grid */}
-            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-8 shadow-soft">
-              <h3 className="font-display text-lg tracking-wider text-primary uppercase mb-6 flex items-center gap-2 font-bold">
-                <Star className="h-4.5 w-4.5 fill-current text-gold" />
-                {t("hotelFacilitiesTitle")}
-              </h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {facilities.map((f) => (
-                  <div
-                    key={f.label}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-background/30 hover:border-gold/30 transition duration-300 group"
-                  >
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center text-gold group-hover:bg-gold group-hover:text-primary-foreground transition duration-300">
-                      <f.icon className="h-4.5 w-4.5" />
-                    </div>
-                    <span className="text-xs md:text-sm font-semibold tracking-wide text-muted-foreground group-hover:text-foreground transition">
-                      {f.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Reserve packs button */}
-              <div className="mt-8">
-                <a
-                  href={localizedHref("/#packs")}
-                  className="w-full inline-flex justify-center items-center rounded-full bg-gold px-6 py-3.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition shadow-gold uppercase tracking-[0.2em] select-none"
-                >
-                  {lang === "fr"
-                    ? "RÉSERVEZ MAINTENANT"
-                    : lang === "es"
-                      ? "RESERVA AHORA"
-                      : "RESERVE NOW"}
-                </a>
-              </div>
             </div>
 
             {/* Embedded Google Map */}
@@ -421,6 +364,62 @@ function HotelPage() {
               {/* Quotes Block */}
               <div className="p-4 rounded-xl border border-gold/20 bg-gold/5 text-xs text-gold leading-relaxed italic">
                 {t("hotelHighlightsDesc")}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Hotel solazur detailed description, equipments list */}
+          <div className="space-y-12">
+            <div>
+              <p className="text-lg md:text-xl font-bold tracking-[0.3em] uppercase text-primary mb-4">
+                {t("hotelStaySubtitle")}
+              </p>
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight text-glow">
+                <span className="block">{lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}</span>
+                <span className="block text-gold italic uppercase pr-4 whitespace-nowrap">KENZI SOLAZUR</span>
+              </h2>
+              <div className="mt-6 space-y-5 text-muted-foreground leading-relaxed text-sm md:text-base border-l-2 border-gold/30 pl-4">
+                <p>{t("hotelStayDesc1")}</p>
+                <p>{t("hotelStayDesc2")}</p>
+                <p>{t("hotelStayDesc3")}</p>
+                <p>{t("hotelStayDesc4")}</p>
+              </div>
+            </div>
+
+            {/* Equipments (Facilities) List Grid */}
+            <div className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-8 shadow-soft">
+              <h3 className="font-display text-lg tracking-wider text-primary uppercase mb-6 flex items-center gap-2 font-bold">
+                <Star className="h-4.5 w-4.5 fill-current text-gold" />
+                {t("hotelFacilitiesTitle")}
+              </h3>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {facilities.map((f) => (
+                  <div
+                    key={f.label}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-border/40 bg-background/30 hover:border-gold/30 transition duration-300 group"
+                  >
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center text-gold group-hover:bg-gold group-hover:text-primary-foreground transition duration-300">
+                      <f.icon className="h-4.5 w-4.5" />
+                    </div>
+                    <span className="text-xs md:text-sm font-semibold tracking-wide text-muted-foreground group-hover:text-foreground transition">
+                      {f.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Reserve packs button */}
+              <div className="mt-8">
+                <a
+                  href={localizedHref("/#packs")}
+                  className="w-full inline-flex justify-center items-center rounded-full bg-gold px-6 py-3.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition shadow-gold uppercase tracking-[0.2em] select-none"
+                >
+                  {lang === "fr"
+                    ? "RÉSERVEZ MAINTENANT"
+                    : lang === "es"
+                      ? "RESERVA AHORA"
+                      : "RESERVE NOW"}
+                </a>
               </div>
             </div>
           </div>

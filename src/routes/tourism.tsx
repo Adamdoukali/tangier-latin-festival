@@ -8,7 +8,7 @@ import asilahImg from "@/assets/asilah.jpg";
 import tangierImg from "@/assets/tangier-tour.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
-import { countries } from "@/lib/countries";
+import { countries, getFlagEmoji } from "@/lib/countries";
 
 const tourismSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -325,14 +325,17 @@ function TourismPage() {
                 <div className="flex">
                   <select
                     name="phone_country"
-                    defaultValue="+212"
-                    className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[120px]"
+                    defaultValue={`${getFlagEmoji("MA")} +212`}
+                    className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[140px]"
                   >
-                    {countries.map(c => (
-                      <option key={c.code} value={c.dial_code}>
-                        {c.dial_code.replace('+', '')} ({c.code})
-                      </option>
-                    ))}
+                    {countries.map(c => {
+                      const flag = getFlagEmoji(c.code);
+                      return (
+                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
+                          {flag} {c.dial_code.replace('+', '')} ({c.code})
+                        </option>
+                      );
+                    })}
                   </select>
                   <input
                     name="phone"

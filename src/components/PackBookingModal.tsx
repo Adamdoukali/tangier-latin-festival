@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, Users, ChevronDown, CheckCircle2 } from "lucide-react";
+import { X, Sparkles, User, Mail, Phone, Globe, Users, CheckCircle2, ChevronDown } from "lucide-react";
+import { countries, getFlagEmoji } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export function PackBookingModal({
@@ -148,26 +149,46 @@ export function PackBookingModal({
                   <Phone className="h-3 w-3" />
                   {t("packFormPhone")}
                 </label>
-                <input
-                  type="tel"
-                  name="Phone"
-                  required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                  placeholder="+212 6 XX XX XX XX"
-                />
+                <div className="flex">
+                  <select
+                    name="Phone Country Code"
+                    defaultValue={`${getFlagEmoji("MA")} +212`}
+                    className="rounded-l-xl border border-border border-r-0 bg-card/40 px-3 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition max-w-[120px]"
+                  >
+                    {countries.map(c => {
+                      const flag = getFlagEmoji(c.code);
+                      return (
+                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
+                          {flag} {c.dial_code.replace('+', '')} ({c.code})
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <input
+                    type="tel"
+                    name="Phone"
+                    required
+                    className="w-full rounded-r-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    placeholder="6 XX XX XX XX"
+                  />
+                </div>
               </div>
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <Globe className="h-3 w-3" />
                   {t("packFormCountry")}
                 </label>
-                <input
-                  type="text"
+                <select
                   name="Country"
                   required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                  placeholder="Morocco"
-                />
+                  defaultValue="MA"
+                  className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
+                >
+                  <option value="" disabled>{t("packFormCountry")}</option>
+                  {countries.map(c => (
+                    <option key={c.code} value={c.name}>{getFlagEmoji(c.code)} {c.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

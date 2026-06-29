@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
+import programBg from "@/assets/program-bg.png";
 
 const programSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -224,7 +225,18 @@ function ProgramPage() {
 
       {/* HERO */}
       <section className="relative py-20 md:py-32 border-b border-border/20 overflow-hidden flex items-center min-h-[70vh]">
-        <div className="absolute inset-0 -z-10 bg-slate-950">
+        {/* Background Image Overlay */}
+        <div className="absolute inset-0 -z-20">
+          <img
+            src={programBg}
+            alt="Program Background"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-slate-950/70 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/50 to-background" />
+        </div>
+
+        <div className="absolute inset-0 -z-10">
           <div className="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-gold/15 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
           <div className="absolute top-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-primary/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
           <div className="absolute -bottom-[20%] left-[20%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '12s' }} />
