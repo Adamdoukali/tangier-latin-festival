@@ -53,6 +53,7 @@ import {
   translatedHomeProgramme,
   Language,
 } from "@/lib/translations";
+import { countries } from "@/lib/countries";
 
 export const Route = createFileRoute("/")({
   head: (ctx) => {
@@ -133,7 +134,7 @@ function Home() {
             src="https://www.youtube.com/embed/QN8LsEhzxy0?autoplay=1&mute=1&loop=1&playlist=QN8LsEhzxy0&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3"
             title="Hero background video"
             allow="autoplay; encrypted-media"
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[177.78vh] min-w-full h-[56.25vw] min-h-full pointer-events-none"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[56.25vw] min-w-[177.77vh] min-h-[100vh] pointer-events-none scale-[1.25]"
           />
           {/* Dark overlay so text stays readable */}
           <div className="absolute inset-0 hero-overlay" />
@@ -154,16 +155,16 @@ function Home() {
             <span className="text-gold italic pr-4">{t("heroTitleSub")}</span>
           </h1>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-x-10 gap-y-3 text-sm tracking-[0.25em] uppercase text-white/80">
-            <span className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary" /> {t("overviewDates")} {t("overviewYear")}
+          <div className="mt-10 flex flex-wrap justify-center gap-x-12 gap-y-4 text-lg md:text-xl lg:text-2xl font-bold tracking-[0.15em] md:tracking-[0.2em] uppercase text-white">
+            <span className="flex items-center gap-3 drop-shadow-md">
+              <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" /> {t("overviewDates")} {t("overviewYear")}
             </span>
-            <span className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" /> {t("overviewLocation")}
+            <span className="flex items-center gap-3 drop-shadow-md">
+              <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" /> {t("overviewLocation")}
             </span>
           </div>
 
-          <p className="mt-6 text-primary tracking-[0.4em] text-xs uppercase">
+          <p className="mt-8 text-white font-bold tracking-[0.25em] md:tracking-[0.4em] text-sm md:text-base uppercase drop-shadow-md">
             Salsa · Bachata · Kizomba · Competition
           </p>
 
@@ -273,7 +274,7 @@ function Home() {
           </div>
 
           <div>
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("overviewSubtitle")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl leading-tight">
@@ -375,10 +376,10 @@ function Home() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-14">
             <div>
-              <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
                 {t("lineupSubtitle")}
               </p>
-              <h2 className="font-display text-4xl md:text-5xl">
+              <h2 className="font-display text-5xl md:text-6xl">
                 Discover our <span className="text-gold italic">artists</span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl">{t("lineupDesc")}</p>
@@ -426,30 +427,16 @@ function Home() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gold opacity-95" />
-        <div className="relative mx-auto max-w-5xl px-6 text-center text-primary-foreground">
-          <p className="text-xs tracking-[0.4em] uppercase mb-4 opacity-80">{t("ctaSubtitle")}</p>
-          <h2 className="font-display text-4xl md:text-6xl leading-tight">{t("ctaTitle")}</h2>
-          <p className="mt-6 max-w-2xl mx-auto opacity-90">{t("ctaDesc")}</p>
-          <a
-            href={localizedHref("/#packs")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-medium text-foreground hover:opacity-90 transition shadow-soft"
-          >
-            {t("ctaGetPackBtn")}
-          </a>
-        </div>
-      </section>
+      
 
       {/* PROGRAMME */}
       <section id="programme" className="py-28">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-16">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("programmeSubtitle")}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl">{t("programmeTitle")}</h2>
+            <h2 className="font-display text-5xl md:text-6xl">{t("programmeTitle")}</h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">{t("programmeDesc")}</p>
           </div>
 
@@ -503,10 +490,10 @@ function Home() {
       <section id="packs" className="py-28 bg-card/30 border-y border-border/40">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-16">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("packsSubtitle")}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl">{t("packsTitle")}</h2>
+            <h2 className="font-display text-5xl md:text-6xl">{t("packsTitle")}</h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("packsDesc")}</p>
           </div>
 
@@ -613,10 +600,10 @@ function Home() {
       <section className="py-20 border-y border-border/40">
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-12">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("partnersSubtitle")}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl">{t("partnersTitle")}</h2>
+            <h2 className="font-display text-5xl md:text-6xl">{t("partnersTitle")}</h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">{t("partnersDesc")}</p>
           </div>
           <div className="relative flex overflow-hidden w-full max-w-full group [mask-image:_linear-gradient(to_right,transparent_0,_black_64px,_black_calc(100%-64px),transparent_100%)] md:[mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
@@ -711,8 +698,8 @@ function Home() {
       <section id="gallery" className="py-28">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-14">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">{t("navGallery")}</p>
-            <h2 className="font-display text-4xl md:text-5xl">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">{t("navGallery")}</p>
+            <h2 className="font-display text-5xl md:text-6xl">
               {t("galleryTitlePart1") || "Memories in"} <span className="text-gold italic">{t("galleryTitlePart2") || "images"}</span>
             </h2>
           </div>
@@ -732,10 +719,10 @@ function Home() {
       <section className="py-28 bg-card/30 border-y border-border/40">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center mb-14">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("testimonialsSubtitle")}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl max-w-3xl mx-auto">
+            <h2 className="font-display text-5xl md:text-6xl max-w-3xl mx-auto">
               {t("testimonialsTitle")}
             </h2>
           </div>
@@ -765,10 +752,10 @@ function Home() {
       <section id="contact" className="py-28">
         <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+            <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4">
               {t("overviewWhere")}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl">
+            <h2 className="font-display text-5xl md:text-6xl">
               {t("joinEventPart1") || "Join our"} <span className="text-gold italic">{t("joinEventPart2") || "event"}</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-lg">
@@ -824,9 +811,61 @@ function Home() {
 
           <ContactForm />
         </div>
+
+        {/* MAP */}
+        <div className="mx-auto max-w-7xl px-6 mt-20">
+          <div className="rounded-2xl overflow-hidden border border-border/60 shadow-soft h-[400px] bg-card">
+            <iframe 
+              src="https://maps.google.com/maps?q=Kenzi%20Solazur%20Tangier&t=&z=15&ie=UTF8&iwloc=&output=embed" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+          </div>
+        </div>
       </section>
 
       {/* FOOTER */}
+            {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
+        <div className="absolute inset-0 bg-gold opacity-95" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
+          </h2>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-border/40 bg-card/40 pt-16 pb-8">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-center text-center gap-6">
@@ -882,8 +921,29 @@ function Home() {
 }
 
 function ContactForm() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
+    formData.append("subject", "New Contact Form Submission");
+
+    try {
+      await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+      setSent(true);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-8">
@@ -891,10 +951,7 @@ function ContactForm() {
       <p className="mt-2 text-sm text-muted-foreground">{t("contactDesc")}</p>
       <form
         className="mt-6 space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSent(true);
-        }}
+        onSubmit={handleSubmit}
       >
         <div>
           <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
@@ -902,6 +959,7 @@ function ContactForm() {
           </label>
           <input
             type="text"
+            name="name"
             required
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
           />
@@ -912,15 +970,40 @@ function ContactForm() {
           </label>
           <input
             type="email"
+            name="email"
             required
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
           />
         </div>
         <div>
           <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
+            {lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone"}
+          </label>
+          <div className="flex">
+            <select
+              name="phone_country"
+              defaultValue="+212"
+              className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[120px]"
+            >
+              {countries.map(c => (
+                <option key={c.code} value={c.dial_code}>
+                  {c.dial_code.replace('+', '')} ({c.code})
+                </option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              name="phone"
+              className="w-full rounded-r-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs tracking-[0.2em] uppercase text-muted-foreground mb-1.5">
             {t("contactFormMsg")}
           </label>
           <textarea
+            name="message"
             required
             rows={4}
             className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
@@ -928,9 +1011,10 @@ function ContactForm() {
         </div>
         <button
           type="submit"
-          className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer"
+          disabled={isSubmitting}
+          className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer disabled:opacity-50"
         >
-          {sent ? "✓ Sent" : t("contactFormSendBtn")}
+          {sent ? "✓ Sent" : isSubmitting ? "Sending..." : t("contactFormSendBtn")}
         </button>
         {sent && (
           <p className="text-xs text-primary mt-2 text-center font-semibold">

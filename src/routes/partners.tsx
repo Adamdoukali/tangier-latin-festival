@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import { z } from "zod";
 import { Nav } from "@/components/Nav";
 
@@ -138,7 +139,7 @@ function PartnersPage() {
             </p>
           </div>
           
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl leading-[0.95] text-white drop-shadow-2xl animate-slide-up-2">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-white drop-shadow-2xl animate-slide-up-2">
             {t("partnersPageHeroTitle")}
           </h1>
           
@@ -166,24 +167,42 @@ function PartnersPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative py-24 overflow-hidden border-t border-border/40">
+      
+    
+            {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
         <div className="absolute inset-0 bg-gold opacity-95" />
-        <div className="relative mx-auto max-w-5xl px-6 text-center text-primary-foreground">
-          <p className="text-xs tracking-[0.4em] uppercase mb-4 opacity-90">
-            {t("partnersPageCtaBadge")}
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
           </p>
-          <h2 className="font-display text-4xl md:text-5xl leading-tight">
-            {t("partnersPageCtaTitle")}
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
           </h2>
-          <p className="mt-4 opacity-90">{t("partnersPageCtaDesc")}</p>
-          <Link
-            to={localizedHref("/")}
-            hash="packs"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-medium text-foreground hover:opacity-90 transition shadow-soft cursor-pointer"
-          >
-            {t("partnersPageCtaBtn")}
-          </Link>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </section>
     </div>

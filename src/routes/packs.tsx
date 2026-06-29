@@ -35,7 +35,7 @@ function PacksPage() {
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
             TLF 2027
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[0.95] text-white drop-shadow-lg">
             Our <span className="text-gold italic">Packs</span>
           </h1>
           <p className="mt-6 text-slate-300 max-w-2xl mx-auto drop-shadow-md">
@@ -44,92 +44,111 @@ function PacksPage() {
         </div>
       </section>
 
+      <AnimatedPriceBanner />
+
       {/* PACKS GRID */}
       <section className="py-24 bg-card/30">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {packs.map((p) => {
-              const isPopular = p.popular;
-              return (
-                <div
-                  key={p.id || `${p.name}-${p.sub}`}
-                  className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
-                    isPopular
-                      ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 z-10 md:-mt-4 md:mb-[-16px]"
-                      : "bg-card/30 backdrop-blur-md border border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10"
-                  }`}
-                >
-                  {/* Glassmorphism reflection highlight */}
-                  <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                  {isPopular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-primary/40">
-                      {t("popularBadge")}
-                    </div>
-                  )}
-
-                  <div className="relative z-10 flex flex-col flex-1">
-                    <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
-                      {p.name}
-                    </h3>
-                    <p className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground mt-3 font-semibold">
-                      {p.sub}
-                    </p>
-
-                    <div className="mt-8 md:mt-10 flex items-end gap-2">
-                      <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
-                        {p.price}
-                      </span>
-                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
-                        {p.currency || "€"} / {t("perPackLabel")}
-                      </span>
-                    </div>
-
-                    <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
-
-                    <ul className="space-y-4 md:space-y-5 flex-1">
-                      {p.features.map((f: string) => (
-                        <li key={f} className="flex items-start gap-4">
-                          <div
-                            className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
-                              isPopular
-                                ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
-                            }`}
-                          >
-                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 stroke-[3]" />
-                          </div>
-                          <span className="text-sm md:text-base font-medium text-foreground/90 leading-snug">
-                            {f}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      onClick={() =>
-                        setSelectedPack({
-                          name: p.name,
-                          sub: p.sub,
-                          price: p.price,
-                          currency: p.currency,
-                        })
-                      }
-                      className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${
+          {Object.entries(
+            packs.reduce((acc, pack) => {
+              const cat = pack.category || "Other";
+              if (!acc[cat]) acc[cat] = [];
+              acc[cat].push(pack);
+              return acc;
+            }, {} as Record<string, any[]>)
+          ).map(([category, catPacks]) => (
+            <div key={category} className="mb-24 last:mb-0">
+              <div className="text-center mb-16">
+                <h2 className="font-display text-3xl md:text-5xl uppercase font-bold text-foreground">
+                  {category}
+                </h2>
+                <div className="h-1 w-24 bg-gold mx-auto mt-6 rounded-full" />
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                {catPacks.map((p) => {
+                  const isPopular = p.popular;
+                  return (
+                    <div
+                      key={p.id || `${p.name}-${p.sub}`}
+                      className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
                         isPopular
-                          ? "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_-5px_rgba(212,175,55,0.6)] hover:scale-[1.03]"
-                          : "bg-card border border-border/80 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.03]"
+                          ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 z-10 md:-mt-4 md:mb-[-16px]"
+                          : "bg-card/30 backdrop-blur-md border border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10"
                       }`}
                     >
-                      <span className="relative z-10">
-                        {isPopular ? t("getStartedBtn") : t("choosePackBtn")}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      {/* Glassmorphism reflection highlight */}
+                      <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+
+                      {isPopular && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-primary/40">
+                          {t("popularBadge")}
+                        </div>
+                      )}
+
+                      <div className="relative z-10 flex flex-col flex-1">
+                        <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                          {p.name}
+                        </h3>
+                        <p className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground mt-3 font-semibold">
+                          {p.sub}
+                        </p>
+
+                        <div className="mt-8 md:mt-10 flex items-end gap-2">
+                          <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
+                            {p.price}
+                          </span>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                            {p.currency || "€"} / {t("perPackLabel")}
+                          </span>
+                        </div>
+
+                        <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
+
+                        <ul className="space-y-4 md:space-y-5 flex-1">
+                          {p.features.map((f: string) => (
+                            <li key={f} className="flex items-start gap-4">
+                              <div
+                                className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
+                                  isPopular
+                                    ? "bg-primary/20 text-primary"
+                                    : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
+                                }`}
+                              >
+                                <Check className="h-3.5 w-3.5 md:h-4 md:w-4 stroke-[3]" />
+                              </div>
+                              <span className="text-sm md:text-base font-medium text-foreground/90 leading-snug">
+                                {f}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <button
+                          onClick={() =>
+                            setSelectedPack({
+                              name: p.name,
+                              sub: p.sub,
+                              price: p.price,
+                              currency: p.currency,
+                            })
+                          }
+                          className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${
+                            isPopular
+                              ? "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_-5px_rgba(212,175,55,0.6)] hover:scale-[1.03]"
+                              : "bg-card border border-border/80 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.03]"
+                          }`}
+                        >
+                          <span className="relative z-10">
+                            {isPopular ? t("getStartedBtn") : t("choosePackBtn")}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -140,3 +159,38 @@ function PacksPage() {
     </div>
   );
 }
+
+function AnimatedPriceBanner() {
+  const dates = ["1 November", "1 December", "1 January"];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % dates.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bg-background border-y border-border/40 py-6 w-full flex items-center justify-center shadow-lg relative z-20">
+      <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left text-sm md:text-base font-medium text-foreground uppercase tracking-widest">
+        <span className="opacity-80">Prices get increased every month, starting from:</span>
+        <div className="relative h-6 md:h-7 w-[140px] overflow-hidden">
+          {dates.map((date, i) => (
+            <span
+              key={date}
+              className={`absolute inset-0 font-black text-primary transition-all duration-500 ease-in-out flex items-center justify-center sm:justify-start ${
+                i === index
+                  ? "opacity-100 translate-y-0 scale-100"
+                  : "opacity-0 translate-y-6 scale-95"
+              }`}
+            >
+              {date}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+

@@ -11,6 +11,7 @@ export function PackBookingModal({
 }) {
   const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
     <div
@@ -89,11 +90,27 @@ export function PackBookingModal({
         ) : (
           <form
             className="px-8 pb-8 space-y-4"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              setSubmitted(true);
+              setIsSubmitting(true);
+              const formData = new FormData(e.currentTarget);
+              formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
+              formData.append("subject", `New Pack Booking: ${pack.name}`);
+              
+              try {
+                await fetch("https://api.web3forms.com/submit", {
+                  method: "POST",
+                  body: formData,
+                });
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setIsSubmitting(false);
+                setSubmitted(true);
+              }
             }}
           >
+            <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
             {/* Name & Email row */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -103,6 +120,7 @@ export function PackBookingModal({
                 </label>
                 <input
                   type="text"
+                  name="Full Name"
                   required
                   className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                   placeholder="John Doe"
@@ -115,6 +133,7 @@ export function PackBookingModal({
                 </label>
                 <input
                   type="email"
+                  name="Email"
                   required
                   className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                   placeholder="john@example.com"
@@ -131,6 +150,7 @@ export function PackBookingModal({
                 </label>
                 <input
                   type="tel"
+                  name="Phone"
                   required
                   className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                   placeholder="+212 6 XX XX XX XX"
@@ -143,6 +163,7 @@ export function PackBookingModal({
                 </label>
                 <input
                   type="text"
+                  name="Country"
                   required
                   className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                   placeholder="Morocco"
@@ -159,6 +180,7 @@ export function PackBookingModal({
                 </label>
                 <input
                   type="number"
+                  name="Number of People"
                   min="1"
                   max="20"
                   defaultValue="1"
@@ -172,8 +194,9 @@ export function PackBookingModal({
                   {t("packFormDanceLevel")}
                 </label>
                 <select
+                  name="Dance Level"
                   required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition appearance-none cursor-pointer"
+                  className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
                 >
                   <option value="beginner">{t("packFormDanceLevelBeginner")}</option>
                   <option value="intermediate">{t("packFormDanceLevelIntermediate")}</option>
@@ -189,6 +212,7 @@ export function PackBookingModal({
                 {t("packFormNotes")}
               </label>
               <textarea
+                name="Notes"
                 rows={3}
                 className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition resize-none placeholder:text-muted-foreground/50"
                 placeholder="..."
@@ -198,9 +222,10 @@ export function PackBookingModal({
             {/* Submit */}
             <button
               type="submit"
-              className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-semibold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition shadow-gold cursor-pointer tracking-wide"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-gold px-4 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase hover:opacity-90 transition shadow-gold cursor-pointer disabled:opacity-70 flex items-center justify-center"
             >
-              {t("packFormSubmitBtn")}
+              {isSubmitting ? "Sending..." : t("packFormSubmitBtn")}
             </button>
 
             <p className="text-center text-[10px] text-muted-foreground/60 tracking-wide">

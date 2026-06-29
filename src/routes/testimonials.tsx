@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Quote, Play, Pause, Volume2, VolumeX, ArrowRight } from "lucide-react";
-import { useState, useRef } from "react";
+import { Quote, Play, Pause, Volume2, VolumeX, ArrowRight, Star } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
-import tangierImg from "@/assets/tangier-tour.jpg";
 
 const testimonialsSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -29,6 +28,27 @@ export const Route = createFileRoute("/testimonials")({
   component: TestimonialsPage,
 });
 
+const floatUpStyle = `
+@keyframes float-up {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-20px) scale(1.2); }
+  80% { opacity: 1; transform: translateY(-80px) scale(1); }
+  100% { transform: translateY(-100px) scale(0.8); opacity: 0; }
+}
+.animate-float-up {
+  animation: float-up 2.5s ease-out forwards;
+}
+
+@keyframes star-fade-fill {
+  0% { fill: transparent; opacity: 0.3; transform: scale(0.8); }
+  40% { fill: currentColor; opacity: 1; transform: scale(1.15); }
+  80%, 100% { fill: transparent; opacity: 0.3; transform: scale(0.8); }
+}
+.animate-star-fill {
+  animation: star-fade-fill 2s ease-in-out infinite;
+}
+`;
+
 function TestimonialsPage() {
   const { lang, t } = useLanguage();
 
@@ -40,10 +60,10 @@ function TestimonialsPage() {
       avatar: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/ORLANDO.jpeg",
       quote:
         lang === "fr"
-          ? "Tangier Latin Festival a été un succès retentissant !!! Vous, les Marocains, êtes si chaleureux, empathiques et transmettez tellement d'énergie positive que je suis encore tout impressionné !!! J'enseigne depuis de très nombreuses années dans le monde entier et les meilleures expériences que j'ai vécues étaient au Maroc ! Que ce soit à Marrakech ou maintenant à Tanger."
+          ? "Tangier Latin Festival a été un succès retentissant !!! Vous, les Marocains, êtes si chaleureux, empathiques et transmettez tellement d'énergie positive que je suis encore tout impressionné !!! J'enseigne depuis de très nombreuses années dans le monde entier et les meilleures expériences que j'ai vécues étaient au Maroc !"
           : lang === "es"
-            ? "¡¡¡Tangier Latin Festival fue una explosión!!! ¡¡¡Ustedes los marroquíes son tan cálidos, empáticos y devuelven tanta energía positiva que realmente todavía estoy emocionado!!! Enseño desde hace muchos, muchos años en todo el mundo y las mejores experiencias que he tenido han sido en Marruecos. Ya sea en Marrakech o ahora en Tánger."
-            : "Tangier Latin Festival was a blast!!! You Moroccans are so warm-hearted, empathic and give back so much positive energy that I am really still flashed!!! I am teaching for many, many years all over the world and the best experiences I have made were in Morocco! Either in Marrakech or now in Tanger.",
+            ? "¡¡¡Tangier Latin Festival fue una explosión!!! ¡¡¡Ustedes los marroquíes son tan cálidos, empáticos y devuelven tanta energía positiva que realmente todavía estoy emocionado!!! Enseño desde hace muchos años en todo el mundo y las mejores experiencias que he tenido han sido en Marruecos."
+            : "Tangier Latin Festival was a blast!!! You Moroccans are so warm-hearted, empathic and give back so much positive energy that I am really still flashed!!! I am teaching for many, many years all over the world and the best experiences I have made were in Morocco!",
     },
     {
       id: 2,
@@ -66,10 +86,10 @@ function TestimonialsPage() {
         "https://www.tangierlatinfestival.com/wp-content/uploads/elementor/thumbs/IVAN-Y-CORAL-r9ti0q9p3aewov45pv6sr9fhkkyx1akfnuz3dq4b08.jpeg",
       quote:
         lang === "fr"
-          ? "Mon Dieu !!! Nous n'arrêtons pas de regarder la vidéo et de nous souvenir des super grands moments que nous avons pu vivre là-bas. Ce furent des journées extrêmement enrichissantes tant au niveau culturel qu'en termes d'apprentissage professionnel. Nous avons tellement hâte que la prochaine édition arrive !"
+          ? "Mon Dieu !!! Nous n'arrêtons pas de regarder la vidéo et de nous souvenir des super grands moments que nous avons pu vivre là-bas. Ce furent des journées extrêmement enrichissantes tant au niveau culturel qu'en termes d'apprentissage professionnel."
           : lang === "es"
-            ? "¡¡¡Madre mía!!! No paramos de ver el video y de recordar los súper momentazos que pudimos vivir allí. Fueron unos días súper enriquecedores tanto en cultura como en aprendizaje profesional. ¡Qué ganas tenemos de que llegue la siguiente edición!"
-            : "Oh my God!!! We can't stop watching the video and remembering the super moments we lived there. They were extremely enriching days, both in culture and in terms of professional learning. We are looking forward to the next edition so much!",
+            ? "¡¡¡Madre mía!!! No paramos de ver el video y de recordar los súper momentazos que pudimos vivir allí. Fueron unos días súper enriquecedores tanto en cultura como en aprendizaje profesional."
+            : "Oh my God!!! We can't stop watching the video and remembering the super moments we lived there. They were extremely enriching days, both in culture and in terms of professional learning.",
     },
     {
       id: 4,
@@ -84,10 +104,10 @@ function TestimonialsPage() {
         "https://www.tangierlatinfestival.com/wp-content/uploads/elementor/thumbs/TALAL-EDYTA--r9thxr43g6c7xbft3kvbv0gxunn2nsr194lqo6j6pk.jpeg",
       quote:
         lang === "fr"
-          ? "Le public marocain... Notre peuple... Toujours accueillant... Nous éprouvons un immense plaisir à les rencontrer dans les congrès, à partager avec eux lors des ateliers, à nous amuser avec eux lors des soirées... C'est pourquoi nous veillons à ne jamais manquer ces événements au Maroc... Tangier Latin Festival... Nous reviendrons..."
+          ? "Le public marocain... Notre peuple... Toujours accueillant... Nous éprouvons un immense plaisir à les rencontrer dans les congrès, à partager avec eux lors des ateliers... Tangier Latin Festival... Nous reviendrons..."
           : lang === "es"
-            ? "El público marroquí... Nuestra gente... Siempre acogedora... Nos da un gran placer encontrarlos en los congresos, compartir con ellos durante los talleres, disfrutar con ellos durante las fiestas... Por eso nos aseguramos de no perdernos nunca esos eventos en Marruecos... Tangier Latin Festival... Volveremos..."
-            : "Moroccan crowd... Our people...Always welcoming... We find big pleasure meeting them in congresses..sharing with them during workshops…enjoying with them during parties… That’s why we make sure we never miss that those events in Morocco… Tangier Latin Festival…We’ll be back….",
+            ? "El público marroquí... Nuestra gente... Siempre acogedora... Nos da un gran placer encontrarlos en los congresos, compartir con ellos durante los talleres... Tangier Latin Festival... Volveremos..."
+            : "Moroccan crowd... Our people...Always welcoming... We find big pleasure meeting them in congresses..sharing with them during workshops… That’s why we make sure we never miss that those events in Morocco… Tangier Latin Festival…We’ll be back….",
     },
     {
       id: 5,
@@ -156,27 +176,33 @@ function TestimonialsPage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-950 font-sans">
+      <style>{floatUpStyle}</style>
       <Nav />
 
-      {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-slate-950">
-        <div className="absolute inset-0 -z-10 opacity-30">
-          <img src={tangierImg} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+      {/* ── Hero Banner ─────────────────────────────── */}
+      <section className="relative pt-32 pb-24 overflow-hidden border-b border-white/5 min-h-[50vh] flex flex-col justify-center">
+        {/* Dynamic Background Glows */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-[40%] h-[60%] bg-gold/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-0 right-1/4 w-[40%] h-[60%] bg-white/5 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
         </div>
-        <div className="mx-auto max-w-5xl px-6 text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
-            {lang === "fr"
-              ? "AVIS DES ARTISTES"
-              : lang === "es"
-                ? "TESTIMONIOS DE ARTISTAS"
-                : "WHAT THEY SAY"}
-          </p>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[0.95] uppercase text-white drop-shadow-lg">
+
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/20 bg-gold/5 backdrop-blur-sm mb-6">
+            <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "0ms" }} />
+            <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "200ms" }} />
+            <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "400ms" }} />
+            <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "600ms" }} />
+            <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "800ms" }} />
+          </div>
+          
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/40 drop-shadow-2xl mb-8 leading-[1.1]">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
-          <p className="mt-6 text-slate-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed drop-shadow-md">
+          
+          <p className="text-slate-300 text-base md:text-lg max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             {lang === "fr"
               ? "Découvrez les retours exclusifs de nos artistes internationaux et professeurs sur leur incroyable expérience au Tangier International Latin Festival."
               : lang === "es"
@@ -186,191 +212,222 @@ function TestimonialsPage() {
         </div>
       </section>
 
-      {/* TESTIMONIAL VIDEO PLAYER */}
-      <section className="py-16 md:py-24 bg-card/10">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center mb-12">
-            <p className="text-xs tracking-[0.35em] uppercase text-primary mb-3">
-              {lang === "fr" ? "Avis Vidéo" : lang === "es" ? "Vídeo Testimonio" : "Featured Video"}
-            </p>
-            <h2 className="font-display text-3xl md:text-5xl uppercase">
-              {lang === "fr"
-                ? "Vibe du Festival"
-                : lang === "es"
-                  ? "Energía del Festival"
-                  : "Festival Energy"}
-            </h2>
-          </div>
-          <VideoTestimonial />
-        </div>
-      </section>
-
-      {/* TESTIMONIALS GRID */}
-      <section className="py-20 md:py-28">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center mb-16">
-            <p className="text-xs tracking-[0.35em] uppercase text-primary mb-3">
-              {lang === "fr"
-                ? "Témoignages Écrits"
-                : lang === "es"
-                  ? "Opiniones Escritas"
-                  : "Written Reviews"}
-            </p>
-            <h2 className="font-display text-3xl md:text-5xl uppercase">
-              {lang === "fr"
-                ? "Partager c'est vivre"
-                : lang === "es"
-                  ? "Compartir es vivir"
-                  : "Sharing is Living"}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
-            {testimonials.map((item) => (
-              <div
-                key={item.id}
-                className="relative bg-card/45 backdrop-blur-xl border border-border/40 hover:border-gold/30 hover:shadow-gold rounded-3xl p-8 transition-all duration-500 group flex flex-col justify-between h-full min-h-[300px]"
-              >
-                {/* Quote Icon */}
-                <div className="absolute top-6 right-8 text-gold/10 group-hover:text-gold/20 transition-colors duration-300">
-                  <Quote className="h-10 w-10 rotate-180 fill-current" />
-                </div>
-
-                <div className="space-y-6">
-                  {/* Testimonial Quote */}
-                  <p className="text-foreground/90 text-xs md:text-sm leading-relaxed italic">
-                    "{item.quote}"
+      {/* ── Featured Video & Masonry Grid ─────────────────────────────── */}
+      <section className="relative py-20 md:py-32">
+        <div className="max-w-7xl mx-auto px-6">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+            
+            {/* Left Column: Phone Video */}
+            <div className="lg:col-span-4 sticky top-32">
+               <div className="text-center lg:text-left mb-8">
+                  <p className="text-xs tracking-[0.3em] uppercase text-gold font-bold mb-3">
+                     {lang === "fr" ? "Avis Vidéo" : lang === "es" ? "Vídeo Testimonio" : "Featured Video"}
                   </p>
-                </div>
+                  <h2 className="font-display text-3xl md:text-4xl uppercase text-white">
+                     {lang === "fr" ? "Vibe du Festival" : lang === "es" ? "Energía del Festival" : "Festival Energy"}
+                  </h2>
+               </div>
+               <VideoTestimonialPhone lang={lang} />
+            </div>
 
-                {/* Profile Casing */}
-                <div className="flex items-center gap-4 mt-8 pt-6 border-t border-border/30">
-                  <img
-                    src={item.avatar}
-                    alt={item.name}
-                    className="w-12 h-12 rounded-full object-cover border border-gold/30 shadow-soft"
-                    loading="lazy"
-                  />
-                  <div>
-                    <h4 className="font-display text-base tracking-wider text-gold">{item.name}</h4>
-                    <p className="text-[10px] tracking-[0.2em] text-muted-foreground uppercase">
-                      {item.country}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {/* Right Column: Masonry Testimonials */}
+            <div className="lg:col-span-8">
+               <div className="text-center lg:text-left mb-8 lg:mb-12">
+                  <p className="text-xs tracking-[0.3em] uppercase text-gold font-bold mb-3">
+                     {lang === "fr" ? "Témoignages Écrits" : lang === "es" ? "Opiniones Escritas" : "Written Reviews"}
+                  </p>
+                  <h2 className="font-display text-3xl md:text-4xl uppercase text-white">
+                     {lang === "fr" ? "Partager c'est vivre" : lang === "es" ? "Compartir es vivir" : "Sharing is Living"}
+                  </h2>
+               </div>
+               
+               <div className="columns-1 md:columns-2 gap-6 space-y-6">
+                  {testimonials.map((item) => (
+                     <div
+                        key={item.id}
+                        className="break-inside-avoid relative bg-white/5 backdrop-blur-md border border-white/10 hover:border-gold/30 hover:shadow-[0_8px_30px_rgba(212,175,55,0.15)] hover:bg-white/10 rounded-[2rem] p-8 transition-all duration-500 group flex flex-col mb-6"
+                     >
+                        <div className="absolute top-6 right-6 text-gold/10 group-hover:text-gold/20 transition-colors duration-300">
+                           <Quote className="h-12 w-12 rotate-180 fill-current" />
+                        </div>
+
+                        <p className="text-gray-300 text-base leading-relaxed italic relative z-10 mb-8">
+                           "{item.quote}"
+                        </p>
+
+                        <div className="flex items-center gap-4 mt-auto pt-6 border-t border-white/10">
+                           <div className="relative">
+                              <div className="absolute inset-0 bg-gold rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
+                              <img
+                                 src={item.avatar}
+                                 alt={item.name}
+                                 className="relative w-12 h-12 rounded-full object-cover border-2 border-slate-800 shadow-md group-hover:scale-105 transition-transform duration-500"
+                                 loading="lazy"
+                              />
+                           </div>
+                           <div>
+                              <h4 className="font-bold text-white tracking-wide group-hover:text-gold transition-colors">{item.name}</h4>
+                              <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">
+                                 {item.country}
+                              </p>
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* BOOKING CTA */}
-      <section className="relative py-24 md:py-32 border-t border-border/40 bg-gradient-to-b from-card/10 to-gold/5 overflow-hidden">
-        <div className="mx-auto max-w-4xl px-6 text-center space-y-6 relative z-10">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary font-semibold">
-            {lang === "fr"
-              ? "Premier arrivé, premier servi !"
-              : lang === "es"
-                ? "¡Plazas limitadas!"
-                : "First come, first served!"}
-          </p>
-          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
-            {lang === "fr"
-              ? "Vous n'avez pas encore réservé votre place ?"
-              : lang === "es"
-                ? "¿Aún no has reservado tu plaza?"
-                : "Haven't booked your spot yet?"}
-          </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto text-sm md:text-base">
-            {lang === "fr"
-              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
-              : lang === "es"
-                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
-                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
-          </p>
-          <div className="pt-6">
-            <a
-              href="/#packs"
-              className="inline-flex items-center gap-2 rounded-full bg-gold px-8 py-4 text-sm font-semibold text-primary-foreground shadow-gold hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
-            >
-              <span>{t("buyPackBtn")}</span>
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
+      {/* ── CTA ─────────────────────────────── */}
+      <section className="relative py-24 md:py-32 border-t border-white/10 overflow-hidden">
+         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gold/5" />
+         <div className="mx-auto max-w-4xl px-6 text-center space-y-6 relative z-10">
+            <p className="text-xs tracking-[0.4em] uppercase text-gold font-bold">
+               {lang === "fr"
+               ? "Premier arrivé, premier servi !"
+               : lang === "es"
+                  ? "¡Plazas limitadas!"
+                  : "First come, first served!"}
+            </p>
+            <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight text-white drop-shadow-xl">
+               {lang === "fr"
+               ? "Vous n'avez pas encore réservé votre place ?"
+               : lang === "es"
+                  ? "¿Aún no has reservado tu plaza?"
+                  : "Haven't booked your spot yet?"}
+            </h2>
+            <p className="text-gray-300 max-w-lg mx-auto text-sm md:text-base">
+               {lang === "fr"
+               ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+               : lang === "es"
+                  ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                  : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+            </p>
+            <div className="pt-8">
+               <a
+               href="/#packs"
+               className="inline-flex items-center gap-2 rounded-full bg-gold px-10 py-5 text-sm font-bold tracking-wider text-slate-950 uppercase shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+               >
+               <span>{t("buyPackBtn")}</span>
+               <ArrowRight className="h-5 w-5" />
+               </a>
+            </div>
+         </div>
       </section>
     </div>
   );
 }
 
-function VideoTestimonial() {
+function VideoTestimonialPhone({ lang }: { lang: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [reactions, setReactions] = useState<{ id: number; emoji: string; left: number }[]>([]);
+  let reactionId = useRef(0);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
+  useEffect(() => {
+    if (!isPlaying) return;
+    const emojis = ["❤️", "🔥", "✨", "👏", "💃", "🕺"];
+    const interval = setInterval(() => {
+      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+      const left = Math.random() * 80 + 10;
+      const newReaction = { id: reactionId.current++, emoji, left };
+      setReactions(prev => [...prev, newReaction]);
+      setTimeout(() => {
+        setReactions(prev => prev.filter(r => r.id !== newReaction.id));
+      }, 2500);
+    }, 800);
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden bg-black shadow-gold group border border-border/40 max-w-sm mx-auto mb-8 aspect-[9/16]">
+    <div className="relative mx-auto w-full max-w-[320px] aspect-[9/19] rounded-[3rem] border-[8px] border-slate-900 bg-slate-950 shadow-2xl overflow-hidden ring-4 ring-gold/20 group">
+      {/* Dynamic Island / Notch */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-6 bg-slate-900 rounded-b-2xl z-30 flex items-center justify-center">
+         <div className="w-2 h-2 rounded-full bg-black/50 ml-6" />
+      </div>
+      
       <video
         ref={videoRef}
         src="/mot_sur_le_festival.mp4"
-        className="w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full object-cover rounded-[2.5rem]"
         loop
         playsInline
-        onClick={togglePlay}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
       />
-      {/* Control Overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex flex-col justify-end p-6 z-20">
-        <div className="flex items-center justify-between w-full pointer-events-auto">
-          <button
-            onClick={togglePlay}
-            className="flex items-center justify-center bg-gold text-primary-foreground h-11 w-11 rounded-full hover:scale-105 active:scale-95 transition cursor-pointer shadow-gold"
+      
+      {/* Reactions Overlay */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
+        {reactions.map(r => (
+          <div
+            key={r.id}
+            className="absolute bottom-24 text-3xl animate-float-up opacity-0"
+            style={{ left: `${r.left}%` }}
           >
-            {isPlaying ? (
-              <Pause className="h-5 w-5" />
-            ) : (
-              <Play className="h-5 w-5 fill-current ml-0.5" />
-            )}
+            {r.emoji}
+          </div>
+        ))}
+      </div>
+
+      {/* gradient overlay */}
+      <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none z-10 transition-opacity duration-500" />
+
+      {/* Controls Area */}
+      <div className="absolute inset-x-0 bottom-0 p-6 z-30 flex items-end justify-between pointer-events-none">
+        <div className="flex-1 pointer-events-auto pr-4">
+          <div className="flex items-center gap-2 mb-2">
+             <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-black font-bold text-xs">TLF</div>
+             <p className="text-white font-bold text-sm drop-shadow-md">@tangierlatinfestival</p>
+          </div>
+          <p className="text-white/90 text-sm leading-snug drop-shadow-md">
+            {lang === "fr" ? "Découvrez l'énergie incroyable de nos danseurs ! 🔥🕺" : lang === "es" ? "¡Descubre la increíble energía de nuestros bailarines! 🔥🕺" : "Discover the incredible energy of our dancers! 🔥🕺"}
+          </p>
+        </div>
+        <div className="flex flex-col gap-4 pointer-events-auto">
+          <button
+            onClick={() => {
+              if (videoRef.current) {
+                if (isPlaying) videoRef.current.pause();
+                else videoRef.current.play();
+                setIsPlaying(!isPlaying);
+              }
+            }}
+            className="flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-gold hover:text-black hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
+          >
+            {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
           </button>
           <button
-            onClick={toggleMute}
-            className="flex items-center justify-center bg-black/40 backdrop-blur-md border border-white/10 text-white h-11 w-11 rounded-full hover:scale-105 active:scale-95 transition cursor-pointer"
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.muted = !isMuted;
+                setIsMuted(!isMuted);
+              }
+            }}
+            className="flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-white/40 hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
           >
             {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {/* Big Center Play Button (when not playing) */}
+      {/* Giant Play button when paused */}
       {!isPlaying && (
-        <button
-          onClick={togglePlay}
-          className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-[1px] hover:bg-black/30 transition cursor-pointer z-10"
-        >
-          <div className="flex items-center justify-center bg-gold/90 text-primary-foreground h-20 w-20 rounded-full shadow-gold hover:scale-110 active:scale-95 transition-all duration-300">
-            <Play className="h-9 w-9 fill-current ml-1" />
-          </div>
-        </button>
+         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-auto bg-black/10 backdrop-blur-[1px] transition-all">
+            <button
+               onClick={() => {
+                  if (videoRef.current) {
+                     videoRef.current.play();
+                     setIsPlaying(true);
+                  }
+               }}
+               className="bg-gold/90 text-slate-950 w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 active:scale-95 transition-all duration-300"
+            >
+               <Play className="h-10 w-10 ml-2" />
+            </button>
+         </div>
       )}
     </div>
   );

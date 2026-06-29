@@ -10,6 +10,7 @@ export interface Pack {
   sub: string;
   price: string;
   currency: string;
+  category?: string;
   features: string[];
   popular: boolean;
   active: boolean;
@@ -54,7 +55,7 @@ export interface Invite {
 const PACKS_KEY = "tlf_admin_packs";
 const BOOKINGS_KEY = "tlf_admin_bookings";
 const INVITES_KEY = "tlf_admin_invites";
-const SEEDED_KEY = "tlf_admin_seeded_v2";
+const SEEDED_KEY = "tlf_admin_seeded_v3";
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -102,6 +103,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Hotel Packs (Double)",
   },
   {
     name: "Basic Ticket",
@@ -116,6 +118,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: true,
     active: true,
+    category: "Hotel Packs (Double)",
   },
   {
     name: "Basic Ticket",
@@ -130,6 +133,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Hotel Packs (Double)",
   },
   {
     name: "Full Pass",
@@ -144,6 +148,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Full Pass",
   },
   {
     name: "Couple Pass",
@@ -158,6 +163,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Full Pass",
   },
   {
     name: "Party Pass",
@@ -172,6 +178,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Full Pass",
   },
   {
     name: "Day Pass",
@@ -186,6 +193,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
+    category: "Full Pass",
   },
 ];
 

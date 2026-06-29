@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, Star, Globe2, Flame } from "lucide-react";
+import { Trophy, Star, Globe2, Flame, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { Nav } from "@/components/Nav";
@@ -7,6 +7,7 @@ import { RollingNumber } from "@/components/RollingNumber";
 import competitionImg from "@/assets/competition.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
+import { countries } from "@/lib/countries";
 
 const competitionSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -32,6 +33,7 @@ export const Route = createFileRoute("/competition")({
 
 function CompetitionPage() {
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { lang, t } = useLanguage();
 
   const langSuffix = lang && lang !== "en" ? `?lang=${lang}` : "";
@@ -71,23 +73,24 @@ function CompetitionPage() {
           <div className="absolute inset-0 hero-overlay" />
         </div>
         <div className="relative mx-auto max-w-5xl px-6 text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
-            <Trophy className="inline h-3.5 w-3.5 mr-2 -mt-0.5" />
+          <p className="text-sm md:text-lg font-bold tracking-[0.4em] uppercase text-primary mb-6 flex items-center justify-center gap-3">
+            <Trophy className="h-6 w-6 md:h-8 md:w-8" />
             {t("competitionHeroSubtitle")}
           </p>
-          <h1 className="font-display text-4xl sm:text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg">
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-[7rem] leading-tight text-white drop-shadow-xl py-2">
             {t("competitionHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("competitionHeroTitlePart2")}</span>{" "}
+            <br className="hidden md:block" />
             {t("competitionHeroTitlePart3")}
           </h1>
           <p className="mt-6 text-slate-300 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
             {t("competitionHeroDesc")}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <span className="rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-primary">
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <span className="rounded-full border-2 border-white bg-white/20 px-8 py-3 text-sm md:text-lg tracking-[0.25em] uppercase text-white font-bold backdrop-blur-md">
               {t("competitionCategorySalsa")}
             </span>
-            <span className="rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-primary">
+            <span className="rounded-full border-2 border-white bg-white/20 px-8 py-3 text-sm md:text-lg tracking-[0.25em] uppercase text-white font-bold backdrop-blur-md">
               {t("competitionCategoryBachata")}
             </span>
           </div>
@@ -107,11 +110,6 @@ function CompetitionPage() {
                 preload="metadata"
                 playsInline
               />
-            </div>
-            {/* Floating gold medal tag */}
-            <div className="absolute -bottom-4 -right-4 hidden md:flex flex-col items-center justify-center h-28 w-28 rounded-2xl bg-gold text-primary-foreground shadow-gold border border-gold/40 select-none z-10">
-              <Trophy className="h-7 w-7" />
-              <p className="mt-1 text-[9px] tracking-[0.25em] uppercase font-bold">Champion</p>
             </div>
           </div>
 
@@ -174,9 +172,24 @@ function CompetitionPage() {
           </div>
 
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              setSent(true);
+              setIsSubmitting(true);
+              const formData = new FormData(e.currentTarget);
+              formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
+              formData.append("subject", "New Competition Registration");
+              
+              try {
+                await fetch("https://api.web3forms.com/submit", {
+                  method: "POST",
+                  body: formData,
+                });
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setIsSubmitting(false);
+                setSent(true);
+              }
             }}
             className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur-xl p-8 md:p-12 space-y-6 shadow-soft"
           >
@@ -227,23 +240,39 @@ function CompetitionPage() {
                 >
                   {lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone Number"}
                 </label>
-                <input
-                  id="form-phone"
-                  name="phone"
-                  type="tel"
-                  placeholder={t("competitionFormPhonePlaceholder")}
-                  className="w-full rounded-xl border border-border/60 bg-background/50 px-4 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition placeholder:text-muted-foreground/50 text-foreground"
-                />
+                <div className="flex">
+                  <select
+                    name="phone_country"
+                    defaultValue="+212"
+                    className="rounded-l-xl border border-border/60 border-r-0 bg-background/50 px-3 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition text-foreground max-w-[120px]"
+                  >
+                    {countries.map(c => (
+                      <option key={c.code} value={c.dial_code}>
+                        {c.dial_code.replace('+', '')} ({c.code})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    id="form-phone"
+                    name="phone"
+                    type="tel"
+                    placeholder={t("competitionFormPhonePlaceholder")}
+                    className="w-full rounded-r-xl border border-border/60 bg-background/50 px-4 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition placeholder:text-muted-foreground/50 text-foreground"
+                  />
+                </div>
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full rounded-full bg-gold px-6 py-4 text-sm font-bold text-primary-foreground hover:opacity-90 active:scale-[0.98] transition-all shadow-gold cursor-pointer uppercase tracking-[0.2em]"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-gold px-4 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] cursor-pointer disabled:opacity-70 disabled:hover:scale-100"
             >
-              {sent
-                ? "✓ " + (lang === "fr" ? "Envoyé" : lang === "es" ? "Enviado" : "Sent")
-                : t("competitionFormSubmitBtn")}
+              {isSubmitting
+                ? (lang === "fr" ? "Envoi en cours..." : lang === "es" ? "Enviando..." : "Sending...")
+                : sent
+                  ? "✓ " + (lang === "fr" ? "Envoyé" : lang === "es" ? "Enviado" : "Sent")
+                  : t("competitionFormSubmitBtn")}
             </button>
 
             {sent && (
@@ -255,20 +284,40 @@ function CompetitionPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative py-24 overflow-hidden">
+            {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
         <div className="absolute inset-0 bg-gold opacity-95" />
-        <div className="relative mx-auto max-w-5xl px-6 text-center text-primary-foreground">
-          <h2 className="font-display text-4xl md:text-5xl leading-tight">
-            {t("competitionCtaTitle")}
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
           </h2>
-          <p className="mt-4 opacity-90">{t("competitionCtaDesc")}</p>
-          <Link
-            to={localizedHref("/program")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-medium text-foreground hover:opacity-90 transition shadow-soft cursor-pointer"
-          >
-            {t("competitionCtaBtn")}
-          </Link>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </section>
     </div>
@@ -317,7 +366,7 @@ function AnimatedProgress({ value }: { value: number }) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setInView(true);
+          setTimeout(() => setInView(true), 200); // Wait 200ms before setting to true to ensure animation runs
           observer.disconnect();
         }
       },
@@ -329,13 +378,14 @@ function AnimatedProgress({ value }: { value: number }) {
   }, []);
 
   return (
-    <div ref={ref} className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden border border-border/20">
+    <div ref={ref} className="mt-4 h-3 rounded-full bg-secondary/50 overflow-hidden border border-border/30 shadow-inner">
       <div
-        className="relative h-full bg-gradient-to-r from-gold/70 to-gold rounded-full transition-all duration-[1500ms] shadow-gold ease-out overflow-hidden"
-        style={{ width: inView ? `${value}%` : "0%" }}
+        className="relative h-full bg-gradient-to-r from-rose-500 to-orange-500 rounded-full transition-all ease-out overflow-hidden shadow-[0_0_10px_rgba(244,63,94,0.5)]"
+        style={{ width: inView ? `${value}%` : "0%", transitionDuration: "1500ms" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent w-[200%] animate-progress-shimmer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent w-[200%] animate-progress-shimmer" />
       </div>
     </div>
   );
 }
+

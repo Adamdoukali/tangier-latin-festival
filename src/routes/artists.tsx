@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import {  Search , ArrowRight } from "lucide-react";
 import { z } from "zod";
 import a1 from "@/assets/artist1.jpg";
 import a2 from "@/assets/artist2.jpg";
@@ -38,7 +38,7 @@ const ALL_ARTISTS = [
   { name: "Sandrine", style: "Kizomba", img: BASE + "image-228-2.png" },
   { name: "Alicia", style: "Bachata", img: BASE + "image-235.png" },
   { name: "Talal", style: "Salsa", img: a1 },
-  { name: "Abdel Zouk", style: "Zouk", img: BASE + "image-232.png" },
+  { name: "Abdel Zouk", style: "Bachata", img: BASE + "image-232.png" },
   { name: "Adil & Elo", style: "Bachata", img: BASE + "image-233.png" },
   { name: "Edu & Silvana", style: "Bachata", img: BASE + "image-237.png" },
   { name: "Malick & Carla", style: "Kizomba", img: BASE + "image-234.png" },
@@ -91,19 +91,19 @@ const ALL_ARTISTS = [
   { name: "Yasmine", style: "Salsa", img: BASE25 + "07/IMG_6842-e1753134853717.jpg" },
   { name: "Rodri & Elena", style: "Kizomba", img: BASE25 + "07/Rodri-Elena-e1753135099695.jpg" },
   { name: "Armando & Erika", style: "Bachata", img: BASE25 + "07/Armando-Erika.jpg" },
-  { name: "DJ W", style: "DJ", img: BASE25 + "08/DJ-ABDELO.jpg" },
-  { name: "DJ KECO", style: "DJ", img: BASE24 + "07/DJ-KECO.png" },
-  { name: "DJ BAD", style: "DJ", img: BASE24 + "07/DJ-BAD.png" },
-  { name: "DJ MISTER T", style: "DJ", img: BASE24 + "07/DJ-MISTER-T.png" },
-  { name: "DJ EL MAESTRO", style: "DJ", img: BASE24 + "07/DJ-EL-MAESTRO.png" },
-  { name: "DJ MYSTER YOUSS", style: "DJ", img: BASE24 + "07/DJ-MYSTER-YOUSS.png" },
-  { name: "DJ KITO", style: "DJ", img: BASE24 + "07/DJ-KITO.png" },
-  { name: "DJ NMK", style: "DJ", img: BASE24 + "07/DJ-NMK.png" },
-  { name: "DJ TEMAZO", style: "DJ", img: BASE24 + "07/DJ-TEMAZO.png" },
-  { name: "Dj Puto X", style: "DJ", img: BASE25 + "08/Dj-Puto-X-scaled.jpg" },
-  { name: "DJ YOUSS", style: "DJ", img: BASE24 + "07/DJ-YOUSS.png" },
-  { name: "DJ JALS", style: "DJ", img: BASE24 + "07/DJ-JALS.png" },
-  { name: "DJs Nene & Sandy", style: "DJ", img: BASE24 + "07/DJ-NENE-SANDY.png" },
+  { name: "DJ W", style: "DJs", img: BASE25 + "08/DJ-ABDELO.jpg" },
+  { name: "DJ KECO", style: "DJs", img: BASE24 + "07/DJ-KECO.png" },
+  { name: "DJ BAD", style: "DJs", img: BASE24 + "07/DJ-BAD.png" },
+  { name: "DJ MISTER T", style: "DJs", img: BASE24 + "07/DJ-MISTER-T.png" },
+  { name: "DJ EL MAESTRO", style: "DJs", img: BASE24 + "07/DJ-EL-MAESTRO.png" },
+  { name: "DJ MYSTER YOUSS", style: "DJs", img: BASE24 + "07/DJ-MYSTER-YOUSS.png" },
+  { name: "DJ KITO", style: "DJs", img: BASE24 + "07/DJ-KITO.png" },
+  { name: "DJ NMK", style: "DJs", img: BASE24 + "07/DJ-NMK.png" },
+  { name: "DJ TEMAZO", style: "DJs", img: BASE24 + "07/DJ-TEMAZO.png" },
+  { name: "Dj Puto X", style: "DJs", img: BASE25 + "08/Dj-Puto-X-scaled.jpg" },
+  { name: "DJ YOUSS", style: "DJs", img: BASE24 + "07/DJ-YOUSS.png" },
+  { name: "DJ JALS", style: "DJs", img: BASE24 + "07/DJ-JALS.png" },
+  { name: "DJs Nene & Sandy", style: "DJs", img: BASE24 + "07/DJ-NENE-SANDY.png" },
   { name: "Fika Dance Crew", style: "Ecole", img: BASE25 + "08/Fika-Dance-Crew.jpg" },
   { name: "Latin Dance Evolution", style: "Ecole", img: BASE24 + "07/LATIN-DANCE-EVOLUTION.png" },
   { name: "Yes We Dance Amateur By Andy & Saray", style: "Ecole", img: BASE24 + "07/YES-WE-DANCE-AMATEUR-BY-ANDY-SARAY.png" },
@@ -123,7 +123,7 @@ const styleColors: Record<string, string> = {
   Bachata: "from-purple-600 to-violet-500",
   Kizomba: "from-amber-600 to-orange-500",
   Zouk: "from-teal-600 to-emerald-500",
-  DJ: "from-blue-600 to-cyan-500",
+  DJs: "from-blue-600 to-cyan-500",
   Ecole: "from-pink-600 to-rose-400",
 };
 
@@ -153,6 +153,9 @@ function ArtistCard({ name, style, img }: { name: string; style: string; img: st
         <h3 className="text-white font-bold text-lg leading-tight drop-shadow">{name}</h3>
       </div>
     </div>
+
+      
+
   );
 }
 
@@ -164,7 +167,7 @@ function ArtistsPage() {
   const langSuffix = lang && lang !== "en" ? `?lang=${lang}` : "";
   const localizedHref = (href: string) => `${href}${langSuffix}`;
 
-  const STYLES = [t("artistsStyleAll"), "Salsa", "Bachata", "Kizomba", "Zouk", "DJ", "Ecole"];
+  const STYLES = [t("artistsStyleAll"), "Salsa", "Bachata", "Kizomba", "DJs", "Ecole"];
 
   const visible = ALL_ARTISTS.filter((a) => {
     const matchStyle = filter === "All" || filter === t("artistsStyleAll") || a.style === filter;
@@ -188,14 +191,8 @@ function ArtistsPage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-gold/20 bg-gold/5 backdrop-blur-sm mb-6">
-            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-            <p className="text-xs font-bold tracking-[0.4em] uppercase text-gold">
-              {t("artistsHeroSubtitle")}
-            </p>
-          </div>
           
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold leading-tight mb-6 text-white drop-shadow-2xl">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-6 text-white drop-shadow-2xl">
             {t("artistsHeroTitle")}
           </h1>
           
@@ -204,7 +201,7 @@ function ArtistsPage() {
           </p>
           
           <div className="mt-8 text-sm font-bold tracking-widest uppercase text-white bg-red-600/90 inline-flex px-6 py-2 rounded-full border border-red-500 backdrop-blur-md shadow-lg shadow-red-500/20">
-            {ALL_ARTISTS.length}+ {t("artistsCountLabel")}
+            +100 {t("artistsCountLabel")}
           </div>
         </div>
       </section>
@@ -239,9 +236,6 @@ function ArtistsPage() {
               </button>
             ))}
           </div>
-          <span className="ml-auto text-xs text-gray-400 font-medium hidden sm:block">
-            {visible.length} {visible.length !== 1 ? "artists" : "artist"}
-          </span>
         </div>
       </section>
 
@@ -291,6 +285,42 @@ function ArtistsPage() {
           >
             ← {t("backHomeBtn")}
           </Link>
+        </div>
+      </section>
+            {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
+        <div className="absolute inset-0 bg-gold opacity-95" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
+          </h2>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </section>
     </div>

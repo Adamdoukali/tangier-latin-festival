@@ -25,6 +25,7 @@ export const Route = createFileRoute("/admin/packs")({
 interface PackFormData {
   name: string;
   sub: string;
+  category: string;
   price: string;
   currency: string;
   features: string[];
@@ -35,6 +36,7 @@ interface PackFormData {
 const emptyForm: PackFormData = {
   name: "",
   sub: "",
+  category: "Hotel Packs (Double)",
   price: "",
   currency: "€",
   features: [""],
@@ -66,6 +68,7 @@ function AdminPacks() {
     setForm({
       name: pack.name,
       sub: pack.sub,
+      category: pack.category || "Hotel Packs (Double)",
       price: pack.price,
       currency: pack.currency || "€",
       features: pack.features.length ? [...pack.features] : [""],
@@ -173,7 +176,14 @@ function AdminPacks() {
             </div>
 
             {/* Pack info */}
-            <h3 className="font-display text-xl text-zinc-100">{pack.name}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-xl text-zinc-100">{pack.name}</h3>
+              {pack.category && (
+                <span className="text-[9px] font-bold tracking-widest uppercase text-amber-500/70 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                  {pack.category}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-zinc-500 tracking-wide uppercase mt-0.5">
               {pack.sub}
             </p>
@@ -295,6 +305,23 @@ function AdminPacks() {
                   placeholder="e.g. Gold"
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
                 />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  Category
+                </label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                >
+                  <option value="Hotel Packs (Double)">Hotel Packs (Double)</option>
+                  <option value="Hotel Packs (Single)">Hotel Packs (Single)</option>
+                  <option value="Full Pass">Full Pass</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
 
               {/* Subtitle */}

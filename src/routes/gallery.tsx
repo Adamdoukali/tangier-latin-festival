@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
-import { Camera, ChevronLeft, ChevronRight, X, Eye } from "lucide-react";
+import {  Camera, ChevronLeft, ChevronRight, X, Eye , ArrowRight } from "lucide-react";
 import heroImg from "@/assets/gallery1.jpg";
 
 const gallerySearchSchema = z.object({
@@ -443,7 +443,6 @@ export const GALLERY_PHOTOS: GalleryPhoto[] = [
     category: "workshops",
   },
 
-
   // black-party (16 photos)
   { url: "/gallery/black-party/482241576_974139544896953_1363265038457908845_n.jpg", category: "black-party", label: "Black party" },
   { url: "/gallery/black-party/482247734_974139694896938_824674460454534476_n.jpg", category: "black-party", label: "Black party" },
@@ -609,16 +608,16 @@ function GalleryPage() {
           <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
         </div>
         <div className="relative mx-auto max-w-5xl px-6 text-center">
-          <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4 flex items-center justify-center gap-2">
-            <Camera className="h-3.5 w-3.5 text-gold" />
+          <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4 flex items-center justify-center gap-2">
+            <Camera className="h-4 w-4 md:h-5 md:w-5 text-gold" />
             {t("galleryHeroSubtitle")}
           </p>
-          <h1 className="font-display text-5xl md:text-7xl leading-[0.95] text-white drop-shadow-lg mb-6">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-white drop-shadow-lg mb-6">
             {t("galleryHeroTitlePart1")}{" "}
             <span className="text-gold italic">{t("galleryHeroTitlePart2")}</span>{" "}
             {t("galleryHeroTitlePart3")}
           </h1>
-          <p className="mt-6 text-slate-300 max-w-2xl mx-auto leading-relaxed text-sm md:text-base drop-shadow-md">
+          <p className="mt-6 text-slate-300 max-w-2xl mx-auto leading-relaxed text-base md:text-lg drop-shadow-md">
             {t("galleryHeroDesc")}
           </p>
         </div>
@@ -635,9 +634,9 @@ function GalleryPage() {
                   setActiveTab(tab.id);
                   setActiveImageIndex(null);
                 }}
-                className={`flex-none snap-center px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${
+                className={`flex-none snap-center px-6 py-3 rounded-full text-sm font-bold uppercase tracking-[0.15em] transition-all duration-300 cursor-pointer ${
                   activeTab === tab.id
-                    ? "bg-gold text-primary-foreground shadow-gold font-bold scale-[1.02]"
+                    ? "bg-gold text-primary-foreground shadow-gold scale-[1.02]"
                     : "border border-border/40 bg-card/60 text-muted-foreground hover:text-foreground hover:border-gold/50"
                 }`}
               >
@@ -738,6 +737,43 @@ function GalleryPage() {
           </button>
         </div>
       )}
+            {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
+        <div className="absolute inset-0 bg-gold opacity-95" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
+          </h2>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
+

@@ -105,12 +105,17 @@ function Separator() {
 /* ── Main Countdown ──────────────────────────────────────── */
 export function Countdown() {
   const { t } = useLanguage();
-  const [timeState, setTimeState] = useState<TimeState>(diff());
+  const [isMounted, setIsMounted] = useState(false);
+  const [timeState, setTimeState] = useState<TimeState>({ d: 0, h: 0, m: 0, s: 0 });
 
   useEffect(() => {
+    setIsMounted(true);
+    setTimeState(diff());
     const id = setInterval(() => setTimeState(diff()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (!isMounted) return <div className="countdown-wrapper" aria-hidden="true" style={{ minHeight: "120px" }} />;
 
   // Determine how many digits for days (at least 2, up to 3)
   const dayDigits = timeState.d >= 100 ? 3 : 2;

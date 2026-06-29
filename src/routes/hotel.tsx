@@ -17,11 +17,25 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  ArrowRight,
 } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
 import exteriorImg from "@/assets/hotel-exterior.jpg";
+
+function FilledStars({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`${className} fill-current text-gold drop-shadow-md`}
+        />
+      ))}
+    </div>
+  );
+}
 
 const hotelSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -230,7 +244,7 @@ function HotelPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative h-[65vh] min-h-[460px] flex items-end border-b border-border/40 overflow-hidden select-none bg-slate-950">
+      <section className="relative h-[65vh] min-h-[460px] flex items-end border-b border-border/40 overflow-hidden select-none bg-transparent">
         <style>{`
           @keyframes kenburns {
             0% { transform: scale(1); }
@@ -241,35 +255,27 @@ function HotelPage() {
             50% { transform: translateY(-10px) rotate(2deg); }
           }
         `}</style>
-        <div className="absolute inset-0 -z-10 bg-black">
+        <div className="absolute inset-0 z-0">
           <img
-            src={exteriorImg}
+            src="https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845166.jpg"
             alt="Hotel Solazur Tangier"
-            className="h-full w-full object-cover opacity-45"
-            style={{ animation: 'kenburns 30s ease-in-out infinite alternate' }}
+            className="h-full w-full object-cover opacity-100"
           />
-          <div className="absolute inset-0 hero-overlay" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-6 pb-16 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div className="relative z-10 mx-auto max-w-7xl px-6 pb-16 w-full flex flex-col md:flex-row md:items-end justify-between gap-8">
           <div className="flex-1">
-            <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4 flex items-center gap-2">
-              <Star className="h-3.5 w-3.5 fill-gold text-gold" />
-              {t("hotelHeroSubtitle")}
-            </p>
-            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl leading-[0.95] max-w-4xl text-white drop-shadow-xl">
+            <h1 className="font-display font-bold text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[1.1] max-w-4xl text-white drop-shadow-xl tracking-tight">
               {lang === "fr" ? "HÔTEL" : lang === "es" ? "HOTEL" : "HOTEL"}{" "}
-              <span className="text-gold italic drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">Solazur</span>
+              <span className="text-gold italic uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] pr-4 inline-block">KENZI</span>
+              <br />
+              <span className="text-gold italic uppercase drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] pr-4 inline-block">SOLAZUR</span>
             </h1>
             <div className="mt-6 flex items-center gap-2 text-white/90 backdrop-blur-md bg-black/20 w-fit px-4 py-2 rounded-full border border-white/10 shadow-lg">
               <MapPin className="h-4 w-4 text-primary animate-bounce" />
               <span className="text-sm tracking-wide">{t("hotelHeroLocation")}</span>
               <span className="mx-3 text-white/30">|</span>
-              <div className="flex gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-gold text-gold" />
-                ))}
-              </div>
+              <FilledStars />
             </div>
           </div>
           
@@ -278,12 +284,8 @@ function HotelPage() {
             <div className="text-gold font-display text-3xl font-bold flex items-center gap-1">
               9.2 <span className="text-lg">/10</span>
             </div>
-            <p className="text-[10px] tracking-[0.2em] uppercase text-white/70 mt-1 font-semibold">Exceptional</p>
-            <div className="flex gap-1 mt-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-3 w-3 fill-gold text-gold" />
-              ))}
-            </div>
+            <p className="text-[10px] tracking-[0.2em] uppercase text-white/70 mt-1 font-semibold mb-2">Exceptional</p>
+            <FilledStars className="h-3 w-3" />
           </div>
         </div>
       </section>
@@ -321,11 +323,11 @@ function HotelPage() {
           {/* Right Column: Hotel solazur detailed description, equipments list, google maps, highlights */}
           <div className="space-y-12">
             <div>
-              <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3">
+              <p className="text-lg md:text-xl font-bold tracking-[0.3em] uppercase text-primary mb-4">
                 {t("hotelStaySubtitle")}
               </p>
               <h2 className="font-display text-3xl sm:text-4xl md:text-5xl leading-tight text-glow">
-                HÔTEL <span className="text-gold italic">Solazur</span>
+                HÔTEL <span className="text-gold italic uppercase">KENZI SOLAZUR</span>
               </h2>
               <div className="mt-6 space-y-5 text-muted-foreground leading-relaxed text-sm md:text-base border-l-2 border-gold/30 pl-4">
                 <p>{t("hotelStayDesc1")}</p>
@@ -425,24 +427,38 @@ function HotelPage() {
         </div>
       </section>
 
-      {/* NEED HELP CTA */}
-      <section className="relative py-24 overflow-hidden border-t border-border/40 bg-card/20 select-none">
+      {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
         <div className="absolute inset-0 bg-gold opacity-95" />
-        <div className="relative mx-auto max-w-3xl px-6 text-center text-primary-foreground">
-          <h2 className="font-display text-4xl md:text-5xl leading-tight">{t("hotelCtaTitle")}</h2>
-          <p className="mt-4 opacity-90 text-sm md:text-base">{t("hotelCtaDesc")}</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
+          </h2>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
             <a
-              href="mailto:contact@tangierlatinfestival.com"
-              className="inline-flex items-center gap-2 rounded-full bg-background px-8 py-3.5 text-sm font-bold text-foreground hover:opacity-90 transition shadow-soft cursor-pointer uppercase tracking-[0.1em]"
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
             >
-              {t("hotelCtaContactBtn")}
-            </a>
-            <a
-              href={localizedHref("/#packs")}
-              className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/30 px-8 py-3.5 text-sm font-bold text-primary-foreground hover:bg-primary-foreground/10 transition cursor-pointer uppercase tracking-[0.1em]"
-            >
-              {t("hotelCtaSeePacksBtn")}
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
             </a>
           </div>
         </div>

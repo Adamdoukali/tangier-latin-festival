@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { MapPin, Calendar, Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Calendar, Check, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { Nav } from "@/components/Nav";
@@ -8,6 +8,7 @@ import asilahImg from "@/assets/asilah.jpg";
 import tangierImg from "@/assets/tangier-tour.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
+import { countries } from "@/lib/countries";
 
 const tourismSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/tourism")({
 function TourismPage() {
   const { lang, t } = useLanguage();
   const [sent, setSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dest, setDest] = useState("");
 
   const tours = [
@@ -182,10 +184,10 @@ function TourismPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-slate-950">
-        <div className="absolute inset-0 -z-10 opacity-30">
-          <img src={tangierImg} alt="" className="h-full w-full object-cover" />
-          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-transparent">
+        <div className="absolute inset-0 -z-10">
+          <img src={chefchaouenImg} alt="" className="h-full w-full object-cover opacity-100" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         </div>
         <div className="mx-auto max-w-5xl px-6 text-center">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
@@ -213,17 +215,17 @@ function TourismPage() {
             >
               <div className="relative">
                 <PremiumCarousel images={tItem.images} alt={tItem.city} />
-                <div className="absolute top-5 left-5 rounded-full bg-background/80 backdrop-blur border border-border/60 px-4 py-1.5 text-[10px] tracking-[0.3em] uppercase text-primary inline-flex items-center gap-2 z-20">
-                  <Calendar className="h-3 w-3" /> {tItem.date}
+                <div className="absolute top-5 left-5 rounded-full bg-slate-950/80 backdrop-blur border border-white/20 px-5 py-2 text-xs font-bold tracking-widest text-white inline-flex items-center gap-2 z-20">
+                  <Calendar className="h-4 w-4" /> {tItem.date}
                 </div>
               </div>
 
               <div>
-                <p className="text-xs tracking-[0.4em] uppercase text-primary mb-3 inline-flex items-center gap-2">
-                  <MapPin className="h-3.5 w-3.5" /> {t("tourismTourGroup")}
+                <p className="font-display text-base md:text-lg font-bold tracking-[0.3em] uppercase text-primary mb-3 inline-flex items-center gap-2">
+                  <MapPin className="h-4 w-4" /> {t("tourismTourGroup")}
                 </p>
                 <h2 className="font-display text-4xl md:text-5xl">
-                  <span className="text-gold italic">{tItem.city}</span>
+                  <span className="text-gold italic pr-4 inline-block">{tItem.city}</span>
                 </h2>
                 <p className="mt-5 text-muted-foreground leading-relaxed">{tItem.desc}</p>
 
@@ -244,7 +246,7 @@ function TourismPage() {
                 <a
                   href="#reserve"
                   onClick={() => setDest(tItem.city)}
-                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-gold px-8 py-4 text-base font-bold font-display tracking-widest text-slate-950 uppercase shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 transition-all cursor-pointer"
                 >
                   {t("tourismReserveBtn")}
                 </a>
@@ -266,9 +268,24 @@ function TourismPage() {
           </div>
 
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              setSent(true);
+              setIsSubmitting(true);
+              const formData = new FormData(e.currentTarget);
+              formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
+              formData.append("subject", "New Tourism Booking");
+              
+              try {
+                await fetch("https://api.web3forms.com/submit", {
+                  method: "POST",
+                  body: formData,
+                });
+              } catch (err) {
+                console.error(err);
+              } finally {
+                setIsSubmitting(false);
+                setSent(true);
+              }
             }}
             className="rounded-2xl border border-border/60 bg-card p-6 md:p-10 space-y-5"
           >
@@ -277,6 +294,7 @@ function TourismPage() {
                 {t("tourismFormLabelDest")} <span className="text-primary">*</span>
               </label>
               <select
+                name="Destination"
                 value={dest}
                 onChange={(e) => setDest(e.target.value)}
                 required
@@ -300,11 +318,29 @@ function TourismPage() {
                 required
               />
               <Field label="Email" name="email" type="email" required />
-              <Field
-                label={lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone"}
-                name="phone"
-                type="tel"
-              />
+              <div>
+                <label className="block text-xs tracking-[0.25em] uppercase text-muted-foreground mb-2">
+                  {lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone"}
+                </label>
+                <div className="flex">
+                  <select
+                    name="phone_country"
+                    defaultValue="+212"
+                    className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[120px]"
+                  >
+                    {countries.map(c => (
+                      <option key={c.code} value={c.dial_code}>
+                        {c.dial_code.replace('+', '')} ({c.code})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    name="phone"
+                    type="tel"
+                    className="w-full rounded-r-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
+                  />
+                </div>
+              </div>
               <Field label={t("tourismFormLabelCountry")} name="country" />
               <div className="md:col-span-2">
                 <label className="block text-xs tracking-[0.25em] uppercase text-muted-foreground mb-2">
@@ -312,6 +348,7 @@ function TourismPage() {
                 </label>
                 <input
                   type="number"
+                  name="Number of People"
                   min={1}
                   defaultValue={1}
                   className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition font-semibold"
@@ -324,6 +361,7 @@ function TourismPage() {
                 {t("tourismFormLabelMsg")}
               </label>
               <textarea
+                name="Message"
                 rows={4}
                 placeholder={t("tourismFormMsgPlaceholder")}
                 className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:border-primary transition"
@@ -332,9 +370,10 @@ function TourismPage() {
 
             <button
               type="submit"
-              className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full rounded-full bg-gold px-6 py-3.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition shadow-gold cursor-pointer disabled:opacity-70"
             >
-              {sent ? "✓ Sent" : t("tourismFormSendBtn")}
+              {isSubmitting ? "Sending..." : sent ? "✓ Sent" : t("tourismFormSendBtn")}
             </button>
 
             {sent && (
@@ -343,6 +382,43 @@ function TourismPage() {
               </p>
             )}
           </form>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
+        <div className="absolute inset-0 bg-gold opacity-95" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
+          <p className="text-xs tracking-[0.4em] uppercase font-bold opacity-90">
+            {lang === "fr"
+              ? "Premier arrivé, premier servi !"
+              : lang === "es"
+                ? "¡Plazas limitadas!"
+                : "First come, first served!"}
+          </p>
+          <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight">
+            {lang === "fr"
+              ? "Vous n'avez pas encore réservé votre place ?"
+              : lang === "es"
+                ? "¿Aún no has reservado tu plaza?"
+                : "Haven't booked your spot yet?"}
+          </h2>
+          <p className="opacity-90 max-w-lg mx-auto text-sm md:text-base">
+            {lang === "fr"
+              ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
+              : lang === "es"
+                ? "¿Listo para unirte al evento? Reserva tu pack y descubre nuestras ofertas exclusivas sin perder tiempo."
+                : "Ready to join the magic? Reserve your pack and discover our exclusive offers right now."}
+          </p>
+          <div className="pt-6">
+            <a
+              href="/#packs"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
+            >
+              <span>{t("buyPackBtn")}</span>
+              <ArrowRight className="h-5 w-5" />
+            </a>
+          </div>
         </div>
       </section>
     </div>
