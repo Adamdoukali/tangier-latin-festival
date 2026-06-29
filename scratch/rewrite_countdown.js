@@ -1,4 +1,11 @@
-import { useEffect, useState } from "react";
+const fs = require('fs');
+
+function fixCountdown() {
+  const filePath = 'src/components/Countdown.tsx';
+  
+  // Here is the EXACT code from f41727f (the "normal version" they liked),
+  // but with the numbers colored exactly like the stats-value gradient.
+  const content = `import { useEffect, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const TARGET = new Date("2027-01-07T14:00:00").getTime();
@@ -92,3 +99,9 @@ export function Countdown() {
     </div>
   );
 }
+`;
+
+  fs.writeFileSync(filePath, content);
+}
+
+fixCountdown();

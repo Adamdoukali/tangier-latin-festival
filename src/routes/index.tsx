@@ -282,7 +282,7 @@ function Home() {
               {t("overviewSubtitle")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl leading-tight">
-              {t("overviewWelcome")}{" "}
+              Welcome to the{" "}
               <span className="text-gold italic py-1 leading-normal block md:inline-block">
                 {t("heroTitlePart1")} {t("heroTitlePart2")}
               </span>
@@ -384,7 +384,7 @@ function Home() {
                 {t("lineupSubtitle")}
               </p>
               <h2 className="font-display text-5xl md:text-6xl">
-                {t("discoverArtists")} <span className="text-gold italic py-1 leading-normal inline-block">{t("lineupTitleHighlight")}</span>
+                Discover our <span className="text-gold italic py-1 leading-normal inline-block">artists</span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl">{t("lineupDesc")}</p>
             </div>
@@ -910,7 +910,7 @@ function Home() {
           <div className="mt-12 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2">
             <span>© {new Date().getFullYear()} Tangier International Latin Festival. {t("footerCopyright") || "All rights reserved."}</span>
             <span className="hidden sm:inline">•</span>
-            <span>Made with love by <a href="https://clarodigi.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition underline decoration-primary/50">Claro</a> & <span className="font-bold">The Node Group</span></span>
+            <span>Made with love by <a href="https://clarodigi.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition underline decoration-primary/50">Claro</a></span>
           </div>
         </div>
       </footer>
