@@ -48,7 +48,7 @@ export function Countdown() {
 
       <div className="flex items-center gap-4 md:gap-8 lg:gap-12">
         <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-foreground font-bold tracking-tighter">
+          <span className="font-display text-4xl md:text-6xl lg:text-7xl text-gold font-bold tracking-tighter leading-none py-1">
             {dStr}
           </span>
           <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
@@ -57,7 +57,7 @@ export function Countdown() {
         </div>
         <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
         <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-foreground font-bold tracking-tighter">
+          <span className="font-display text-4xl md:text-6xl lg:text-7xl text-gold font-bold tracking-tighter leading-none py-1">
             {hStr}
           </span>
           <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
@@ -66,7 +66,7 @@ export function Countdown() {
         </div>
         <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
         <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-gold font-bold tracking-tighter">
+          <span className="font-display text-4xl md:text-6xl lg:text-7xl text-gold font-bold tracking-tighter leading-none py-1">
             {mStr}
           </span>
           <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
@@ -75,7 +75,7 @@ export function Countdown() {
         </div>
         <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
         <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl text-gold font-bold tracking-tighter">
+          <span className="font-display text-4xl md:text-6xl lg:text-7xl text-gold font-bold tracking-tighter leading-none py-1">
             {sStr}
           </span>
           <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">

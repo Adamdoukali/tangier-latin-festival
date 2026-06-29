@@ -281,8 +281,8 @@ function Home() {
               {t("overviewSubtitle")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl leading-tight">
-              Welcome to the{" "}
-              <span className="text-gold italic">
+              {t("overviewWelcome")}{" "}
+              <span className="text-gold italic py-1 leading-normal block md:inline-block">
                 {t("heroTitlePart1")} {t("heroTitlePart2")}
               </span>
             </h2>
@@ -383,7 +383,7 @@ function Home() {
                 {t("lineupSubtitle")}
               </p>
               <h2 className="font-display text-5xl md:text-6xl">
-                Discover our <span className="text-gold italic">artists</span>
+                {t("discoverArtists")} <span className="text-gold italic py-1 leading-normal inline-block">{t("lineupTitleHighlight")}</span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl">{t("lineupDesc")}</p>
             </div>
@@ -886,7 +886,11 @@ function Home() {
               </div>
             </a>
             <p className="max-w-2xl text-sm text-muted-foreground italic">
-              {t("footerDesc") || "An internationally renowned cultural event on the lands of Tangier."}
+              lang === "fr" 
+                ? "LE FESTIVAL EST UN ÉVÉNEMENT CULTUREL DE RENOMMÉE INTERNATIONALE SUR LE SOL DE TANGER"
+                : lang === "es"
+                ? "EL FESTIVAL ES UN EVENTO CULTURAL DE RENOMBRE INTERNACIONAL EN LAS TIERRAS DE TÁNGER"
+                : "THE FESTIVAL IS AN INTERNATIONALLY RENOWNED CULTURAL EVENT IN THE LANDS OF TANGIER"
             </p>
             <div className="flex items-center gap-4">
               <a
