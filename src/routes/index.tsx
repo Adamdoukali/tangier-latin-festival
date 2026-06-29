@@ -54,7 +54,7 @@ import {
   translatedHomeProgramme,
   Language,
 } from "@/lib/translations";
-import { countries } from "@/lib/countries";
+import { countries, getFlagEmoji } from "@/lib/countries";
 
 export const Route = createFileRoute("/")({
   head: (ctx) => {
@@ -626,14 +626,14 @@ function Home() {
                   <img
                     src={partnerSalsero}
                     alt="Salsero"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
                 <a href="#" className="hover:opacity-70 transition shrink-0">
                   <img
                     src={partnerSalsaGroup}
                     alt="Salsa Group"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
                 <a
@@ -645,7 +645,7 @@ function Home() {
                   <img
                     src={partnerSummerBachata}
                     alt="Summer Bachata"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
                 <a
@@ -657,7 +657,7 @@ function Home() {
                   <img
                     src={partnerBachataSpain}
                     alt="Bachata Spain"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
                 <a
@@ -669,7 +669,7 @@ function Home() {
                   <img
                     src={partnerBachataWorld}
                     alt="Bachata All The World"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
                 <a
@@ -681,7 +681,7 @@ function Home() {
                   <img
                     src={partnerAllIn}
                     alt="All In Kizomba"
-                    className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition duration-300"
+                    className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
               </div>
@@ -980,12 +980,12 @@ function ContactForm() {
           <div className="flex">
             <select
               name="phone_country"
-              defaultValue="+212"
+              defaultValue={`${getFlagEmoji("MA")} +212`}
               className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[120px]"
             >
               {countries.map(c => (
-                <option key={c.code} value={c.dial_code}>
-                  {c.dial_code.replace('+', '')} ({c.code})
+                <option key={c.code} value={`${getFlagEmoji(c.code)} ${c.dial_code}`}>
+                  {getFlagEmoji(c.code)} {c.dial_code} ({c.code})
                 </option>
               ))}
             </select>

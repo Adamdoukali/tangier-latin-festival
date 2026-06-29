@@ -204,10 +204,10 @@ function TestimonialsPage() {
           
           <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
             {lang === "fr"
-              ? "Découvrez les retours exclusifs de nos artistes internationaux et professeurs sur leur incroyable expérience au Tangier International Latin Festival."
+              ? "Découvrez les retours exclusifs des participants sur leur incroyable expérience au Tangier International Latin Festival."
               : lang === "es"
-                ? "Descubre los testimonios exclusivos de nuestros artistas internacionales y profesores sobre su increíble experiencia en el Tangier International Latin Festival."
-                : "Discover exclusive feedback from our international artists, DJs, and instructors about their amazing experience at the Tangier International Latin Festival."}
+                ? "Descubre los testimonios exclusivos de los participantes sobre su increíble experiencia en el Tangier International Latin Festival."
+                : "Discover exclusive feedback from our participants about their amazing experience at the Tangier International Latin Festival."}
           </p>
         </div>
       </section>

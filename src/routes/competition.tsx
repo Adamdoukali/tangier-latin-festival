@@ -251,7 +251,7 @@ function CompetitionPage() {
                       const flag = getFlagEmoji(c.code);
                       return (
                         <option key={c.code} value={`${flag} ${c.dial_code}`}>
-                          {flag} {c.dial_code.replace('+', '')} ({c.code})
+                          {flag} {c.dial_code} ({c.code})
                         </option>
                       );
                     })}
