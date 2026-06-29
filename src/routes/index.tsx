@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getActivePacks } from "@/lib/admin-store";
 import { GALLERY_PHOTOS } from "@/routes/gallery";
+import tlfLogo from "@/assets/tlf-logo.png";
 import {
   MapPin,
   Calendar,
@@ -874,23 +875,13 @@ function Home() {
           <div className="flex flex-col items-center text-center gap-6">
             <a href={localizedHref("#home")} className="flex items-center gap-3">
               <img
-                src="/favicon.png"
+                src={tlfLogo}
                 alt="Tangier Latin Festival Icon"
-                className="h-12 w-12 object-contain"
+                className="h-16 w-auto object-contain invert"
               />
-              <div className="leading-tight text-left">
-                <div className="font-display text-xl tracking-wide">Tangier</div>
-                <div className="text-[10px] tracking-[0.3em] text-muted-foreground uppercase">
-                  Latin Festival
-                </div>
-              </div>
             </a>
             <p className="max-w-2xl text-sm text-muted-foreground italic">
-              lang === "fr" 
-                ? "LE FESTIVAL EST UN ÉVÉNEMENT CULTUREL DE RENOMMÉE INTERNATIONALE SUR LE SOL DE TANGER"
-                : lang === "es"
-                ? "EL FESTIVAL ES UN EVENTO CULTURAL DE RENOMBRE INTERNACIONAL EN LAS TIERRAS DE TÁNGER"
-                : "THE FESTIVAL IS AN INTERNATIONALLY RENOWNED CULTURAL EVENT IN THE LANDS OF TANGIER"
+              {t("footerDesc") || "An internationally renowned cultural event on the lands of Tangier."}
             </p>
             <div className="flex items-center gap-4">
               <a
@@ -919,7 +910,7 @@ function Home() {
           <div className="mt-12 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-center gap-2">
             <span>© {new Date().getFullYear()} Tangier International Latin Festival. {t("footerCopyright") || "All rights reserved."}</span>
             <span className="hidden sm:inline">•</span>
-            <span>Made with love by <a href="https://clarodigi.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 transition underline decoration-primary/50">Claro</a></span>
+            <span>Made by <span className="font-bold">The Node Group</span></span>
           </div>
         </div>
       </footer>

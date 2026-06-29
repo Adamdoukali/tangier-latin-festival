@@ -166,7 +166,8 @@ export const translations = {
     addressLabel: "Address",
     emailLabel: "Email",
     phonesLabel: "Phones",
-    footerDesc: "An internationally renowned cultural event on the lands of Tangier.",
+    footerDesc: "THE FESTIVAL IS AN INTERNATIONALLY RENOWNED CULTURAL EVENT IN THE LANDS OF TANGIER.",
+    oldFooterDesc: "An internationally renowned cultural event on the lands of Tangier.",
     footerCopyright: "All rights reserved.",
 
     // ──────────────────────────────────────────
@@ -499,7 +500,8 @@ export const translations = {
     addressLabel: "Adresse",
     emailLabel: "Email",
     phonesLabel: "Téléphones",
-    footerDesc: "Un événement culturel de renommée internationale sur les terres de Tanger.",
+    footerDesc: "LE FESTIVAL EST UN ÉVÉNEMENT CULTUREL DE RENOMMÉE INTERNATIONALE SUR LE SOL DE TANGER",
+    oldFooterDesc: "Un événement culturel de renommée internationale sur les terres de Tanger.",
     footerCopyright: "Tous droits réservés.",
 
     // Artists Page
@@ -817,7 +819,8 @@ export const translations = {
     addressLabel: "Dirección",
     emailLabel: "Correo",
     phonesLabel: "Teléfonos",
-    footerDesc: "Un evento cultural de renombre internacional en las tierras de Tánger.",
+    footerDesc: "EL FESTIVAL ES UN EVENTO CULTURAL DE RENOMBRE INTERNACIONAL EN LAS TIERRAS DE TÁNGER",
+    oldFooterDesc: "Un evento cultural de renombre internacional en las tierras de Tánger.",
     footerCopyright: "Todos los derechos reservados.",
 
     // Artists Page
