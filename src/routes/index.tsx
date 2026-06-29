@@ -282,7 +282,7 @@ function Home() {
               {t("overviewSubtitle")}
             </p>
             <h2 className="font-display text-4xl md:text-5xl leading-tight">
-              Welcome to the{" "}
+              {lang === "fr" ? "Bienvenue au " : lang === "es" ? "Bienvenido al " : "Welcome to the "}
               <span className="text-gold italic py-1 leading-normal block md:inline-block">
                 {t("heroTitlePart1")} {t("heroTitlePart2")}
               </span>
@@ -384,7 +384,10 @@ function Home() {
                 {t("lineupSubtitle")}
               </p>
               <h2 className="font-display text-5xl md:text-6xl">
-                Discover our <span className="text-gold italic py-1 leading-normal inline-block">artists</span>
+                {lang === "fr" ? "Découvrez nos " : lang === "es" ? "Descubre nuestros " : "Discover our "} 
+                <span className="text-gold italic py-1 leading-normal inline-block">
+                  {lang === "fr" ? "artistes" : lang === "es" ? "artistas" : "artists"}
+                </span>
               </h2>
               <p className="mt-4 text-muted-foreground max-w-xl">{t("lineupDesc")}</p>
             </div>
