@@ -81,7 +81,7 @@ const artists = [
 ];
 
 function Home() {
-
+  const [videoOpen, setVideoOpen] = useState(false);
   const [secondVideoOpen, setSecondVideoOpen] = useState(false);
   const [selectedPack, setSelectedPack] = useState<{
     name: string;
@@ -172,6 +172,23 @@ function Home() {
             Salsa · Bachata · Kizomba · Competition
           </p>
 
+          {/* Big play button */}
+          <div className="mt-12 flex flex-col items-center gap-3">
+            <button
+              id="hero-play-btn"
+              onClick={() => setVideoOpen(true)}
+              aria-label="Watch the festival recap"
+              className="group relative flex items-center justify-center h-20 w-20 rounded-full bg-white/15 backdrop-blur-sm border-2 border-white/60 hover:bg-white/25 hover:border-white transition-all duration-300 hover:scale-110 shadow-gold cursor-pointer"
+            >
+              {/* Pulsing ring */}
+              <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
+              <Play className="h-8 w-8 text-white fill-white translate-x-0.5" />
+            </button>
+            <span className="text-white/70 text-xs tracking-[0.25em] uppercase">
+              {t("watchRecap")}
+            </span>
+          </div>
+
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <a
               href={localizedHref("/#packs")}
@@ -189,7 +206,38 @@ function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background pointer-events-none" />
       </section>
 
-
+      {/* VIDEO MODAL */}
+      {videoOpen && (
+        <div
+          id="video-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVideoOpen(false);
+          }}
+        >
+          <div className="relative w-full max-w-5xl">
+            {/* Close button */}
+            <button
+              onClick={() => setVideoOpen(false)}
+              aria-label="Close video"
+              className="absolute -top-10 md:-top-12 right-2 md:right-0 z-10 text-white hover:text-white/80 text-xs md:text-sm tracking-widest uppercase transition cursor-pointer"
+            >
+              {t("closeBtn")}
+            </button>
+            <div className="relative rounded-none md:rounded-2xl overflow-hidden shadow-gold border-y md:border border-white/10">
+              <div className="aspect-video">
+                <iframe
+                  src="https://www.youtube.com/embed/QN8LsEhzxy0?autoplay=1&rel=0&modestbranding=1"
+                  title={t("recapsTitle")}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* OVERVIEW */}
       <section id="festival" className="py-28">
