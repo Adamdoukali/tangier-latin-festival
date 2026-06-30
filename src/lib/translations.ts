@@ -102,9 +102,12 @@ export const translations = {
       "Get a glimpse of the festival timeline. Experience workshops, shows and grand social parties with dancers from all over the world.",
     viewFullScheduleBtn: "View Full Schedule →",
 
-    // Packs Home Section
     packsSubtitle: "Packs",
     packsTitle: "Choose your Pack",
+    packsHeroTitlePart1: "Our ",
+    packsHeroTitlePart2: "Packs",
+    packsHeroDesc: "Choose the perfect pack that suits your festival experience.",
+    packsPriceBanner: "Prices get increased every month, starting from:",
     packsDesc:
       "Whether you are a beginner, social dancer, or professional, we have a pass that suits your desires.",
     popularBadge: "Popular",
@@ -436,9 +439,12 @@ export const translations = {
       "Découvrez le déroulement du festival. Participez à des ateliers, des spectacles et des soirées intenses avec des danseurs du monde entier.",
     viewFullScheduleBtn: "Voir le programme complet →",
 
-    // Packs Home Section
     packsSubtitle: "Packs",
     packsTitle: "Choisissez votre Pack",
+    packsHeroTitlePart1: "Nos ",
+    packsHeroTitlePart2: "Packs",
+    packsHeroDesc: "Choisissez le pack parfait qui correspond à votre expérience du festival.",
+    packsPriceBanner: "Les prix augmentent chaque mois, à partir de :",
     packsDesc:
       "Que vous soyez débutant, danseur social ou professionnel, nous avons le pass qui correspond à vos envies.",
     popularBadge: "Populaire",
@@ -755,9 +761,12 @@ export const translations = {
       "Echa un vistazo a la agenda del festival. Disfruta de talleres, espectáculos y grandes fiestas sociales con bailarines de todo el mundo.",
     viewFullScheduleBtn: "Ver programa completo →",
 
-    // Packs Home Section
     packsSubtitle: "Packs",
     packsTitle: "Elige tu Pack",
+    packsHeroTitlePart1: "Nuestros ",
+    packsHeroTitlePart2: "Packs",
+    packsHeroDesc: "Elige el pack perfecto que se adapte a tu experiencia en el festival.",
+    packsPriceBanner: "Los precios suben cada mes, a partir de:",
     packsDesc:
       "Tanto si eres principiante, bailarín social o profesional, tenemos el pase perfecto para ti.",
     popularBadge: "Popular",

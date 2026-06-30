@@ -67,10 +67,10 @@ function PacksPage() {
             TLF 2027
           </p>
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[0.95] text-white drop-shadow-lg">
-            Our <span className="text-gold italic">Packs</span>
+            {t("packsHeroTitlePart1")} <span className="text-gold italic">{t("packsHeroTitlePart2")}</span>
           </h1>
           <p className="mt-6 text-slate-300 max-w-2xl mx-auto drop-shadow-md">
-            Choose the perfect pack that suits your festival experience.
+            {t("packsHeroDesc")}
           </p>
         </div>
       </section>
@@ -192,6 +192,7 @@ function PacksPage() {
 }
 
 function AnimatedPriceBanner() {
+  const { t } = useLanguage();
   const dates = ["1 November", "1 December", "1 January"];
   const [index, setIndex] = useState(0);
 
@@ -205,7 +206,7 @@ function AnimatedPriceBanner() {
   return (
     <div className="bg-background border-y border-border/40 py-6 w-full flex items-center justify-center shadow-lg relative z-20">
       <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left text-sm md:text-base font-medium text-foreground uppercase tracking-widest">
-        <span className="opacity-80">Prices get increased every month, starting from:</span>
+        <span className="opacity-80">{t("packsPriceBanner")}</span>
         <div className="relative h-6 md:h-7 w-[140px] overflow-hidden">
           {dates.map((date, i) => (
             <span

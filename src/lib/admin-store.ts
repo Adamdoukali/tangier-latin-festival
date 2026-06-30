@@ -55,7 +55,7 @@ export interface Invite {
 const PACKS_KEY = "tlf_admin_packs";
 const BOOKINGS_KEY = "tlf_admin_bookings";
 const INVITES_KEY = "tlf_admin_invites";
-const SEEDED_KEY = "tlf_admin_seeded_v3";
+const SEEDED_KEY = "tlf_admin_seeded_v4";
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -91,7 +91,7 @@ function writeStore<T>(key: string, data: T[]): void {
 
 const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
   {
-    name: "Basic Ticket",
+    name: "Chambre double",
     sub: "SOLAZUR HOTEL TANGIER (2 NIGHTS)",
     price: "335",
     currency: "€",
@@ -103,10 +103,10 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
-    category: "Hotel Packs (Double)",
+    category: "Chambre double",
   },
   {
-    name: "Basic Ticket",
+    name: "Chambre double",
     sub: "SOLAZUR HOTEL TANGIER (3 NIGHTS)",
     price: "385",
     currency: "€",
@@ -118,10 +118,10 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: true,
     active: true,
-    category: "Hotel Packs (Double)",
+    category: "Chambre double",
   },
   {
-    name: "Basic Ticket",
+    name: "Chambre double",
     sub: "SOLAZUR HOTEL TANGIER (4 NIGHTS)",
     price: "435",
     currency: "€",
@@ -133,7 +133,52 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     ],
     popular: false,
     active: true,
-    category: "Hotel Packs (Double)",
+    category: "Chambre double",
+  },
+  {
+    name: "Chambre single",
+    sub: "SOLAZUR HOTEL TANGIER (2 NIGHTS)",
+    price: "435",
+    currency: "€",
+    features: [
+      "2 NIGHTS",
+      "BREAKFAST",
+      "DINNER",
+      "FULL PASS",
+    ],
+    popular: false,
+    active: true,
+    category: "Chambre single",
+  },
+  {
+    name: "Chambre single",
+    sub: "SOLAZUR HOTEL TANGIER (3 NIGHTS)",
+    price: "535",
+    currency: "€",
+    features: [
+      "3 NIGHTS",
+      "BREAKFAST",
+      "DINNER",
+      "FULL PASS",
+    ],
+    popular: false,
+    active: true,
+    category: "Chambre single",
+  },
+  {
+    name: "Chambre single",
+    sub: "SOLAZUR HOTEL TANGIER (4 NIGHTS)",
+    price: "635",
+    currency: "€",
+    features: [
+      "4 NIGHTS",
+      "BREAKFAST",
+      "DINNER",
+      "FULL PASS",
+    ],
+    popular: false,
+    active: true,
+    category: "Chambre single",
   },
   {
     name: "Full Pass",
