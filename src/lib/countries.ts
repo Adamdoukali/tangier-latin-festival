@@ -1248,3 +1248,19 @@ export const getFlagEmoji = (countryCode: string) => {
     .map((char) => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 };
+
+export const getFlagUrl = (countryCode: string) => {
+  return `https://flagcdn.com/${countryCode.toLowerCase()}.svg`;
+};
+
+const ALLOWED_COUNTRY_CODES = new Set([
+  "MA", // Morocco
+  "US", // United States
+  // Europe
+  "AD", "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", "DK", 
+  "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", 
+  "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", 
+  "RO", "RS", "RU", "SE", "SI", "SK", "SM", "UA", "VA"
+]);
+
+export const filteredCountries = countries.filter(c => ALLOWED_COUNTRY_CODES.has(c.code));

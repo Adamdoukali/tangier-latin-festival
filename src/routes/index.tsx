@@ -54,7 +54,7 @@ import {
   translatedHomeProgramme,
   Language,
 } from "@/lib/translations";
-import { countries, getFlagEmoji } from "@/lib/countries";
+import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 
 export const Route = createFileRoute("/")({
   head: (ctx) => {
@@ -978,17 +978,7 @@ function ContactForm() {
             {lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone"}
           </label>
           <div className="flex">
-            <select
-              name="phone_country"
-              defaultValue={`${getFlagEmoji("MA")} +212`}
-              className="rounded-l-lg border border-border border-r-0 bg-background px-3 py-3 text-sm focus:outline-none focus:border-primary transition max-w-[120px]"
-            >
-              {countries.map(c => (
-                <option key={c.code} value={`${getFlagEmoji(c.code)} ${c.dial_code}`}>
-                  {getFlagEmoji(c.code)} {c.dial_code} ({c.code})
-                </option>
-              ))}
-            </select>
+            <PhoneCountrySelect className="rounded-l-lg border border-border border-r-0 max-w-[120px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none" />
             <input
               type="tel"
               name="phone"

@@ -60,8 +60,10 @@ function PacksPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/20 bg-slate-950 select-none">
-        <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/20 bg-background select-none">
+        <div className="absolute inset-0 bg-[url('/packs_bg.png')] bg-cover bg-center bg-no-repeat" />
+        <div className="absolute inset-0 bg-background/40" />
+        <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-background via-background/60 to-transparent" />
         <div className="relative mx-auto max-w-5xl px-6 text-center w-full">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">
             TLF 2027

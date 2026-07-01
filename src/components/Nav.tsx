@@ -88,10 +88,10 @@ export function Nav() {
     { href: "/#contact", label: t("navContact") },
   ];
 
-  const languages: { code: Language; label: string; flag: string }[] = [
-    { code: "en", label: "English", flag: "🇺🇸" },
-    { code: "fr", label: "Français", flag: "🇫🇷" },
-    { code: "es", label: "Español", flag: "🇪🇸" },
+  const languages: { code: Language; label: string; flagUrl: string }[] = [
+    { code: "en", label: "English", flagUrl: "https://flagcdn.com/us.svg" },
+    { code: "fr", label: "Français", flagUrl: "https://flagcdn.com/fr.svg" },
+    { code: "es", label: "Español", flagUrl: "https://flagcdn.com/es.svg" },
   ];
 
   return (
@@ -132,13 +132,15 @@ export function Nav() {
                 <button
                   key={l.code}
                   onClick={() => changeLanguage(l.code)}
-                  className={`group relative h-7 w-7 xl:h-9 xl:w-9 rounded-full flex items-center justify-center text-sm xl:text-lg transition-all duration-500 cursor-pointer overflow-visible ${
+                  className={`group relative h-7 w-7 xl:h-9 xl:w-9 rounded-full flex items-center justify-center transition-all duration-500 cursor-pointer overflow-visible ${
                     lang === l.code
                       ? "bg-gold/20 scale-115 border border-gold/70 flag-pulse-active shadow-gold z-10"
                       : "border border-transparent bg-background/20 opacity-50 hover:opacity-100 hover:scale-110 hover:rotate-6 hover:-translate-y-0.5 hover:border-gold/45"
                   }`}
                 >
-                  <span className="relative z-10 select-none">{l.flag}</span>
+                  <span className="relative z-10 select-none flex items-center justify-center">
+                    <img src={l.flagUrl} alt={l.label} className="w-4 h-4 xl:w-5 xl:h-5 rounded-full object-cover shadow-sm" />
+                  </span>
                   <span className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/0 via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/90 border border-gold/30 text-gold text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none shadow-gold font-mono whitespace-nowrap z-50">
                     {l.code}
@@ -239,13 +241,13 @@ export function Nav() {
                       changeLanguage(l.code);
                       setMobileMenuOpen(false);
                     }}
-                    className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-all duration-300 ${
+                    className={`h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                       lang === l.code
                         ? "bg-gold/20 border border-gold/70 shadow-sm"
                         : "opacity-40 hover:opacity-100 hover:scale-105"
                     }`}
                   >
-                    {l.flag}
+                    <img src={l.flagUrl} alt={l.label} className="w-5 h-5 rounded-full object-cover shadow-sm" />
                   </button>
                 ))}
               </div>

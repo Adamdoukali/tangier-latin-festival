@@ -1,7 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2 } from "lucide-react";
-import { countries, getFlagEmoji } from "@/lib/countries";
+import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const ALLOWED_COUNTRY_CODES = new Set([
+  "MA", // Morocco
+  // Europe
+  "AD", "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", "DK", 
+  "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", 
+  "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", 
+  "RO", "RS", "RU", "SE", "SI", "SK", "SM", "UA", "VA"
+]);
+
+const filteredCountries = countries.filter(c => ALLOWED_COUNTRY_CODES.has(c.code));
 
 export function PackBookingModal({
   pack,
@@ -13,6 +25,29 @@ export function PackBookingModal({
   const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Memoize large country lists to prevent lag when opening the modal
+  const phoneOptions = useMemo(() => {
+    return filteredCountries.map((c) => (
+      <SelectItem key={c.code} value={c.dial_code} className="cursor-pointer">
+        <div className="flex items-center gap-2">
+          <img src={getFlagUrl(c.code)} alt={c.name} loading="lazy" className="w-4 h-3 object-cover rounded-[2px] shadow-sm" />
+          <span>{c.dial_code}</span>
+        </div>
+      </SelectItem>
+    ));
+  }, []);
+
+  const countryOptions = useMemo(() => {
+    return filteredCountries.map((c) => (
+      <SelectItem key={c.code} value={c.name} className="cursor-pointer">
+        <div className="flex items-center gap-3">
+          <img src={getFlagUrl(c.code)} alt={c.name} loading="lazy" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
+          <span>{c.name}</span>
+        </div>
+      </SelectItem>
+    ));
+  }, []);
 
   return (
     <div
@@ -178,26 +213,22 @@ export function PackBookingModal({
                   <Phone className="h-3 w-3" />
                   {t("packFormPhone")}
                 </label>
-                <div className="flex">
-                  <select
-                    name="Phone Country Code"
-                    defaultValue={`${getFlagEmoji("MA")} +212`}
-                    className="rounded-l-xl border border-border border-r-0 bg-card/40 px-3 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition max-w-[120px]"
-                  >
-                    {countries.map(c => {
-                      const flag = getFlagEmoji(c.code);
-                      return (
-                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
-                          {flag} {c.dial_code} ({c.code})
-                        </option>
-                      );
-                    })}
-                  </select>
+                <div className="flex items-center">
+                  <Select name="Phone Country Code" defaultValue="+212">
+                    <SelectTrigger className="w-[110px] rounded-l-xl rounded-r-none border border-border border-r-0 bg-card/40 px-3 py-3 h-[46px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none">
+                      <SelectValue placeholder="+212" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      <SelectGroup>
+                        {phoneOptions}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                   <input
                     type="tel"
                     name="Phone"
                     required
-                    className="w-full rounded-r-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    className="w-full rounded-r-xl border border-border bg-card/40 px-4 py-3 h-[46px] text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                     placeholder="6 XX XX XX XX"
                   />
                 </div>
@@ -210,17 +241,16 @@ export function PackBookingModal({
                 <Globe className="h-3 w-3" />
                 {t("packFormCountry")}
               </label>
-              <select
-                name="Country"
-                required
-                defaultValue="MA"
-                className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
-              >
-                <option value="" disabled>{t("packFormCountry")}</option>
-                {countries.map(c => (
-                  <option key={c.code} value={c.name}>{getFlagEmoji(c.code)} {c.name}</option>
-                ))}
-              </select>
+              <Select name="Country" defaultValue="Morocco">
+                <SelectTrigger className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 h-[46px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none">
+                  <SelectValue placeholder={t("packFormCountry")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  <SelectGroup>
+                    {countryOptions}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Notes */}

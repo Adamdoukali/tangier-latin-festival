@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { countries, getFlagEmoji } from "@/lib/countries";
+import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import { z } from "zod";
 import QRCode from "qrcode";
 import {
@@ -386,23 +386,7 @@ function RedeemPage() {
                   Phone
                 </label>
                 <div className="flex">
-                  <select
-                    name="phone_country"
-                    defaultValue={`${getFlagEmoji("MA")} +212`}
-                    className="rounded-l-lg border border-zinc-700/60 border-r-0 bg-zinc-800/50 px-2 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition max-w-[110px]"
-                    onChange={(e) => {
-                       // Just update form.phone or a new field if needed
-                    }}
-                  >
-                    {countries.map(c => {
-                      const flag = getFlagEmoji(c.code);
-                      return (
-                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
-                          {flag} {c.dial_code} ({c.code})
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <PhoneCountrySelect className="rounded-l-lg border border-zinc-700/60 border-r-0 bg-zinc-800/50 px-2 max-w-[110px] text-zinc-100 focus:outline-none focus:border-amber-500/50" />
                   <input
                     type="tel"
                     value={form.phone}

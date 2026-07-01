@@ -7,7 +7,7 @@ import { RollingNumber } from "@/components/RollingNumber";
 import competitionImg from "@/assets/competition.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
-import { countries, getFlagEmoji } from "@/lib/countries";
+import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 
 const competitionSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -242,20 +242,7 @@ function CompetitionPage() {
                   {lang === "fr" ? "Téléphone" : lang === "es" ? "Teléfono" : "Phone Number"}
                 </label>
                 <div className="flex">
-                  <select
-                    name="phone_country"
-                    defaultValue={`${getFlagEmoji("MA")} +212`}
-                    className="rounded-l-xl border border-border/60 border-r-0 bg-background/50 px-3 py-3.5 text-sm focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition text-foreground max-w-[140px]"
-                  >
-                    {countries.map(c => {
-                      const flag = getFlagEmoji(c.code);
-                      return (
-                        <option key={c.code} value={`${flag} ${c.dial_code}`}>
-                          {flag} {c.dial_code} ({c.code})
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <PhoneCountrySelect className="rounded-l-lg border border-border border-r-0 max-w-[140px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none" />
                   <input
                     id="form-phone"
                     name="phone"
