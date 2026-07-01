@@ -60,7 +60,7 @@ function PacksPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative pt-32 pb-20 overflow-hidden flex items-end min-h-[40vh] border-b border-border/20 bg-slate-950 select-none">
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/20 bg-slate-950 select-none">
         <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
         <div className="relative mx-auto max-w-5xl px-6 text-center w-full">
           <p className="text-xs tracking-[0.4em] uppercase text-primary mb-4">

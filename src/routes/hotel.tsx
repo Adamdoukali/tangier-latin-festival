@@ -411,7 +411,7 @@ function HotelPage() {
               {/* Reserve packs button */}
               <div className="mt-8">
                 <a
-                  href={localizedHref("/#packs")}
+                  href={localizedHref("/packs")}
                   className="w-full inline-flex justify-center items-center rounded-full bg-gold px-6 py-3.5 text-sm font-bold text-primary-foreground hover:opacity-90 transition shadow-gold uppercase tracking-[0.2em] select-none"
                 >
                   {lang === "fr"
@@ -420,6 +420,28 @@ function HotelPage() {
                       ? "RESERVA AHORA"
                       : "RESERVE NOW"}
                 </a>
+              </div>
+
+              {/* Need Help Card */}
+              <div className="relative rounded-2xl overflow-hidden mt-6 shadow-soft border border-white/10 bg-slate-900">
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/80 to-[#be8c42]/90 z-10" />
+                <div className="absolute inset-0 bg-[url('https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845166.jpg')] bg-cover bg-center mix-blend-overlay opacity-40 z-0" />
+                <div className="relative z-20 p-8 text-center flex flex-col items-center">
+                  <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-4 uppercase drop-shadow-md">
+                    {lang === "fr" ? "Besoin d'aide ?" : lang === "es" ? "¿Necesitas ayuda?" : "Need help?"}
+                  </h3>
+                  <p className="text-white/90 text-sm md:text-base leading-relaxed mb-6 max-w-sm font-medium">
+                    {lang === "fr" ? "Contactez-nous pour toute demande de renseignements ou d'assistance." : lang === "es" ? "Contáctenos para cualquier consulta o asistencia." : "Contact us for any inquiries or assistance."}
+                  </p>
+                  <a
+                    href="https://wa.me/212664010279"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#be8c42] px-8 py-3.5 text-xs font-bold tracking-[0.15em] text-white uppercase hover:scale-105 hover:bg-[#a67935] active:scale-95 transition-all shadow-xl border border-white/20"
+                  >
+                    {lang === "fr" ? "Contactez Nous →" : lang === "es" ? "Contáctanos →" : "Contact Us →"}
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -453,7 +475,7 @@ function HotelPage() {
           </p>
           <div className="pt-6">
             <a
-              href="/#packs"
+              href={localizedHref("/packs")}
               className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
             >
               <span>{t("buyPackBtn")}</span>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, Users, CheckCircle2, ChevronDown } from "lucide-react";
+import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2 } from "lucide-react";
 import { countries, getFlagEmoji } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -112,8 +112,37 @@ export function PackBookingModal({
             }}
           >
             <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
-            {/* Name & Email row */}
-            <div className="grid sm:grid-cols-2 gap-4">
+            {/* Conditional Names */}
+            {pack.name.toLowerCase().includes("double") ? (
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                    <User className="h-3 w-3" />
+                    Person 1 Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="Person 1 Full Name"
+                    required
+                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                    <User className="h-3 w-3" />
+                    Person 2 Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="Person 2 Full Name"
+                    required
+                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    placeholder="Jane Doe"
+                  />
+                </div>
+              </div>
+            ) : (
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <User className="h-3 w-3" />
@@ -127,6 +156,10 @@ export function PackBookingModal({
                   placeholder="John Doe"
                 />
               </div>
+            )}
+
+            {/* Email & Phone */}
+            <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <Mail className="h-3 w-3" />
@@ -140,10 +173,6 @@ export function PackBookingModal({
                   placeholder="john@example.com"
                 />
               </div>
-            </div>
-
-            {/* Phone & Country */}
-            <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <Phone className="h-3 w-3" />
@@ -173,58 +202,25 @@ export function PackBookingModal({
                   />
                 </div>
               </div>
-              <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Globe className="h-3 w-3" />
-                  {t("packFormCountry")}
-                </label>
-                <select
-                  name="Country"
-                  required
-                  defaultValue="MA"
-                  className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
-                >
-                  <option value="" disabled>{t("packFormCountry")}</option>
-                  {countries.map(c => (
-                    <option key={c.code} value={c.name}>{getFlagEmoji(c.code)} {c.name}</option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            {/* People & Level */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Users className="h-3 w-3" />
-                  {t("packFormNumPeople")}
-                </label>
-                <input
-                  type="number"
-                  name="Number of People"
-                  min="1"
-                  max="20"
-                  defaultValue="1"
-                  required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <ChevronDown className="h-3 w-3" />
-                  {t("packFormDanceLevel")}
-                </label>
-                <select
-                  name="Dance Level"
-                  required
-                  className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
-                >
-                  <option value="beginner">{t("packFormDanceLevelBeginner")}</option>
-                  <option value="intermediate">{t("packFormDanceLevelIntermediate")}</option>
-                  <option value="advanced">{t("packFormDanceLevelAdvanced")}</option>
-                  <option value="pro">{t("packFormDanceLevelPro")}</option>
-                </select>
-              </div>
+            {/* Country */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                <Globe className="h-3 w-3" />
+                {t("packFormCountry")}
+              </label>
+              <select
+                name="Country"
+                required
+                defaultValue="MA"
+                className="w-full appearance-none rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground cursor-pointer"
+              >
+                <option value="" disabled>{t("packFormCountry")}</option>
+                {countries.map(c => (
+                  <option key={c.code} value={c.name}>{getFlagEmoji(c.code)} {c.name}</option>
+                ))}
+              </select>
             </div>
 
             {/* Notes */}

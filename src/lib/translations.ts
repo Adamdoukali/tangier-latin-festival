@@ -252,7 +252,7 @@ export const translations = {
     // Route: Hotel Page
     // ──────────────────────────────────────────
     hotelHeroSubtitle: "Official festival hotel",
-    hotelHeroTitle: "Hôtel Solazur",
+    hotelHeroTitle: "Hôtel Kenzi Solazur",
     hotelHeroLocation: "Tangier, Morocco",
     hotelRatingLabel: "Guest rating",
     hotelRatingSub: "An ideal location",
@@ -277,7 +277,7 @@ export const translations = {
     hotelGalleryTitle: "A look inside",
     hotelCtaTitle: "Need help?",
     hotelCtaDesc:
-      "Contact us for further information about Hôtel Solazur or to build a tailored pack for your stay.",
+      "Contact us for further information about Hôtel Kenzi Solazur or to build a tailored pack for your stay.",
     hotelCtaContactBtn: "Contact us →",
     hotelCtaSeePacksBtn: "See packs",
 
@@ -327,7 +327,7 @@ export const translations = {
     galleryHeroTitlePart2: "Photo",
     galleryHeroTitlePart3: "Gallery",
     galleryHeroDesc:
-      "Relive the magical highlights, workshops, shows, and themed nights of the 9th edition of the Tangier International Latin Festival.",
+      "Relive the magical highlights, workshops, shows, and themed nights of previous editions of the Tangier International Latin Festival.",
     galleryTabAll: "All Photos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Competition",
@@ -369,11 +369,11 @@ export const translations = {
       "Découvrez tous les artistes internationaux présents au Tangier Latin Festival 2027. Salsa, Bachata, Kizomba et plus.",
     seoProgramTitle: "Programme — Tangier International Latin Festival 2027",
     seoProgramDesc:
-      "Programme complet de 5 jours du Tangier International Latin Festival, Du 07 au 11 janvier 2027 à l'Hôtel Solazur.",
+      "Programme complet de 5 jours du Tangier International Latin Festival, Du 07 au 11 janvier 2027 à l'Hôtel Kenzi Solazur.",
     seoCompetitionTitle: "Compétition — Tangier International Latin Festival 2027",
     seoCompetitionDesc:
       "Compétition Internationale de Salsa & Bachata à Tanger — accès direct à la finale en Espagne et à la Oaxaca Paramount Cup au Mexique.",
-    seoHotelTitle: "Hôtel Solazur — Tangier International Latin Festival 2027",
+    seoHotelTitle: "Hôtel Kenzi Solazur — Tangier International Latin Festival 2027",
     seoHotelDesc:
       "Kenzi Solazur — l'hôtel officiel du festival. Surplombant le détroit de Gibraltar et la baie de Tanger, avec piscine extérieure, spa et restaurants gastronomiques.",
     seoTourismTitle: "Tourisme — Tangier International Latin Festival 2027",
@@ -529,7 +529,7 @@ export const translations = {
     programHeroSubtitle: "Programme du Festival",
     programHeroTitle: "Notre Programme",
     programHeroDesc:
-      "Cinq jours de danse, de musique et de découverte. Du 07 au 11 janvier 2027 à l'Hôtel Solazur, Tanger.",
+      "Cinq jours de danse, de musique et de découverte. Du 07 au 11 janvier 2027 à l'Hôtel Kenzi Solazur, Tanger.",
     programDownloadPdf: "Télécharger le PDF",
     programSeePacks: "Voir les packs →",
     programMoments: "moments",
@@ -581,7 +581,7 @@ export const translations = {
 
     // Hotel Page
     hotelHeroSubtitle: "Hôtel officiel du festival",
-    hotelHeroTitle: "Hôtel Solazur",
+    hotelHeroTitle: "Hôtel Kenzi Solazur",
     hotelHeroLocation: "Tanger, Maroc",
     hotelRatingLabel: "Évaluation client",
     hotelRatingSub: "Un emplacement idéal",
@@ -606,7 +606,7 @@ export const translations = {
     hotelGalleryTitle: "Un aperçu intérieur",
     hotelCtaTitle: "Besoin d'aide ?",
     hotelCtaDesc:
-      "Contactez-nous pour plus d'informations sur l'Hôtel Solazur ou pour concevoir un pack personnalisé pour votre séjour.",
+      "Contactez-nous pour plus d'informations sur l'Hôtel Kenzi Solazur ou pour concevoir un pack personnalisé pour votre séjour.",
     hotelCtaContactBtn: "Contactez-nous →",
     hotelCtaSeePacksBtn: "Voir les packs",
 
@@ -650,7 +650,7 @@ export const translations = {
     galleryHeroTitlePart2: "Photos du",
     galleryHeroTitlePart3: "Festival",
     galleryHeroDesc:
-      "Revivez les moments magiques, les workshops, les spectacles et les soirées à thème de la 9ème édition du Tangier International Latin Festival.",
+      "Revivez les moments magiques, les workshops, les spectacles et les soirées à thème des éditions précédentes du Tangier International Latin Festival.",
     galleryTabAll: "Toutes les photos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Compétition",
@@ -903,7 +903,7 @@ export const translations = {
 
     // Hotel Page
     hotelHeroSubtitle: "Hotel oficial del festival",
-    hotelHeroTitle: "Hôtel Solazur",
+    hotelHeroTitle: "Hôtel Kenzi Solazur",
     hotelHeroLocation: "Tánger, Marruecos",
     hotelRatingLabel: "Valoración de huéspedes",
     hotelRatingSub: "Una ubicación ideal",
@@ -927,7 +927,7 @@ export const translations = {
     hotelGalleryTitle: "Un vistazo por dentro",
     hotelCtaTitle: "¿Necesitas ayuda?",
     hotelCtaDesc:
-      "Ponte en contacto con nosotros para obtener más información sobre el Hôtel Solazur o para diseñar un pack a medida para tu estancia.",
+      "Ponte en contacto con nosotros para obtener más información sobre el Hôtel Kenzi Solazur o para diseñar un pack a medida para tu estancia.",
     hotelCtaContactBtn: "Contacto →",
     hotelCtaSeePacksBtn: "Ver packs",
 
@@ -971,7 +971,7 @@ export const translations = {
     galleryHeroTitlePart2: "Fotos del",
     galleryHeroTitlePart3: "Festival",
     galleryHeroDesc:
-      "Revive los momentos mágicos, talleres, espectáculos y noches temáticas de la 9ª edición del Tangier International Latin Festival.",
+      "Revive los momentos mágicos, talleres, espectáculos y noches temáticas de las ediciones anteriores del Tangier International Latin Festival.",
     galleryTabAll: "Todas las fotos",
     galleryTabBlackParty: "Black Party",
     galleryTabCompetition: "Competición",
@@ -1232,27 +1232,27 @@ export const translatedHomeProgramme = {
       day: "Jour 1",
       date: "Jeudi · 7 Janvier, 2027",
       items: [
-        { t: "Check-in", time: "À partir de 14:00", place: "Hôtel Solazur" },
-        { t: "Dîner Buffet", time: "19:00 — 23:00", place: "Hôtel Solazur" },
-        { t: "Soirée d'ouverture", time: "22:00 — 05:00", place: "Hôtel Solazur" },
+        { t: "Check-in", time: "À partir de 14:00", place: "Hôtel Kenzi Solazur" },
+        { t: "Dîner Buffet", time: "19:00 — 23:00", place: "Hôtel Kenzi Solazur" },
+        { t: "Soirée d'ouverture", time: "22:00 — 05:00", place: "Hôtel Kenzi Solazur" },
       ],
     },
     {
       day: "Jour 2",
       date: "Vendredi · 8 Janvier, 2027",
       items: [
-        { t: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Solazur" },
-        { t: "Workshops / Cours", time: "14:00 — 19:00", place: "Hôtel Solazur" },
-        { t: "Soirée Black Party", time: "00:00 — 05:00", place: "Hôtel Solazur" },
+        { t: "Petit-déjeuner Buffet", time: "05:00 — 11:00", place: "Hôtel Kenzi Solazur" },
+        { t: "Workshops / Cours", time: "14:00 — 19:00", place: "Hôtel Kenzi Solazur" },
+        { t: "Soirée Black Party", time: "00:00 — 05:00", place: "Hôtel Kenzi Solazur" },
       ],
     },
     {
       day: "Jour 3",
       date: "Samedi · 9 Janvier, 2027",
       items: [
-        { t: "Workshops / Cours", time: "11:00 — 19:00", place: "Hôtel Solazur" },
+        { t: "Workshops / Cours", time: "11:00 — 19:00", place: "Hôtel Kenzi Solazur" },
         { t: "Excursions", time: "12:00 & 15:00", place: "Assilah & Tanger" },
-        { t: "Soirée White Party", time: "00:00 — 06:00", place: "Hôtel Solazur" },
+        { t: "Soirée White Party", time: "00:00 — 06:00", place: "Hôtel Kenzi Solazur" },
       ],
     },
   ],

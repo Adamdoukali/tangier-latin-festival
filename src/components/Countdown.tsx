@@ -47,47 +47,33 @@ export function Countdown() {
   };
 
   return (
-    <div className="w-full flex justify-center mt-12 md:mt-16" role="timer" aria-label="Event countdown">
+    <div className="w-full flex justify-center mt-6 md:mt-16 px-4" role="timer" aria-label="Event countdown">
       <span className="sr-only">
         {timeState.d} {t("days")}, {timeState.h} {t("hours")}, {timeState.m} {t("minutes")}, {timeState.s} {t("seconds")}
       </span>
 
-      <div className="flex items-center gap-4 md:gap-8 lg:gap-12">
-        <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter" style={goldGradientStyle}>
-            {dStr}
-          </span>
-          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
-            {t("days")}
-          </span>
-        </div>
-        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
-        <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter" style={goldGradientStyle}>
-            {hStr}
-          </span>
-          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
-            {t("hours")}
-          </span>
-        </div>
-        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
-        <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter" style={goldGradientStyle}>
-            {mStr}
-          </span>
-          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
-            {t("minutes")}
-          </span>
-        </div>
-        <span className="text-3xl md:text-5xl text-border/50 mb-6 font-display">:</span>
-        <div className="flex flex-col items-center">
-          <span className="font-display text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter" style={goldGradientStyle}>
-            {sStr}
-          </span>
-          <span className="text-[10px] md:text-xs tracking-[0.2em] uppercase text-muted-foreground mt-2 font-semibold">
-            {t("seconds")}
-          </span>
-        </div>
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-6 lg:gap-8 w-full max-w-[340px] sm:max-w-[400px] md:max-w-none md:w-auto">
+        {[
+          { value: dStr, label: "days" },
+          { value: hStr, label: "hours" },
+          { value: mStr, label: "minutes" },
+          { value: sStr, label: "seconds" }
+        ].map((item, idx) => (
+          <div 
+            key={idx} 
+            className="flex flex-col items-center justify-center bg-white rounded-lg sm:rounded-xl md:rounded-3xl p-2 sm:p-3 md:p-8 min-w-0 md:min-w-[140px] lg:min-w-[180px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-black/5 relative overflow-hidden"
+          >
+            {/* Top golden gradient edge */}
+            <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 md:h-1.5" style={{ backgroundImage: "var(--gradient-gold)" }} />
+            
+            <span className="font-display text-2xl sm:text-3xl md:text-8xl lg:text-[110px] font-bold tracking-tighter leading-none" style={goldGradientStyle}>
+              {item.value}
+            </span>
+            <span className="text-[6px] sm:text-[8px] md:text-xs lg:text-sm tracking-[0.1em] md:tracking-[0.25em] uppercase text-zinc-500 mt-0.5 sm:mt-1 md:mt-4 font-bold">
+              {t(item.label)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

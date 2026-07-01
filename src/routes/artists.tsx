@@ -38,7 +38,7 @@ const ALL_ARTISTS = [
   { name: "Sandrine", style: "Kizomba", img: BASE + "image-228-2.png" },
   { name: "Alicia", style: "Bachata", img: BASE + "image-235.png" },
   { name: "Talal", style: "Salsa", img: a1 },
-  { name: "Abdel Zouk", style: "Bachata", img: BASE + "image-232.png" },
+  { name: "Abdel Zouk", style: "Kizomba", img: BASE + "image-232.png" },
   { name: "Adil & Elo", style: "Bachata", img: BASE + "image-233.png" },
   { name: "Edu & Silvana", style: "Bachata", img: BASE + "image-237.png" },
   { name: "Malick & Carla", style: "Kizomba", img: BASE + "image-234.png" },
@@ -181,13 +181,11 @@ function ArtistsPage() {
       <Nav />
 
       {/* ── Hero Banner ─────────────────────────────── */}
-      <section className="relative pt-24 pb-20 overflow-hidden bg-slate-950 border-b border-border/20 min-h-[50vh] flex items-center justify-center">
-        {/* Dynamic Background Glows */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/4 w-[40%] h-[60%] bg-gold/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-0 right-1/4 w-[40%] h-[60%] bg-primary/10 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
-          {/* Subtle grid pattern overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(212,175,55,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/20">
+        {/* Generated Image Background */}
+        <div className="absolute inset-0">
+          <img src="/artists_bg.png" alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">

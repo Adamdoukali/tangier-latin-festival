@@ -602,10 +602,10 @@ function GalleryPage() {
       <Nav />
 
       {/* HERO SECTION */}
-      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40 bg-slate-950">
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/40 bg-slate-950">
         <div className="absolute inset-0 select-none">
-          <img src={heroImg} alt="" className="h-full w-full object-cover opacity-25" />
-          <div className="absolute inset-0 hero-overlay bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+          <img src={heroImg} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
         <div className="relative mx-auto max-w-5xl px-6 text-center">
           <p className="text-sm md:text-base font-sans font-semibold tracking-[0.25em] uppercase text-primary mb-4 flex items-center justify-center gap-2">
@@ -614,7 +614,7 @@ function GalleryPage() {
           </p>
           <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-white drop-shadow-lg mb-6">
             {t("galleryHeroTitlePart1")}{" "}
-            <span className="text-gold italic">{t("galleryHeroTitlePart2")}</span>{" "}
+            <span className="text-gold italic pr-2 md:pr-4">{t("galleryHeroTitlePart2")}</span>{" "}
             {t("galleryHeroTitlePart3")}
           </h1>
           <p className="mt-6 text-slate-300 max-w-2xl mx-auto leading-relaxed text-base md:text-lg drop-shadow-md">

@@ -181,12 +181,11 @@ function TestimonialsPage() {
       <Nav />
 
       {/* ── Hero Banner ─────────────────────────────── */}
-      <section className="relative pt-32 pb-24 overflow-hidden border-b border-white/5 min-h-[50vh] flex flex-col justify-center">
-        {/* Dynamic Background Glows */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/4 w-[40%] h-[60%] bg-gold/15 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-0 right-1/4 w-[40%] h-[60%] bg-white/5 rounded-full blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,black,transparent)]" />
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-white/5">
+        {/* Generated Image Background */}
+        <div className="absolute inset-0 z-0">
+          <img src="/testimonials_bg.png" alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/60" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
@@ -198,11 +197,11 @@ function TestimonialsPage() {
             <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "800ms" }} />
           </div>
           
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-slate-950 drop-shadow-md mb-8 leading-[1.1]">
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-white drop-shadow-md mb-8 leading-[1.1]">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
           
-          <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-200 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
             {lang === "fr"
               ? "Découvrez les retours exclusifs des participants sur leur incroyable expérience au Tangier International Latin Festival."
               : lang === "es"
@@ -219,7 +218,7 @@ function TestimonialsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
             
             {/* Left Column: Phone Video */}
-            <div className="lg:col-span-4 sticky top-32">
+            <div className="lg:col-span-4 lg:sticky lg:top-32">
                <div className="text-center lg:text-left mb-8">
                   <p className="text-xs tracking-[0.3em] uppercase text-gold font-bold mb-3">
                      {lang === "fr" ? "Avis Vidéo" : lang === "es" ? "Vídeo Testimonio" : "Featured Video"}
@@ -281,24 +280,23 @@ function TestimonialsPage() {
       </section>
 
       {/* ── CTA ─────────────────────────────── */}
-      <section className="relative py-24 md:py-32 border-t border-slate-200 overflow-hidden">
-         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gold/5" />
+      <section className="relative py-24 md:py-32 overflow-hidden bg-[#e09139]">
          <div className="mx-auto max-w-4xl px-6 text-center space-y-6 relative z-10">
-            <p className="text-xs tracking-[0.4em] uppercase text-gold font-bold">
+            <p className="text-xs md:text-sm tracking-[0.4em] uppercase text-white font-bold drop-shadow-sm">
                {lang === "fr"
                ? "Premier arrivé, premier servi !"
                : lang === "es"
                   ? "¡Plazas limitadas!"
                   : "First come, first served!"}
             </p>
-            <h2 className="font-display text-4xl md:text-6xl uppercase leading-tight text-slate-950 drop-shadow-sm">
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl uppercase leading-[1.2] text-white font-bold drop-shadow-md">
                {lang === "fr"
                ? "Vous n'avez pas encore réservé votre place ?"
                : lang === "es"
                   ? "¿Aún no has reservado tu plaza?"
                   : "Haven't booked your spot yet?"}
             </h2>
-            <p className="text-slate-600 max-w-lg mx-auto text-sm md:text-base">
+            <p className="text-white/90 max-w-2xl mx-auto text-sm md:text-base font-medium leading-relaxed">
                {lang === "fr"
                ? "Prêt à rejoindre l'événement ? Réservez votre pack et découvrez nos offres exclusives sans plus attendre."
                : lang === "es"
@@ -308,10 +306,10 @@ function TestimonialsPage() {
             <div className="pt-8">
                <a
                href="/#packs"
-               className="inline-flex items-center gap-2 rounded-full bg-gold px-10 py-5 text-sm font-bold tracking-wider text-slate-950 uppercase shadow-[0_0_40px_rgba(212,175,55,0.4)] hover:shadow-[0_0_60px_rgba(212,175,55,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+               className="inline-flex items-center gap-2 rounded-full bg-white px-10 py-4 md:py-5 text-xs md:text-sm font-bold tracking-[0.15em] text-slate-900 uppercase shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
                >
                <span>{t("buyPackBtn")}</span>
-               <ArrowRight className="h-5 w-5" />
+               <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
                </a>
             </div>
          </div>
@@ -343,7 +341,7 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
   }, [isPlaying]);
 
   return (
-    <div className="relative mx-auto w-full max-w-[320px] aspect-[9/19] rounded-[3rem] border-[8px] border-slate-900 bg-slate-950 shadow-2xl overflow-hidden ring-4 ring-gold/20 group">
+    <div className="relative mx-auto w-full max-w-[240px] md:max-w-[320px] aspect-[9/19] rounded-[2rem] md:rounded-[3rem] border-[6px] md:border-[8px] border-slate-900 bg-slate-950 shadow-2xl overflow-hidden ring-4 ring-gold/20 group">
       {/* Dynamic Island / Notch */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[35%] h-6 bg-slate-900 rounded-b-2xl z-30 flex items-center justify-center">
          <div className="w-2 h-2 rounded-full bg-black/50 ml-6" />

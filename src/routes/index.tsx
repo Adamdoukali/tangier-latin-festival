@@ -184,9 +184,6 @@ function Home() {
               <span className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
               <Play className="h-8 w-8 text-white fill-white translate-x-0.5" />
             </button>
-            <span className="text-white/70 text-xs tracking-[0.25em] uppercase">
-              {t("watchRecap")}
-            </span>
           </div>
 
           <div className="mt-10 flex flex-wrap justify-center gap-4">

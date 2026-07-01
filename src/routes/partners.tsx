@@ -101,7 +101,7 @@ function PartnersPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-28 md:py-40 border-b border-border/20 overflow-hidden min-h-[60vh] flex flex-col justify-center">
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] border-b border-border/20 overflow-hidden">
         <style>{`
           @keyframes marquee-left {
             0% { transform: translateX(0); }
@@ -116,10 +116,10 @@ function PartnersPage() {
           .animate-slide-up-3 { animation: slide-up-fade 1s cubic-bezier(0.16, 1, 0.3, 1) forwards 0.4s; opacity: 0; }
         `}</style>
 
-        {/* Network / Grid Background */}
-        <div className="absolute inset-0 -z-20 bg-white">
-          <div className="absolute inset-0 opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent)] bg-[linear-gradient(rgba(212,175,55,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(212,175,55,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full bg-[radial-gradient(ellipse_at_top,oklch(0.62_0.18_30/0.15),transparent_60%)]" />
+        {/* Generated Image Background */}
+        <div className="absolute inset-0">
+          <img src="/partners_bg.png" alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/40" />
         </div>
 
         {/* Infinite Faded Logo Marquee Background */}
@@ -139,11 +139,11 @@ function PartnersPage() {
             </p>
           </div>
           
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-slate-950 drop-shadow-md animate-slide-up-2">
+          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl xl:text-8xl leading-[0.95] text-white drop-shadow-md animate-slide-up-2">
             {t("partnersPageHeroTitle")}
           </h1>
           
-          <p className="mt-8 text-slate-600 max-w-2xl mx-auto text-sm md:text-base leading-relaxed animate-slide-up-3">
+          <p className="mt-8 text-slate-200 max-w-2xl mx-auto text-sm md:text-base leading-relaxed animate-slide-up-3">
             {t("partnersPageHeroDesc")}
           </p>
         </div>

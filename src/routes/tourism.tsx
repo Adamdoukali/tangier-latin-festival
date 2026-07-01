@@ -184,7 +184,7 @@ function TourismPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-24 md:py-32 border-b border-border/40 overflow-hidden bg-transparent">
+      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] border-b border-border/40 overflow-hidden bg-transparent">
         <div className="absolute inset-0 -z-10">
           <img src={chefchaouenImg} alt="" className="h-full w-full object-cover opacity-100" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />

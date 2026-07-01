@@ -67,29 +67,29 @@ function CompetitionPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative py-28 md:py-36 overflow-hidden border-b border-border/40 bg-slate-950">
+      <section className="relative flex flex-col items-center justify-center h-[65vh] min-h-[460px] overflow-hidden bg-slate-950">
         <div className="absolute inset-0">
-          <img src={competitionImg} alt="" className="h-full w-full object-cover opacity-30" />
-          <div className="absolute inset-0 hero-overlay" />
+          <img src={competitionImg} alt="" className="h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
-        <div className="relative mx-auto max-w-5xl px-6 text-center">
-          <p className="text-sm md:text-lg font-bold tracking-[0.4em] uppercase text-primary mb-6 flex items-center justify-center gap-3">
-            <Trophy className="h-6 w-6 md:h-8 md:w-8" />
+        <div className="relative mx-auto max-w-4xl px-6 text-center mt-12">
+          <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-gold mb-4 flex items-center justify-center gap-2">
+            <Trophy className="h-4 w-4 md:h-5 md:w-5" />
             {t("competitionHeroSubtitle")}
           </p>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl xl:text-[4.5rem] leading-[1.1] text-white drop-shadow-xl py-2">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-6xl lg:text-7xl leading-[1.1] text-white drop-shadow-2xl py-2">
             <span className="block">{t("competitionHeroTitlePart1")}</span>
-            <span className="block text-gold italic pr-6 whitespace-nowrap">{t("competitionHeroTitlePart2")}</span>
+            <span className="block text-gold italic whitespace-nowrap">{t("competitionHeroTitlePart2")}</span>
             <span className="block">{t("competitionHeroTitlePart3")}</span>
           </h1>
-          <p className="mt-6 text-slate-300 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+          <p className="mt-8 text-gray-300/90 text-sm md:text-base max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             {t("competitionHeroDesc")}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <span className="rounded-full border-2 border-white bg-white/20 px-8 py-3 text-sm md:text-lg tracking-[0.25em] uppercase text-white font-bold backdrop-blur-md">
+          <div className="mt-10 flex flex-wrap justify-center gap-4">
+            <span className="rounded-full border border-white/80 bg-transparent px-8 py-3 text-xs md:text-sm tracking-[0.2em] uppercase text-white font-semibold hover:bg-white/10 transition-colors cursor-pointer">
               {t("competitionCategorySalsa")}
             </span>
-            <span className="rounded-full border-2 border-white bg-white/20 px-8 py-3 text-sm md:text-lg tracking-[0.25em] uppercase text-white font-bold backdrop-blur-md">
+            <span className="rounded-full border border-white/80 bg-transparent px-8 py-3 text-xs md:text-sm tracking-[0.2em] uppercase text-white font-semibold hover:bg-white/10 transition-colors cursor-pointer">
               {t("competitionCategoryBachata")}
             </span>
           </div>
@@ -116,8 +116,8 @@ function CompetitionPage() {
           <div>
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] mb-6">
               <span className="block">{t("competitionHeroTitlePart1")}</span>
-              <span className="block text-gold italic pr-6 whitespace-nowrap">{t("competitionHeroTitlePart2")}</span>
-              <span className="block">{t("competitionHeroTitlePart3")}</span>
+              <span className="block text-gold italic">{t("competitionHeroTitlePart2")}</span>
+              <span className="block whitespace-nowrap">{t("competitionHeroTitlePart3")}</span>
             </h2>
             <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed text-sm md:text-base">
               <p>{t("competitionOverviewDesc1")}</p>
