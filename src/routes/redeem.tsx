@@ -49,24 +49,13 @@ function RedeemPage() {
     email: "",
     phone: "",
     country: "",
-    numPeople: 1,
-    danceLevel: "Beginner",
     notes: "",
   });
 
   // Double rooms and couple passes include exactly two people —
-  // both names are required and the count is fixed.
+  // both client names are required.
   const isTwoPersonPack = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
   const twoPerson = pack ? isTwoPersonPack(pack) : false;
-
-  const setPeople = (n: number) =>
-    setForm((f) => {
-      const clamped = Math.max(1, Math.min(6, n));
-      const names = [...f.names];
-      while (names.length < clamped) names.push("");
-      names.length = clamped;
-      return { ...f, numPeople: clamped, names };
-    });
 
   const setName = (idx: number, value: string) =>
     setForm((f) => ({
@@ -102,7 +91,7 @@ function RedeemPage() {
       setPack(foundPack);
       // Two-person packs (double room / couple pass) need both names.
       if (isTwoPersonPack(foundPack)) {
-        setForm((f) => ({ ...f, numPeople: 2, names: ["", ""] }));
+        setForm((f) => ({ ...f, names: ["", ""] }));
       }
     })();
     return () => {
@@ -124,8 +113,8 @@ function RedeemPage() {
       email: form.email,
       phone: form.phone,
       country: form.country,
-      numPeople: form.numPeople,
-      danceLevel: form.danceLevel,
+      numPeople: form.names.length,
+      danceLevel: "",
       notes: form.notes,
     });
     if (result.success) {
@@ -387,28 +376,30 @@ function RedeemPage() {
           </p>
 
           <div className="space-y-4">
-            {/* Names — one field per person */}
+            {/* Names — like the booking form: one field per client */}
             {twoPerson && (
               <p className="text-xs text-amber-400/90 -mb-1">
                 This pack is for 2 people — please enter both full names.
               </p>
             )}
-            {form.names.map((name, idx) => (
-              <div key={idx}>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                  {form.names.length === 1 ? "Full Name" : `Person ${idx + 1} Full Name`}{" "}
-                  <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(idx, e.target.value)}
-                  placeholder={form.names.length === 1 ? "Your full name" : `Person ${idx + 1} full name`}
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
-                />
-              </div>
-            ))}
+            <div className={twoPerson ? "grid sm:grid-cols-2 gap-3" : ""}>
+              {form.names.map((name, idx) => (
+                <div key={idx}>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    {form.names.length === 1 ? "Full Name" : `Person ${idx + 1} Full Name`}{" "}
+                    <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(idx, e.target.value)}
+                    placeholder={form.names.length === 1 ? "Your full name" : idx === 0 ? "John Doe" : "Jane Doe"}
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  />
+                </div>
+              ))}
+            </div>
 
             {/* Email */}
             <div>
@@ -453,42 +444,6 @@ function RedeemPage() {
                   placeholder="Morocco"
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
                 />
-              </div>
-            </div>
-
-            {/* People & Level */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                  Number of People
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={6}
-                  value={form.numPeople}
-                  disabled={twoPerson}
-                  onChange={(e) => setPeople(parseInt(e.target.value) || 1)}
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  title={twoPerson ? "This pack is for exactly 2 people" : undefined}
-                />
-              </div>
-              <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                  Dance Level
-                </label>
-                <select
-                  value={form.danceLevel}
-                  onChange={(e) =>
-                    setForm({ ...form, danceLevel: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-                >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Professional">Professional</option>
-                </select>
               </div>
             </div>
 
