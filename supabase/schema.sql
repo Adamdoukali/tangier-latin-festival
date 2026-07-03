@@ -62,16 +62,16 @@ end $$;
 -- 4. Seed default packs (only inserts ones that don't exist yet)
 insert into public.packs (name, sub, price, currency, category, features, popular, active)
 select * from (values
-  ('Chambre double', 'SOLAZUR HOTEL TANGIER (2 NIGHTS)', '335', '€', 'Chambre double', '["2 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, false, true),
-  ('Chambre double', 'SOLAZUR HOTEL TANGIER (3 NIGHTS)', '385', '€', 'Chambre double', '["3 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, true,  true),
-  ('Chambre double', 'SOLAZUR HOTEL TANGIER (4 NIGHTS)', '435', '€', 'Chambre double', '["4 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, false, true),
-  ('Chambre single', 'SOLAZUR HOTEL TANGIER (2 NIGHTS)', '435', '€', 'Chambre single', '["2 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, false, true),
-  ('Chambre single', 'SOLAZUR HOTEL TANGIER (3 NIGHTS)', '535', '€', 'Chambre single', '["3 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, false, true),
-  ('Chambre single', 'SOLAZUR HOTEL TANGIER (4 NIGHTS)', '635', '€', 'Chambre single', '["4 NIGHTS","BREAKFAST","DINNER","FULL PASS"]'::jsonb, false, true),
-  ('Full Pass',   'WITHOUT ACCOMMODATION', '130', '€', 'Full Pass', '["ALL WORKSHOPS","SHOWS","SOCIAL PARTIES","POOL PARTIES"]'::jsonb, false, true),
-  ('Couple Pass', 'WITHOUT ACCOMMODATION', '200', '€', 'Full Pass', '["1 LEADER + 1 FOLLOWER","ALL WORKSHOPS","SHOWS & PARTIES","POOL PARTIES"]'::jsonb, false, true),
-  ('Party Pass',  'WITHOUT ACCOMMODATION', '90',  '€', 'Full Pass', '["SHOWS","SOCIAL PARTIES","POOL PARTIES","(NO WORKSHOPS)"]'::jsonb, false, true),
-  ('Day Pass',    'WITHOUT ACCOMMODATION', '50',  '€', 'Full Pass', '["ALL WORKSHOPS","SHOWS","SOCIAL PARTIES","POOL PARTIES (1 DAY ONLY)"]'::jsonb, false, true)
+  ('Chambre double', 'SOLAZUR HOTEL TANGIER (2 NIGHTS)', '335', '€', 'Chambre double', array['2 NIGHTS','BREAKFAST','DINNER','FULL PASS'], false, true),
+  ('Chambre double', 'SOLAZUR HOTEL TANGIER (3 NIGHTS)', '385', '€', 'Chambre double', array['3 NIGHTS','BREAKFAST','DINNER','FULL PASS'], true,  true),
+  ('Chambre double', 'SOLAZUR HOTEL TANGIER (4 NIGHTS)', '435', '€', 'Chambre double', array['4 NIGHTS','BREAKFAST','DINNER','FULL PASS'], false, true),
+  ('Chambre single', 'SOLAZUR HOTEL TANGIER (2 NIGHTS)', '435', '€', 'Chambre single', array['2 NIGHTS','BREAKFAST','DINNER','FULL PASS'], false, true),
+  ('Chambre single', 'SOLAZUR HOTEL TANGIER (3 NIGHTS)', '535', '€', 'Chambre single', array['3 NIGHTS','BREAKFAST','DINNER','FULL PASS'], false, true),
+  ('Chambre single', 'SOLAZUR HOTEL TANGIER (4 NIGHTS)', '635', '€', 'Chambre single', array['4 NIGHTS','BREAKFAST','DINNER','FULL PASS'], false, true),
+  ('Full Pass',   'WITHOUT ACCOMMODATION', '130', '€', 'Full Pass', array['ALL WORKSHOPS','SHOWS','SOCIAL PARTIES','POOL PARTIES'], false, true),
+  ('Couple Pass', 'WITHOUT ACCOMMODATION', '200', '€', 'Full Pass', array['1 LEADER + 1 FOLLOWER','ALL WORKSHOPS','SHOWS & PARTIES','POOL PARTIES'], false, true),
+  ('Party Pass',  'WITHOUT ACCOMMODATION', '90',  '€', 'Full Pass', array['SHOWS','SOCIAL PARTIES','POOL PARTIES','(NO WORKSHOPS)'], false, true),
+  ('Day Pass',    'WITHOUT ACCOMMODATION', '50',  '€', 'Full Pass', array['ALL WORKSHOPS','SHOWS','SOCIAL PARTIES','POOL PARTIES (1 DAY ONLY)'], false, true)
 ) as seed(name, sub, price, currency, category, features, popular, active)
 where not exists (
   select 1 from public.packs p where p.name = seed.name and p.sub = seed.sub
