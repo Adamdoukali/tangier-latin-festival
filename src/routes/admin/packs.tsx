@@ -15,8 +15,10 @@ import {
   addPack,
   updatePack,
   deletePack,
+  seedPacksToDb,
   type Pack,
 } from "@/lib/admin-store";
+import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin/packs")({
   component: AdminPacks,
@@ -50,12 +52,37 @@ function AdminPacks() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PackFormData>(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [dbEmpty, setDbEmpty] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedError, setSeedError] = useState("");
 
-  const reload = async () => setPacks(await getPacks());
+  const reload = async () => {
+    setPacks(await getPacks());
+    if (supabase) {
+      const { data, error } = await supabase.from("packs").select("id").limit(1);
+      setDbEmpty(!error && (data ?? []).length === 0);
+    }
+  };
 
   useEffect(() => {
     reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    setSeedError("");
+    try {
+      await seedPacksToDb();
+      await reload();
+    } catch {
+      setSeedError(
+        "The database refused the write — its security rules aren't set up yet. " +
+          "Run supabase/schema.sql in the Supabase Dashboard → SQL Editor, then try again."
+      );
+    }
+    setSeeding(false);
+  };
 
   const openNew = () => {
     setEditingId(null);
@@ -145,6 +172,27 @@ function AdminPacks() {
           <Plus className="h-4 w-4" /> Add Pack
         </button>
       </div>
+
+      {/* DB seed banner */}
+      {dbEmpty && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <p className="text-sm text-amber-200/90 flex-1">
+              The database has no packs yet — the packs below are the built-in defaults, and edits
+              will only be saved on this device. Push them to the database so they're shared with
+              the whole website and every admin.
+            </p>
+            <button
+              onClick={handleSeed}
+              disabled={seeding}
+              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer disabled:opacity-50 self-start shrink-0"
+            >
+              {seeding ? "Pushing…" : "Push packs to database"}
+            </button>
+          </div>
+          {seedError && <p className="text-sm font-medium text-red-400">{seedError}</p>}
+        </div>
+      )}
 
       {/* Pack Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

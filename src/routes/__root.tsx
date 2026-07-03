@@ -8,7 +8,9 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { z } from "zod";
+import { useEffect } from "react";
 import { translations, Language } from "../lib/translations";
+import { rememberReferral } from "../lib/admin-store";
 
 import { WhatsAppButton } from "../components/WhatsAppButton";
 
@@ -145,6 +147,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const searchStr = router.state.location.searchStr;
+
+  // Remember ?ref=CODE from collaborator referral links so bookings
+  // made later in the session are attributed to that collaborator.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) rememberReferral(ref);
+  }, [searchStr]);
 
   return (
     <QueryClientProvider client={queryClient}>

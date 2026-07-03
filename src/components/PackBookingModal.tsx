@@ -2,6 +2,11 @@ import { useState, useMemo } from "react";
 import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2 } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
+import {
+  addBooking,
+  getCollaboratorByCode,
+  getRememberedReferral,
+} from "@/lib/admin-store";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const ALLOWED_COUNTRY_CODES = new Set([
@@ -19,7 +24,7 @@ export function PackBookingModal({
   pack,
   onClose,
 }: {
-  pack: { name: string; sub: string; price: string; currency?: string };
+  pack: { id?: string; name: string; sub: string; price: string; currency?: string };
   onClose: () => void;
 }) {
   const { t } = useLanguage();
@@ -135,12 +140,51 @@ export function PackBookingModal({
               formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
               formData.append("subject", `New Pack Booking: ${pack.name}`);
 
+              // Attribute the booking to a collaborator if the visitor
+              // arrived via a referral link (/packs?ref=CODE).
+              const refCode = getRememberedReferral();
+              const collaborator = refCode
+                ? await getCollaboratorByCode(refCode).catch(() => undefined)
+                : undefined;
+              if (collaborator) formData.append("Referral", collaborator.code);
+
+              const isDouble = /double|doble/.test(pack.name.toLowerCase());
+              const customerName = isDouble
+                ? [formData.get("Person 1 Full Name"), formData.get("Person 2 Full Name")]
+                    .filter(Boolean)
+                    .join(" & ")
+                : String(formData.get("Full Name") ?? "");
+              const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
+
               try {
                 const res = await fetch("https://api.web3forms.com/submit", {
                   method: "POST",
                   body: formData,
                 });
                 if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+
+                // Record the booking in the database so it shows up in the
+                // admin panel (pending until the team confirms payment).
+                try {
+                  await addBooking({
+                    packId: pack.id ?? "",
+                    packName: pack.name,
+                    customerName,
+                    email: String(formData.get("Email") ?? ""),
+                    phone,
+                    country: String(formData.get("Country") ?? ""),
+                    numPeople: isDouble ? 2 : 1,
+                    danceLevel: "",
+                    notes: String(formData.get("Notes") ?? ""),
+                    status: "pending",
+                    source: collaborator ? "referral" : "website",
+                    collaboratorId: collaborator?.id ?? null,
+                  });
+                } catch (dbErr) {
+                  // Email already went through — don't fail the user's booking.
+                  console.warn("Could not record booking in database:", dbErr);
+                }
+
                 setSubmitted(true);
               } catch (err) {
                 console.error(err);

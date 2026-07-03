@@ -38,9 +38,10 @@ function AdminBookings() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    setBookings(getBookings());
-    setPacks(getPacks());
+  const reload = useCallback(async () => {
+    const [b, p] = await Promise.all([getBookings(), getPacks()]);
+    setBookings(b);
+    setPacks(p);
   }, []);
 
   useEffect(() => {
@@ -74,26 +75,27 @@ function AdminBookings() {
     });
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.customerName.trim() || !form.packId) return;
     const pack = packs.find((p) => p.id === form.packId);
-    addBooking({
+    await addBooking({
       ...form,
       packName: pack?.name ?? "Unknown",
+      source: "manual",
     });
     setShowForm(false);
-    reload();
+    await reload();
   };
 
-  const handleStatusChange = (id: string, status: BookingStatus) => {
-    updateBookingStatus(id, status);
-    reload();
+  const handleStatusChange = async (id: string, status: BookingStatus) => {
+    await updateBookingStatus(id, status);
+    await reload();
   };
 
-  const handleDelete = (id: string) => {
-    deleteBooking(id);
+  const handleDelete = async (id: string) => {
+    await deleteBooking(id);
     setDeleteConfirm(null);
-    reload();
+    await reload();
   };
 
   const showQr = async (booking: Booking) => {
@@ -251,6 +253,10 @@ function AdminBookings() {
                             {b.inviteCode}
                           </code>
                         </span>
+                      ) : b.source === "website" ? (
+                        <span className="text-xs text-blue-400">Website</span>
+                      ) : b.source === "referral" ? (
+                        <span className="text-xs text-emerald-400">Referral</span>
                       ) : (
                         <span className="text-xs text-zinc-600">Manual</span>
                       )}
@@ -327,7 +333,7 @@ function AdminBookings() {
                     .filter((p) => p.active)
                     .map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.name} — {p.price} MAD
+                        {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
                       </option>
                     ))}
                 </select>

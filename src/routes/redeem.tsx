@@ -56,26 +56,34 @@ function RedeemPage() {
 
   // Look up invite on load
   useEffect(() => {
-    if (!code) {
-      setError("No invite code provided.");
-      return;
-    }
-    const found = getInviteByCode(code);
-    if (!found) {
-      setError("This invite code is invalid or does not exist.");
-      return;
-    }
-    if (found.used) {
-      setError("This invite has already been redeemed.");
-      return;
-    }
-    const foundPack = getPackById(found.packId);
-    if (!foundPack) {
-      setError("The pack for this invite is no longer available.");
-      return;
-    }
-    setInvite(found);
-    setPack(foundPack);
+    let cancelled = false;
+    (async () => {
+      if (!code) {
+        setError("No invite code provided.");
+        return;
+      }
+      const found = await getInviteByCode(code);
+      if (cancelled) return;
+      if (!found) {
+        setError("This invite code is invalid or does not exist.");
+        return;
+      }
+      if (found.used) {
+        setError("This invite has already been redeemed.");
+        return;
+      }
+      const foundPack = await getPackById(found.packId);
+      if (cancelled) return;
+      if (!foundPack) {
+        setError("The pack for this invite is no longer available.");
+        return;
+      }
+      setInvite(found);
+      setPack(foundPack);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,7 +95,7 @@ function RedeemPage() {
     // Small delay for UX
     await new Promise((r) => setTimeout(r, 600));
 
-    const result = redeemInvite(code, form);
+    const result = await redeemInvite(code, form);
     if (result.success) {
       setSuccess(true);
       setBooking(result.booking);

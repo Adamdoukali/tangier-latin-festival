@@ -20,8 +20,10 @@ import {
   generateBulkInvites,
   deleteInvite,
   getPacks,
+  getCollaborators,
   type Invite,
   type Pack,
+  type Collaborator,
 } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/invite")({
@@ -38,7 +40,9 @@ function getRedeemUrl(code: string): string {
 function AdminInvite() {
   const [invites, setInvites] = useState<Invite[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [selectedPackId, setSelectedPackId] = useState<string>("");
+  const [selectedCollabId, setSelectedCollabId] = useState<string>("");
   const [assignee, setAssignee] = useState<string>("");
   const [bulkCount, setBulkCount] = useState(5);
   const [showBulk, setShowBulk] = useState(false);
@@ -48,13 +52,20 @@ function AdminInvite() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    const inv = getInvites().sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const reload = useCallback(async () => {
+    const [allInvites, allPacks, allCollabs] = await Promise.all([
+      getInvites(),
+      getPacks(),
+      getCollaborators(),
+    ]);
+    setInvites(
+      allInvites.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
     );
-    setInvites(inv);
-    const p = getPacks().filter((pk) => pk.active);
+    const p = allPacks.filter((pk) => pk.active);
     setPacks(p);
+    setCollaborators(allCollabs.filter((c) => c.active));
     if (!selectedPackId && p.length > 0) setSelectedPackId(p[0].id);
   }, [selectedPackId]);
 
@@ -86,27 +97,38 @@ function AdminInvite() {
     if (invites.length > 0) generateQrs();
   }, [invites]);
 
-  const handleGenerateOne = () => {
+  const handleGenerateOne = async () => {
     if (!selectedPackId) return;
     const pack = packs.find((p) => p.id === selectedPackId);
-    generateInvite(selectedPackId, pack?.name ?? "Unknown", assignee);
+    await generateInvite(
+      selectedPackId,
+      pack?.name ?? "Unknown",
+      assignee,
+      selectedCollabId || undefined
+    );
     setAssignee("");
-    reload();
+    await reload();
   };
 
-  const handleGenerateBulk = () => {
+  const handleGenerateBulk = async () => {
     if (!selectedPackId || bulkCount < 1) return;
     const pack = packs.find((p) => p.id === selectedPackId);
-    generateBulkInvites(selectedPackId, pack?.name ?? "Unknown", bulkCount, assignee);
+    await generateBulkInvites(
+      selectedPackId,
+      pack?.name ?? "Unknown",
+      bulkCount,
+      assignee,
+      selectedCollabId || undefined
+    );
     setShowBulk(false);
     setAssignee("");
-    reload();
+    await reload();
   };
 
-  const handleDelete = (id: string) => {
-    deleteInvite(id);
+  const handleDelete = async (id: string) => {
+    await deleteInvite(id);
     setDeleteConfirm(null);
-    reload();
+    await reload();
   };
 
   const openPreview = async (invite: Invite) => {
@@ -205,6 +227,24 @@ function AdminInvite() {
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
           </div>
 
+          {/* Collaborator select */}
+          <div className="relative flex-1 min-w-[180px]">
+            <select
+              value={selectedCollabId}
+              onChange={(e) => setSelectedCollabId(e.target.value)}
+              className="w-full appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+              title="Attribute these invites to a collaborator"
+            >
+              <option value="">No collaborator</option>
+              {collaborators.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+          </div>
+
           {/* Assignee Input */}
           <div className="flex-1 min-w-[200px]">
             <input
@@ -279,6 +319,11 @@ function AdminInvite() {
                 {inv.assignee && (
                   <p className="text-[10px] font-semibold text-zinc-300 mt-1.5 uppercase tracking-widest border border-zinc-700/50 rounded bg-zinc-800/40 px-2 py-0.5 inline-block">
                     For: {inv.assignee}
+                  </p>
+                )}
+                {inv.collaboratorId && (
+                  <p className="text-[10px] font-semibold text-violet-300 mt-1.5 uppercase tracking-widest border border-violet-500/30 rounded bg-violet-500/10 px-2 py-0.5 inline-block">
+                    {collaborators.find((c) => c.id === inv.collaboratorId)?.name ?? "Collaborator"}
                   </p>
                 )}
                 {inv.used && (

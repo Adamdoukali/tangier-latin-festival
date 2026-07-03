@@ -10,7 +10,13 @@ import {
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
-import { getStats, getBookings, type Booking } from "@/lib/admin-store";
+import {
+  getStats,
+  getBookings,
+  getCollaboratorStats,
+  type Booking,
+  type CollaboratorStats,
+} from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -27,14 +33,28 @@ function AdminDashboard() {
     activePacks: 0,
   });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
+  const [collabStats, setCollabStats] = useState<CollaboratorStats[]>([]);
 
   useEffect(() => {
-    setStats(getStats());
-    setRecentBookings(
-      getBookings()
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5)
-    );
+    let cancelled = false;
+    (async () => {
+      const [s, bookings, cs] = await Promise.all([
+        getStats(),
+        getBookings(),
+        getCollaboratorStats(),
+      ]);
+      if (cancelled) return;
+      setStats(s);
+      setRecentBookings(
+        bookings
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 5)
+      );
+      setCollabStats(cs.sort((a, b) => b.ticketsSold - a.ticketsSold));
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const cards = [
@@ -176,6 +196,55 @@ function AdminDashboard() {
           <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-violet-400 transition" />
         </Link>
       </div>
+
+      {/* Collaborator Leaderboard */}
+      {collabStats.length > 0 && (
+        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
+            <h3 className="font-display text-sm tracking-wide text-zinc-200">
+              Collaborator Sales
+            </h3>
+            <Link
+              to="/admin/collaborators"
+              className="text-xs text-amber-400 hover:text-amber-300 tracking-widest uppercase transition"
+            >
+              Manage →
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-[10px] tracking-widest uppercase text-zinc-500 border-b border-zinc-800/40">
+                  <th className="px-5 py-3">Collaborator</th>
+                  <th className="px-5 py-3">Code</th>
+                  <th className="px-5 py-3 text-right">Tickets Sold</th>
+                  <th className="px-5 py-3 text-right">Invites Used</th>
+                  <th className="px-5 py-3 text-right">Revenue (€)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/40">
+                {collabStats.map((cs) => (
+                  <tr key={cs.collaborator.id} className="hover:bg-zinc-800/30 transition">
+                    <td className="px-5 py-3 text-zinc-200">{cs.collaborator.name}</td>
+                    <td className="px-5 py-3">
+                      <span className="font-mono text-xs text-amber-400">
+                        {cs.collaborator.code}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right text-zinc-200">{cs.ticketsSold}</td>
+                    <td className="px-5 py-3 text-right text-zinc-400">
+                      {cs.invitesRedeemed}/{cs.invitesIssued}
+                    </td>
+                    <td className="px-5 py-3 text-right text-emerald-400">
+                      {cs.revenue.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Recent Bookings */}
       <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">

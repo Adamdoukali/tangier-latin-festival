@@ -85,6 +85,7 @@ function Home() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [secondVideoOpen, setSecondVideoOpen] = useState(false);
   const [selectedPack, setSelectedPack] = useState<{
+    id?: string;
     name: string;
     sub: string;
     price: string;
@@ -102,8 +103,17 @@ function Home() {
 
   const stats = translatedStats[lang] || translatedStats.en;
 
-  // Use admin-managed packs from localStorage if available, otherwise fall back to hardcoded
-  const [packs, setDynamicPacks] = useState(
+  // Use admin-managed packs from the database if available, otherwise fall back to hardcoded
+  type HomePack = {
+    id?: string;
+    name: string;
+    sub: string;
+    price: string;
+    currency?: string;
+    features: string[];
+    popular: boolean;
+  };
+  const [packs, setDynamicPacks] = useState<HomePack[]>(
     translatedPacks[lang] || translatedPacks.en
   );
   useEffect(() => {
@@ -572,6 +582,7 @@ function Home() {
                     <button
                       onClick={() =>
                         setSelectedPack({
+                          id: p.id,
                           name: p.name,
                           sub: p.sub,
                           price: p.price,

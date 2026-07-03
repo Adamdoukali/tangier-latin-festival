@@ -1,6 +1,13 @@
 // ─── Admin Data Store ───────────────────────────────────────────────
-// localStorage-backed CRUD for packs, bookings, and invite codes.
-// Falls back to hardcoded defaults on first load.
+// Supabase-backed CRUD for packs, bookings, invites and collaborators.
+// All functions are async. When Supabase is not configured (no .env keys)
+// or a request fails, the store falls back to localStorage so the site
+// keeps working offline / in local dev.
+//
+// DB setup lives in supabase/schema.sql — run it once in the Supabase
+// SQL Editor to create the collaborators table + attribution columns.
+
+import { supabase } from "./supabase";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -18,6 +25,7 @@ export interface Pack {
 }
 
 export type BookingStatus = "pending" | "confirmed" | "checked-in";
+export type BookingSource = "manual" | "website" | "invite" | "referral";
 
 export interface Booking {
   id: string;
@@ -32,6 +40,8 @@ export interface Booking {
   danceLevel: string;
   notes: string;
   status: BookingStatus;
+  source?: BookingSource;
+  collaboratorId?: string | null;
   inviteId?: string;
   inviteCode?: string;
   createdAt: string;
@@ -47,14 +57,28 @@ export interface Invite {
   redeemedAt?: string;
   bookingId?: string;
   assignee?: string;
+  collaboratorId?: string | null;
   createdAt: string;
 }
 
-// ─── Keys ───────────────────────────────────────────────────────────
+export interface Collaborator {
+  id: string;
+  name: string;
+  code: string;
+  email?: string;
+  phone?: string;
+  commission?: number;
+  active: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+// ─── Keys (localStorage fallback) ───────────────────────────────────
 
 const PACKS_KEY = "tlf_admin_packs";
 const BOOKINGS_KEY = "tlf_admin_bookings";
 const INVITES_KEY = "tlf_admin_invites";
+const COLLABS_KEY = "tlf_admin_collaborators";
 const SEEDED_KEY = "tlf_admin_seeded_v4";
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -87,6 +111,147 @@ function writeStore<T>(key: string, data: T[]): void {
   localStorage.setItem(key, JSON.stringify(data));
 }
 
+// When the database rejects writes (RLS policies not set up yet — see
+// supabase/schema.sql), flip to localStorage for the whole browser session
+// so reads and writes stay consistent instead of writing locally while
+// listing from an empty database. Kept in sessionStorage so it survives
+// page reloads but re-checks on the next visit (e.g. after fixing RLS).
+const DB_BLOCKED_KEY = "tlf_db_write_blocked";
+
+function isDbBlocked(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(DB_BLOCKED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function setDbBlocked(): void {
+  try {
+    sessionStorage.setItem(DB_BLOCKED_KEY, "true");
+  } catch {
+    /* ignore */
+  }
+}
+
+const useDb = () => supabase !== null && typeof window !== "undefined" && !isDbBlocked();
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function warn(op: string, error: unknown) {
+  const msg = String((error as any)?.message ?? error ?? "");
+  const code = String((error as any)?.code ?? "");
+  if (code === "42501" || /row-level security|permission denied/i.test(msg)) {
+    setDbBlocked();
+    console.warn(
+      `[admin-store] Database writes are blocked by row-level security — ` +
+        `run supabase/schema.sql in the Supabase SQL Editor to fix. ` +
+        `Falling back to localStorage for this session.`
+    );
+  }
+  console.warn(`[admin-store] ${op} failed, using local fallback:`, error);
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+/** True when database writes were rejected this session (RLS not set up). */
+export function isDbWriteBlocked(): boolean {
+  return isDbBlocked();
+}
+
+// ─── Row mappers (DB uses snake_case) ───────────────────────────────
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const packFromRow = (r: any): Pack => ({
+  id: r.id,
+  name: r.name,
+  sub: r.sub ?? "",
+  price: String(r.price ?? ""),
+  currency: r.currency ?? "€",
+  category: r.category ?? undefined,
+  features: Array.isArray(r.features) ? r.features : [],
+  popular: !!r.popular,
+  active: !!r.active,
+  createdAt: r.created_at,
+});
+
+const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
+  const row: Record<string, unknown> = {};
+  if (p.name !== undefined) row.name = p.name;
+  if (p.sub !== undefined) row.sub = p.sub;
+  if (p.price !== undefined) row.price = p.price;
+  if (p.currency !== undefined) row.currency = p.currency;
+  if (p.category !== undefined) row.category = p.category;
+  if (p.features !== undefined) row.features = p.features;
+  if (p.popular !== undefined) row.popular = p.popular;
+  if (p.active !== undefined) row.active = p.active;
+  return row;
+};
+
+const bookingFromRow = (r: any): Booking => ({
+  id: r.id,
+  ticketCode: r.ticket_code,
+  packId: r.pack_id ?? "",
+  packName: r.pack_name ?? "",
+  customerName: r.customer_name ?? "",
+  email: r.email ?? "",
+  phone: r.phone ?? "",
+  country: r.country ?? "",
+  numPeople: r.num_people ?? 1,
+  danceLevel: r.dance_level ?? "",
+  notes: r.notes ?? "",
+  status: (r.status as BookingStatus) ?? "pending",
+  source: (r.source as BookingSource) ?? undefined,
+  collaboratorId: r.collaborator_id ?? null,
+  inviteId: r.invite_id ?? undefined,
+  inviteCode: r.invite_code ?? undefined,
+  createdAt: r.created_at,
+});
+
+const inviteFromRow = (r: any): Invite => ({
+  id: r.id,
+  code: r.code,
+  packId: r.pack_id ?? "",
+  packName: r.pack_name ?? "",
+  used: !!r.used,
+  redeemedBy: r.redeemed_by ?? undefined,
+  redeemedAt: r.redeemed_at ?? undefined,
+  bookingId: r.booking_id ?? undefined,
+  assignee: r.assignee ?? undefined,
+  collaboratorId: r.collaborator_id ?? null,
+  createdAt: r.created_at,
+});
+
+const collabFromRow = (r: any): Collaborator => ({
+  id: r.id,
+  name: r.name,
+  code: r.code,
+  email: r.email ?? undefined,
+  phone: r.phone ?? undefined,
+  commission: r.commission != null ? Number(r.commission) : 0,
+  active: !!r.active,
+  notes: r.notes ?? undefined,
+  createdAt: r.created_at,
+});
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+// Insert that tolerates a DB that hasn't run supabase/schema.sql yet:
+// if the error complains about an unknown column, retry without the
+// optional attribution columns.
+async function insertRow(
+  table: string,
+  row: Record<string, unknown>,
+  optionalCols: string[] = []
+): Promise<Record<string, unknown>> {
+  let { data, error } = await supabase!.from(table).insert(row).select().single();
+  if (error && optionalCols.some((c) => error!.message?.includes(c))) {
+    const stripped = { ...row };
+    for (const c of optionalCols) delete stripped[c];
+    ({ data, error } = await supabase!.from(table).insert(stripped).select().single());
+  }
+  if (error) throw error;
+  return data as Record<string, unknown>;
+}
+
 // ─── Default Seed Data ──────────────────────────────────────────────
 
 const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
@@ -95,12 +260,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (2 NIGHTS)",
     price: "335",
     currency: "€",
-    features: [
-      "2 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["2 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: false,
     active: true,
     category: "Chambre double",
@@ -110,12 +270,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (3 NIGHTS)",
     price: "385",
     currency: "€",
-    features: [
-      "3 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["3 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: true,
     active: true,
     category: "Chambre double",
@@ -125,12 +280,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (4 NIGHTS)",
     price: "435",
     currency: "€",
-    features: [
-      "4 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["4 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: false,
     active: true,
     category: "Chambre double",
@@ -140,12 +290,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (2 NIGHTS)",
     price: "435",
     currency: "€",
-    features: [
-      "2 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["2 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: false,
     active: true,
     category: "Chambre single",
@@ -155,12 +300,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (3 NIGHTS)",
     price: "535",
     currency: "€",
-    features: [
-      "3 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["3 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: false,
     active: true,
     category: "Chambre single",
@@ -170,12 +310,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "SOLAZUR HOTEL TANGIER (4 NIGHTS)",
     price: "635",
     currency: "€",
-    features: [
-      "4 NIGHTS",
-      "BREAKFAST",
-      "DINNER",
-      "FULL PASS",
-    ],
+    features: ["4 NIGHTS", "BREAKFAST", "DINNER", "FULL PASS"],
     popular: false,
     active: true,
     category: "Chambre single",
@@ -185,12 +320,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "WITHOUT ACCOMMODATION",
     price: "130",
     currency: "€",
-    features: [
-      "ALL WORKSHOPS",
-      "SHOWS",
-      "SOCIAL PARTIES",
-      "POOL PARTIES",
-    ],
+    features: ["ALL WORKSHOPS", "SHOWS", "SOCIAL PARTIES", "POOL PARTIES"],
     popular: false,
     active: true,
     category: "Full Pass",
@@ -200,12 +330,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "WITHOUT ACCOMMODATION",
     price: "200",
     currency: "€",
-    features: [
-      "1 LEADER + 1 FOLLOWER",
-      "ALL WORKSHOPS",
-      "SHOWS & PARTIES",
-      "POOL PARTIES",
-    ],
+    features: ["1 LEADER + 1 FOLLOWER", "ALL WORKSHOPS", "SHOWS & PARTIES", "POOL PARTIES"],
     popular: false,
     active: true,
     category: "Full Pass",
@@ -215,12 +340,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "WITHOUT ACCOMMODATION",
     price: "90",
     currency: "€",
-    features: [
-      "SHOWS",
-      "SOCIAL PARTIES",
-      "POOL PARTIES",
-      "(NO WORKSHOPS)",
-    ],
+    features: ["SHOWS", "SOCIAL PARTIES", "POOL PARTIES", "(NO WORKSHOPS)"],
     popular: false,
     active: true,
     category: "Full Pass",
@@ -230,12 +350,7 @@ const DEFAULT_PACKS: Omit<Pack, "id" | "createdAt">[] = [
     sub: "WITHOUT ACCOMMODATION",
     price: "50",
     currency: "€",
-    features: [
-      "ALL WORKSHOPS",
-      "SHOWS",
-      "SOCIAL PARTIES",
-      "POOL PARTIES (1 DAY ONLY)",
-    ],
+    features: ["ALL WORKSHOPS", "SHOWS", "SOCIAL PARTIES", "POOL PARTIES (1 DAY ONLY)"],
     popular: false,
     active: true,
     category: "Full Pass",
@@ -258,38 +373,72 @@ export function seedIfNeeded(): void {
 
 // ─── Packs CRUD ─────────────────────────────────────────────────────
 
-export function getPacks(): Pack[] {
+function getLocalPacks(): Pack[] {
   seedIfNeeded();
   return readStore<Pack>(PACKS_KEY);
 }
 
-export function getActivePacks(): Pack[] {
-  return getPacks().filter((p) => p.active);
+export async function getPacks(): Promise<Pack[]> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("packs")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      if (data && data.length > 0) return data.map(packFromRow);
+      // Empty DB: fall back to defaults so the public site never shows nothing.
+      return getLocalPacks();
+    } catch (e) {
+      warn("getPacks", e);
+    }
+  }
+  return getLocalPacks();
 }
 
-export function getPackById(id: string): Pack | undefined {
-  return getPacks().find((p) => p.id === id);
+export async function getActivePacks(): Promise<Pack[]> {
+  return (await getPacks()).filter((p) => p.active);
 }
 
-export function addPack(
-  pack: Omit<Pack, "id" | "createdAt">
-): Pack {
-  const packs = getPacks();
-  const newPack: Pack = {
-    ...pack,
-    id: generateId(),
-    createdAt: new Date().toISOString(),
-  };
+export async function getPackById(id: string): Promise<Pack | undefined> {
+  return (await getPacks()).find((p) => p.id === id);
+}
+
+export async function addPack(pack: Omit<Pack, "id" | "createdAt">): Promise<Pack> {
+  if (useDb()) {
+    try {
+      const data = await insertRow("packs", packToRow(pack));
+      return packFromRow(data);
+    } catch (e) {
+      warn("addPack", e);
+    }
+  }
+  const packs = getLocalPacks();
+  const newPack: Pack = { ...pack, id: generateId(), createdAt: new Date().toISOString() };
   packs.push(newPack);
   writeStore(PACKS_KEY, packs);
   return newPack;
 }
 
-export function updatePack(
+export async function updatePack(
   id: string,
   updates: Partial<Omit<Pack, "id" | "createdAt">>
-): Pack | null {
-  const packs = getPacks();
+): Promise<Pack | null> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("packs")
+        .update(packToRow(updates))
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return packFromRow(data);
+    } catch (e) {
+      warn("updatePack", e);
+    }
+  }
+  const packs = getLocalPacks();
   const idx = packs.findIndex((p) => p.id === id);
   if (idx === -1) return null;
   packs[idx] = { ...packs[idx], ...updates };
@@ -297,32 +446,106 @@ export function updatePack(
   return packs[idx];
 }
 
-export function deletePack(id: string): boolean {
-  const packs = getPacks();
+export async function deletePack(id: string): Promise<boolean> {
+  if (useDb()) {
+    try {
+      const { error } = await supabase!.from("packs").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      warn("deletePack", e);
+    }
+  }
+  const packs = getLocalPacks();
   const filtered = packs.filter((p) => p.id !== id);
   if (filtered.length === packs.length) return false;
   writeStore(PACKS_KEY, filtered);
   return true;
 }
 
+/** Push the hardcoded default packs into the database (admin action).
+ *  Throws when the database refuses the writes (e.g. RLS not set up). */
+export async function seedPacksToDb(): Promise<number> {
+  if (!useDb()) return 0;
+  const { data } = await supabase!.from("packs").select("name, sub");
+  const existing = new Set((data ?? []).map((r) => `${r.name}::${r.sub}`));
+  let inserted = 0;
+  let firstError: unknown = null;
+  for (const p of DEFAULT_PACKS) {
+    if (existing.has(`${p.name}::${p.sub}`)) continue;
+    const { error } = await supabase!.from("packs").insert(packToRow(p));
+    if (error) {
+      firstError = firstError ?? error;
+    } else {
+      inserted++;
+    }
+  }
+  if (inserted === 0 && firstError) {
+    warn("seedPacksToDb", firstError);
+    throw firstError;
+  }
+  return inserted;
+}
+
 // ─── Bookings CRUD ──────────────────────────────────────────────────
 
-export function getBookings(): Booking[] {
+export async function getBookings(): Promise<Booking[]> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("bookings")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(bookingFromRow);
+    } catch (e) {
+      warn("getBookings", e);
+    }
+  }
   return readStore<Booking>(BOOKINGS_KEY);
 }
 
-export function getBookingById(id: string): Booking | undefined {
-  return getBookings().find((b) => b.id === id);
+export async function getBookingById(id: string): Promise<Booking | undefined> {
+  return (await getBookings()).find((b) => b.id === id);
 }
 
-export function addBooking(
+export async function addBooking(
   booking: Omit<Booking, "id" | "ticketCode" | "createdAt">
-): Booking {
-  const bookings = getBookings();
+): Promise<Booking> {
+  const ticketCode = generateTicketCode();
+  if (useDb()) {
+    try {
+      const data = await insertRow(
+        "bookings",
+        {
+          ticket_code: ticketCode,
+          pack_id: booking.packId || null,
+          pack_name: booking.packName,
+          customer_name: booking.customerName,
+          email: booking.email,
+          phone: booking.phone,
+          country: booking.country,
+          num_people: booking.numPeople,
+          dance_level: booking.danceLevel,
+          notes: booking.notes,
+          status: booking.status,
+          source: booking.source ?? "manual",
+          collaborator_id: booking.collaboratorId ?? null,
+          invite_id: booking.inviteId ?? null,
+          invite_code: booking.inviteCode ?? null,
+        },
+        ["source", "collaborator_id"]
+      );
+      return bookingFromRow(data);
+    } catch (e) {
+      warn("addBooking", e);
+    }
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
   const newBooking: Booking = {
     ...booking,
     id: generateId(),
-    ticketCode: generateTicketCode(),
+    ticketCode,
     createdAt: new Date().toISOString(),
   };
   bookings.push(newBooking);
@@ -330,11 +553,25 @@ export function addBooking(
   return newBooking;
 }
 
-export function updateBookingStatus(
+export async function updateBookingStatus(
   id: string,
   status: BookingStatus
-): Booking | null {
-  const bookings = getBookings();
+): Promise<Booking | null> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("bookings")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return bookingFromRow(data);
+    } catch (e) {
+      warn("updateBookingStatus", e);
+    }
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
   const idx = bookings.findIndex((b) => b.id === id);
   if (idx === -1) return null;
   bookings[idx] = { ...bookings[idx], status };
@@ -342,8 +579,17 @@ export function updateBookingStatus(
   return bookings[idx];
 }
 
-export function deleteBooking(id: string): boolean {
-  const bookings = getBookings();
+export async function deleteBooking(id: string): Promise<boolean> {
+  if (useDb()) {
+    try {
+      const { error } = await supabase!.from("bookings").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      warn("deleteBooking", e);
+    }
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
   const filtered = bookings.filter((b) => b.id !== id);
   if (filtered.length === bookings.length) return false;
   writeStore(BOOKINGS_KEY, filtered);
@@ -352,19 +598,57 @@ export function deleteBooking(id: string): boolean {
 
 // ─── Invites CRUD ───────────────────────────────────────────────────
 
-export function getInvites(): Invite[] {
+export async function getInvites(): Promise<Invite[]> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("invites")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(inviteFromRow);
+    } catch (e) {
+      warn("getInvites", e);
+    }
+  }
   return readStore<Invite>(INVITES_KEY);
 }
 
-export function generateInvite(packId: string, packName: string, assignee?: string): Invite {
-  const invites = getInvites();
+export async function generateInvite(
+  packId: string,
+  packName: string,
+  assignee?: string,
+  collaboratorId?: string
+): Promise<Invite> {
+  const code = generateTicketCode();
+  if (useDb()) {
+    try {
+      const data = await insertRow(
+        "invites",
+        {
+          code,
+          pack_id: packId || null,
+          pack_name: packName,
+          used: false,
+          assignee: assignee || null,
+          collaborator_id: collaboratorId || null,
+        },
+        ["collaborator_id"]
+      );
+      return inviteFromRow(data);
+    } catch (e) {
+      warn("generateInvite", e);
+    }
+  }
+  const invites = readStore<Invite>(INVITES_KEY);
   const invite: Invite = {
     id: generateId(),
-    code: generateTicketCode(),
+    code,
     packId,
     packName,
     used: false,
     assignee: assignee || undefined,
+    collaboratorId: collaboratorId || null,
     createdAt: new Date().toISOString(),
   };
   invites.push(invite);
@@ -372,33 +656,36 @@ export function generateInvite(packId: string, packName: string, assignee?: stri
   return invite;
 }
 
-export function generateBulkInvites(
+export async function generateBulkInvites(
   packId: string,
   packName: string,
   count: number,
-  assignee?: string
-): Invite[] {
-  const invites = getInvites();
-  const newInvites: Invite[] = [];
+  assignee?: string,
+  collaboratorId?: string
+): Promise<Invite[]> {
+  const out: Invite[] = [];
   for (let i = 0; i < count; i++) {
-    const invite: Invite = {
-      id: generateId(),
-      code: generateTicketCode(),
-      packId,
-      packName,
-      used: false,
-      assignee: assignee || undefined,
-      createdAt: new Date().toISOString(),
-    };
-    newInvites.push(invite);
-    invites.push(invite);
+    out.push(await generateInvite(packId, packName, assignee, collaboratorId));
   }
-  writeStore(INVITES_KEY, invites);
-  return newInvites;
+  return out;
 }
 
-export function markInviteUsed(id: string): Invite | null {
-  const invites = getInvites();
+export async function markInviteUsed(id: string): Promise<Invite | null> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("invites")
+        .update({ used: true })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return inviteFromRow(data);
+    } catch (e) {
+      warn("markInviteUsed", e);
+    }
+  }
+  const invites = readStore<Invite>(INVITES_KEY);
   const idx = invites.findIndex((i) => i.id === id);
   if (idx === -1) return null;
   invites[idx] = { ...invites[idx], used: true };
@@ -406,8 +693,17 @@ export function markInviteUsed(id: string): Invite | null {
   return invites[idx];
 }
 
-export function deleteInvite(id: string): boolean {
-  const invites = getInvites();
+export async function deleteInvite(id: string): Promise<boolean> {
+  if (useDb()) {
+    try {
+      const { error } = await supabase!.from("invites").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      warn("deleteInvite", e);
+    }
+  }
+  const invites = readStore<Invite>(INVITES_KEY);
   const filtered = invites.filter((i) => i.id !== id);
   if (filtered.length === invites.length) return false;
   writeStore(INVITES_KEY, filtered);
@@ -416,9 +712,27 @@ export function deleteInvite(id: string): boolean {
 
 // ─── Invite Lookup & Redeem ─────────────────────────────────────────
 
-export function getInviteByCode(code: string): Invite | undefined {
-  return getInvites().find((i) => i.code === code);
+export async function getInviteByCode(code: string): Promise<Invite | undefined> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("invites")
+        .select("*")
+        .eq("code", code)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return inviteFromRow(data);
+      // Not in the database — fall through and check localStorage too
+      // (covers invites created while database writes were blocked).
+    } catch (e) {
+      warn("getInviteByCode", e);
+    }
+  }
+  return readStore<Invite>(INVITES_KEY).find((i) => i.code === code);
 }
+
+// Local (fallback) records use timestamp-based ids; database rows use uuids.
+const isLocalId = (id: string) => !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id);
 
 export interface RedeemData {
   customerName: string;
@@ -430,29 +744,67 @@ export interface RedeemData {
   notes: string;
 }
 
-export function redeemInvite(
+export async function redeemInvite(
   inviteCode: string,
   data: RedeemData
-): { success: true; booking: Booking } | { success: false; error: string } {
-  const invite = getInviteByCode(inviteCode);
+): Promise<{ success: true; booking: Booking } | { success: false; error: string }> {
+  const invite = await getInviteByCode(inviteCode);
   if (!invite) return { success: false, error: "Invite code not found." };
   if (invite.used) return { success: false, error: "This invite has already been used." };
 
-  const pack = getPackById(invite.packId);
-  if (!pack) return { success: false, error: "Pack no longer available." };
+  const pack = await getPackById(invite.packId);
 
-  // Create booking linked to invite
-  const booking = addBooking({
+  if (useDb() && !isLocalId(invite.id)) {
+    try {
+      // Claim the invite first (guards against double redemption):
+      // the update only matches if the invite is still unused.
+      const { data: claimed, error: claimErr } = await supabase!
+        .from("invites")
+        .update({
+          used: true,
+          redeemed_by: data.customerName,
+          redeemed_at: new Date().toISOString(),
+        })
+        .eq("id", invite.id)
+        .eq("used", false)
+        .select();
+      if (claimErr) throw claimErr;
+      if (!claimed || claimed.length === 0) {
+        return { success: false, error: "This invite has already been used." };
+      }
+
+      const booking = await addBooking({
+        ...data,
+        packId: invite.packId,
+        packName: invite.packName,
+        status: "confirmed",
+        source: "invite",
+        collaboratorId: invite.collaboratorId ?? null,
+        inviteId: invite.id,
+        inviteCode: invite.code,
+      });
+
+      await supabase!.from("invites").update({ booking_id: booking.id }).eq("id", invite.id);
+      return { success: true, booking };
+    } catch (e) {
+      warn("redeemInvite", e);
+      return { success: false, error: "Something went wrong. Please try again." };
+    }
+  }
+
+  // Local fallback
+  if (!pack) return { success: false, error: "Pack no longer available." };
+  const booking = await addBooking({
     ...data,
     packId: invite.packId,
     packName: invite.packName,
     status: "confirmed",
+    source: "invite",
+    collaboratorId: invite.collaboratorId ?? null,
     inviteId: invite.id,
     inviteCode: invite.code,
   });
-
-  // Mark invite as used
-  const invites = getInvites();
+  const invites = readStore<Invite>(INVITES_KEY);
   const idx = invites.findIndex((i) => i.id === invite.id);
   if (idx !== -1) {
     invites[idx] = {
@@ -464,15 +816,177 @@ export function redeemInvite(
     };
     writeStore(INVITES_KEY, invites);
   }
-
   return { success: true, booking };
+}
+
+// ─── Collaborators ──────────────────────────────────────────────────
+
+/** True when the collaborators table exists in the database. */
+export async function collaboratorsReady(): Promise<boolean> {
+  if (!useDb()) return true; // local mode always "works"
+  const { error } = await supabase!.from("collaborators").select("id").limit(1);
+  return !error;
+}
+
+export async function getCollaborators(): Promise<Collaborator[]> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("collaborators")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map(collabFromRow);
+    } catch (e) {
+      warn("getCollaborators", e);
+    }
+  }
+  return readStore<Collaborator>(COLLABS_KEY);
+}
+
+export async function getCollaboratorByCode(code: string): Promise<Collaborator | undefined> {
+  const wanted = code.trim().toUpperCase();
+  return (await getCollaborators()).find((c) => c.code.toUpperCase() === wanted && c.active);
+}
+
+export async function addCollaborator(
+  c: Omit<Collaborator, "id" | "createdAt">
+): Promise<Collaborator> {
+  if (useDb()) {
+    try {
+      const data = await insertRow("collaborators", {
+        name: c.name,
+        code: c.code.trim().toUpperCase(),
+        email: c.email || null,
+        phone: c.phone || null,
+        commission: c.commission ?? 0,
+        active: c.active,
+        notes: c.notes || null,
+      });
+      return collabFromRow(data);
+    } catch (e) {
+      warn("addCollaborator", e);
+      throw e;
+    }
+  }
+  const all = readStore<Collaborator>(COLLABS_KEY);
+  const created: Collaborator = {
+    ...c,
+    code: c.code.trim().toUpperCase(),
+    id: generateId(),
+    createdAt: new Date().toISOString(),
+  };
+  all.push(created);
+  writeStore(COLLABS_KEY, all);
+  return created;
+}
+
+export async function updateCollaborator(
+  id: string,
+  updates: Partial<Omit<Collaborator, "id" | "createdAt">>
+): Promise<Collaborator | null> {
+  if (useDb()) {
+    try {
+      const row: Record<string, unknown> = {};
+      if (updates.name !== undefined) row.name = updates.name;
+      if (updates.code !== undefined) row.code = updates.code.trim().toUpperCase();
+      if (updates.email !== undefined) row.email = updates.email || null;
+      if (updates.phone !== undefined) row.phone = updates.phone || null;
+      if (updates.commission !== undefined) row.commission = updates.commission;
+      if (updates.active !== undefined) row.active = updates.active;
+      if (updates.notes !== undefined) row.notes = updates.notes || null;
+      const { data, error } = await supabase!
+        .from("collaborators")
+        .update(row)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return collabFromRow(data);
+    } catch (e) {
+      warn("updateCollaborator", e);
+    }
+  }
+  const all = readStore<Collaborator>(COLLABS_KEY);
+  const idx = all.findIndex((x) => x.id === id);
+  if (idx === -1) return null;
+  all[idx] = { ...all[idx], ...updates };
+  writeStore(COLLABS_KEY, all);
+  return all[idx];
+}
+
+export async function deleteCollaborator(id: string): Promise<boolean> {
+  if (useDb()) {
+    try {
+      const { error } = await supabase!.from("collaborators").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      warn("deleteCollaborator", e);
+    }
+  }
+  const all = readStore<Collaborator>(COLLABS_KEY);
+  const filtered = all.filter((x) => x.id !== id);
+  if (filtered.length === all.length) return false;
+  writeStore(COLLABS_KEY, filtered);
+  return true;
+}
+
+export interface CollaboratorStats {
+  collaborator: Collaborator;
+  invitesIssued: number;
+  invitesRedeemed: number;
+  bookings: number;
+  ticketsSold: number; // sum of numPeople over attributed bookings
+  revenue: number;
+}
+
+export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
+  const [collaborators, invites, bookings, packs] = await Promise.all([
+    getCollaborators(),
+    getInvites(),
+    getBookings(),
+    getPacks(),
+  ]);
+  const priceOf = (packId: string) => {
+    const p = packs.find((x) => x.id === packId);
+    return p ? parseInt(p.price, 10) || 0 : 0;
+  };
+  return collaborators.map((c) => {
+    const myInvites = invites.filter((i) => i.collaboratorId === c.id);
+    const myBookings = bookings.filter((b) => b.collaboratorId === c.id);
+    return {
+      collaborator: c,
+      invitesIssued: myInvites.length,
+      invitesRedeemed: myInvites.filter((i) => i.used).length,
+      bookings: myBookings.length,
+      ticketsSold: myBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
+      revenue: myBookings
+        .filter((b) => b.source !== "invite")
+        .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0),
+    };
+  });
+}
+
+// ─── Referral tracking (public site) ────────────────────────────────
+
+const REF_KEY = "tlf_ref_code";
+
+/** Remember a ?ref= code so later bookings are attributed to it. */
+export function rememberReferral(code: string): void {
+  if (typeof window === "undefined" || !code) return;
+  localStorage.setItem(REF_KEY, code.trim().toUpperCase());
+}
+
+export function getRememberedReferral(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(REF_KEY);
 }
 
 // ─── Stats Helpers ──────────────────────────────────────────────────
 
-export function getStats() {
-  const bookings = getBookings();
-  const packs = getPacks();
+export async function getStats() {
+  const [bookings, packs] = await Promise.all([getBookings(), getPacks()]);
 
   const totalBookings = bookings.length;
   const pendingBookings = bookings.filter((b) => b.status === "pending").length;

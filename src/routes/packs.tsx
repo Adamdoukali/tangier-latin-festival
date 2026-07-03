@@ -18,6 +18,7 @@ function PacksPage() {
     translateDynamicText(text, lang as "en" | "fr" | "es");
   const [packs, setPacks] = useState<any[]>([]);
   const [selectedPack, setSelectedPack] = useState<{
+    id?: string;
     name: string;
     sub: string;
     price: string;
@@ -25,7 +26,13 @@ function PacksPage() {
   } | null>(null);
 
   useEffect(() => {
-    setPacks(getActivePacks());
+    let cancelled = false;
+    getActivePacks().then((p) => {
+      if (!cancelled) setPacks(p);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -132,6 +139,7 @@ function PacksPage() {
                         <button
                           onClick={() =>
                             setSelectedPack({
+                              id: p.id,
                               name: translateDynamic(p.name),
                               sub: translateDynamic(p.sub),
                               price: p.price,

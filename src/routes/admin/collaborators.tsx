@@ -1,0 +1,472 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Check,
+  Link2,
+  CheckCircle2,
+  AlertTriangle,
+  ToggleLeft,
+  ToggleRight,
+  Users,
+} from "lucide-react";
+import {
+  getCollaboratorStats,
+  addCollaborator,
+  updateCollaborator,
+  deleteCollaborator,
+  collaboratorsReady,
+  type Collaborator,
+  type CollaboratorStats,
+} from "@/lib/admin-store";
+
+export const Route = createFileRoute("/admin/collaborators")({
+  component: AdminCollaborators,
+});
+
+interface CollabForm {
+  name: string;
+  code: string;
+  email: string;
+  phone: string;
+  commission: number;
+  notes: string;
+  active: boolean;
+}
+
+const emptyForm: CollabForm = {
+  name: "",
+  code: "",
+  email: "",
+  phone: "",
+  commission: 0,
+  notes: "",
+  active: true,
+};
+
+function suggestCode(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .toUpperCase()
+    .slice(0, 12);
+}
+
+function referralUrl(code: string): string {
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/packs?ref=${code}`;
+}
+
+function AdminCollaborators() {
+  const [stats, setStats] = useState<CollaboratorStats[]>([]);
+  const [ready, setReady] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<CollabForm>(emptyForm);
+  const [saveError, setSaveError] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    const [ok, s] = await Promise.all([collaboratorsReady(), getCollaboratorStats()]);
+    setReady(ok);
+    setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const openNew = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setSaveError("");
+    setShowForm(true);
+  };
+
+  const openEdit = (c: Collaborator) => {
+    setEditingId(c.id);
+    setForm({
+      name: c.name,
+      code: c.code,
+      email: c.email ?? "",
+      phone: c.phone ?? "",
+      commission: c.commission ?? 0,
+      notes: c.notes ?? "",
+      active: c.active,
+    });
+    setSaveError("");
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.name.trim() || !form.code.trim()) {
+      setSaveError("Name and code are required.");
+      return;
+    }
+    try {
+      if (editingId) {
+        await updateCollaborator(editingId, form);
+      } else {
+        await addCollaborator(form);
+      }
+      setShowForm(false);
+      setEditingId(null);
+      await reload();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setSaveError(
+        msg.includes("duplicate") ? "This code is already taken — pick another one." : msg
+      );
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteCollaborator(id);
+    setDeleteConfirm(null);
+    await reload();
+  };
+
+  const toggleActive = async (c: Collaborator) => {
+    await updateCollaborator(c.id, { active: !c.active });
+    await reload();
+  };
+
+  const copyLink = (c: Collaborator) => {
+    navigator.clipboard.writeText(referralUrl(c.code));
+    setCopiedId(c.id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl tracking-wide text-zinc-100">Collaborators</h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            Partners who sell tickets or distribute invites. Every sale and invite is tracked per
+            collaborator.
+          </p>
+        </div>
+        <button
+          onClick={openNew}
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer self-start"
+        >
+          <Plus className="h-4 w-4" /> Add Collaborator
+        </button>
+      </div>
+
+      {/* DB setup notice */}
+      {!ready && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-200/90">
+            <p className="font-semibold text-amber-300">Database setup required</p>
+            <p className="mt-1">
+              The <code className="font-mono">collaborators</code> table doesn't exist yet in your
+              Supabase project. Open the Supabase Dashboard → SQL Editor and run the script in{" "}
+              <code className="font-mono bg-amber-500/10 px-1 rounded">supabase/schema.sql</code>{" "}
+              (in the project repo), then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* How it works */}
+      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 text-sm text-zinc-400 space-y-1.5">
+        <p className="font-display text-sm tracking-wide text-zinc-200 mb-2">How tracking works</p>
+        <p>
+          · <span className="text-zinc-300">Selling:</span> give each collaborator their referral
+          link — any pack booking made through it is attributed to them.
+        </p>
+        <p>
+          · <span className="text-zinc-300">Inviting:</span> generate QR invites on the{" "}
+          <span className="text-zinc-300">QR Invites</span> page and pick the collaborator — every
+          redeemed invite counts toward them.
+        </p>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
+        {loading ? (
+          <div className="px-5 py-16 text-center text-sm text-zinc-600">Loading…</div>
+        ) : stats.length === 0 ? (
+          <div className="px-5 py-16 text-center text-sm text-zinc-600">
+            <Users className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+            No collaborators yet. Click "Add Collaborator" to create the first one.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800/60 text-xs tracking-widest uppercase text-zinc-500">
+                  <th className="px-5 py-3 text-left font-medium">Name</th>
+                  <th className="px-5 py-3 text-left font-medium">Code / Link</th>
+                  <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
+                  <th className="px-5 py-3 text-right font-medium">Invites</th>
+                  <th className="px-5 py-3 text-right font-medium">Revenue (€)</th>
+                  <th className="px-5 py-3 text-center font-medium">Active</th>
+                  <th className="px-5 py-3 text-right font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/40">
+                {stats.map(({ collaborator: c, ...s }) => (
+                  <tr key={c.id} className="hover:bg-zinc-800/30 transition">
+                    <td className="px-5 py-3">
+                      <p className="font-medium text-zinc-200">{c.name}</p>
+                      <p className="text-xs text-zinc-500">{c.email || c.phone || "—"}</p>
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <code className="text-xs font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                          {c.code}
+                        </code>
+                        <button
+                          onClick={() => copyLink(c)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            copiedId === c.id
+                              ? "text-emerald-400"
+                              : "text-zinc-600 hover:text-zinc-300"
+                          }`}
+                          title={`Copy referral link: ${referralUrl(c.code)}`}
+                        >
+                          {copiedId === c.id ? (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          ) : (
+                            <Link2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3 text-right text-zinc-200 font-medium">
+                      {s.ticketsSold}
+                    </td>
+                    <td className="px-5 py-3 text-right text-zinc-400">
+                      {s.invitesRedeemed}/{s.invitesIssued}
+                    </td>
+                    <td className="px-5 py-3 text-right text-emerald-400">
+                      {s.revenue.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <button
+                        onClick={() => toggleActive(c)}
+                        className="cursor-pointer align-middle"
+                        title={c.active ? "Deactivate" : "Activate"}
+                      >
+                        {c.active ? (
+                          <ToggleRight className="h-5 w-5 text-emerald-400" />
+                        ) : (
+                          <ToggleLeft className="h-5 w-5 text-zinc-600" />
+                        )}
+                      </button>
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openEdit(c)}
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirm(c.id)}
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add / Edit Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display text-lg text-zinc-100">
+                {editingId ? "Edit Collaborator" : "New Collaborator"}
+              </h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      name: e.target.value,
+                      code: editingId || f.code ? f.code : suggestCode(e.target.value),
+                    }))
+                  }
+                  onBlur={() =>
+                    setForm((f) => (f.code ? f : { ...f, code: suggestCode(f.name) }))
+                  }
+                  placeholder="e.g. Salsero Madrid"
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  Referral Code
+                </label>
+                <input
+                  type="text"
+                  value={form.code}
+                  onChange={(e) =>
+                    setForm({ ...form, code: e.target.value.toUpperCase().replace(/\s/g, "") })
+                  }
+                  placeholder="SALSERO"
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                />
+                {form.code && (
+                  <p className="mt-1.5 text-[11px] text-zinc-500 break-all">
+                    Referral link: {referralUrl(form.code)}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="partner@email.com"
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="+212..."
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Commission %
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.commission}
+                    onChange={(e) =>
+                      setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
+                    }
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                  />
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.active}
+                      onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                      className="accent-amber-500"
+                    />
+                    Active
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  Notes (optional)
+                </label>
+                <textarea
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={2}
+                  placeholder="Deal terms, region, contact person..."
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition resize-none"
+                />
+              </div>
+
+              {saveError && <p className="text-sm text-red-400">{saveError}</p>}
+            </div>
+
+            <div className="mt-6 flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
+              >
+                <Check className="h-4 w-4" /> {editingId ? "Save Changes" : "Create"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+            <h3 className="font-display text-lg text-zinc-100">Delete Collaborator?</h3>
+            <p className="mt-2 text-sm text-zinc-500">
+              Their past bookings and invites stay in the system but lose the attribution link.
+            </p>
+            <div className="mt-6 flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirm)}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
