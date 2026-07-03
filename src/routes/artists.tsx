@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {  Search , ArrowRight } from "lucide-react";
 import { z } from "zod";
@@ -165,7 +165,6 @@ function ArtistsPage() {
   const [search, setSearch] = useState("");
 
   const langSuffix = lang && lang !== "en" ? `?lang=${lang}` : "";
-  const localizedHref = (href: string) => `${href}${langSuffix}`;
 
   const STYLES = [t("artistsStyleAll"), "Salsa", "Bachata", "Kizomba", "DJs", "Ecole"];
 
@@ -181,7 +180,7 @@ function ArtistsPage() {
       <Nav />
 
       {/* ── Hero Banner ─────────────────────────────── */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/20">
+      <section className="relative flex flex-col justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 overflow-hidden border-b border-border/20">
         {/* Generated Image Background */}
         <div className="absolute inset-0">
           <img src="/artists_bg.png" alt="" className="h-full w-full object-cover" />
@@ -261,31 +260,7 @@ function ArtistsPage() {
         )}
       </main>
 
-      {/* ── CTA ─────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-gray-950 to-gray-900 text-white py-20 text-center px-6">
-        <p className="text-xs font-bold tracking-[0.35em] uppercase text-rose-400 mb-3">
-          {t("artistsCtaSubtitle")}
-        </p>
-        <h2 className="font-['Playfair_Display'] text-4xl md:text-5xl font-bold mb-6">
-          {t("artistsCtaTitle")}
-        </h2>
-        <p className="text-gray-300 mb-8 max-w-xl mx-auto">{t("artistsCtaDesc")}</p>
-        <a
-          href={localizedHref("/#packs")}
-          className="inline-flex items-center gap-2 px-8 py-4 bg-rose-600 hover:bg-rose-700 text-white font-bold tracking-widest uppercase text-sm rounded-full transition shadow-lg"
-        >
-          {t("artistsCtaBtn")}
-        </a>
-        <div className="mt-8">
-          <Link
-            to={localizedHref("/")}
-            className="text-sm text-gray-400 hover:text-white transition underline"
-          >
-            ← {t("backHomeBtn")}
-          </Link>
-        </div>
-      </section>
-            {/* CTA */}
+      {/* CTA */}
       <section className="relative py-24 md:py-32 overflow-hidden border-t border-border/40 select-none">
         <div className="absolute inset-0 bg-gold opacity-95" />
         <div className="relative mx-auto max-w-4xl px-6 text-center space-y-6 text-primary-foreground">
@@ -312,7 +287,7 @@ function ArtistsPage() {
           </p>
           <div className="pt-6">
             <a
-              href="/#packs"
+              href={`/${langSuffix}#packs`}
               className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
             >
               <span>{t("buyPackBtn")}</span>

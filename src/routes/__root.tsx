@@ -127,7 +127,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 function RootShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const search = router.state.location.search as { lang?: string };
-  const lang = search.lang || "en";
+  const lang = (search.lang || "en") as Language;
 
   return (
     <html lang={lang}>
@@ -136,7 +136,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <WhatsAppButton />
+        <WhatsAppButton lang={lang} />
         <Scripts />
       </body>
     </html>

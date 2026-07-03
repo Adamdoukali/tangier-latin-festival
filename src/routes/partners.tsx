@@ -101,7 +101,7 @@ function PartnersPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] border-b border-border/20 overflow-hidden">
+      <section className="relative flex flex-col justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 border-b border-border/20 overflow-hidden">
         <style>{`
           @keyframes marquee-left {
             0% { transform: translateX(0); }

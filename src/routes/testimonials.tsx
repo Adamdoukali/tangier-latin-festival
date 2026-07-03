@@ -181,7 +181,7 @@ function TestimonialsPage() {
       <Nav />
 
       {/* ── Hero Banner ─────────────────────────────── */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-white/5">
+      <section className="relative flex flex-col justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 overflow-hidden border-b border-white/5">
         {/* Generated Image Background */}
         <div className="absolute inset-0 z-0">
           <img src="/testimonials_bg.png" alt="" className="h-full w-full object-cover" />
@@ -197,7 +197,7 @@ function TestimonialsPage() {
             <Star className="h-3.5 w-3.5 text-gold animate-star-fill" style={{ animationDelay: "800ms" }} />
           </div>
           
-          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-white drop-shadow-md mb-8 leading-[1.1]">
+          <h1 className="font-display text-4xl sm:text-6xl md:text-7xl xl:text-8xl uppercase text-white drop-shadow-md mb-8 leading-[1.1]">
             {lang === "fr" ? "Témoignages" : lang === "es" ? "Testimonios" : "Testimonials"}
           </h1>
           

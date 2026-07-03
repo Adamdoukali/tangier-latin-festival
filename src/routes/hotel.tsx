@@ -226,7 +226,7 @@ function HotelPage() {
       icon: UtensilsCrossed,
       title:
         lang === "fr"
-          ? "Petit-déjeuner & Dinner"
+          ? "Petit-déjeuner & Dîner"
           : lang === "es"
             ? "Desayuno y Cena"
             : "Breakfast & Dinner",

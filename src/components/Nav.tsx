@@ -12,6 +12,8 @@ export function TopBar() {
         <div className="flex items-center gap-3">
           <a
             href="https://www.instagram.com/tangierlatinfestival.official"
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label="Instagram"
             className="hover:text-primary transition"
           >
@@ -19,6 +21,8 @@ export function TopBar() {
           </a>
           <a
             href="https://www.facebook.com/TangierInternationalLatinfestival/"
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label="Facebook"
             className="hover:text-primary transition"
           >
@@ -26,6 +30,8 @@ export function TopBar() {
           </a>
           <a
             href="https://www.youtube.com/@tangierlatinfestival1622"
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label="YouTube"
             className="hover:text-primary transition"
           >
@@ -188,9 +194,9 @@ export function Nav() {
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="space-y-6">
+          <div className="flex flex-col flex-1 min-h-0 gap-6">
             {/* Header in Drawer */}
-            <div className="flex items-center justify-between pb-6 border-b border-border/30">
+            <div className="flex items-center justify-between pb-6 border-b border-border/30 shrink-0">
               <a href={localizedHref("/")} onClick={() => setMobileMenuOpen(false)}>
                 <img
                   src={logo}
@@ -207,7 +213,7 @@ export function Nav() {
             </div>
 
             {/* Navigation links */}
-            <nav className="flex flex-col gap-4 overflow-y-auto max-h-[55vh] pr-2">
+            <nav className="flex flex-col gap-4 overflow-y-auto flex-1 min-h-0 pr-2">
               {links.map((l) => (
                 <a
                   key={l.href}
@@ -227,7 +233,7 @@ export function Nav() {
           </div>
 
           {/* Footer in Drawer (Flags and CTA Button) */}
-          <div className="space-y-6 pt-6 border-t border-border/30">
+          <div className="space-y-6 pt-6 border-t border-border/30 shrink-0">
             {/* Translation Flag select */}
             <div className="flex items-center justify-between">
               <span className="text-xs uppercase text-muted-foreground tracking-widest font-semibold">

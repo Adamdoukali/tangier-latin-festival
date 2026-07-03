@@ -224,7 +224,7 @@ function ProgramPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] border-b border-border/20 overflow-hidden">
+      <section className="relative flex flex-col justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 border-b border-border/20 overflow-hidden">
         {/* Background Image Overlay */}
         <div className="absolute inset-0 -z-20">
           <img
@@ -364,7 +364,7 @@ function ProgramPage() {
           </p>
           <div className="pt-6">
             <a
-              href="/#packs"
+              href={`/${langSuffix}#packs`}
               className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
             >
               <span>{t("buyPackBtn")}</span>

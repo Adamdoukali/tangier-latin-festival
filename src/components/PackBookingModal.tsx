@@ -24,6 +24,7 @@ export function PackBookingModal({
 }) {
   const { t } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Memoize large country lists to prevent lag when opening the modal
@@ -129,26 +130,29 @@ export function PackBookingModal({
             onSubmit={async (e) => {
               e.preventDefault();
               setIsSubmitting(true);
+              setError(false);
               const formData = new FormData(e.currentTarget);
               formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
               formData.append("subject", `New Pack Booking: ${pack.name}`);
-              
+
               try {
-                await fetch("https://api.web3forms.com/submit", {
+                const res = await fetch("https://api.web3forms.com/submit", {
                   method: "POST",
                   body: formData,
                 });
+                if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+                setSubmitted(true);
               } catch (err) {
                 console.error(err);
+                setError(true);
               } finally {
                 setIsSubmitting(false);
-                setSubmitted(true);
               }
             }}
           >
             <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
             {/* Conditional Names */}
-            {pack.name.toLowerCase().includes("double") ? (
+            {/double|doble/.test(pack.name.toLowerCase()) ? (
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
@@ -274,6 +278,13 @@ export function PackBookingModal({
             >
               {isSubmitting ? "Sending..." : t("packFormSubmitBtn")}
             </button>
+
+            {error && (
+              <p className="text-xs text-destructive text-center font-semibold">
+                Something went wrong. Please try again or contact us at
+                contact@tangierlatinfestival.com
+              </p>
+            )}
 
             <p className="text-center text-[10px] text-muted-foreground/60 tracking-wide">
               contact@tangierlatinfestival.com · +212 6 64 01 02 79

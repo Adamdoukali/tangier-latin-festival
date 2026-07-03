@@ -34,8 +34,10 @@ const REELS_DATA = [
 
 function ReelsPage() {
   const { lang, t } = useLanguage();
-  // Shared mute state across all reels
-  const [isMuted, setIsMuted] = useState(false);
+  // Shared mute state across all reels.
+  // Starts muted: browsers block unmuted autoplay, so an unmuted default
+  // would leave the first reel frozen until the user taps it.
+  const [isMuted, setIsMuted] = useState(true);
 
   return (
     <div className="bg-black min-h-screen text-white flex flex-col overflow-hidden">
@@ -45,7 +47,7 @@ function ReelsPage() {
 
       {/* Main scrolling container */}
       <div 
-        className="flex-1 overflow-y-scroll snap-y snap-mandatory h-screen pt-0 md:pt-20 pb-0"
+        className="flex-1 overflow-y-scroll snap-y snap-mandatory h-screen pt-0 md:pt-[114px] pb-0"
         style={{ height: "100dvh" }}
       >
         {REELS_DATA.map((reel, index) => (

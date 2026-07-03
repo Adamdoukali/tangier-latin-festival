@@ -602,7 +602,7 @@ function GalleryPage() {
       <Nav />
 
       {/* HERO SECTION */}
-      <section className="relative flex flex-col justify-center h-[65vh] min-h-[460px] overflow-hidden border-b border-border/40 bg-slate-950">
+      <section className="relative flex flex-col justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 overflow-hidden border-b border-border/40 bg-slate-950">
         <div className="absolute inset-0 select-none">
           <img src={heroImg} alt="" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-black/30" />

@@ -75,8 +75,17 @@ export const translations = {
     overviewWhen: "When",
     overviewHotel: "Kenzi Solazur Hotel",
     overviewLocation: "Tangier, Morocco",
-    overviewDates: "DU 07 AU 11 JANVIER",
+    overviewDates: "JANUARY 07 TO 11",
     overviewYear: "2027",
+
+    // Tangier Video Section
+    tangierVideoTitle:
+      "Tangier, a crossroads of cultures and an essential stage for Latin dances.",
+    tangierVideoSubtitle: "(see video below)",
+
+    // WhatsApp floating button
+    whatsappCta: "More info?",
+    whatsappMessage: "Hello! I am interested in joining the festival!",
 
     // Artists Home Section
     lineupSubtitle: "Line-up",
@@ -417,6 +426,15 @@ export const translations = {
     overviewDates: "DU 07 AU 11 JANVIER",
     overviewYear: "2027",
 
+    // Tangier Video Section
+    tangierVideoTitle:
+      "Tanger, carrefour des cultures et scène incontournable des danses latines.",
+    tangierVideoSubtitle: "(voir vidéo ci-dessous)",
+
+    // WhatsApp floating button
+    whatsappCta: "Plus d'infos?",
+    whatsappMessage: "Bonjour! Je suis intéressé pour participer au festival!",
+
     // Artists Home Section
     lineupSubtitle: "Line-up",
     lineupTitle: "Découvrez nos artistes",
@@ -736,8 +754,17 @@ export const translations = {
     overviewWhen: "Cuándo",
     overviewHotel: "Hotel Kenzi Solazur",
     overviewLocation: "Tánger, Morocco",
-    overviewDates: "DU 07 AU 11 JANVIER",
+    overviewDates: "DEL 07 AL 11 DE ENERO",
     overviewYear: "2027",
+
+    // Tangier Video Section
+    tangierVideoTitle:
+      "Tánger, cruce de culturas y escenario imprescindible de los bailes latinos.",
+    tangierVideoSubtitle: "(ver vídeo abajo)",
+
+    // WhatsApp floating button
+    whatsappCta: "¿Más información?",
+    whatsappMessage: "¡Hola! ¡Estoy interesado en participar en el festival!",
 
     // Artists Home Section
     lineupSubtitle: "Line-up",
@@ -1286,3 +1313,39 @@ export const translatedHomeProgramme = {
     },
   ],
 };
+
+// ─── Dynamic pack text translation ──────────────────────────────────
+// Admin-managed packs are stored with French/English source strings;
+// this maps the known ones to the active language at render time.
+// Unknown strings are returned unchanged.
+const dynamicPackDict: Record<string, { en: string; fr: string; es: string }> = {
+  "chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "chambre single": { en: "Single Room", fr: "Chambre Simple", es: "Habitación Individual" },
+  "full pass": { en: "Full Pass", fr: "Full Pass", es: "Full Pass" },
+  "basic ticket": { en: "Basic Ticket", fr: "Billet Basique", es: "Entrada Básica" },
+  "couple pass": { en: "Couple Pass", fr: "Pass Couple", es: "Pase Pareja" },
+  "party pass": { en: "Party Pass", fr: "Pass Soirée", es: "Pase Fiesta" },
+  "day pass": { en: "Day Pass", fr: "Pass Journée", es: "Pase de Día" },
+  "solazur hotel tangier (2 nights)": { en: "SOLAZUR HOTEL TANGIER (2 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (2 NUITS)", es: "HOTEL SOLAZUR TÁNGER (2 NOCHES)" },
+  "solazur hotel tangier (3 nights)": { en: "SOLAZUR HOTEL TANGIER (3 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (3 NUITS)", es: "HOTEL SOLAZUR TÁNGER (3 NOCHES)" },
+  "solazur hotel tangier (4 nights)": { en: "SOLAZUR HOTEL TANGIER (4 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (4 NUITS)", es: "HOTEL SOLAZUR TÁNGER (4 NOCHES)" },
+  "without accommodation": { en: "WITHOUT ACCOMMODATION", fr: "SANS HÉBERGEMENT", es: "SIN ALOJAMIENTO" },
+  "2 nights": { en: "2 NIGHTS", fr: "2 NUITS", es: "2 NOCHES" },
+  "3 nights": { en: "3 NIGHTS", fr: "3 NUITS", es: "3 NOCHES" },
+  "4 nights": { en: "4 NIGHTS", fr: "4 NUITS", es: "4 NOCHES" },
+  "breakfast": { en: "BREAKFAST", fr: "PETIT-DÉJEUNER", es: "DESAYUNO" },
+  "dinner": { en: "DINNER", fr: "DÎNER", es: "CENA" },
+  "all workshops": { en: "ALL WORKSHOPS", fr: "TOUS LES WORKSHOPS", es: "TODOS LOS TALLERES" },
+  "shows": { en: "SHOWS", fr: "SHOWS", es: "SHOWS" },
+  "social parties": { en: "SOCIAL PARTIES", fr: "SOIRÉES SOCIALES", es: "FIESTAS SOCIALES" },
+  "pool parties": { en: "POOL PARTIES", fr: "POOL PARTIES", es: "POOL PARTIES" },
+  "1 leader + 1 follower": { en: "1 LEADER + 1 FOLLOWER", fr: "1 LEADER + 1 FOLLOWER", es: "1 LEADER + 1 FOLLOWER" },
+  "shows & parties": { en: "SHOWS & PARTIES", fr: "SHOWS & SOIRÉES", es: "SHOWS & FIESTAS" },
+  "(no workshops)": { en: "(NO WORKSHOPS)", fr: "(SANS WORKSHOPS)", es: "(SIN TALLERES)" },
+  "pool parties (1 day only)": { en: "POOL PARTIES (1 DAY ONLY)", fr: "POOL PARTIES (1 JOUR SEULEMENT)", es: "POOL PARTIES (SOLO 1 DÍA)" },
+};
+
+export function translateDynamicText(text: string, lang: Language): string {
+  const key = (text || "").trim().toLowerCase();
+  return dynamicPackDict[key]?.[lang] || text;
+}

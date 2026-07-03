@@ -67,12 +67,12 @@ function CompetitionPage() {
       <Nav />
 
       {/* HERO */}
-      <section className="relative flex flex-col items-center justify-center h-[65vh] min-h-[460px] overflow-hidden bg-slate-950">
+      <section className="relative flex flex-col items-center justify-center min-h-[65vh] pt-28 md:pt-36 pb-14 overflow-hidden bg-slate-950">
         <div className="absolute inset-0">
-          <img src={competitionImg} alt="" className="h-full w-full object-cover" />
+          <img src={competitionImg} alt="" className="h-full w-full object-cover object-[center_22%]" />
           <div className="absolute inset-0 bg-black/30" />
         </div>
-        <div className="relative mx-auto max-w-4xl px-6 text-center mt-12">
+        <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs md:text-sm font-semibold tracking-[0.3em] uppercase text-gold mb-4 flex items-center justify-center gap-2">
             <Trophy className="h-4 w-4 md:h-5 md:w-5" />
             {t("competitionHeroSubtitle")}
@@ -114,9 +114,11 @@ function CompetitionPage() {
 
           {/* Right Column: Title, Description, and Embedded Criteria Progress Bars */}
           <div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] mb-6">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl xl:text-6xl text-foreground leading-[1.1] mb-6">
               <span className="block">{t("competitionHeroTitlePart1")}</span>
-              <span className="block text-gold italic">{t("competitionHeroTitlePart2")}</span>
+              <span className="block text-gold italic whitespace-nowrap text-[0.75em]">
+                {t("competitionHeroTitlePart2")}
+              </span>
               <span className="block whitespace-nowrap">{t("competitionHeroTitlePart3")}</span>
             </h2>
             <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed text-sm md:text-base">

@@ -52,6 +52,7 @@ import {
   translatedPacks,
   translatedTestimonials,
   translatedHomeProgramme,
+  translateDynamicText,
   Language,
 } from "@/lib/translations";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
@@ -312,10 +313,10 @@ function Home() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="text-center mb-10">
             <h2 className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground/90 max-w-3xl mx-auto leading-relaxed">
-              Tanger, carrefour des cultures et scène incontournable des danses latines.
+              {t("tangierVideoTitle")}
             </h2>
             <p className="mt-4 text-xs tracking-[0.25em] uppercase text-primary font-semibold">
-              (voir vidéo ci-dessous)
+              {t("tangierVideoSubtitle")}
             </p>
           </div>
           <div 
@@ -502,7 +503,15 @@ function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {packs.slice(0, 3).map((p) => {
+            {packs.slice(0, 3).map((rawPack) => {
+              const p = {
+                ...rawPack,
+                name: translateDynamicText(rawPack.name, lang),
+                sub: translateDynamicText(rawPack.sub, lang),
+                features: rawPack.features.map((f: string) =>
+                  translateDynamicText(f, lang)
+                ),
+              };
               const isPopular = p.popular;
               return (
                 <div
@@ -586,7 +595,7 @@ function Home() {
 
           <div className="mt-16 text-center">
             <a
-              href="/packs"
+              href={localizedHref("/packs")}
               className="inline-flex items-center gap-2 rounded-full border border-gold px-8 py-4 text-sm font-semibold text-gold hover:bg-gold hover:text-primary-foreground shadow-[0_0_20px_-5px_rgba(212,175,55,0.3)] hover:shadow-gold transition-all duration-300 cursor-pointer"
             >
               {t("seeAllPacksBtn") || "See all packs"}
@@ -860,7 +869,7 @@ function Home() {
           </p>
           <div className="pt-6">
             <a
-              href="/#packs"
+              href={localizedHref("/#packs")}
               className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-sm font-bold tracking-wider text-foreground uppercase hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer shadow-soft"
             >
               <span>{t("buyPackBtn")}</span>
@@ -886,6 +895,8 @@ function Home() {
             <div className="flex items-center gap-4">
               <a
                 href="https://www.instagram.com/tangierlatinfestival.official"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
               >
@@ -893,6 +904,8 @@ function Home() {
               </a>
               <a
                 href="https://www.facebook.com/TangierInternationalLatinfestival/"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Facebook"
                 className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
               >
@@ -900,6 +913,8 @@ function Home() {
               </a>
               <a
                 href="https://www.youtube.com/@tangierlatinfestival1622"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="YouTube"
                 className="h-10 w-10 rounded-full border border-border grid place-items-center hover:border-primary hover:text-primary transition"
               >
@@ -921,25 +936,29 @@ function Home() {
 function ContactForm() {
   const { t, lang } = useLanguage();
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(false);
     const formData = new FormData(e.currentTarget);
     formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
     formData.append("subject", "New Contact Form Submission");
 
     try {
-      await fetch("https://api.web3forms.com/submit", {
+      const res = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
         body: formData,
       });
+      if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+      setSent(true);
     } catch (err) {
       console.error(err);
+      setError(true);
     } finally {
       setIsSubmitting(false);
-      setSent(true);
     }
   };
 
@@ -1009,6 +1028,15 @@ function ContactForm() {
             {t("contactFormSuccess")}
           </p>
         )}
+        {error && (
+          <p className="text-xs text-destructive mt-2 text-center font-semibold">
+            {lang === "fr"
+              ? "Une erreur est survenue. Veuillez réessayer ou nous contacter par email."
+              : lang === "es"
+                ? "Ocurrió un error. Inténtalo de nuevo o contáctanos por correo."
+                : "Something went wrong. Please try again or contact us by email."}
+          </p>
+        )}
       </form>
     </div>
   );
@@ -1029,11 +1057,15 @@ function shuffleArray<T>(arr: T[]): T[] {
 function GalleryMosaic() {
   const allPhotos = GALLERY_PHOTOS.map((p) => p.url);
 
-  // Pick initial random set
-  const [grid, setGrid] = useState<string[]>(() => {
-    const shuffled = shuffleArray(allPhotos);
-    return shuffled.slice(0, GRID_SLOTS);
-  });
+  // Deterministic initial set so the server and client render the same HTML
+  // (random values during render cause React hydration mismatches).
+  const [grid, setGrid] = useState<string[]>(() => allPhotos.slice(0, GRID_SLOTS));
+
+  // Randomize once after mount, client-side only
+  useEffect(() => {
+    setGrid(shuffleArray(allPhotos).slice(0, GRID_SLOTS));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Track which cell is currently fading (for crossfade animation)
   const [fadingCell, setFadingCell] = useState<number | null>(null);
