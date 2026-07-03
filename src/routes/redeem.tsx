@@ -45,7 +45,7 @@ function RedeemPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
-    customerName: "",
+    names: [""] as string[],
     email: "",
     phone: "",
     country: "",
@@ -53,6 +53,26 @@ function RedeemPage() {
     danceLevel: "Beginner",
     notes: "",
   });
+
+  // Double rooms and couple passes include exactly two people —
+  // both names are required and the count is fixed.
+  const isTwoPersonPack = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
+  const twoPerson = pack ? isTwoPersonPack(pack) : false;
+
+  const setPeople = (n: number) =>
+    setForm((f) => {
+      const clamped = Math.max(1, Math.min(6, n));
+      const names = [...f.names];
+      while (names.length < clamped) names.push("");
+      names.length = clamped;
+      return { ...f, numPeople: clamped, names };
+    });
+
+  const setName = (idx: number, value: string) =>
+    setForm((f) => ({
+      ...f,
+      names: f.names.map((n, i) => (i === idx ? value : n)),
+    }));
 
   // Look up invite on load
   useEffect(() => {
@@ -80,6 +100,10 @@ function RedeemPage() {
       }
       setInvite(found);
       setPack(foundPack);
+      // Two-person packs (double room / couple pass) need both names.
+      if (isTwoPersonPack(foundPack)) {
+        setForm((f) => ({ ...f, numPeople: 2, names: ["", ""] }));
+      }
     })();
     return () => {
       cancelled = true;
@@ -89,13 +113,21 @@ function RedeemPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !invite) return;
-    if (!form.customerName.trim() || !form.email.trim()) return;
+    if (form.names.some((n) => !n.trim()) || !form.email.trim()) return;
 
     setSubmitting(true);
     // Small delay for UX
     await new Promise((r) => setTimeout(r, 600));
 
-    const result = await redeemInvite(code, form);
+    const result = await redeemInvite(code, {
+      customerName: form.names.map((n) => n.trim()).join(" & "),
+      email: form.email,
+      phone: form.phone,
+      country: form.country,
+      numPeople: form.numPeople,
+      danceLevel: form.danceLevel,
+      notes: form.notes,
+    });
     if (result.success) {
       setSuccess(true);
       setBooking(result.booking);
@@ -320,7 +352,7 @@ function RedeemPage() {
               <p className="text-xs text-zinc-500">{pack.sub}</p>
               <div className="mt-2">
                 <span className="font-display text-2xl text-amber-400">{pack.price}</span>
-                <span className="text-xs text-zinc-500 ml-1">MAD</span>
+                <span className="text-xs text-zinc-500 ml-1">{pack.currency || "€"}</span>
               </div>
               <ul className="mt-3 space-y-1">
                 {pack.features.map((f, i) => (
@@ -355,22 +387,28 @@ function RedeemPage() {
           </p>
 
           <div className="space-y-4">
-            {/* Name */}
-            <div>
-              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                Full Name <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={form.customerName}
-                onChange={(e) =>
-                  setForm({ ...form, customerName: e.target.value })
-                }
-                placeholder="Your full name"
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
-              />
-            </div>
+            {/* Names — one field per person */}
+            {twoPerson && (
+              <p className="text-xs text-amber-400/90 -mb-1">
+                This pack is for 2 people — please enter both full names.
+              </p>
+            )}
+            {form.names.map((name, idx) => (
+              <div key={idx}>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  {form.names.length === 1 ? "Full Name" : `Person ${idx + 1} Full Name`}{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(idx, e.target.value)}
+                  placeholder={form.names.length === 1 ? "Your full name" : `Person ${idx + 1} full name`}
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                />
+              </div>
+            ))}
 
             {/* Email */}
             <div>
@@ -427,14 +465,12 @@ function RedeemPage() {
                 <input
                   type="number"
                   min={1}
+                  max={6}
                   value={form.numPeople}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      numPeople: parseInt(e.target.value) || 1,
-                    })
-                  }
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                  disabled={twoPerson}
+                  onChange={(e) => setPeople(parseInt(e.target.value) || 1)}
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  title={twoPerson ? "This pack is for exactly 2 people" : undefined}
                 />
               </div>
               <div>
@@ -474,7 +510,7 @@ function RedeemPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || !form.customerName.trim() || !form.email.trim()}
+            disabled={submitting || form.names.some((n) => !n.trim()) || !form.email.trim()}
             className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-zinc-950 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-amber-500/20"
           >
             {submitting ? (

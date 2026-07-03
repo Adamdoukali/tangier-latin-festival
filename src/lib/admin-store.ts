@@ -70,6 +70,12 @@ export interface Collaborator {
   commission?: number;
   active: boolean;
   notes?: string;
+  /** Partner Portal login (optional — no account without it) */
+  username?: string;
+  accessCode?: string;
+  /** Max invites they may generate in the portal; null/undefined = unlimited */
+  inviteQuota?: number | null;
+  lastSeenAt?: string | null;
   createdAt: string;
 }
 
@@ -230,6 +236,10 @@ const collabFromRow = (r: any): Collaborator => ({
   commission: r.commission != null ? Number(r.commission) : 0,
   active: !!r.active,
   notes: r.notes ?? undefined,
+  username: r.username ?? undefined,
+  accessCode: r.access_code ?? undefined,
+  inviteQuota: r.invite_quota ?? null,
+  lastSeenAt: r.last_seen_at ?? null,
   createdAt: r.created_at,
 });
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -849,20 +859,54 @@ export async function getCollaboratorByCode(code: string): Promise<Collaborator 
   return (await getCollaborators()).find((c) => c.code.toUpperCase() === wanted && c.active);
 }
 
+export async function getCollaboratorById(id: string): Promise<Collaborator | undefined> {
+  return (await getCollaborators()).find((c) => c.id === id);
+}
+
+export async function countInvitesByCollaborator(collaboratorId: string): Promise<number> {
+  return (await getInvites()).filter((i) => i.collaboratorId === collaboratorId).length;
+}
+
+/** Partner Portal login: username + access code against active collaborators. */
+export async function partnerLogin(
+  username: string,
+  accessCode: string
+): Promise<{ success: true; collaborator: Collaborator } | { success: false; error: string }> {
+  const u = username.trim().toLowerCase();
+  const all = await getCollaborators();
+  const found = all.find((c) => (c.username ?? "").toLowerCase() === u);
+  if (!found || !found.accessCode || found.accessCode !== accessCode.trim()) {
+    return { success: false, error: "Wrong username or access code." };
+  }
+  if (!found.active) {
+    return { success: false, error: "This account has been deactivated. Contact the festival team." };
+  }
+  // Best-effort "last active" stamp — ignore failures.
+  updateCollaborator(found.id, { lastSeenAt: new Date().toISOString() }).catch(() => {});
+  return { success: true, collaborator: found };
+}
+
 export async function addCollaborator(
   c: Omit<Collaborator, "id" | "createdAt">
 ): Promise<Collaborator> {
   if (useDb()) {
     try {
-      const data = await insertRow("collaborators", {
-        name: c.name,
-        code: c.code.trim().toUpperCase(),
-        email: c.email || null,
-        phone: c.phone || null,
-        commission: c.commission ?? 0,
-        active: c.active,
-        notes: c.notes || null,
-      });
+      const data = await insertRow(
+        "collaborators",
+        {
+          name: c.name,
+          code: c.code.trim().toUpperCase(),
+          email: c.email || null,
+          phone: c.phone || null,
+          commission: c.commission ?? 0,
+          active: c.active,
+          notes: c.notes || null,
+          username: c.username?.trim().toLowerCase() || null,
+          access_code: c.accessCode || null,
+          invite_quota: c.inviteQuota ?? null,
+        },
+        ["username", "access_code", "invite_quota"]
+      );
       return collabFromRow(data);
     } catch (e) {
       warn("addCollaborator", e);
@@ -895,6 +939,11 @@ export async function updateCollaborator(
       if (updates.commission !== undefined) row.commission = updates.commission;
       if (updates.active !== undefined) row.active = updates.active;
       if (updates.notes !== undefined) row.notes = updates.notes || null;
+      if (updates.username !== undefined)
+        row.username = updates.username?.trim().toLowerCase() || null;
+      if (updates.accessCode !== undefined) row.access_code = updates.accessCode || null;
+      if (updates.inviteQuota !== undefined) row.invite_quota = updates.inviteQuota;
+      if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
       const { data, error } = await supabase!
         .from("collaborators")
         .update(row)

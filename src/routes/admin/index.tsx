@@ -67,7 +67,7 @@ function AdminDashboard() {
       iconColor: "text-blue-400",
     },
     {
-      label: "Revenue (MAD)",
+      label: "Revenue (€)",
       value: stats.totalRevenue.toLocaleString(),
       icon: DollarSign,
       color: "from-emerald-500 to-emerald-700",

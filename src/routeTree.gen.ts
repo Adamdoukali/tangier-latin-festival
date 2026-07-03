@@ -15,6 +15,7 @@ import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RedeemRouteImport } from './routes/redeem'
 import { Route as ProgramRouteImport } from './routes/program'
 import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as PartnerRouteImport } from './routes/partner'
 import { Route as PacksRouteImport } from './routes/packs'
 import { Route as HotelRouteImport } from './routes/hotel'
 import { Route as GalleryRouteImport } from './routes/gallery'
@@ -57,6 +58,11 @@ const ProgramRoute = ProgramRouteImport.update({
 const PartnersRoute = PartnersRouteImport.update({
   id: '/partners',
   path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PacksRoute = PacksRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
   '/packs': typeof PacksRoute
+  '/partner': typeof PartnerRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
   '/redeem': typeof RedeemRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
   '/packs': typeof PacksRoute
+  '/partner': typeof PartnerRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
   '/redeem': typeof RedeemRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
   '/packs': typeof PacksRoute
+  '/partner': typeof PartnerRoute
   '/partners': typeof PartnersRoute
   '/program': typeof ProgramRoute
   '/redeem': typeof RedeemRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hotel'
     | '/packs'
+    | '/partner'
     | '/partners'
     | '/program'
     | '/redeem'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hotel'
     | '/packs'
+    | '/partner'
     | '/partners'
     | '/program'
     | '/redeem'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/gallery'
     | '/hotel'
     | '/packs'
+    | '/partner'
     | '/partners'
     | '/program'
     | '/redeem'
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   GalleryRoute: typeof GalleryRoute
   HotelRoute: typeof HotelRoute
   PacksRoute: typeof PacksRoute
+  PartnerRoute: typeof PartnerRoute
   PartnersRoute: typeof PartnersRoute
   ProgramRoute: typeof ProgramRoute
   RedeemRoute: typeof RedeemRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/partners'
       fullPath: '/partners'
       preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/packs': {
@@ -435,6 +455,7 @@ const rootRouteChildren: RootRouteChildren = {
   GalleryRoute: GalleryRoute,
   HotelRoute: HotelRoute,
   PacksRoute: PacksRoute,
+  PartnerRoute: PartnerRoute,
   PartnersRoute: PartnersRoute,
   ProgramRoute: ProgramRoute,
   RedeemRoute: RedeemRoute,

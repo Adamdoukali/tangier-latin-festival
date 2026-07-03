@@ -35,6 +35,9 @@ interface CollabForm {
   commission: number;
   notes: string;
   active: boolean;
+  username: string;
+  accessCode: string;
+  inviteQuota: string; // keep as text in the form; "" = unlimited
 }
 
 const emptyForm: CollabForm = {
@@ -45,7 +48,17 @@ const emptyForm: CollabForm = {
   commission: 0,
   notes: "",
   active: true,
+  username: "",
+  accessCode: "",
+  inviteQuota: "",
 };
+
+function generateAccessCode(): string {
+  const chars = "abcdefghjkmnpqrstuvwxyz23456789";
+  let out = "";
+  for (let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
 
 function suggestCode(name: string): string {
   return name
@@ -100,6 +113,9 @@ function AdminCollaborators() {
       commission: c.commission ?? 0,
       notes: c.notes ?? "",
       active: c.active,
+      username: c.username ?? "",
+      accessCode: c.accessCode ?? "",
+      inviteQuota: c.inviteQuota == null ? "" : String(c.inviteQuota),
     });
     setSaveError("");
     setShowForm(true);
@@ -110,11 +126,19 @@ function AdminCollaborators() {
       setSaveError("Name and code are required.");
       return;
     }
+    if (form.username.trim() && !form.accessCode.trim()) {
+      setSaveError("Set an access code for the portal account (or clear the username).");
+      return;
+    }
+    const payload = {
+      ...form,
+      inviteQuota: form.inviteQuota.trim() === "" ? null : parseInt(form.inviteQuota, 10) || 0,
+    };
     try {
       if (editingId) {
-        await updateCollaborator(editingId, form);
+        await updateCollaborator(editingId, payload);
       } else {
-        await addCollaborator(form);
+        await addCollaborator(payload);
       }
       setShowForm(false);
       setEditingId(null);
@@ -122,7 +146,9 @@ function AdminCollaborators() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setSaveError(
-        msg.includes("duplicate") ? "This code is already taken — pick another one." : msg
+        msg.includes("duplicate")
+          ? "This code or username is already taken — pick another one."
+          : msg
       );
     }
   };
@@ -191,6 +217,12 @@ function AdminCollaborators() {
           <span className="text-zinc-300">QR Invites</span> page and pick the collaborator — every
           redeemed invite counts toward them.
         </p>
+        <p>
+          · <span className="text-zinc-300">Self-service:</span> give a partner a username +
+          access code below and they can sign in at{" "}
+          <code className="font-mono text-violet-400/90">/partner</code> to generate their own
+          invites (within their limit) and watch their stats.
+        </p>
       </div>
 
       {/* Table */}
@@ -212,6 +244,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
                   <th className="px-5 py-3 text-right font-medium">Invites</th>
                   <th className="px-5 py-3 text-right font-medium">Revenue (€)</th>
+                  <th className="px-5 py-3 text-left font-medium">Last Active</th>
                   <th className="px-5 py-3 text-center font-medium">Active</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
@@ -221,7 +254,16 @@ function AdminCollaborators() {
                   <tr key={c.id} className="hover:bg-zinc-800/30 transition">
                     <td className="px-5 py-3">
                       <p className="font-medium text-zinc-200">{c.name}</p>
-                      <p className="text-xs text-zinc-500">{c.email || c.phone || "—"}</p>
+                      <p className="text-xs text-zinc-500">
+                        {c.username ? (
+                          <span className="font-mono text-violet-400/80">@{c.username}</span>
+                        ) : (
+                          <span className="text-zinc-600">no portal account</span>
+                        )}
+                        {c.inviteQuota != null && (
+                          <span className="text-zinc-600"> · limit {c.inviteQuota}</span>
+                        )}
+                      </p>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
@@ -253,6 +295,9 @@ function AdminCollaborators() {
                     </td>
                     <td className="px-5 py-3 text-right text-emerald-400">
                       {s.revenue.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-xs text-zinc-500 whitespace-nowrap">
+                      {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString() : "never"}
                     </td>
                     <td className="px-5 py-3 text-center">
                       <button
@@ -405,6 +450,71 @@ function AdminCollaborators() {
                     />
                     Active
                   </label>
+                </div>
+              </div>
+
+              {/* Portal account */}
+              <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-violet-300 font-semibold">
+                  Partner Portal account (optional)
+                </p>
+                <p className="text-xs text-zinc-500 -mt-1">
+                  Lets this partner sign in at <code className="font-mono">/partner</code> to
+                  generate their own invites and see their sales.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={form.username}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          username: e.target.value.toLowerCase().replace(/\s/g, ""),
+                        })
+                      }
+                      placeholder="salsero"
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      Access Code
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={form.accessCode}
+                        onChange={(e) => setForm({ ...form, accessCode: e.target.value.trim() })}
+                        placeholder="secret code"
+                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, accessCode: generateAccessCode() })}
+                        className="px-2.5 rounded-lg border border-zinc-700/60 text-xs text-zinc-400 hover:text-amber-400 hover:border-amber-500/40 transition cursor-pointer shrink-0"
+                        title="Generate a random access code"
+                      >
+                        ↻
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Invite limit (empty = unlimited)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.inviteQuota}
+                    onChange={(e) => setForm({ ...form, inviteQuota: e.target.value })}
+                    placeholder="e.g. 50"
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  />
                 </div>
               </div>
 
