@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /partner
+Disallow: /redeem
+
+Sitemap: https://www.tangierlatinfestival.com/sitemap.xml
