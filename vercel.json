@@ -1,0 +1,45 @@
+{
+  "redirects": [
+    { "source": "/wp-content/uploads/:path*", "destination": "/media/:path*", "permanent": true },
+
+    { "source": "/programme", "destination": "/program?lang=fr", "permanent": true },
+    { "source": "/artistes", "destination": "/artists?lang=fr", "permanent": true },
+    { "source": "/packs-2", "destination": "/packs?lang=fr", "permanent": true },
+    { "source": "/tourisme", "destination": "/tourism?lang=fr", "permanent": true },
+    { "source": "/partenaires", "destination": "/partners?lang=fr", "permanent": true },
+    { "source": "/temoignages", "destination": "/testimonials?lang=fr", "permanent": true },
+    { "source": "/contact", "destination": "/?lang=fr", "permanent": true },
+    { "source": "/competition-2", "destination": "/competition?lang=fr", "permanent": true },
+    { "source": "/competition-internationale-3", "destination": "/competition?lang=fr", "permanent": true },
+    { "source": "/workshops-4", "destination": "/program?lang=fr", "permanent": true },
+    { "source": "/workshops-2-3", "destination": "/program?lang=fr", "permanent": true },
+    { "source": "/shows-du-samedi-2", "destination": "/gallery?lang=fr", "permanent": true },
+    { "source": "/shows-du-vendredi-2", "destination": "/gallery?lang=fr", "permanent": true },
+    { "source": "/white-party-3", "destination": "/gallery?lang=fr", "permanent": true },
+    { "source": "/black-party", "destination": "/gallery?lang=fr", "permanent": true },
+    { "source": "/2-nuitees", "destination": "/packs?lang=fr", "permanent": true },
+    { "source": "/3-nuitees", "destination": "/packs?lang=fr", "permanent": true },
+    { "source": "/4-nuitees", "destination": "/packs?lang=fr", "permanent": true },
+    { "source": "/full-pass", "destination": "/packs?lang=fr", "permanent": true },
+    { "source": "/404-2", "destination": "/", "permanent": true },
+
+    { "source": "/en/saturday-shows", "destination": "/gallery", "permanent": true },
+    { "source": "/en/friday-shows", "destination": "/gallery", "permanent": true },
+    { "source": "/en/white-party", "destination": "/gallery", "permanent": true },
+    { "source": "/en/white-party-3", "destination": "/gallery", "permanent": true },
+    { "source": "/en/black-party", "destination": "/gallery", "permanent": true },
+    { "source": "/en/packs-2", "destination": "/packs", "permanent": true },
+    { "source": "/en/programme", "destination": "/program", "permanent": true },
+    { "source": "/en/artistes", "destination": "/artists", "permanent": true },
+    { "source": "/en/tourisme", "destination": "/tourism", "permanent": true },
+    { "source": "/en/competition-2", "destination": "/competition", "permanent": true },
+    { "source": "/en/workshops-4", "destination": "/program", "permanent": true },
+    { "source": "/en", "destination": "/", "permanent": true },
+    { "source": "/en/:path*", "destination": "/:path*", "permanent": true },
+
+    { "source": "/es", "destination": "/?lang=es", "permanent": true },
+    { "source": "/es/:path*", "destination": "/:path*?lang=es", "permanent": true },
+    { "source": "/fr", "destination": "/?lang=fr", "permanent": true },
+    { "source": "/fr/:path*", "destination": "/:path*?lang=fr", "permanent": true }
+  ]
+}
