@@ -104,7 +104,7 @@ function CompetitionPage() {
             <div className="rounded-2xl overflow-hidden border border-gold/20 shadow-soft bg-black/40 h-[480px] w-full flex items-center justify-center">
               <video
                 className="w-full h-full object-cover"
-                src="https://www.tangierlatinfestival.com/wp-content/uploads/2025/10/IMG_7013.mov"
+                src="/media/2025/10/IMG_7013.mov"
                 controls
                 preload="metadata"
                 playsInline

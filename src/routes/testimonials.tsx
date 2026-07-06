@@ -57,7 +57,7 @@ function TestimonialsPage() {
       id: 1,
       name: "ORLANDO",
       country: lang === "fr" ? "ALLEMAGNE" : lang === "es" ? "ALEMANIA" : "GERMANY",
-      avatar: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/ORLANDO.jpeg",
+      avatar: "/media/2024/07/ORLANDO.jpeg",
       quote:
         lang === "fr"
           ? "Tangier Latin Festival a été un succès retentissant !!! Vous, les Marocains, êtes si chaleureux, empathiques et transmettez tellement d'énergie positive que je suis encore tout impressionné !!! J'enseigne depuis de très nombreuses années dans le monde entier et les meilleures expériences que j'ai vécues étaient au Maroc !"
@@ -70,7 +70,7 @@ function TestimonialsPage() {
       name: "RAQUEL",
       country: lang === "fr" ? "PORTUGAL" : lang === "es" ? "PORTUGAL" : "PORTUGAL",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/TLF-RAQUEL-e1720206100981.jpeg",
+        "/media/2024/07/TLF-RAQUEL-e1720206100981.jpeg",
       quote:
         lang === "fr"
           ? "Partager c'est vivre. Merci pour cette danse incroyable, à Juan pour ce magnifique souvenir et à Tanger pour une année de plus."
@@ -83,7 +83,7 @@ function TestimonialsPage() {
       name: "IVAN Y CORAL",
       country: lang === "fr" ? "ESPAGNE" : lang === "es" ? "ESPAÑA" : "SPAIN",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/elementor/thumbs/IVAN-Y-CORAL-r9ti0q9p3aewov45pv6sr9fhkkyx1akfnuz3dq4b08.jpeg",
+        "/media/elementor/thumbs/IVAN-Y-CORAL-r9ti0q9p3aewov45pv6sr9fhkkyx1akfnuz3dq4b08.jpeg",
       quote:
         lang === "fr"
           ? "Mon Dieu !!! Nous n'arrêtons pas de regarder la vidéo et de nous souvenir des super grands moments que nous avons pu vivre là-bas. Ce furent des journées extrêmement enrichissantes tant au niveau culturel qu'en termes d'apprentissage professionnel."
@@ -101,7 +101,7 @@ function TestimonialsPage() {
             ? "BÉLGICA & POLONIA"
             : "BELGIUM & POLAND",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/elementor/thumbs/TALAL-EDYTA--r9thxr43g6c7xbft3kvbv0gxunn2nsr194lqo6j6pk.jpeg",
+        "/media/elementor/thumbs/TALAL-EDYTA--r9thxr43g6c7xbft3kvbv0gxunn2nsr194lqo6j6pk.jpeg",
       quote:
         lang === "fr"
           ? "Le public marocain... Notre peuple... Toujours accueillant... Nous éprouvons un immense plaisir à les rencontrer dans les congrès, à partager avec eux lors des ateliers... Tangier Latin Festival... Nous reviendrons..."
@@ -114,7 +114,7 @@ function TestimonialsPage() {
       name: "LAURA",
       country: lang === "fr" ? "COLOMBIE" : lang === "es" ? "COLOMBIA" : "COLOMBIA",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/LAURA-e1720206234140.jpeg",
+        "/media/2024/07/LAURA-e1720206234140.jpeg",
       quote:
         lang === "fr"
           ? "Un petit aperçu de ce qu'était la soirée sociale du samedi au Tangier Latin Festival. Un plaisir d'être là une année de plus pour cet événement, merci pour votre confiance."
@@ -127,7 +127,7 @@ function TestimonialsPage() {
       name: "DANI K",
       country: lang === "fr" ? "ROYAUME-UNI" : lang === "es" ? "REINO UNIDO" : "UNITED KINGDOM",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/DANI-K--e1720206941803.jpeg",
+        "/media/2024/07/DANI-K--e1720206941803.jpeg",
       quote:
         lang === "fr"
           ? "Reconnaissant pour tout l'amour, et béni pour cette opportunité. Merci au Tangier International Latin Festival de nous avoir accueillis et pour toute cette affection. Inspiré et motivé en compagnie de danseurs fantastiques."
@@ -140,7 +140,7 @@ function TestimonialsPage() {
       name: "EL CRUZ & NADEGE",
       country: lang === "fr" ? "LUXEMBOURG" : lang === "es" ? "LUXEMBURGO" : "LUXEMBOURG",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/EL-CRUZ-NADEGE-e1720206422700.jpeg",
+        "/media/2024/07/EL-CRUZ-NADEGE-e1720206422700.jpeg",
       quote:
         lang === "fr"
           ? "C'était notre première fois au Maroc ! Nous espérions un peu plus de soleil dans le ciel ce week-end, mais il était dans vos cœurs !"
@@ -152,7 +152,7 @@ function TestimonialsPage() {
       id: 8,
       name: "AMI EMIRATO",
       country: lang === "fr" ? "ROYAUME-UNI" : lang === "es" ? "REINO UNIDO" : "UNITED KINGDOM",
-      avatar: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/Ami-Emirato.jpeg",
+      avatar: "/media/2024/07/Ami-Emirato.jpeg",
       quote:
         lang === "fr"
           ? "90 minutes de musicalité Bachata en feu ! Merci au Tangier Latin Dance Festival pour la confiance !"
@@ -165,7 +165,7 @@ function TestimonialsPage() {
       name: "FOLIVI",
       country: lang === "fr" ? "LUXEMBOURG" : lang === "es" ? "LUXEMBURGO" : "LUXEMBOURG",
       avatar:
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/FOLIVI-e1720206683125.jpeg",
+        "/media/2024/07/FOLIVI-e1720206683125.jpeg",
       quote:
         lang === "fr"
           ? "C'était génial de mixer et danser avec vous pendant ce week-end de folie !"

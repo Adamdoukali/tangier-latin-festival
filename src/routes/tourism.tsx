@@ -49,11 +49,11 @@ function TourismPage() {
             ? "Domingo · 10 de Enero, 2027"
             : "Sunday · January 10, 2027",
       images: [
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-20.54.30.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/aaaaa-e1720209971548.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-20.54.31-1-e1720210179854.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-22.06.23.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-20.54.30-1-e1720209714617.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-20.54.30.jpeg",
+        "/media/2024/07/aaaaa-e1720209971548.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-20.54.31-1-e1720210179854.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-22.06.23.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-20.54.30-1-e1720209714617.jpeg",
       ],
       desc:
         lang === "fr"
@@ -96,11 +96,11 @@ function TourismPage() {
             ? "Sábado · 9 de Enero, 2027"
             : "Saturday · January 9, 2027",
       images: [
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS1.jpg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS2.jpg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS4.jpg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/AS3.jpg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-e1720218274371.jpeg",
+        "/media/2025/07/AS1.jpg",
+        "/media/2025/07/AS2.jpg",
+        "/media/2025/07/AS4.jpg",
+        "/media/2025/07/AS3.jpg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-e1720218274371.jpeg",
       ],
       desc:
         lang === "fr"
@@ -140,11 +140,11 @@ function TourismPage() {
             ? "Sábado · 9 de Enero, 2027"
             : "Saturday · January 9, 2027",
       images: [
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.40-e1720217925119.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-2-e1720218051604.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-1.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-22.05.56-e1720218166318.jpeg",
-        "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-05-at-21.40.40-1.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-21.40.40-e1720217925119.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-2-e1720218051604.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-21.40.39-1.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-22.05.56-e1720218166318.jpeg",
+        "/media/2024/07/WhatsApp-Image-2024-07-05-at-21.40.40-1.jpeg",
       ],
       desc:
         lang === "fr"

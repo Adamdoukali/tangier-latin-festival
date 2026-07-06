@@ -41,405 +41,405 @@ export const GALLERY_PHOTOS: GalleryPhoto[] = [
 
   // 1. Black Party (16 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-06-at-00.46.06.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-07-06-at-00.46.06.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.11.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.11.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.12-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.12-1.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.12.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.12.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/IMG_6787.jpg",
+    url: "/media/2025/07/IMG_6787.jpg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.13-2.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.13-2.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.13.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.13.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/IMG_6764.jpg",
+    url: "/media/2025/07/IMG_6764.jpg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.15-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.15-1.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.15.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.15.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.16-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.16-1.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.16.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.16.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.17-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.17-1.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.17.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.17.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.18-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.18-1.jpeg",
     category: "black-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.07.18.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.07.18.jpeg",
     category: "black-party",
   },
 
   // 2. Competition (15 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.48.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.48.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.49-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.49-1.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.46.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.46.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.51.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.51.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.54.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.54.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.49.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.49.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/1.jpg",
+    url: "/media/2025/07/1.jpg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.50.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.50.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.48-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.48-1.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.47.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.47.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/4.jpg",
+    url: "/media/2025/07/4.jpg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.46.51-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.46.51-1.jpeg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/5.jpg",
+    url: "/media/2025/07/5.jpg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/3.jpg",
+    url: "/media/2025/07/3.jpg",
     category: "competition",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/2.jpg",
+    url: "/media/2025/07/2.jpg",
     category: "competition",
   },
 
   // 3. Friday Shows (16 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.11.59.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.11.59.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.00-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.00-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.01.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.01.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.02-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.02-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.02.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.02.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.03-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.03-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.03.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.03.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.04-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.04-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.04.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.04.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.05-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.05-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.07-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.07-1.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.12.07.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.12.07.jpeg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/44.jpg",
+    url: "/media/2025/07/44.jpg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/33.jpg",
+    url: "/media/2025/07/33.jpg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/22.jpg",
+    url: "/media/2025/07/22.jpg",
     category: "friday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/11.jpg",
+    url: "/media/2025/07/11.jpg",
     category: "friday-shows",
   },
 
   // 4. Saturday Shows (15 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.24-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.24-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.25-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.25-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.25.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.25.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.26.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.26.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.27-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.27-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.27.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.27.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/S1.jpg",
+    url: "/media/2025/07/S1.jpg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.28-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.28-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.24.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.24.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.28.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.28.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.29-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.29-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.29.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.29.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.30-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.30-1.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.30.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.30.jpeg",
     category: "saturday-shows",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.35.31.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.35.31.jpeg",
     category: "saturday-shows",
   },
 
   // 5. White Party (16 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.23.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.23.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.25-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.25-1.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.25.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.25.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.26-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.26-1.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.27-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.27-1.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.27.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.27.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.29-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.29-1.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.30-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.30-1.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.30.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.30.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.30.31.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.30.31.jpeg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W6.jpg",
+    url: "/media/2025/07/W6.jpg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W5.jpg",
+    url: "/media/2025/07/W5.jpg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W4.jpg",
+    url: "/media/2025/07/W4.jpg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W3.jpg",
+    url: "/media/2025/07/W3.jpg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W1.jpg",
+    url: "/media/2025/07/W1.jpg",
     category: "white-party",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/W2.jpg",
+    url: "/media/2025/07/W2.jpg",
     category: "white-party",
   },
 
   // 6. Workshops (20 photos)
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.50.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.50.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/WK2.jpg",
+    url: "/media/2025/07/WK2.jpg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.53-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.53-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-06-at-00.59.50.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-07-06-at-00.59.50.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.54-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.54-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.57.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.57.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.52-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.52-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.52.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.52.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.54.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.54.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.49.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.49.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.51.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.51.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.50-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.50-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.56-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.56-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.51-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.51-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-07-06-at-00.59.48.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-07-06-at-00.59.48.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.53.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.53.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.55.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.55.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.49-1.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.49-1.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2024/07/WhatsApp-Image-2024-06-25-at-23.53.56.jpeg",
+    url: "/media/2024/07/WhatsApp-Image-2024-06-25-at-23.53.56.jpeg",
     category: "workshops",
   },
   {
-    url: "https://www.tangierlatinfestival.com/wp-content/uploads/2025/07/WK1.jpg",
+    url: "/media/2025/07/WK1.jpg",
     category: "workshops",
   },
 

@@ -30,9 +30,9 @@ export const Route = createFileRoute("/artists")({
   component: ArtistsPage,
 });
 
-const BASE = "https://www.tangierlatinfestival.com/wp-content/uploads/2024/04/";
-const BASE24 = "https://www.tangierlatinfestival.com/wp-content/uploads/2024/";
-const BASE25 = "https://www.tangierlatinfestival.com/wp-content/uploads/2025/";
+const BASE = "/media/2024/04/";
+const BASE24 = "/media/2024/";
+const BASE25 = "/media/2025/";
 
 const ALL_ARTISTS = [
   { name: "Sandrine", style: "Kizomba", img: BASE + "image-228-2.png" },
@@ -136,7 +136,7 @@ function ArtistCard({ name, style, img }: { name: string; style: string; img: st
         className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
         onError={(e) => {
           (e.target as HTMLImageElement).src =
-            "https://www.tangierlatinfestival.com/wp-content/uploads/2024/04/TLF-logo.png";
+            "/media/2024/04/TLF-logo.png";
         }}
       />
       {/* dark gradient overlay always visible at bottom */}

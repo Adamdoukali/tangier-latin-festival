@@ -62,16 +62,16 @@ export const Route = createFileRoute("/hotel")({
 
 function ImageCarousel() {
   const images = [
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845166.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/510893786.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/510895394.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/510893385.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/510896529.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88756856.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88757193.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/519897053.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845160.jpg",
-    "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845185.jpg",
+    "/media/2024/05/88845166.jpg",
+    "/media/2024/05/510893786.jpg",
+    "/media/2024/05/510895394.jpg",
+    "/media/2024/05/510893385.jpg",
+    "/media/2024/05/510896529.jpg",
+    "/media/2024/05/88756856.jpg",
+    "/media/2024/05/88757193.jpg",
+    "/media/2024/05/519897053.jpg",
+    "/media/2024/05/88845160.jpg",
+    "/media/2024/05/88845185.jpg",
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -257,7 +257,7 @@ function HotelPage() {
         `}</style>
         <div className="absolute inset-0 z-0">
           <img
-            src="https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845166.jpg"
+            src="/media/2024/05/88845166.jpg"
             alt="Hotel Solazur Tangier"
             className="h-full w-full object-cover opacity-100"
           />
@@ -298,9 +298,9 @@ function HotelPage() {
             {/* Collage of 3 Portrait Images */}
             <div className="grid grid-cols-3 gap-4">
               {[
-                "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/519884878.jpg",
-                "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/image-341-2-compressed.jpg",
-                "https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/519897116.jpg",
+                "/media/2024/05/519884878.jpg",
+                "/media/2024/05/image-341-2-compressed.jpg",
+                "/media/2024/05/519897116.jpg",
               ].map((src, idx) => (
                 <div
                   key={idx}
@@ -425,7 +425,7 @@ function HotelPage() {
               {/* Need Help Card */}
               <div className="relative rounded-2xl overflow-hidden mt-6 shadow-soft border border-white/10 bg-slate-900">
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/80 to-[#be8c42]/90 z-10" />
-                <div className="absolute inset-0 bg-[url('https://www.tangierlatinfestival.com/wp-content/uploads/2024/05/88845166.jpg')] bg-cover bg-center mix-blend-overlay opacity-40 z-0" />
+                <div className="absolute inset-0 bg-[url('/media/2024/05/88845166.jpg')] bg-cover bg-center mix-blend-overlay opacity-40 z-0" />
                 <div className="relative z-20 p-8 text-center flex flex-col items-center">
                   <h3 className="font-display text-2xl md:text-3xl text-white font-bold mb-4 uppercase drop-shadow-md">
                     {lang === "fr" ? "Besoin d'aide ?" : lang === "es" ? "¿Necesitas ayuda?" : "Need help?"}
