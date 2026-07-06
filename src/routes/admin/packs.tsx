@@ -9,6 +9,8 @@ import {
   Star,
   ToggleLeft,
   ToggleRight,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   getPacks,
@@ -16,6 +18,7 @@ import {
   updatePack,
   deletePack,
   seedPacksToDb,
+  movePack,
   type Pack,
 } from "@/lib/admin-store";
 import { supabase } from "@/lib/supabase";
@@ -135,6 +138,18 @@ function AdminPacks() {
     reload();
   };
 
+  const [moveError, setMoveError] = useState("");
+  const handleMove = async (pack: Pack, direction: -1 | 1) => {
+    setMoveError("");
+    const ok = await movePack(pack.id, direction);
+    if (!ok) {
+      setMoveError(
+        "Ordering needs a small database update — run supabase/pack-order.sql in the Supabase SQL Editor, then try again."
+      );
+    }
+    await reload();
+  };
+
   const addFeatureField = () => {
     setForm((prev) => ({ ...prev, features: [...prev.features, ""] }));
   };
@@ -194,9 +209,20 @@ function AdminPacks() {
         </div>
       )}
 
+      {/* Ordering hint / error */}
+      <p className="text-xs text-zinc-600 -mt-2">
+        Use the ↑ ↓ arrows on a card to change the order packs appear on the website
+        (within each category, left to right).
+      </p>
+      {moveError && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200/90">
+          {moveError}
+        </div>
+      )}
+
       {/* Pack Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {packs.map((pack) => (
+        {packs.map((pack, packIdx) => (
           <div
             key={pack.id}
             className={`relative rounded-xl border bg-zinc-900/50 p-5 transition-all duration-300 ${
@@ -205,7 +231,7 @@ function AdminPacks() {
                 : "border-zinc-800/30 opacity-60"
             }`}
           >
-            {/* Active/Popular badges */}
+            {/* Active/Popular badges + order controls */}
             <div className="flex items-center gap-2 mb-4">
               {pack.popular && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] tracking-widest uppercase font-medium border border-amber-500/20">
@@ -220,6 +246,24 @@ function AdminPacks() {
                 }`}
               >
                 {pack.active ? "Active" : "Inactive"}
+              </span>
+              <span className="ml-auto flex items-center gap-1">
+                <button
+                  onClick={() => handleMove(pack, -1)}
+                  disabled={packIdx === 0}
+                  className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                  title="Move earlier (left on the website)"
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => handleMove(pack, 1)}
+                  disabled={packIdx === packs.length - 1}
+                  className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                  title="Move later (right on the website)"
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </button>
               </span>
             </div>
 

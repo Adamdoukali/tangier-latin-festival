@@ -21,6 +21,8 @@ export interface Pack {
   features: string[];
   popular: boolean;
   active: boolean;
+  /** Display position on the website (lower = earlier); null = unordered */
+  sortOrder?: number | null;
   createdAt: string;
 }
 
@@ -177,8 +179,18 @@ const packFromRow = (r: any): Pack => ({
   features: Array.isArray(r.features) ? r.features : [],
   popular: !!r.popular,
   active: !!r.active,
+  sortOrder: r.sort_order ?? null,
   createdAt: r.created_at,
 });
+
+// Sort by explicit admin order first, then by creation date.
+const sortPacks = (packs: Pack[]): Pack[] =>
+  [...packs].sort((a, b) => {
+    const ao = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    const bo = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    if (ao !== bo) return ao - bo;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
 
 const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
   const row: Record<string, unknown> = {};
@@ -190,6 +202,7 @@ const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
   if (p.features !== undefined) row.features = p.features;
   if (p.popular !== undefined) row.popular = p.popular;
   if (p.active !== undefined) row.active = p.active;
+  if (p.sortOrder !== undefined) row.sort_order = p.sortOrder;
   return row;
 };
 
@@ -396,14 +409,45 @@ export async function getPacks(): Promise<Pack[]> {
         .select("*")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      if (data && data.length > 0) return data.map(packFromRow);
+      if (data && data.length > 0) return sortPacks(data.map(packFromRow));
       // Empty DB: fall back to defaults so the public site never shows nothing.
-      return getLocalPacks();
+      return sortPacks(getLocalPacks());
     } catch (e) {
       warn("getPacks", e);
     }
   }
-  return getLocalPacks();
+  return sortPacks(getLocalPacks());
+}
+
+/** Move a pack one position up or down in the display order.
+ *  Returns false when the order column is missing (run supabase/pack-order.sql). */
+export async function movePack(id: string, direction: -1 | 1): Promise<boolean> {
+  const packs = await getPacks(); // already in display order
+  const idx = packs.findIndex((p) => p.id === id);
+  const target = idx + direction;
+  if (idx === -1 || target < 0 || target >= packs.length) return true;
+
+  // Normalize to sequential positions, then swap the two neighbours.
+  const order = packs.map((p) => p.id);
+  [order[idx], order[target]] = [order[target], order[idx]];
+
+  for (let i = 0; i < order.length; i++) {
+    const pack = packs.find((p) => p.id === order[i])!;
+    if (pack.sortOrder === i + 1) continue;
+    if (useDb()) {
+      const { error } = await supabase!
+        .from("packs")
+        .update({ sort_order: i + 1 })
+        .eq("id", order[i]);
+      if (error) {
+        warn("movePack", error);
+        return false;
+      }
+    } else {
+      await updatePack(order[i], { sortOrder: i + 1 });
+    }
+  }
+  return true;
 }
 
 export async function getActivePacks(): Promise<Pack[]> {
