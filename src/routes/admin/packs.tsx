@@ -25,6 +25,7 @@ import {
   type Pack,
 } from "@/lib/admin-store";
 import { supabase } from "@/lib/supabase";
+import { priceUnitLabel } from "@/lib/translations";
 
 export const Route = createFileRoute("/admin/packs")({
   component: AdminPacks,
@@ -455,7 +456,8 @@ function AdminPacks() {
                     <p className="mt-3 font-display text-3xl text-zinc-100">
                       {p.price}
                       <span className="text-xs text-zinc-500 ml-1">
-                        {p.currency || "€"} / pass
+                        {p.currency || "€"}
+                        {priceUnitLabel(p, "en") ? ` / ${priceUnitLabel(p, "en")}` : ""}
                       </span>
                     </p>
                     <ul className="mt-3 space-y-1 text-left">

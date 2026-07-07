@@ -53,6 +53,7 @@ import {
   translatedTestimonials,
   translatedHomeProgramme,
   translateDynamicText,
+  priceUnitLabel,
   Language,
 } from "@/lib/translations";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
@@ -110,6 +111,7 @@ function Home() {
     sub: string;
     price: string;
     currency?: string;
+    category?: string;
     features: string[];
     popular: boolean;
   };
@@ -126,6 +128,8 @@ function Home() {
             name: p.name,
             sub: p.sub,
             price: p.price,
+            currency: p.currency,
+            category: p.category,
             features: p.features,
             popular: p.popular,
           }))
@@ -554,7 +558,10 @@ function Home() {
                         {p.price}
                       </span>
                       <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
-                        {p.currency || "€"} / {t("perPackLabel")}
+                        {p.currency || "€"}
+                        {priceUnitLabel(p, lang)
+                          ? ` / ${priceUnitLabel(p, lang)}`
+                          : ""}
                       </span>
                     </div>
 

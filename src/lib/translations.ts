@@ -1349,3 +1349,17 @@ export function translateDynamicText(text: string, lang: Language): string {
   const key = (text || "").trim().toLowerCase();
   return dynamicPackDict[key]?.[lang] || text;
 }
+
+/** Price unit shown after a pack's price:
+ *  double rooms → "per person", single rooms → nothing, others → "pass". */
+export function priceUnitLabel(
+  pack: { name: string; category?: string },
+  lang: Language
+): string | null {
+  const hay = `${pack.name} ${pack.category ?? ""}`.toLowerCase();
+  if (/double|doble/.test(hay)) {
+    return lang === "fr" ? "par personne" : lang === "es" ? "por persona" : "per person";
+  }
+  if (/single|simple|individual/.test(hay)) return null;
+  return translations[lang]?.perPackLabel || translations.en.perPackLabel || "pass";
+}

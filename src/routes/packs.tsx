@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
-import { translateDynamicText } from "@/lib/translations";
+import { translateDynamicText, priceUnitLabel } from "@/lib/translations";
 import { getActivePacks } from "@/lib/admin-store";
 import { PackBookingModal } from "@/components/PackBookingModal";
 
@@ -114,7 +114,10 @@ function PacksPage() {
                             {p.price}
                           </span>
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
-                            {p.currency || "€"} / {t("perPackLabel")}
+                            {p.currency || "€"}
+                            {priceUnitLabel(p, lang as "en" | "fr" | "es")
+                              ? ` / ${priceUnitLabel(p, lang as "en" | "fr" | "es")}`
+                              : ""}
                           </span>
                         </div>
 
