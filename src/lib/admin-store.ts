@@ -427,15 +427,28 @@ export async function hasPackOrderColumn(): Promise<boolean> {
   return !error;
 }
 
-/** Persist a full display order: packs get sort_order 1..N following
- *  the given id list. Returns false when the order column is missing
- *  (run supabase/pack-order.sql). */
+/** Persist a full display order following the given id list.
+ *
+ *  Preferred key is the sort_order column (supabase/pack-order.sql).
+ *  When that column doesn't exist, the order is stored by rewriting
+ *  created_at timestamps instead — getPacks() sorts by sort_order and
+ *  falls back to created_at, so both paths give the same result and
+ *  no database migration is required. */
 export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
+  if (!useDb()) {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await updatePack(orderedIds[i], { sortOrder: i + 1 });
+    }
+    return true;
+  }
+
   const packs = await getPacks();
-  for (let i = 0; i < orderedIds.length; i++) {
-    const pack = packs.find((p) => p.id === orderedIds[i]);
-    if (!pack || pack.sortOrder === i + 1) continue;
-    if (useDb()) {
+  const useColumn = await hasPackOrderColumn();
+
+  if (useColumn) {
+    for (let i = 0; i < orderedIds.length; i++) {
+      const pack = packs.find((p) => p.id === orderedIds[i]);
+      if (!pack || pack.sortOrder === i + 1) continue;
       const { error } = await supabase!
         .from("packs")
         .update({ sort_order: i + 1 })
@@ -444,8 +457,24 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
         warn("reorderPacks", error);
         return false;
       }
-    } else {
-      await updatePack(orderedIds[i], { sortOrder: i + 1 });
+    }
+    return true;
+  }
+
+  // Fallback: encode the order in created_at (spaced 1 hour apart from a
+  // fixed base so the sequence is stable and unambiguous).
+  const base = Date.UTC(2024, 0, 1);
+  for (let i = 0; i < orderedIds.length; i++) {
+    const wanted = new Date(base + i * 3600_000).toISOString();
+    const pack = packs.find((p) => p.id === orderedIds[i]);
+    if (!pack || pack.createdAt === wanted) continue;
+    const { error } = await supabase!
+      .from("packs")
+      .update({ created_at: wanted })
+      .eq("id", orderedIds[i]);
+    if (error) {
+      warn("reorderPacks(created_at)", error);
+      return false;
     }
   }
   return true;

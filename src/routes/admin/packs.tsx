@@ -22,7 +22,6 @@ import {
   deletePack,
   seedPacksToDb,
   reorderPacks,
-  hasPackOrderColumn,
   type Pack,
 } from "@/lib/admin-store";
 import { supabase } from "@/lib/supabase";
@@ -62,12 +61,11 @@ function AdminPacks() {
   const [dbEmpty, setDbEmpty] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [seedError, setSeedError] = useState("");
-  const [orderReady, setOrderReady] = useState(true);
+  const [orderError, setOrderError] = useState("");
   const [previewCategory, setPreviewCategory] = useState<string | null>(null);
 
   const reload = async () => {
     setPacks(await getPacks());
-    setOrderReady(await hasPackOrderColumn());
     if (supabase) {
       const { data, error } = await supabase.from("packs").select("id").limit(1);
       setDbEmpty(!error && (data ?? []).length === 0);
@@ -95,8 +93,9 @@ function AdminPacks() {
     cats.flatMap((c) => g[c].map((p) => p.id));
 
   const persistOrder = async (orderedIds: string[]) => {
+    setOrderError("");
     const ok = await reorderPacks(orderedIds);
-    if (!ok) setOrderReady(false);
+    if (!ok) setOrderError("Could not save the new order — please try again.");
     await reload();
   };
 
@@ -246,13 +245,10 @@ function AdminPacks() {
         </div>
       )}
 
-      {/* Ordering setup notice */}
-      {!orderReady && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200/90">
-          <span className="font-semibold text-amber-300">One-time setup needed for ordering:</span>{" "}
-          run <code className="font-mono bg-amber-500/10 px-1 rounded">supabase/pack-order.sql</code>{" "}
-          in the Supabase Dashboard → SQL Editor, then refresh. Until then, the arrows can't save
-          the new order.
+      {/* Ordering error */}
+      {orderError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+          {orderError}
         </div>
       )}
 

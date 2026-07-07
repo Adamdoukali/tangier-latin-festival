@@ -17,18 +17,8 @@ function PacksPage() {
   const translateDynamic = (text: string) =>
     translateDynamicText(text, lang as "en" | "fr" | "es");
 
-  // When the admin has arranged packs (sort_order set), respect that order.
-  // Otherwise, place the popular pack in the middle of its row (like the
-  // home page) so its raised "Populaire" card reads as centered.
-  const centerPopular = (list: any[]) => {
-    if (list.some((p) => p.sortOrder != null)) return list;
-    const popIdx = list.findIndex((p) => p.popular);
-    if (popIdx === -1 || list.length < 3) return list;
-    const rest = list.filter((_, i) => i !== popIdx);
-    const mid = Math.floor((list.length - 1) / 2);
-    rest.splice(mid, 0, list[popIdx]);
-    return rest;
-  };
+  // Packs display in the exact order set by the admin
+  // (arrows on the Admin → Packs page).
   const [packs, setPacks] = useState<any[]>([]);
   const [selectedPack, setSelectedPack] = useState<{
     id?: string;
@@ -91,7 +81,7 @@ function PacksPage() {
                 <div className="h-1 w-24 bg-gold mt-6 rounded-full" />
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                {centerPopular(catPacks).map((p) => {
+                {catPacks.map((p) => {
                   const isPopular = p.popular;
                   return (
                     <div
