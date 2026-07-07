@@ -419,32 +419,33 @@ export async function getPacks(): Promise<Pack[]> {
   return sortPacks(getLocalPacks());
 }
 
-/** Move a pack one position up or down in the display order.
- *  Returns false when the order column is missing (run supabase/pack-order.sql). */
-export async function movePack(id: string, direction: -1 | 1): Promise<boolean> {
-  const packs = await getPacks(); // already in display order
-  const idx = packs.findIndex((p) => p.id === id);
-  const target = idx + direction;
-  if (idx === -1 || target < 0 || target >= packs.length) return true;
+/** True when the packs table has the sort_order column
+ *  (created by supabase/pack-order.sql). */
+export async function hasPackOrderColumn(): Promise<boolean> {
+  if (!useDb()) return true; // local mode stores it fine
+  const { error } = await supabase!.from("packs").select("sort_order").limit(1);
+  return !error;
+}
 
-  // Normalize to sequential positions, then swap the two neighbours.
-  const order = packs.map((p) => p.id);
-  [order[idx], order[target]] = [order[target], order[idx]];
-
-  for (let i = 0; i < order.length; i++) {
-    const pack = packs.find((p) => p.id === order[i])!;
-    if (pack.sortOrder === i + 1) continue;
+/** Persist a full display order: packs get sort_order 1..N following
+ *  the given id list. Returns false when the order column is missing
+ *  (run supabase/pack-order.sql). */
+export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
+  const packs = await getPacks();
+  for (let i = 0; i < orderedIds.length; i++) {
+    const pack = packs.find((p) => p.id === orderedIds[i]);
+    if (!pack || pack.sortOrder === i + 1) continue;
     if (useDb()) {
       const { error } = await supabase!
         .from("packs")
         .update({ sort_order: i + 1 })
-        .eq("id", order[i]);
+        .eq("id", orderedIds[i]);
       if (error) {
-        warn("movePack", error);
+        warn("reorderPacks", error);
         return false;
       }
     } else {
-      await updatePack(order[i], { sortOrder: i + 1 });
+      await updatePack(orderedIds[i], { sortOrder: i + 1 });
     }
   }
   return true;
