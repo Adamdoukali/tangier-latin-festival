@@ -15,6 +15,8 @@ import {
   Users,
   TrendingUp,
   Sparkles,
+  Mail,
+  Phone,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -22,9 +24,12 @@ import {
   getInvites,
   getBookings,
   generateBulkInvites,
+  updateBookingStatus,
   type Collaborator,
   type Invite,
   type Pack,
+  type Booking,
+  type BookingStatus,
 } from "@/lib/admin-store";
 import {
   savePartnerSession,
@@ -173,6 +178,7 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [myInvites, setMyInvites] = useState<Invite[]>([]);
+  const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
   const [selectedPackId, setSelectedPackId] = useState("");
   const [count, setCount] = useState(1);
@@ -196,12 +202,21 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         .filter((i) => i.collaboratorId === partner.id)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     );
+    const mine = allBookings
+      .filter((b) => b.collaboratorId === partner.id)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    setMyBookings(mine);
     setTicketsSold(
-      allBookings
-        .filter((b) => b.collaboratorId === partner.id)
+      mine
+        .filter((b) => b.status !== "declined")
         .reduce((s, b) => s + (b.numPeople || 1), 0)
     );
   }, [partner.id]);
+
+  const changeBookingStatus = async (id: string, status: BookingStatus) => {
+    await updateBookingStatus(id, status);
+    await reload();
+  };
 
   useEffect(() => {
     reload();
@@ -403,6 +418,92 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 <img src={refQr} alt="Booking link QR" className="w-28 h-28" />
               </div>
               <p className="mt-1.5 text-[10px] text-zinc-600">Booking link QR</p>
+            </div>
+          )}
+        </div>
+
+        {/* My bookings — guests who booked through this partner's link */}
+        <div>
+          <h3 className="font-display text-sm tracking-wide mb-1">
+            My Bookings ({myBookings.length})
+          </h3>
+          <p className="text-sm text-zinc-500 mb-4">
+            Everyone who booked through your link. Update their status and contact them directly.
+          </p>
+          {myBookings.length === 0 ? (
+            <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 px-5 py-10 text-center text-sm text-zinc-600">
+              No bookings yet — share your booking link to get started.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myBookings.map((b) => {
+                const waDigits = (b.phone || "").replace(/\D/g, "");
+                const statusStyles: Record<string, string> = {
+                  pending: "bg-amber-500/15 text-amber-400 border-amber-500/30",
+                  confirmed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+                  "checked-in": "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+                  declined: "bg-red-500/15 text-red-400 border-red-500/30",
+                };
+                return (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-zinc-200 truncate">
+                        {b.customerName}
+                      </p>
+                      <p className="text-xs text-zinc-500 truncate">
+                        {b.packName}
+                        {b.numPeople > 1 ? ` · ${b.numPeople} people` : ""} ·{" "}
+                        {new Date(b.createdAt).toLocaleDateString()}
+                        {b.source === "invite" ? " · via invite" : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {waDigits && (
+                        <a
+                          href={`https://wa.me/${waDigits}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-lg bg-[#25D366]/15 text-[#4ade80] hover:bg-[#25D366]/25 transition"
+                          title={`WhatsApp ${b.phone}`}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </a>
+                      )}
+                      {b.email && (
+                        <a
+                          href={`mailto:${b.email}`}
+                          className="p-2 rounded-lg bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition"
+                          title={`Email ${b.email}`}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </a>
+                      )}
+                      {b.status === "checked-in" ? (
+                        <span
+                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
+                        >
+                          Checked In
+                        </span>
+                      ) : (
+                        <select
+                          value={b.status}
+                          onChange={(e) =>
+                            changeBookingStatus(b.id, e.target.value as BookingStatus)
+                          }
+                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="declined">Declined</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

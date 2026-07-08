@@ -26,7 +26,7 @@ export interface Pack {
   createdAt: string;
 }
 
-export type BookingStatus = "pending" | "confirmed" | "checked-in";
+export type BookingStatus = "pending" | "confirmed" | "checked-in" | "declined";
 export type BookingSource = "manual" | "website" | "invite" | "referral";
 
 export interface Booking {
@@ -1077,7 +1077,9 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
   };
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
-    const myBookings = bookings.filter((b) => b.collaboratorId === c.id);
+    const myBookings = bookings.filter(
+      (b) => b.collaboratorId === c.id && b.status !== "declined"
+    );
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
@@ -1116,11 +1118,13 @@ export async function getStats() {
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
   const checkedIn = bookings.filter((b) => b.status === "checked-in").length;
 
-  const totalRevenue = bookings.reduce((sum, b) => {
-    const pack = packs.find((p) => p.id === b.packId);
-    const price = pack ? parseInt(pack.price, 10) : 0;
-    return sum + price * b.numPeople;
-  }, 0);
+  const totalRevenue = bookings
+    .filter((b) => b.status !== "declined")
+    .reduce((sum, b) => {
+      const pack = packs.find((p) => p.id === b.packId);
+      const price = pack ? parseInt(pack.price, 10) : 0;
+      return sum + price * b.numPeople;
+    }, 0);
 
   const totalPacks = packs.length;
   const activePacks = packs.filter((p) => p.active).length;

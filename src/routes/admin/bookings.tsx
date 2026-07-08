@@ -142,6 +142,13 @@ function AdminBookings() {
         `We are reviewing it and will respond within 24 hours to confirm your booking and send you the payment details.\n\n` +
         `Your reference: ${b.ticketCode}\n\n` +
         `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+    } else if (b.status === "declined") {
+      subject = `About your Tangier Latin Festival booking request (${b.ticketCode})`;
+      body =
+        `Hello ${firstName},\n\n` +
+        `Thank you for your interest in the Tangier International Latin Festival. Unfortunately we were not able to confirm your booking request for the "${b.packName}" pack.\n\n` +
+        `If you believe this is a mistake or would like to book a different pack, just reply to this email or contact us on WhatsApp and we'll be happy to help.\n\n` +
+        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
     } else {
       subject = `Your Tangier Latin Festival booking is confirmed! (${b.ticketCode})`;
       body =
@@ -172,6 +179,7 @@ function AdminBookings() {
     pending: "bg-amber-500/15 text-amber-400 border-amber-500/20",
     confirmed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
     "checked-in": "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+    declined: "bg-red-500/15 text-red-400 border-red-500/20",
   };
 
   return (
@@ -221,6 +229,7 @@ function AdminBookings() {
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
             <option value="checked-in">Checked In</option>
+            <option value="declined">Declined</option>
           </select>
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
         </div>
@@ -300,6 +309,9 @@ function AdminBookings() {
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="checked-in">Checked In</option>
+                  <option value="declined">Declined</option>
+                        <option value="declined">Declined</option>
+            <option value="declined">Declined</option>
                       </select>
                     </td>
                     <td className="px-5 py-3 text-zinc-500 whitespace-nowrap">
@@ -502,6 +514,8 @@ function AdminBookings() {
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="checked-in">Checked In</option>
+                  <option value="declined">Declined</option>
+            <option value="declined">Declined</option>
                 </select>
               </div>
             </div>

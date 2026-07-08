@@ -112,6 +112,7 @@ function AdminDashboard() {
     pending: "bg-amber-500/15 text-amber-400 border-amber-500/20",
     confirmed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
     "checked-in": "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
+    declined: "bg-red-500/15 text-red-400 border-red-500/20",
   };
 
   return (
