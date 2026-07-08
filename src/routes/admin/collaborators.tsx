@@ -19,8 +19,12 @@ import {
   updateCollaborator,
   deleteCollaborator,
   collaboratorsReady,
+  formatMoney,
+  commissionLabel,
   type Collaborator,
   type CollaboratorStats,
+  type CommissionType,
+  type CommissionCurrency,
 } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/collaborators")({
@@ -33,6 +37,8 @@ interface CollabForm {
   email: string;
   phone: string;
   commission: number;
+  commissionType: CommissionType;
+  commissionCurrency: CommissionCurrency;
   notes: string;
   active: boolean;
   username: string;
@@ -46,6 +52,8 @@ const emptyForm: CollabForm = {
   email: "",
   phone: "",
   commission: 0,
+  commissionType: "percent",
+  commissionCurrency: "EUR",
   notes: "",
   active: true,
   username: "",
@@ -111,6 +119,8 @@ function AdminCollaborators() {
       email: c.email ?? "",
       phone: c.phone ?? "",
       commission: c.commission ?? 0,
+      commissionType: c.commissionType ?? "percent",
+      commissionCurrency: c.commissionCurrency ?? "EUR",
       notes: c.notes ?? "",
       active: c.active,
       username: c.username ?? "",
@@ -298,9 +308,11 @@ function AdminCollaborators() {
                       {s.revenue.toLocaleString()}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-400">€{s.commission.toLocaleString()}</span>
+                      <span className="text-amber-400">
+                        {formatMoney(s.commission, s.commissionCurrency)}
+                      </span>
                       <span className="ml-1.5 text-[10px] text-zinc-500">
-                        ({c.commission ?? 0}%)
+                        ({commissionLabel(c)})
                       </span>
                     </td>
                     <td className="px-5 py-3 text-xs text-zinc-500 whitespace-nowrap">
@@ -431,34 +443,81 @@ function AdminCollaborators() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                    Commission %
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={form.commission}
-                    onChange={(e) =>
-                      setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
-                  />
+              {/* Commission deal */}
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-amber-300 font-semibold">
+                  Commission
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      Type
+                    </label>
+                    <select
+                      value={form.commissionType}
+                      onChange={(e) =>
+                        setForm({ ...form, commissionType: e.target.value as CommissionType })
+                      }
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    >
+                      <option value="percent">% of sales</option>
+                      <option value="per_person">Fixed amount per person</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      {form.commissionType === "percent" ? "Percentage" : "Amount / person"}
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="number"
+                        min={0}
+                        max={form.commissionType === "percent" ? 100 : undefined}
+                        value={form.commission}
+                        onChange={(e) =>
+                          setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
+                        }
+                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                      />
+                      {form.commissionType === "percent" ? (
+                        <span className="grid place-items-center px-3 rounded-lg border border-zinc-700/60 bg-zinc-800/30 text-sm text-zinc-400 shrink-0">
+                          %
+                        </span>
+                      ) : (
+                        <select
+                          value={form.commissionCurrency}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              commissionCurrency: e.target.value as CommissionCurrency,
+                            })
+                          }
+                          className="rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer shrink-0"
+                          title="Commission currency"
+                        >
+                          <option value="EUR">€</option>
+                          <option value="MAD">MAD</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-end pb-1">
-                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={form.active}
-                      onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                      className="accent-amber-500"
-                    />
-                    Active
-                  </label>
-                </div>
+                <p className="text-[11px] text-zinc-500">
+                  {form.commissionType === "percent"
+                    ? "Earns a percentage of the € value of every sale made through their link. Free invite tickets don't count."
+                    : "Earns this amount for every person who books through their link (a double room = 2 people). Free invite tickets don't count."}
+                </p>
               </div>
+
+              <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                  className="accent-amber-500"
+                />
+                Active
+              </label>
 
               {/* Portal account */}
               <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4 space-y-3">

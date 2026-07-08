@@ -26,6 +26,9 @@ import {
   generateBulkInvites,
   updateBookingStatus,
   collaboratorRevenue,
+  collaboratorCommission,
+  commissionLabel,
+  formatMoney,
   packLabel,
   type Collaborator,
   type Invite,
@@ -184,6 +187,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
   const [sales, setSales] = useState(0);
+  const [earned, setEarned] = useState<{ amount: number; currency: "EUR" | "MAD" }>({
+    amount: 0,
+    currency: "EUR",
+  });
   const [statusError, setStatusError] = useState("");
   const [selectedPackId, setSelectedPackId] = useState("");
   const [count, setCount] = useState(1);
@@ -218,7 +225,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         .reduce((s, b) => s + (b.numPeople || 1), 0)
     );
     setSales(collaboratorRevenue(partner.id, mine, allPacks));
-  }, [partner.id]);
+    setEarned(collaboratorCommission(partner, mine, allPacks));
+  }, [partner]);
 
   const changeBookingStatus = async (id: string, status: BookingStatus) => {
     setStatusError("");
@@ -353,8 +361,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             },
             { label: "Sales", value: `€${sales.toLocaleString()}`, icon: Euro },
             {
-              label: `Commission (${partner.commission ?? 0}%)`,
-              value: `€${(Math.round(sales * ((partner.commission ?? 0) / 100) * 100) / 100).toLocaleString()}`,
+              label: `Commission (${commissionLabel(partner)})`,
+              value: formatMoney(earned.amount, earned.currency),
               icon: Euro,
             },
           ].map((s) => (

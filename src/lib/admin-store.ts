@@ -63,13 +63,20 @@ export interface Invite {
   createdAt: string;
 }
 
+export type CommissionType = "percent" | "per_person";
+export type CommissionCurrency = "EUR" | "MAD";
+
 export interface Collaborator {
   id: string;
   name: string;
   code: string;
   email?: string;
   phone?: string;
+  /** % of sales (percent) or fixed amount per person (per_person) */
   commission?: number;
+  commissionType?: CommissionType;
+  /** Currency of per-person amounts; % commissions are always in € (sales are in €) */
+  commissionCurrency?: CommissionCurrency;
   active: boolean;
   notes?: string;
   /** Partner Portal login (optional — no account without it) */
@@ -258,6 +265,8 @@ const collabFromRow = (r: any): Collaborator => ({
   email: r.email ?? undefined,
   phone: r.phone ?? undefined,
   commission: r.commission != null ? Number(r.commission) : 0,
+  commissionType: (r.commission_type as CommissionType) ?? "percent",
+  commissionCurrency: (r.commission_currency as CommissionCurrency) ?? "EUR",
   active: !!r.active,
   notes: r.notes ?? undefined,
   username: r.username ?? undefined,
@@ -992,13 +1001,15 @@ export async function addCollaborator(
           email: c.email || null,
           phone: c.phone || null,
           commission: c.commission ?? 0,
+          commission_type: c.commissionType ?? "percent",
+          commission_currency: c.commissionCurrency ?? "EUR",
           active: c.active,
           notes: c.notes || null,
           username: c.username?.trim().toLowerCase() || null,
           access_code: c.accessCode || null,
           invite_quota: c.inviteQuota ?? null,
         },
-        ["username", "access_code", "invite_quota"]
+        ["username", "access_code", "invite_quota", "commission_type", "commission_currency"]
       );
       return collabFromRow(data);
     } catch (e) {
@@ -1030,6 +1041,9 @@ export async function updateCollaborator(
       if (updates.email !== undefined) row.email = updates.email || null;
       if (updates.phone !== undefined) row.phone = updates.phone || null;
       if (updates.commission !== undefined) row.commission = updates.commission;
+      if (updates.commissionType !== undefined) row.commission_type = updates.commissionType;
+      if (updates.commissionCurrency !== undefined)
+        row.commission_currency = updates.commissionCurrency;
       if (updates.active !== undefined) row.active = updates.active;
       if (updates.notes !== undefined) row.notes = updates.notes || null;
       if (updates.username !== undefined)
@@ -1037,12 +1051,23 @@ export async function updateCollaborator(
       if (updates.accessCode !== undefined) row.access_code = updates.accessCode || null;
       if (updates.inviteQuota !== undefined) row.invite_quota = updates.inviteQuota;
       if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
-      const { data, error } = await supabase!
+      const optionalCols = ["commission_type", "commission_currency"];
+      let { data, error } = await supabase!
         .from("collaborators")
         .update(row)
         .eq("id", id)
         .select()
         .single();
+      // Tolerate a DB that hasn't run supabase/commission.sql yet.
+      if (error && optionalCols.some((c) => error!.message?.includes(c))) {
+        for (const c of optionalCols) delete row[c];
+        ({ data, error } = await supabase!
+          .from("collaborators")
+          .update(row)
+          .eq("id", id)
+          .select()
+          .single());
+      }
       if (error) throw error;
       return collabFromRow(data);
     } catch (e) {
@@ -1081,8 +1106,50 @@ export interface CollaboratorStats {
   bookings: number;
   ticketsSold: number; // sum of numPeople over attributed bookings
   revenue: number;
-  /** Commission earned in € = revenue × commission % */
+  /** Commission earned (% of sales, or fixed amount × people) */
   commission: number;
+  commissionCurrency: CommissionCurrency;
+}
+
+/** "€1,234" or "1,234 MAD" */
+export function formatMoney(value: number, currency: CommissionCurrency = "EUR"): string {
+  const n = value.toLocaleString();
+  return currency === "MAD" ? `${n} MAD` : `€${n}`;
+}
+
+/** Human label of a collaborator's deal: "10%" or "50 MAD / person" */
+export function commissionLabel(c: Collaborator): string {
+  if ((c.commissionType ?? "percent") === "per_person") {
+    return `${formatMoney(c.commission ?? 0, c.commissionCurrency ?? "EUR")} / person`;
+  }
+  return `${c.commission ?? 0}%`;
+}
+
+/** Commission earned by a collaborator over the given bookings.
+ *  Basis: non-declined bookings that came through their link (free
+ *  invite tickets don't pay commission).
+ *  - percent:    % of the € sales value
+ *  - per_person: fixed amount × number of people, in € or MAD */
+export function collaboratorCommission(
+  c: Collaborator,
+  bookings: Booking[],
+  packs: Pack[]
+): { amount: number; currency: CommissionCurrency } {
+  const mine = bookings.filter(
+    (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
+  );
+  if ((c.commissionType ?? "percent") === "per_person") {
+    const people = mine.reduce((s, b) => s + (b.numPeople || 1), 0);
+    return {
+      amount: (c.commission ?? 0) * people,
+      currency: c.commissionCurrency ?? "EUR",
+    };
+  }
+  const revenue = collaboratorRevenue(c.id, bookings, packs);
+  return {
+    amount: Math.round(revenue * ((c.commission ?? 0) / 100) * 100) / 100,
+    currency: "EUR",
+  };
 }
 
 /** Sales revenue (€) attributed to one collaborator: non-declined,
@@ -1125,6 +1192,7 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
     const revenue = myBookings
       .filter((b) => b.source !== "invite")
       .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
+    const earned = collaboratorCommission(c, bookings, packs);
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
@@ -1132,7 +1200,8 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       bookings: myBookings.length,
       ticketsSold: myBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
       revenue,
-      commission: Math.round(revenue * ((c.commission ?? 0) / 100) * 100) / 100,
+      commission: earned.amount,
+      commissionCurrency: earned.currency,
     };
   });
 }

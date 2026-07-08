@@ -14,6 +14,8 @@ import {
   getStats,
   getBookings,
   getCollaboratorStats,
+  formatMoney,
+  commissionLabel,
   type Booking,
   type CollaboratorStats,
 } from "@/lib/admin-store";
@@ -241,9 +243,11 @@ function AdminDashboard() {
                       {cs.revenue.toLocaleString()}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-400">€{cs.commission.toLocaleString()}</span>
+                      <span className="text-amber-400">
+                        {formatMoney(cs.commission, cs.commissionCurrency)}
+                      </span>
                       <span className="ml-1.5 text-[10px] text-zinc-500">
-                        ({cs.collaborator.commission ?? 0}%)
+                        ({commissionLabel(cs.collaborator)})
                       </span>
                     </td>
                   </tr>
@@ -262,8 +266,19 @@ function AdminDashboard() {
                   <td className="px-5 py-3 text-right font-medium text-emerald-400">
                     {collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-amber-400">
-                    €{collabStats.reduce((s, c) => s + c.commission, 0).toLocaleString()}
+                  <td className="px-5 py-3 text-right font-medium text-amber-400 whitespace-nowrap">
+                    {(() => {
+                      const eur = collabStats
+                        .filter((c) => c.commissionCurrency !== "MAD")
+                        .reduce((s, c) => s + c.commission, 0);
+                      const mad = collabStats
+                        .filter((c) => c.commissionCurrency === "MAD")
+                        .reduce((s, c) => s + c.commission, 0);
+                      const parts = [];
+                      if (eur > 0 || mad === 0) parts.push(formatMoney(eur, "EUR"));
+                      if (mad > 0) parts.push(formatMoney(mad, "MAD"));
+                      return parts.join(" + ");
+                    })()}
                   </td>
                 </tr>
               </tbody>
