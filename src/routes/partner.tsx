@@ -10,7 +10,6 @@ import {
   Link2,
   LogOut,
   Lock,
-  ChevronDown,
   Plus,
   Users,
   TrendingUp,
@@ -521,21 +520,43 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </span>
             )}
           </p>
+          {/* Pack picker — one small card per pack so the details
+              (nights, price, category) are always visible */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+            {packs.map((p) => {
+              const nights = p.features.find((f) => /night|nuit|noche/i.test(f));
+              const active = selectedPackId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPackId(p.id)}
+                  className={`relative text-left rounded-xl border p-3 transition cursor-pointer ${
+                    active
+                      ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/50"
+                      : "border-zinc-700/60 bg-zinc-800/40 hover:border-zinc-600"
+                  }`}
+                >
+                  {active && (
+                    <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-amber-400" />
+                  )}
+                  <p className="text-xs font-semibold text-zinc-100 leading-tight pr-5">
+                    {p.name}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-zinc-500 uppercase tracking-wide truncate">
+                    {nights ?? p.sub}
+                    {p.category ? ` · ${p.category}` : ""}
+                  </p>
+                  <p className="mt-1.5 font-display text-base text-amber-400">
+                    {p.price}
+                    <span className="text-[10px] text-zinc-500 ml-0.5">
+                      {p.currency || "€"}
+                    </span>
+                  </p>
+                </button>
+              );
+            })}
+          </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <select
-                value={selectedPackId}
-                onChange={(e) => setSelectedPackId(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
-              >
-                {packs.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.sub}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
-            </div>
             <input
               type="number"
               min={1}

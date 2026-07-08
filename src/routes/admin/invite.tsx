@@ -218,11 +218,15 @@ function AdminInvite() {
               className="w-full appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
             >
               <option value="">Select a pack</option>
-              {packs.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} — {p.price} {p.currency || "€"}
-                </option>
-              ))}
+              {packs.map((p) => {
+                const nights = p.features.find((f) => /night|nuit|noche/i.test(f));
+                return (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                    {nights ? ` · ${nights}` : ` · ${p.sub}`} — {p.price} {p.currency || "€"}
+                  </option>
+                );
+              })}
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
           </div>
