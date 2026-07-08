@@ -80,7 +80,7 @@ export function RollingNumber({
   }, [hasStarted, numericValue, duration]);
 
   return (
-    <span ref={ref} className="rolling-number">
+    <span ref={ref} className="rolling-number notranslate" translate="no">
       {prefix}
       {display.toLocaleString()}
     </span>

@@ -158,6 +158,31 @@ function RootComponent() {
     if (ref) rememberReferral(ref);
   }, [searchStr]);
 
+  // Browser auto-translate (Google Translate etc.) rewrites React-managed
+  // text nodes; the next re-render then crashes the whole page with
+  // "The node to be removed is not a child of this node". Make DOM
+  // removals/insertions tolerant of externally-moved nodes.
+  useEffect(() => {
+    if (typeof Node === "undefined") return;
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const w = window as any;
+    if (w.__tlfDomPatched) return;
+    w.__tlfDomPatched = true;
+    const origRemoveChild = Node.prototype.removeChild;
+    Node.prototype.removeChild = function (this: Node, child: any) {
+      if (child.parentNode !== this) return child;
+      return origRemoveChild.call(this, child);
+    } as any;
+    const origInsertBefore = Node.prototype.insertBefore;
+    Node.prototype.insertBefore = function (this: Node, node: any, refNode: any) {
+      if (refNode && refNode.parentNode !== this) {
+        return origInsertBefore.call(this, node, null);
+      }
+      return origInsertBefore.call(this, node, refNode);
+    } as any;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />

@@ -47,7 +47,12 @@ export function Countdown() {
   };
 
   return (
-    <div className="w-full flex justify-center mt-6 md:mt-16 px-4" role="timer" aria-label="Event countdown">
+    <div
+      className="w-full flex justify-center mt-6 md:mt-16 px-4 notranslate"
+      translate="no"
+      role="timer"
+      aria-label="Event countdown"
+    >
       <span className="sr-only">
         {timeState.d} {t("days")}, {timeState.h} {t("hours")}, {timeState.m} {t("minutes")}, {timeState.s} {t("seconds")}
       </span>

@@ -202,7 +202,7 @@ function AnimatedPriceBanner() {
     <div className="bg-background border-y border-border/40 py-6 w-full flex items-center justify-center shadow-lg relative z-20">
       <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left text-sm md:text-base font-medium text-foreground uppercase tracking-widest">
         <span className="opacity-80">{t("packsPriceBanner")}</span>
-        <div className="relative h-6 md:h-7 w-[140px] overflow-hidden">
+        <div className="relative h-6 md:h-7 w-[140px] overflow-hidden notranslate" translate="no">
           {dates.map((date, i) => (
             <span
               key={date}
