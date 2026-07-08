@@ -93,6 +93,11 @@ function BookPage() {
       fd.append("Phone", form.phone);
       fd.append("Country", form.country);
       fd.append("Notes", form.notes);
+      // Lowercase special fields so Web3Forms' auto-responder can reply
+      // to the customer automatically.
+      fd.append("email", form.email);
+      fd.append("name", customerName);
+      fd.append("from_name", "Tangier International Latin Festival");
       if (collaborator) fd.append("Referral", collaborator.code);
       const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body: fd });
       if (!res.ok) throw new Error(`Submit failed: ${res.status}`);

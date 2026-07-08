@@ -156,6 +156,12 @@ export function PackBookingModal({
                 : String(formData.get("Full Name") ?? "");
               const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
 
+              // Lowercase special fields so Web3Forms' auto-responder can
+              // reply to the customer automatically.
+              formData.append("email", String(formData.get("Email") ?? ""));
+              formData.append("name", customerName);
+              formData.append("from_name", "Tangier International Latin Festival");
+
               try {
                 const res = await fetch("https://api.web3forms.com/submit", {
                   method: "POST",
