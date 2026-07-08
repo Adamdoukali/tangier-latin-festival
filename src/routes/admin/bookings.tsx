@@ -20,9 +20,11 @@ import {
   updateBookingStatus,
   deleteBooking,
   getPacks,
+  getCollaborators,
   packLabel,
   type Booking,
   type BookingStatus,
+  type Collaborator,
   type Pack,
 } from "@/lib/admin-store";
 
@@ -33,6 +35,7 @@ export const Route = createFileRoute("/admin/bookings")({
 function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [showForm, setShowForm] = useState(false);
@@ -42,9 +45,10 @@ function AdminBookings() {
   const [statusError, setStatusError] = useState("");
 
   const reload = useCallback(async () => {
-    const [b, p] = await Promise.all([getBookings(), getPacks()]);
+    const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
     setBookings(b);
     setPacks(p);
+    setCollaborators(c);
   }, []);
 
   useEffect(() => {
@@ -325,20 +329,37 @@ function AdminBookings() {
                       })()}
                     </td>
                     <td className="px-5 py-3">
-                      {b.inviteCode ? (
-                        <span className="inline-flex items-center gap-1 text-xs text-violet-400">
-                          <Link2 className="h-3 w-3" />
-                          <code className="font-mono bg-violet-500/10 px-1 py-0.5 rounded text-[10px]">
-                            {b.inviteCode}
-                          </code>
-                        </span>
-                      ) : b.source === "website" ? (
-                        <span className="text-xs text-blue-400">Website</span>
-                      ) : b.source === "referral" ? (
-                        <span className="text-xs text-emerald-400">Referral</span>
-                      ) : (
-                        <span className="text-xs text-zinc-600">Manual</span>
-                      )}
+                      {(() => {
+                        const partner = b.collaboratorId
+                          ? collaborators.find((c) => c.id === b.collaboratorId)
+                          : undefined;
+                        if (b.inviteCode) {
+                          return (
+                            <div>
+                              <span className="inline-flex items-center gap-1 text-xs text-violet-400">
+                                <Link2 className="h-3 w-3" />
+                                <code className="font-mono bg-violet-500/10 px-1 py-0.5 rounded text-[10px]">
+                                  {b.inviteCode}
+                                </code>
+                              </span>
+                              {partner && (
+                                <p className="text-[11px] text-zinc-500 mt-0.5">{partner.name}</p>
+                              )}
+                            </div>
+                          );
+                        }
+                        if (b.source === "referral") {
+                          return (
+                            <span className="text-xs text-emerald-400">
+                              Referral{partner ? ` / ${partner.name}` : ""}
+                            </span>
+                          );
+                        }
+                        if (b.source === "website") {
+                          return <span className="text-xs text-blue-400">Website</span>;
+                        }
+                        return <span className="text-xs text-zinc-600">Manual</span>;
+                      })()}
                     </td>
                     <td className="px-5 py-3">
                       <select
