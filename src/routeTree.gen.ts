@@ -20,6 +20,7 @@ import { Route as PacksRouteImport } from './routes/packs'
 import { Route as HotelRouteImport } from './routes/hotel'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CompetitionRouteImport } from './routes/competition'
+import { Route as BookRouteImport } from './routes/book'
 import { Route as ArtistsRouteImport } from './routes/artists'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -85,6 +86,11 @@ const CompetitionRoute = CompetitionRouteImport.update({
   path: '/competition',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArtistsRoute = ArtistsRouteImport.update({
   id: '/artists',
   path: '/artists',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
+  '/book': typeof BookRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/artists': typeof ArtistsRoute
+  '/book': typeof BookRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
+  '/book': typeof BookRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/artists'
+    | '/book'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/artists'
+    | '/book'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/artists'
+    | '/book'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -269,6 +281,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ArtistsRoute: typeof ArtistsRoute
+  BookRoute: typeof BookRoute
   CompetitionRoute: typeof CompetitionRoute
   GalleryRoute: typeof GalleryRoute
   HotelRoute: typeof HotelRoute
@@ -361,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/artists': {
       id: '/artists'
       path: '/artists'
@@ -451,6 +471,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ArtistsRoute: ArtistsRoute,
+  BookRoute: BookRoute,
   CompetitionRoute: CompetitionRoute,
   GalleryRoute: GalleryRoute,
   HotelRoute: HotelRoute,

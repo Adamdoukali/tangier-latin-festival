@@ -12,6 +12,7 @@ import {
   Download,
   Copy,
   Link2,
+  Mail,
 } from "lucide-react";
 import {
   getBookings,
@@ -125,6 +126,33 @@ function AdminBookings() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
+  };
+
+  // Opens the admin's email app with a ready-to-send message to the customer,
+  // worded according to the booking status.
+  const emailCustomer = (b: Booking) => {
+    const firstName = b.customerName.split(/\s|&/)[0] || b.customerName;
+    let subject: string;
+    let body: string;
+    if (b.status === "pending") {
+      subject = `Your Tangier Latin Festival booking request (${b.ticketCode})`;
+      body =
+        `Hello ${firstName},\n\n` +
+        `Thank you for your booking request for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027).\n\n` +
+        `We are reviewing it and will respond within 24 hours to confirm your booking and send you the payment details.\n\n` +
+        `Your reference: ${b.ticketCode}\n\n` +
+        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+    } else {
+      subject = `Your Tangier Latin Festival booking is confirmed! (${b.ticketCode})`;
+      body =
+        `Hello ${firstName},\n\n` +
+        `Great news — your booking for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027, Kenzi Solazur Hotel) is confirmed!\n\n` +
+        `Your ticket code: ${b.ticketCode}\n` +
+        `Guests: ${b.customerName} (${b.numPeople} ${b.numPeople > 1 ? "people" : "person"})\n\n` +
+        `Please keep this code — you'll present it at check-in.\n\n` +
+        `See you on the dance floor!\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+    }
+    window.location.href = `mailto:${encodeURIComponent(b.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const filtered = bookings
@@ -279,6 +307,17 @@ function AdminBookings() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => emailCustomer(b)}
+                          className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition cursor-pointer"
+                          title={
+                            b.status === "pending"
+                              ? "Email customer: we respond within 24h"
+                              : "Email customer: confirmation details"
+                          }
+                        >
+                          <Mail className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => showQr(b)}
                           className="p-1.5 rounded-lg text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition cursor-pointer"

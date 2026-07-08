@@ -49,6 +49,11 @@ function getReferralUrl(code: string): string {
   return `${base}/packs?ref=${code}`;
 }
 
+function getBookingUrl(code: string): string {
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/book?ref=${code}`;
+}
+
 function PartnerPortal() {
   const [checking, setChecking] = useState(true);
   const [partner, setPartner] = useState<Collaborator | null>(null);
@@ -202,9 +207,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     reload();
   }, [reload]);
 
-  // Referral QR
+  // Booking-link QR (guests scan it, choose their pack, request a booking)
   useEffect(() => {
-    QRCode.toDataURL(getReferralUrl(partner.code), {
+    QRCode.toDataURL(getBookingUrl(partner.code), {
       width: 240,
       margin: 1,
       color: { dark: "#18181b", light: "#fafafa" },
@@ -333,39 +338,71 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           ))}
         </div>
 
-        {/* Referral link */}
+        {/* Selling links */}
         <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 flex flex-col sm:flex-row gap-5 items-start">
-          <div className="flex-1">
-            <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" /> Your Selling Link
-            </h3>
-            <p className="mt-1.5 text-sm text-zinc-500">
-              Share this link — every pack booked through it is credited to you.
-            </p>
-            <div className="mt-3 flex items-center gap-2 flex-wrap">
-              <code className="text-xs font-mono text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg break-all">
-                {getReferralUrl(partner.code)}
-              </code>
-              <button
-                onClick={() => copy("ref", getReferralUrl(partner.code))}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                  copiedId === "ref"
-                    ? "bg-emerald-500/15 text-emerald-400"
-                    : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                {copiedId === "ref" ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {copiedId === "ref" ? "Copied" : "Copy"}
-              </button>
+          <div className="flex-1 space-y-5">
+            <div>
+              <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-amber-400" /> Your Booking Link
+              </h3>
+              <p className="mt-1.5 text-sm text-zinc-500">
+                Send this to your guests — they choose the pack they want and send a booking
+                request. It arrives as <span className="text-amber-400">Pending</span>, credited
+                to you, and the festival team confirms within 24 hours.
+              </p>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <code className="text-xs font-mono text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg break-all">
+                  {getBookingUrl(partner.code)}
+                </code>
+                <button
+                  onClick={() => copy("book", getBookingUrl(partner.code))}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                    copiedId === "book"
+                      ? "bg-emerald-500/15 text-emerald-400"
+                      : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  {copiedId === "book" ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                  {copiedId === "book" ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-zinc-800/60">
+              <p className="text-xs text-zinc-500">
+                Prefer the full website? This link opens the packs page, also credited to you:
+              </p>
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <code className="text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/40 px-2 py-1 rounded-lg break-all">
+                  {getReferralUrl(partner.code)}
+                </code>
+                <button
+                  onClick={() => copy("ref", getReferralUrl(partner.code))}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition cursor-pointer ${
+                    copiedId === "ref"
+                      ? "text-emerald-400"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  {copiedId === "ref" ? (
+                    <CheckCircle2 className="h-3 w-3" />
+                  ) : (
+                    <Copy className="h-3 w-3" />
+                  )}
+                  {copiedId === "ref" ? "Copied" : "Copy"}
+                </button>
+              </div>
             </div>
           </div>
           {refQr && (
-            <div className="rounded-lg border border-zinc-700/30 bg-zinc-100 p-2 shrink-0">
-              <img src={refQr} alt="Referral QR" className="w-28 h-28" />
+            <div className="shrink-0 text-center">
+              <div className="rounded-lg border border-zinc-700/30 bg-zinc-100 p-2 inline-block">
+                <img src={refQr} alt="Booking link QR" className="w-28 h-28" />
+              </div>
+              <p className="mt-1.5 text-[10px] text-zinc-600">Booking link QR</p>
             </div>
           )}
         </div>
