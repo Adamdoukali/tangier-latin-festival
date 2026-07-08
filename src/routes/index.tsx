@@ -57,6 +57,7 @@ import {
   Language,
 } from "@/lib/translations";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { sendFormNotification, contactAutoResponse } from "@/lib/form-notify";
 
 export const Route = createFileRoute("/")({
   head: (ctx) => {
@@ -962,15 +963,19 @@ function ContactForm() {
     setIsSubmitting(true);
     setError(false);
     const formData = new FormData(e.currentTarget);
-    formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
-    formData.append("subject", "New Contact Form Submission");
 
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        body: formData,
+      const ok = await sendFormNotification({
+        subject: "New Contact Form Submission",
+        fields: {
+          name: String(formData.get("name") ?? ""),
+          email: String(formData.get("email") ?? ""),
+          Phone: String(formData.get("phone") ?? ""),
+          Message: String(formData.get("message") ?? ""),
+        },
+        autoresponse: contactAutoResponse(lang),
       });
-      if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+      if (!ok) throw new Error("Submit failed");
       setSent(true);
     } catch (err) {
       console.error(err);

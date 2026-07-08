@@ -20,6 +20,7 @@ import {
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel, type Language } from "@/lib/translations";
+import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
 
 export const Route = createFileRoute("/book")({
   head: () => ({
@@ -83,24 +84,21 @@ function BookPage() {
     const customerName = form.names.map((n) => n.trim()).join(" & ");
 
     try {
-      // Notify the festival team by email
-      const fd = new FormData();
-      fd.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
-      fd.append("subject", `New Booking Request: ${selected.name} (${selected.sub})`);
-      fd.append("Pack", `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`);
-      fd.append("Name", customerName);
-      fd.append("Email", form.email);
-      fd.append("Phone", form.phone);
-      fd.append("Country", form.country);
-      fd.append("Notes", form.notes);
-      // Lowercase special fields so Web3Forms' auto-responder can reply
-      // to the customer automatically.
-      fd.append("email", form.email);
-      fd.append("name", customerName);
-      fd.append("from_name", "Tangier International Latin Festival");
-      if (collaborator) fd.append("Referral", collaborator.code);
-      const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body: fd });
-      if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+      // Notify the festival team + automatic reply to the customer
+      const sent = await sendFormNotification({
+        subject: `New Booking Request: ${selected.name} (${selected.sub})`,
+        fields: {
+          name: customerName,
+          email: form.email,
+          Pack: `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`,
+          Phone: form.phone,
+          Country: form.country,
+          Notes: form.notes,
+          ...(collaborator ? { Referral: collaborator.code } : {}),
+        },
+        autoresponse: bookingAutoResponse(lang),
+      });
+      if (!sent) throw new Error("Submit failed");
 
       // Record the pending booking in the system
       try {

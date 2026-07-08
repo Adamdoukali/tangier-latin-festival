@@ -8,6 +8,7 @@ import {
   getRememberedReferral,
 } from "@/lib/admin-store";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
 
 const ALLOWED_COUNTRY_CODES = new Set([
   "MA", // Morocco
@@ -27,7 +28,7 @@ export function PackBookingModal({
   pack: { id?: string; name: string; sub: string; price: string; currency?: string };
   onClose: () => void;
 }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,8 +138,6 @@ export function PackBookingModal({
               setIsSubmitting(true);
               setError(false);
               const formData = new FormData(e.currentTarget);
-              formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
-              formData.append("subject", `New Pack Booking: ${pack.name}`);
 
               // Attribute the booking to a collaborator if the visitor
               // arrived via a referral link (/packs?ref=CODE).
@@ -146,7 +145,6 @@ export function PackBookingModal({
               const collaborator = refCode
                 ? await getCollaboratorByCode(refCode).catch(() => undefined)
                 : undefined;
-              if (collaborator) formData.append("Referral", collaborator.code);
 
               const isDouble = /double|doble/.test(pack.name.toLowerCase());
               const customerName = isDouble
@@ -155,19 +153,23 @@ export function PackBookingModal({
                     .join(" & ")
                 : String(formData.get("Full Name") ?? "");
               const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
-
-              // Lowercase special fields so Web3Forms' auto-responder can
-              // reply to the customer automatically.
-              formData.append("email", String(formData.get("Email") ?? ""));
-              formData.append("name", customerName);
-              formData.append("from_name", "Tangier International Latin Festival");
+              const customerEmail = String(formData.get("Email") ?? "");
 
               try {
-                const res = await fetch("https://api.web3forms.com/submit", {
-                  method: "POST",
-                  body: formData,
+                const sent = await sendFormNotification({
+                  subject: `New Pack Booking: ${pack.name}`,
+                  fields: {
+                    name: customerName,
+                    email: customerEmail,
+                    Pack: `${pack.name} - ${pack.sub} (${pack.price})`,
+                    Phone: phone,
+                    Country: String(formData.get("Country") ?? ""),
+                    Notes: String(formData.get("Notes") ?? ""),
+                    ...(collaborator ? { Referral: collaborator.code } : {}),
+                  },
+                  autoresponse: bookingAutoResponse(lang),
                 });
-                if (!res.ok) throw new Error(`Submit failed: ${res.status}`);
+                if (!sent) throw new Error("Submit failed");
 
                 // Record the booking in the database so it shows up in the
                 // admin panel (pending until the team confirms payment).
