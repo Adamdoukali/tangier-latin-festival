@@ -95,6 +95,17 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Full display label for a pack — name + distinguishing details
+ *  (e.g. "Chambre double (SOLAZUR HOTEL TANGIER (3 NIGHTS))"), so
+ *  bookings/invites always say exactly which pack was chosen. */
+export function packLabel(
+  pack: { name: string; sub?: string } | null | undefined,
+  fallback = "Unknown"
+): string {
+  if (!pack) return fallback;
+  return pack.sub ? `${pack.name} — ${pack.sub}` : pack.name;
+}
+
 export function generateTicketCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "TLF-";
@@ -641,19 +652,27 @@ export async function updateBookingStatus(
   id: string,
   status: BookingStatus
 ): Promise<Booking | null> {
-  if (useDb()) {
-    try {
-      const { data, error } = await supabase!
-        .from("bookings")
-        .update({ status })
-        .eq("id", id)
-        .select()
-        .single();
-      if (error) throw error;
-      return bookingFromRow(data);
-    } catch (e) {
-      warn("updateBookingStatus", e);
+  if (useDb() && !isLocalId(id)) {
+    const { data, error } = await supabase!
+      .from("bookings")
+      .update({ status })
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      warn("updateBookingStatus", error);
+      // A database row can't be patched locally — surface the real reason
+      // instead of silently reverting (e.g. an old CHECK constraint that
+      // doesn't allow "declined" — fixed by supabase/booking-status.sql).
+      if (/check constraint|bookings_status/i.test(error.message ?? "")) {
+        throw new Error(
+          `The database still rejects the "${status}" status. ` +
+            `Run supabase/booking-status.sql in the Supabase SQL Editor to fix it.`
+        );
+      }
+      throw new Error(error.message || "Could not update the booking status.");
     }
+    return bookingFromRow(data);
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
   const idx = bookings.findIndex((b) => b.id === id);
@@ -1062,6 +1081,29 @@ export interface CollaboratorStats {
   bookings: number;
   ticketsSold: number; // sum of numPeople over attributed bookings
   revenue: number;
+  /** Commission earned in € = revenue × commission % */
+  commission: number;
+}
+
+/** Sales revenue (€) attributed to one collaborator: non-declined,
+ *  non-invite bookings × pack price. Shared by admin and the portal. */
+export function collaboratorRevenue(
+  collaboratorId: string,
+  bookings: Booking[],
+  packs: Pack[]
+): number {
+  const priceOf = (packId: string) => {
+    const p = packs.find((x) => x.id === packId);
+    return p ? parseInt(p.price, 10) || 0 : 0;
+  };
+  return bookings
+    .filter(
+      (b) =>
+        b.collaboratorId === collaboratorId &&
+        b.status !== "declined" &&
+        b.source !== "invite"
+    )
+    .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
 }
 
 export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
@@ -1080,15 +1122,17 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
     const myBookings = bookings.filter(
       (b) => b.collaboratorId === c.id && b.status !== "declined"
     );
+    const revenue = myBookings
+      .filter((b) => b.source !== "invite")
+      .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
       invitesRedeemed: myInvites.filter((i) => i.used).length,
       bookings: myBookings.length,
       ticketsSold: myBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
-      revenue: myBookings
-        .filter((b) => b.source !== "invite")
-        .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0),
+      revenue,
+      commission: Math.round(revenue * ((c.commission ?? 0) / 100) * 100) / 100,
     };
   });
 }

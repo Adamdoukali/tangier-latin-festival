@@ -243,7 +243,8 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-left font-medium">Code / Link</th>
                   <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
                   <th className="px-5 py-3 text-right font-medium">Invites</th>
-                  <th className="px-5 py-3 text-right font-medium">Revenue (€)</th>
+                  <th className="px-5 py-3 text-right font-medium">Sales (€)</th>
+                  <th className="px-5 py-3 text-right font-medium">Commission</th>
                   <th className="px-5 py-3 text-left font-medium">Last Active</th>
                   <th className="px-5 py-3 text-center font-medium">Active</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
@@ -295,6 +296,12 @@ function AdminCollaborators() {
                     </td>
                     <td className="px-5 py-3 text-right text-emerald-400">
                       {s.revenue.toLocaleString()}
+                    </td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <span className="text-amber-400">€{s.commission.toLocaleString()}</span>
+                      <span className="ml-1.5 text-[10px] text-zinc-500">
+                        ({c.commission ?? 0}%)
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-xs text-zinc-500 whitespace-nowrap">
                       {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString() : "never"}

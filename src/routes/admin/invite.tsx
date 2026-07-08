@@ -21,6 +21,7 @@ import {
   deleteInvite,
   getPacks,
   getCollaborators,
+  packLabel,
   type Invite,
   type Pack,
   type Collaborator,
@@ -102,7 +103,7 @@ function AdminInvite() {
     const pack = packs.find((p) => p.id === selectedPackId);
     await generateInvite(
       selectedPackId,
-      pack?.name ?? "Unknown",
+      packLabel(pack),
       assignee,
       selectedCollabId || undefined
     );
@@ -115,7 +116,7 @@ function AdminInvite() {
     const pack = packs.find((p) => p.id === selectedPackId);
     await generateBulkInvites(
       selectedPackId,
-      pack?.name ?? "Unknown",
+      packLabel(pack),
       bulkCount,
       assignee,
       selectedCollabId || undefined

@@ -20,6 +20,7 @@ import {
   updateBookingStatus,
   deleteBooking,
   getPacks,
+  packLabel,
   type Booking,
   type BookingStatus,
   type Pack,
@@ -38,6 +39,7 @@ function AdminBookings() {
   const [qrBooking, setQrBooking] = useState<Booking | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState("");
 
   const reload = useCallback(async () => {
     const [b, p] = await Promise.all([getBookings(), getPacks()]);
@@ -81,7 +83,7 @@ function AdminBookings() {
     const pack = packs.find((p) => p.id === form.packId);
     await addBooking({
       ...form,
-      packName: pack?.name ?? "Unknown",
+      packName: packLabel(pack),
       source: "manual",
     });
     setShowForm(false);
@@ -89,7 +91,12 @@ function AdminBookings() {
   };
 
   const handleStatusChange = async (id: string, status: BookingStatus) => {
-    await updateBookingStatus(id, status);
+    setStatusError("");
+    try {
+      await updateBookingStatus(id, status);
+    } catch (e) {
+      setStatusError(e instanceof Error ? e.message : String(e));
+    }
     await reload();
   };
 
@@ -235,6 +242,19 @@ function AdminBookings() {
         </div>
       </div>
 
+      {/* Status change error (e.g. database constraint) */}
+      {statusError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start justify-between gap-3">
+          <p className="text-sm text-red-300">{statusError}</p>
+          <button
+            onClick={() => setStatusError("")}
+            className="text-red-400/70 hover:text-red-300 transition cursor-pointer shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
         {filtered.length === 0 ? (
@@ -281,7 +301,29 @@ function AdminBookings() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-zinc-400">{b.packName}</td>
+                    <td className="px-5 py-3">
+                      {(() => {
+                        const pack = packs.find((p) => p.id === b.packId);
+                        const name = pack?.name ?? b.packName;
+                        const detail = [
+                          pack?.sub,
+                          pack ? `${pack.price} ${pack.currency || "€"}` : null,
+                          b.numPeople > 1 ? `${b.numPeople} people` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ");
+                        return (
+                          <>
+                            <p className="text-zinc-300">{name}</p>
+                            {detail && (
+                              <p className="text-[11px] text-zinc-500 mt-0.5 max-w-[220px] truncate" title={detail}>
+                                {detail}
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </td>
                     <td className="px-5 py-3">
                       {b.inviteCode ? (
                         <span className="inline-flex items-center gap-1 text-xs text-violet-400">
@@ -309,9 +351,7 @@ function AdminBookings() {
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="checked-in">Checked In</option>
-                  <option value="declined">Declined</option>
                         <option value="declined">Declined</option>
-            <option value="declined">Declined</option>
                       </select>
                     </td>
                     <td className="px-5 py-3 text-zinc-500 whitespace-nowrap">
@@ -515,7 +555,6 @@ function AdminBookings() {
                   <option value="confirmed">Confirmed</option>
                   <option value="checked-in">Checked In</option>
                   <option value="declined">Declined</option>
-            <option value="declined">Declined</option>
                 </select>
               </div>
             </div>

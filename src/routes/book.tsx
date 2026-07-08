@@ -16,6 +16,7 @@ import {
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
+  packLabel,
   type Pack,
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -104,7 +105,7 @@ function BookPage() {
       try {
         await addBooking({
           packId: selected.id,
-          packName: selected.name,
+          packName: packLabel(selected),
           customerName,
           email: form.email,
           phone: form.phone,

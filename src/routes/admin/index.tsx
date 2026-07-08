@@ -203,7 +203,7 @@ function AdminDashboard() {
         <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800/60">
             <h3 className="font-display text-sm tracking-wide text-zinc-200">
-              Collaborator Sales
+              Collaborator Sales & Commissions
             </h3>
             <Link
               to="/admin/collaborators"
@@ -220,7 +220,8 @@ function AdminDashboard() {
                   <th className="px-5 py-3">Code</th>
                   <th className="px-5 py-3 text-right">Tickets Sold</th>
                   <th className="px-5 py-3 text-right">Invites Used</th>
-                  <th className="px-5 py-3 text-right">Revenue (€)</th>
+                  <th className="px-5 py-3 text-right">Sales (€)</th>
+                  <th className="px-5 py-3 text-right">Commission</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/40">
@@ -239,8 +240,32 @@ function AdminDashboard() {
                     <td className="px-5 py-3 text-right text-emerald-400">
                       {cs.revenue.toLocaleString()}
                     </td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <span className="text-amber-400">€{cs.commission.toLocaleString()}</span>
+                      <span className="ml-1.5 text-[10px] text-zinc-500">
+                        ({cs.collaborator.commission ?? 0}%)
+                      </span>
+                    </td>
                   </tr>
                 ))}
+                <tr className="border-t border-zinc-700/60 bg-zinc-900/80">
+                  <td className="px-5 py-3 text-xs tracking-widest uppercase text-zinc-500" colSpan={2}>
+                    Total
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-zinc-100">
+                    {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
+                  </td>
+                  <td className="px-5 py-3 text-right text-zinc-400">
+                    {collabStats.reduce((s, c) => s + c.invitesRedeemed, 0)}/
+                    {collabStats.reduce((s, c) => s + c.invitesIssued, 0)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-emerald-400">
+                    {collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-amber-400">
+                    €{collabStats.reduce((s, c) => s + c.commission, 0).toLocaleString()}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

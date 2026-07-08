@@ -16,6 +16,7 @@ import {
   Sparkles,
   Mail,
   Phone,
+  Euro,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -24,6 +25,8 @@ import {
   getBookings,
   generateBulkInvites,
   updateBookingStatus,
+  collaboratorRevenue,
+  packLabel,
   type Collaborator,
   type Invite,
   type Pack,
@@ -176,9 +179,12 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
 
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [myInvites, setMyInvites] = useState<Invite[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
+  const [sales, setSales] = useState(0);
+  const [statusError, setStatusError] = useState("");
   const [selectedPackId, setSelectedPackId] = useState("");
   const [count, setCount] = useState(1);
   const [generating, setGenerating] = useState(false);
@@ -195,6 +201,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     ]);
     const active = allPacks.filter((p) => p.active);
     setPacks(active);
+    setAllPacks(allPacks);
     setSelectedPackId((prev) => prev || active[0]?.id || "");
     setMyInvites(
       allInvites
@@ -210,10 +217,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         .filter((b) => b.status !== "declined")
         .reduce((s, b) => s + (b.numPeople || 1), 0)
     );
+    setSales(collaboratorRevenue(partner.id, mine, allPacks));
   }, [partner.id]);
 
   const changeBookingStatus = async (id: string, status: BookingStatus) => {
-    await updateBookingStatus(id, status);
+    setStatusError("");
+    try {
+      await updateBookingStatus(id, status);
+    } catch (e) {
+      setStatusError(e instanceof Error ? e.message : String(e));
+    }
     await reload();
   };
 
@@ -271,7 +284,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     }
     setGenerating(true);
     const pack = packs.find((p) => p.id === selectedPackId);
-    await generateBulkInvites(selectedPackId, pack?.name ?? "Unknown", n, partner.name, partner.id);
+    await generateBulkInvites(selectedPackId, packLabel(pack), n, partner.name, partner.id);
     await reload();
     setGenerating(false);
   };
@@ -301,7 +314,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const redeemed = myInvites.filter((i) => i.used).length;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 notranslate" translate="no">
       {/* Header */}
       <header className="border-b border-zinc-800/60 bg-zinc-900/50">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
@@ -328,7 +341,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
             { label: "Invites Created", value: used, icon: QrCode },
             { label: "Invites Redeemed", value: redeemed, icon: CheckCircle2 },
@@ -337,6 +350,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               label: "Invites Left",
               value: remaining === null ? "∞" : remaining,
               icon: TrendingUp,
+            },
+            { label: "Sales", value: `€${sales.toLocaleString()}`, icon: Euro },
+            {
+              label: `Commission (${partner.commission ?? 0}%)`,
+              value: `€${(Math.round(sales * ((partner.commission ?? 0) / 100) * 100) / 100).toLocaleString()}`,
+              icon: Euro,
             },
           ].map((s) => (
             <div
@@ -429,6 +448,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <p className="text-sm text-zinc-500 mb-4">
             Everyone who booked through your link. Update their status and contact them directly.
           </p>
+          {statusError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 mb-3">
+              <p className="text-sm text-red-300">{statusError}</p>
+            </div>
+          )}
           {myBookings.length === 0 ? (
             <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 px-5 py-10 text-center text-sm text-zinc-600">
               No bookings yet — share your booking link to get started.
@@ -453,7 +477,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         {b.customerName}
                       </p>
                       <p className="text-xs text-zinc-500 truncate">
-                        {b.packName}
+                        {(() => {
+                          const pack = allPacks.find((p) => p.id === b.packId);
+                          return pack
+                            ? `${packLabel(pack)} · ${pack.price} ${pack.currency || "€"}`
+                            : b.packName;
+                        })()}
                         {b.numPeople > 1 ? ` · ${b.numPeople} people` : ""} ·{" "}
                         {new Date(b.createdAt).toLocaleDateString()}
                         {b.source === "invite" ? " · via invite" : ""}

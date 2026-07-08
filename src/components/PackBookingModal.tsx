@@ -176,7 +176,7 @@ export function PackBookingModal({
                 try {
                   await addBooking({
                     packId: pack.id ?? "",
-                    packName: pack.name,
+                    packName: pack.sub ? `${pack.name} — ${pack.sub}` : pack.name,
                     customerName,
                     email: String(formData.get("Email") ?? ""),
                     phone,

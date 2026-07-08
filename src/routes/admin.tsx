@@ -27,16 +27,26 @@ const navItems = [
 
 function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Auth lives in localStorage, so the server always renders "logged out".
+  // Render nothing until mounted so the client's first paint matches the
+  // server and React doesn't log a hydration mismatch on every admin load.
+  const [mounted, setMounted] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isLoginPage = location.pathname === "/admin/login";
 
   useEffect(() => {
-    if (!getAuthStatus() && !isLoginPage) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !getAuthStatus() && !isLoginPage) {
       navigate({ to: "/admin/login", replace: true });
     }
-  }, [navigate, location.pathname, isLoginPage]);
+  }, [mounted, navigate, location.pathname, isLoginPage]);
+
+  if (!mounted) return null;
 
   if (!getAuthStatus() && !isLoginPage) {
     return null; // Prevents flash of admin content before redirect
@@ -52,7 +62,9 @@ function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex">
+    // translate="no": browser auto-translate rewrites React's DOM and used to
+    // crash the panel; the back office is internal, so opt out entirely.
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex notranslate" translate="no">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
