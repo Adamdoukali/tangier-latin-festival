@@ -12,6 +12,7 @@ import {
   ToggleLeft,
   ToggleRight,
   Users,
+  Download,
 } from "lucide-react";
 import {
   getCollaboratorStats,
@@ -88,9 +89,10 @@ function suggestCode(name: string): string {
     .slice(0, 12);
 }
 
+// The partner link is the /book funnel (guests choose a pack + register).
 function referralUrl(code: string, lang?: PartnerLanguage): string {
   const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/packs?ref=${code}${lang && lang !== "en" ? `&lang=${lang}` : ""}`;
+  return `${base}/book?ref=${code}${lang && lang !== "en" ? `&lang=${lang}` : ""}`;
 }
 
 function AdminCollaborators() {
@@ -203,6 +205,60 @@ function AdminCollaborators() {
     navigator.clipboard.writeText(referralUrl(c.code, c.language));
     setCopiedId(c.id);
     setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  // Excel-friendly export of the table (semicolon-delimited CSV with a
+  // UTF-8 BOM opens directly in Excel with proper accents and columns).
+  const downloadExcel = () => {
+    const header = [
+      "Collaborator",
+      "Code",
+      "Language",
+      "Single Rooms",
+      "Double Rooms",
+      "Full Pass",
+      "Tickets Sold",
+      "Sales (EUR)",
+      "Commission",
+      "Commission Deal",
+      "Active",
+    ];
+    const rows = stats.map(({ collaborator: c, ...s }) => [
+      c.name,
+      c.code,
+      (c.language ?? "en").toUpperCase(),
+      s.singleRooms,
+      s.doubleRooms,
+      s.fullPass,
+      s.ticketsSold,
+      s.revenue,
+      formatMoney(s.commission, s.commissionCurrency),
+      commissionLabel(c),
+      c.active ? "yes" : "no",
+    ]);
+    const totals = [
+      "TOTAL",
+      "",
+      "",
+      stats.reduce((a, x) => a + x.singleRooms, 0),
+      stats.reduce((a, x) => a + x.doubleRooms, 0),
+      stats.reduce((a, x) => a + x.fullPass, 0),
+      stats.reduce((a, x) => a + x.ticketsSold, 0),
+      stats.reduce((a, x) => a + x.revenue, 0),
+      "",
+      "",
+      "",
+    ];
+    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const csv =
+      "﻿" +
+      [header, ...rows, totals].map((r) => r.map(esc).join(";")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `collaborators-sales-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   return (
@@ -318,8 +374,10 @@ function AdminCollaborators() {
                 <tr className="border-b border-zinc-800/60 text-xs tracking-widest uppercase text-zinc-500">
                   <th className="px-5 py-3 text-left font-medium">Name</th>
                   <th className="px-5 py-3 text-left font-medium">Code / Link</th>
+                  <th className="px-5 py-3 text-right font-medium">Single Rooms</th>
+                  <th className="px-5 py-3 text-right font-medium">Double Rooms</th>
+                  <th className="px-5 py-3 text-right font-medium">Full Pass</th>
                   <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right font-medium">Invites</th>
                   <th className="px-5 py-3 text-right font-medium">Sales (€)</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
                   <th className="px-5 py-3 text-left font-medium">Last Active</th>
@@ -363,11 +421,11 @@ function AdminCollaborators() {
                         </button>
                       </div>
                     </td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{s.singleRooms}</td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{s.doubleRooms}</td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{s.fullPass}</td>
                     <td className="px-5 py-3 text-right text-zinc-200 font-medium">
                       {s.ticketsSold}
-                    </td>
-                    <td className="px-5 py-3 text-right text-zinc-400">
-                      {s.invitesRedeemed}/{s.invitesIssued}
                     </td>
                     <td className="px-5 py-3 text-right text-emerald-400">
                       {s.revenue.toLocaleString()}
@@ -421,6 +479,18 @@ function AdminCollaborators() {
           </div>
         )}
       </div>
+
+      {/* Excel export (Chambre double / Chambre single / Full Pass per partner) */}
+      {stats.length > 0 && (
+        <div className="flex justify-end">
+          <button
+            onClick={downloadExcel}
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
+          >
+            <Download className="h-4 w-4" /> Download Excel (rooms &amp; sales)
+          </button>
+        </div>
+      )}
 
       {/* Add / Edit Modal */}
       {showForm && (

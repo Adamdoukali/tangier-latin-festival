@@ -220,8 +220,10 @@ function AdminDashboard() {
                 <tr className="text-left text-[10px] tracking-widest uppercase text-zinc-500 border-b border-zinc-800/40">
                   <th className="px-5 py-3">Collaborator</th>
                   <th className="px-5 py-3">Code</th>
+                  <th className="px-5 py-3 text-right">Single Rooms</th>
+                  <th className="px-5 py-3 text-right">Double Rooms</th>
+                  <th className="px-5 py-3 text-right">Full Pass</th>
                   <th className="px-5 py-3 text-right">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right">Invites Used</th>
                   <th className="px-5 py-3 text-right">Sales (€)</th>
                   <th className="px-5 py-3 text-right">Commission</th>
                 </tr>
@@ -235,10 +237,10 @@ function AdminDashboard() {
                         {cs.collaborator.code}
                       </span>
                     </td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{cs.singleRooms}</td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{cs.doubleRooms}</td>
+                    <td className="px-5 py-3 text-right text-zinc-300">{cs.fullPass}</td>
                     <td className="px-5 py-3 text-right text-zinc-200">{cs.ticketsSold}</td>
-                    <td className="px-5 py-3 text-right text-zinc-400">
-                      {cs.invitesRedeemed}/{cs.invitesIssued}
-                    </td>
                     <td className="px-5 py-3 text-right text-emerald-400">
                       {cs.revenue.toLocaleString()}
                     </td>
@@ -257,11 +259,16 @@ function AdminDashboard() {
                     Total
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-zinc-100">
-                    {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
+                    {collabStats.reduce((s, c) => s + c.singleRooms, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right text-zinc-400">
-                    {collabStats.reduce((s, c) => s + c.invitesRedeemed, 0)}/
-                    {collabStats.reduce((s, c) => s + c.invitesIssued, 0)}
+                  <td className="px-5 py-3 text-right font-medium text-zinc-100">
+                    {collabStats.reduce((s, c) => s + c.doubleRooms, 0)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-zinc-100">
+                    {collabStats.reduce((s, c) => s + c.fullPass, 0)}
+                  </td>
+                  <td className="px-5 py-3 text-right font-medium text-zinc-100">
+                    {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-emerald-400">
                     {collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}

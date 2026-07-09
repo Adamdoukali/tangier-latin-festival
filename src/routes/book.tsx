@@ -57,6 +57,8 @@ function BookPage() {
     email: "",
     phone: "",
     country: "",
+    arrival: "",
+    departure: "",
     notes: "",
   });
 
@@ -101,6 +103,8 @@ function BookPage() {
         numPeople: form.names.length,
         danceLevel: "",
         notes: form.notes,
+        arrivalDate: form.arrival || null,
+        departureDate: form.departure || null,
         status: "pending",
         source: collaborator ? "referral" : "website",
         collaboratorId: collaborator?.id ?? null,
@@ -119,6 +123,8 @@ function BookPage() {
           Pack: `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`,
           Phone: form.phone,
           Country: form.country,
+          Arrival: form.arrival,
+          Departure: form.departure,
           Notes: form.notes,
           ...(created ? { Reservation: created.ticketCode } : {}),
           ...(collaborator ? { Referral: collaborator.code } : {}),
@@ -328,6 +334,39 @@ function BookPage() {
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Morocco"
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={form.arrival}
+                  min="2027-01-01"
+                  max="2027-01-31"
+                  onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  {tr("Departure Date", "Date de départ", "Fecha de salida")}{" "}
+                  <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={form.departure}
+                  min={form.arrival || "2027-01-01"}
+                  max="2027-02-15"
+                  onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
                 />
               </div>
             </div>

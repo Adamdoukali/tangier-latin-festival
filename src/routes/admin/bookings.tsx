@@ -68,6 +68,8 @@ function AdminBookings() {
     country: "",
     numPeople: 1,
     danceLevel: "Beginner",
+    arrival: "",
+    departure: "",
     notes: "",
     status: "pending" as BookingStatus,
   });
@@ -81,6 +83,8 @@ function AdminBookings() {
       country: "",
       numPeople: 1,
       danceLevel: "Beginner",
+      arrival: "",
+      departure: "",
       notes: "",
       status: "pending",
     });
@@ -92,6 +96,8 @@ function AdminBookings() {
     await addBooking({
       ...form,
       packName: packLabel(pack),
+      arrivalDate: form.arrival || null,
+      departureDate: form.departure || null,
       source: "manual",
     });
     setShowForm(false);
@@ -363,6 +369,13 @@ function AdminBookings() {
                           pack?.sub,
                           pack ? `${pack.price} ${pack.currency || "€"}` : null,
                           b.numPeople > 1 ? `${b.numPeople} people` : null,
+                          b.arrivalDate
+                            ? `${new Date(b.arrivalDate).toLocaleDateString()} → ${
+                                b.departureDate
+                                  ? new Date(b.departureDate).toLocaleDateString()
+                                  : "?"
+                              }`
+                            : null,
                         ]
                           .filter(Boolean)
                           .join(" · ");
@@ -491,14 +504,21 @@ function AdminBookings() {
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
                 >
                   <option value="">Select a pack</option>
-                  {packs
-                    .filter((p) => p.active)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
-                      </option>
-                    ))}
+                  {/* Inactive packs stay hidden on the website but can be booked
+                      here — create one on the Packs page (e.g. 5+ nights) for
+                      special reservations. */}
+                  {packs.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
+                      {p.active ? "" : "  · special (hidden from website)"}
+                    </option>
+                  ))}
                 </select>
+                <p className="mt-1.5 text-[11px] text-zinc-500">
+                  Need a special reservation (e.g. more than 4 nights)? Create the pack on
+                  the Packs page with <span className="text-zinc-400">Active off</span> — it
+                  stays hidden from the website but you can book it here.
+                </p>
               </div>
 
               {/* Name */}
@@ -573,6 +593,33 @@ function AdminBookings() {
                       setForm({ ...form, numPeople: parseInt(e.target.value) || 1 })
                     }
                     className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Arrival & Departure */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Arrival Date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.arrival}
+                    onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Departure Date
+                  </label>
+                  <input
+                    type="date"
+                    value={form.departure}
+                    min={form.arrival || undefined}
+                    onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
                   />
                 </div>
               </div>

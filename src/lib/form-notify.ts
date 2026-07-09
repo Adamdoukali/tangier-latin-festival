@@ -73,11 +73,13 @@ export function bookingAutoResponse(
         `Suivez votre réservation ici : ${reservation.url}\n\n`
       : "";
     return (
-      "Bonjour,\n\n" +
-      "Merci pour votre demande de réservation au Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger).\n\n" +
+      "Merci pour votre inscription !\n\n" +
+      "Votre demande de réservation a bien été enregistrée.\n\n" +
       refBlock +
-      "Votre demande est maintenant EN ATTENTE. Un membre de notre équipe vous contactera sous 24 heures pour confirmer votre réservation et vous envoyer les détails de paiement.\n\n" +
-      "— L'équipe du Tangier International Latin Festival\n" +
+      "Dès réception de votre paiement, notre partenaire vous adressera la confirmation officielle de votre réservation, accompagnée de votre code QR personnel. Ce code devra être présenté à nos équipes d'accueil lors de votre arrivée au festival afin de faciliter votre enregistrement.\n\n" +
+      "Nous sommes impatients de vous accueillir à Tanger et de vous faire vivre une expérience unique, placée sous le signe de la danse, du partage et de la convivialité.\n\n" +
+      "Toute l'équipe du Tangier International Latin Festival vous remercie pour votre confiance et vous souhaite un séjour exceptionnel ainsi que des souvenirs inoubliables.\n\n" +
+      "À très bientôt au Tangier International Latin Festival !\n\n" +
       "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
     );
   }
@@ -87,11 +89,13 @@ export function bookingAutoResponse(
         `Sigue tu reserva aquí: ${reservation.url}\n\n`
       : "";
     return (
-      "Hola,\n\n" +
-      "Gracias por tu solicitud de reserva para el Tangier International Latin Festival (07–11 de enero de 2027 · Hotel Kenzi Solazur, Tánger).\n\n" +
+      "¡Gracias por tu inscripción!\n\n" +
+      "Tu solicitud de reserva ha quedado registrada.\n\n" +
       refBlock +
-      "Tu solicitud está ahora PENDIENTE. Un miembro de nuestro equipo te contactará en un plazo de 24 horas para confirmar tu reserva y enviarte los detalles de pago.\n\n" +
-      "— El equipo del Tangier International Latin Festival\n" +
+      "En cuanto recibamos tu pago, nuestro socio te enviará la confirmación oficial de tu reserva, junto con tu código QR personal. Deberás presentar este código a nuestro equipo de recepción a tu llegada al festival para facilitar tu registro.\n\n" +
+      "Estamos deseando recibirte en Tánger y hacerte vivir una experiencia única, bajo el signo del baile, el intercambio y la convivencia.\n\n" +
+      "Todo el equipo del Tangier International Latin Festival te agradece tu confianza y te desea una estancia excepcional y recuerdos inolvidables.\n\n" +
+      "¡Hasta muy pronto en el Tangier International Latin Festival!\n\n" +
       "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
     );
   }
@@ -100,11 +104,13 @@ export function bookingAutoResponse(
       `Track your booking here: ${reservation.url}\n\n`
     : "";
   return (
-    "Hello,\n\n" +
-    "Thank you for your booking request for the Tangier International Latin Festival (January 07–11, 2027 · Kenzi Solazur Hotel, Tangier).\n\n" +
+    "Thank you for your registration!\n\n" +
+    "Your booking request has been recorded.\n\n" +
     refBlock +
-    "Your request is now PENDING. One of our team members will contact you within 24 hours to confirm your booking and send you the payment details.\n\n" +
-    "— The Tangier International Latin Festival team\n" +
+    "As soon as your payment is received, our partner will send you the official confirmation of your booking, together with your personal QR code. This code must be presented to our welcome team when you arrive at the festival to make your check-in easier.\n\n" +
+    "We look forward to welcoming you to Tangier for a unique experience of dance, sharing and conviviality.\n\n" +
+    "The whole Tangier International Latin Festival team thanks you for your trust and wishes you an exceptional stay and unforgettable memories.\n\n" +
+    "See you very soon at the Tangier International Latin Festival!\n\n" +
     "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
   );
 }

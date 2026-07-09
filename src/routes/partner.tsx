@@ -52,11 +52,6 @@ function getBookingUrl(code: string, lang?: string): string {
   return `${base}/book?ref=${code}${langParam(lang)}`;
 }
 
-function getReferralUrl(code: string, lang?: string): string {
-  const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/packs?ref=${code}${langParam(lang)}`;
-}
-
 function PartnerPortal() {
   const [checking, setChecking] = useState(true);
   const [partner, setPartner] = useState<Collaborator | null>(null);
@@ -372,37 +367,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 </button>
               </div>
             </div>
-            <div className="pt-4 border-t border-zinc-800/60">
-              <p className="text-xs text-zinc-500">
-                {tr(
-                  "Prefer the full website? This link opens the packs page, also credited to you:",
-                  "Vous préférez le site complet ? Ce lien ouvre la page des packs, aussi à votre crédit :",
-                  "¿Prefieres el sitio completo? Este enlace abre la página de packs, también a tu crédito:"
-                )}
-              </p>
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                <code className="text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/40 px-2 py-1 rounded-lg break-all">
-                  {getReferralUrl(partner.code, L)}
-                </code>
-                <button
-                  onClick={() => copy("ref", getReferralUrl(partner.code, L))}
-                  className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition cursor-pointer ${
-                    copiedId === "ref"
-                      ? "text-emerald-400"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  {copiedId === "ref" ? (
-                    <CheckCircle2 className="h-3 w-3" />
-                  ) : (
-                    <Copy className="h-3 w-3" />
-                  )}
-                  {copiedId === "ref"
-                    ? tr("Copied", "Copié", "Copiado")
-                    : tr("Copy", "Copier", "Copiar")}
-                </button>
-              </div>
-            </div>
           </div>
           {refQr && (
             <div className="shrink-0 text-center">
@@ -464,6 +428,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         })()}
                         {b.numPeople > 1
                           ? ` · ${b.numPeople} ${tr("people", "personnes", "personas")}`
+                          : ""}
+                        {b.arrivalDate
+                          ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
+                              b.departureDate
+                                ? new Date(b.departureDate).toLocaleDateString()
+                                : "?"
+                            }`
                           : ""}{" "}
                         · {new Date(b.createdAt).toLocaleDateString()}
                       </p>

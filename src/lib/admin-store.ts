@@ -41,6 +41,9 @@ export interface Booking {
   numPeople: number;
   danceLevel: string;
   notes: string;
+  /** ISO dates (YYYY-MM-DD) from the booking form; hotel planning */
+  arrivalDate?: string | null;
+  departureDate?: string | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -246,6 +249,8 @@ const bookingFromRow = (r: any): Booking => ({
   numPeople: r.num_people ?? 1,
   danceLevel: r.dance_level ?? "",
   notes: r.notes ?? "",
+  arrivalDate: r.arrival_date ?? null,
+  departureDate: r.departure_date ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
   collaboratorId: r.collaborator_id ?? null,
@@ -669,13 +674,15 @@ export async function addBooking(
           num_people: booking.numPeople,
           dance_level: booking.danceLevel,
           notes: booking.notes,
+          arrival_date: booking.arrivalDate || null,
+          departure_date: booking.departureDate || null,
           status: booking.status,
           source: booking.source ?? "manual",
           collaborator_id: booking.collaboratorId ?? null,
           invite_id: booking.inviteId ?? null,
           invite_code: booking.inviteCode ?? null,
         },
-        ["source", "collaborator_id"]
+        ["source", "collaborator_id", "arrival_date", "departure_date"]
       );
       return bookingFromRow(data);
     } catch (e) {
@@ -1172,10 +1179,24 @@ export interface CollaboratorStats {
   invitesRedeemed: number;
   bookings: number;
   ticketsSold: number; // sum of numPeople over attributed bookings
+  /** Non-declined bookings split by pack type */
+  singleRooms: number;
+  doubleRooms: number;
+  fullPass: number;
   revenue: number;
   /** Commission earned (% of sales, or fixed amount × people) */
   commission: number;
   commissionCurrency: CommissionCurrency;
+}
+
+export type PackRoomCategory = "single" | "double" | "fullpass";
+
+/** Classify a pack by its name: single room / double room / full pass. */
+export function packRoomCategory(packName: string): PackRoomCategory {
+  const n = packName.toLowerCase();
+  if (/single|simple|individual/.test(n)) return "single";
+  if (/double|doble/.test(n)) return "double";
+  return "fullpass";
 }
 
 /** "€1,234" or "1,234 MAD" */
@@ -1260,12 +1281,19 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       .filter((b) => b.source !== "invite")
       .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
     const earned = collaboratorCommission(c, bookings, packs);
+    const catOf = (b: Booking) => {
+      const p = packs.find((x) => x.id === b.packId);
+      return packRoomCategory(p?.name ?? b.packName);
+    };
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
       invitesRedeemed: myInvites.filter((i) => i.used).length,
       bookings: myBookings.length,
       ticketsSold: myBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
+      singleRooms: myBookings.filter((b) => catOf(b) === "single").length,
+      doubleRooms: myBookings.filter((b) => catOf(b) === "double").length,
+      fullPass: myBookings.filter((b) => catOf(b) === "fullpass").length,
       revenue,
       commission: earned.amount,
       commissionCurrency: earned.currency,
