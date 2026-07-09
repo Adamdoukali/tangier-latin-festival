@@ -13,6 +13,7 @@ import {
   Copy,
   Link2,
   Mail,
+  Phone,
 } from "lucide-react";
 import {
   getBookings,
@@ -22,11 +23,13 @@ import {
   getPacks,
   getCollaborators,
   packLabel,
+  ticketUrl,
   type Booking,
   type BookingStatus,
   type Collaborator,
   type Pack,
 } from "@/lib/admin-store";
+import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 
 export const Route = createFileRoute("/admin/bookings")({
   component: AdminBookings,
@@ -43,6 +46,7 @@ function AdminBookings() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [statusError, setStatusError] = useState("");
+  const [autoEmail, setAutoEmail] = useState<"sending" | "sent" | "failed" | null>(null);
 
   const reload = useCallback(async () => {
     const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
@@ -96,12 +100,58 @@ function AdminBookings() {
 
   const handleStatusChange = async (id: string, status: BookingStatus) => {
     setStatusError("");
+    let updated: Booking | null = null;
     try {
-      await updateBookingStatus(id, status);
+      updated = await updateBookingStatus(id, status);
     } catch (e) {
       setStatusError(e instanceof Error ? e.message : String(e));
     }
     await reload();
+
+    // Confirming a booking = the guest gets their ticket. Automatically:
+    // 1) email them the ticket link (QR page) and 2) open the QR modal
+    // with one-click WhatsApp / email buttons as a backup channel.
+    if (status === "confirmed" && updated) {
+      showQr(updated);
+      if (updated.email) {
+        setAutoEmail("sending");
+        const mail = ticketConfirmationEmail({
+          customerName: updated.customerName,
+          packName: updated.packName,
+          ticketCode: updated.ticketCode,
+          numPeople: updated.numPeople || 1,
+          ticketUrl: ticketUrl(updated.ticketCode),
+        });
+        sendFormNotification({
+          subject: mail.subject,
+          fields: {
+            name: updated.customerName,
+            email: updated.email,
+            Ticket: ticketUrl(updated.ticketCode),
+            Code: updated.ticketCode,
+            Pack: updated.packName,
+          },
+          autoresponse: mail.body,
+        })
+          .then((ok) => setAutoEmail(ok ? "sent" : "failed"))
+          .catch(() => setAutoEmail("failed"));
+      } else {
+        setAutoEmail(null);
+      }
+    }
+  };
+
+  // Prefilled WhatsApp message with the guest's ticket link
+  const waTicketLink = (b: Booking): string | null => {
+    const digits = (b.phone || "").replace(/\D/g, "");
+    if (!digits) return null;
+    const firstName = b.customerName.split(/\s|&/)[0] || b.customerName;
+    const text =
+      `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n` +
+      `🎫 Your ticket (show the QR at check-in):\n${ticketUrl(b.ticketCode)}\n\n` +
+      `Code: ${b.ticketCode} · ${b.packName}\n` +
+      `See you January 07–11, 2027 at the Kenzi Solazur, Tangier!`;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
   };
 
   const handleDelete = async (id: string) => {
@@ -113,14 +163,13 @@ function AdminBookings() {
   const showQr = async (booking: Booking) => {
     setQrBooking(booking);
     try {
-      const url = await QRCode.toDataURL(
-        `TLF-TICKET:${booking.ticketCode}|${booking.customerName}|${booking.packName}`,
-        {
-          width: 300,
-          margin: 2,
-          color: { dark: "#18181b", light: "#fafafa" },
-        }
-      );
+      // The QR encodes the public ticket page, so scanning it with any
+      // phone camera opens /ticket and shows valid / pending / already used.
+      const url = await QRCode.toDataURL(ticketUrl(booking.ticketCode), {
+        width: 300,
+        margin: 2,
+        color: { dark: "#18181b", light: "#fafafa" },
+      });
       setQrDataUrl(url);
     } catch {
       setQrDataUrl("");
@@ -165,9 +214,10 @@ function AdminBookings() {
       body =
         `Hello ${firstName},\n\n` +
         `Great news — your booking for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027, Kenzi Solazur Hotel) is confirmed!\n\n` +
-        `Your ticket code: ${b.ticketCode}\n` +
+        `Your ticket (with QR code): ${ticketUrl(b.ticketCode)}\n` +
+        `Ticket code: ${b.ticketCode}\n` +
         `Guests: ${b.customerName} (${b.numPeople} ${b.numPeople > 1 ? "people" : "person"})\n\n` +
-        `Please keep this code — you'll present it at check-in.\n\n` +
+        `Open the link and show the QR code at check-in.\n\n` +
         `See you on the dance floor!\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
     }
     window.location.href = `mailto:${encodeURIComponent(b.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -606,12 +656,34 @@ function AdminBookings() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg text-zinc-100">Ticket QR Code</h3>
               <button
-                onClick={() => setQrBooking(null)}
+                onClick={() => {
+                  setQrBooking(null);
+                  setAutoEmail(null);
+                }}
                 className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
+
+            {/* Automatic confirmation email status */}
+            {autoEmail && (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2 text-xs ${
+                  autoEmail === "sent"
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                    : autoEmail === "failed"
+                      ? "border-red-500/30 bg-red-500/10 text-red-300"
+                      : "border-zinc-700/60 bg-zinc-800/40 text-zinc-400"
+                }`}
+              >
+                {autoEmail === "sent"
+                  ? "✓ Confirmation email with the ticket sent automatically."
+                  : autoEmail === "failed"
+                    ? "Automatic email failed — send the ticket with the buttons below."
+                    : "Sending confirmation email to the guest…"}
+              </div>
+            )}
 
             {qrDataUrl && (
               <div className="flex flex-col items-center gap-4">
@@ -627,12 +699,40 @@ function AdminBookings() {
                   </code>
                   <p className="text-xs text-zinc-500 mt-1">{qrBooking.packName}</p>
                 </div>
+
+                {/* Send the ticket to the guest */}
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  {waTicketLink(qrBooking) && (
+                    <a
+                      href={waTicketLink(qrBooking)!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#25D366]/15 text-[#4ade80] hover:bg-[#25D366]/25 transition"
+                    >
+                      <Phone className="h-3.5 w-3.5" /> WhatsApp Ticket
+                    </a>
+                  )}
+                  {qrBooking.email && (
+                    <button
+                      onClick={() => emailCustomer(qrBooking)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition cursor-pointer"
+                    >
+                      <Mail className="h-3.5 w-3.5" /> Email Ticket
+                    </button>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={downloadQr}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" /> Download
+                  </button>
+                  <button
+                    onClick={() => copyCode(ticketUrl(qrBooking.ticketCode))}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                  >
+                    <Link2 className="h-3.5 w-3.5" /> Copy Link
                   </button>
                   <button
                     onClick={() => copyCode(qrBooking.ticketCode)}

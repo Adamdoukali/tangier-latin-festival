@@ -89,6 +89,39 @@ export function bookingAutoResponse(lang: string): string {
   );
 }
 
+/** Confirmation email with the guest's ticket link, sent automatically
+ *  when the admin confirms a booking. Bilingual EN/FR (we don't know the
+ *  guest's language at confirmation time). */
+export function ticketConfirmationEmail(opts: {
+  customerName: string;
+  packName: string;
+  ticketCode: string;
+  numPeople: number;
+  ticketUrl: string;
+}): { subject: string; body: string } {
+  const firstName = opts.customerName.split(/\s|&/)[0] || opts.customerName;
+  return {
+    subject: `Your ticket is confirmed! · Votre billet est confirmé ! (${opts.ticketCode})`,
+    body:
+      `Hello ${firstName},\n\n` +
+      `Great news — your booking for "${opts.packName}" at the Tangier International Latin Festival (January 07–11, 2027 · Kenzi Solazur Hotel, Tangier) is CONFIRMED!\n\n` +
+      `🎫 Your ticket (QR code included):\n${opts.ticketUrl}\n\n` +
+      `Ticket code: ${opts.ticketCode}\n` +
+      `Guests: ${opts.numPeople}\n\n` +
+      `Open the link and show the QR code at check-in. Save it or take a screenshot.\n\n` +
+      `───────────────\n\n` +
+      `Bonjour ${firstName},\n\n` +
+      `Bonne nouvelle — votre réservation « ${opts.packName} » au Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger) est CONFIRMÉE !\n\n` +
+      `🎫 Votre billet (avec QR code) :\n${opts.ticketUrl}\n\n` +
+      `Code billet : ${opts.ticketCode}\n` +
+      `Personnes : ${opts.numPeople}\n\n` +
+      `Ouvrez le lien et présentez le QR code à l'entrée. Enregistrez-le ou faites une capture d'écran.\n\n` +
+      `See you on the dance floor! / À très vite sur la piste !\n` +
+      `— Tangier International Latin Festival\n` +
+      `contact@tangierlatinfestival.com · +212 6 64 01 02 79`,
+  };
+}
+
 /** Auto-reply for the general contact form. */
 export function contactAutoResponse(lang: string): string {
   if (lang === "fr") {

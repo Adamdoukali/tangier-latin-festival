@@ -20,10 +20,12 @@ import {
   getInviteByCode,
   getPackById,
   redeemInvite,
+  ticketUrl,
   type Invite,
   type Pack,
   type Booking,
 } from "@/lib/admin-store";
+import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
 
 const redeemSearchSchema = z.object({
   code: z.string().optional(),
@@ -120,16 +122,30 @@ function RedeemPage() {
     if (result.success) {
       setSuccess(true);
       setBooking(result.booking);
-      // Generate QR for the ticket
+      // Notify the festival team + 24h auto-reply to the guest
+      // (the redemption arrives as PENDING until the team confirms).
+      sendFormNotification({
+        subject: `Invite redeemed (pending): ${result.booking.packName} — ${result.booking.customerName}`,
+        fields: {
+          name: result.booking.customerName,
+          email: form.email,
+          Pack: result.booking.packName,
+          "Invite code": code ?? "",
+          "Ticket code": result.booking.ticketCode,
+          Phone: form.phone,
+          Country: form.country,
+          Notes: form.notes,
+        },
+        autoresponse: bookingAutoResponse("en"),
+      }).catch(() => {});
+      // QR of the guest's ticket page — shows "pending" now and becomes
+      // their valid ticket automatically once the booking is confirmed.
       try {
-        const url = await QRCode.toDataURL(
-          `TLF-TICKET:${result.booking.ticketCode}|${result.booking.customerName}|${result.booking.packName}`,
-          {
-            width: 300,
-            margin: 2,
-            color: { dark: "#18181b", light: "#fafafa" },
-          }
-        );
+        const url = await QRCode.toDataURL(ticketUrl(result.booking.ticketCode), {
+          width: 300,
+          margin: 2,
+          color: { dark: "#18181b", light: "#fafafa" },
+        });
         setQrDataUrl(url);
       } catch {
         // fail silently
@@ -183,10 +199,11 @@ function RedeemPage() {
               <CheckCircle2 className="h-8 w-8 text-emerald-400" />
             </div>
             <h1 className="font-display text-2xl text-zinc-100 tracking-wide">
-              You're In!
+              Request Received!
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Your invite has been redeemed. Here's your festival ticket.
+              Your invite has been registered. The festival team confirms within
+              24 hours — you'll automatically receive your ticket by email.
             </p>
           </div>
 
@@ -245,8 +262,8 @@ function RedeemPage() {
                   <p className="text-[10px] tracking-widest uppercase text-zinc-500">
                     Status
                   </p>
-                  <span className="inline-flex items-center gap-1 mt-0.5 text-sm font-medium text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Confirmed
+                  <span className="inline-flex items-center gap-1 mt-0.5 text-sm font-medium text-amber-400">
+                    <Star className="h-3.5 w-3.5" /> Pending
                   </span>
                 </div>
               </div>
@@ -261,8 +278,10 @@ function RedeemPage() {
                       className="w-40 h-40"
                     />
                   </div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-600">
-                    Present this QR at the entrance
+                  <p className="text-[10px] tracking-widest uppercase text-zinc-600 text-center">
+                    Save this QR — it becomes your valid ticket
+                    <br />
+                    automatically once confirmed
                   </p>
                   <button
                     onClick={downloadQr}

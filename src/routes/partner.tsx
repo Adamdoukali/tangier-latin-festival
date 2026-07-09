@@ -30,6 +30,7 @@ import {
   commissionLabel,
   formatMoney,
   packLabel,
+  ticketUrl,
   type Collaborator,
   type Invite,
   type Pack,
@@ -41,6 +42,7 @@ import {
   clearPartnerSession,
   restorePartnerSession,
 } from "@/lib/partner-auth";
+import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({
@@ -230,12 +232,37 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const changeBookingStatus = async (id: string, status: BookingStatus) => {
     setStatusError("");
+    let updated: Booking | null = null;
     try {
-      await updateBookingStatus(id, status);
+      updated = await updateBookingStatus(id, status);
     } catch (e) {
       setStatusError(e instanceof Error ? e.message : String(e));
     }
     await reload();
+
+    // Confirming sends the guest their ticket link automatically,
+    // same as when the festival team confirms from the admin.
+    if (status === "confirmed" && updated?.email) {
+      const mail = ticketConfirmationEmail({
+        customerName: updated.customerName,
+        packName: updated.packName,
+        ticketCode: updated.ticketCode,
+        numPeople: updated.numPeople || 1,
+        ticketUrl: ticketUrl(updated.ticketCode),
+      });
+      sendFormNotification({
+        subject: mail.subject,
+        fields: {
+          name: updated.customerName,
+          email: updated.email,
+          Ticket: ticketUrl(updated.ticketCode),
+          Code: updated.ticketCode,
+          Pack: updated.packName,
+          "Confirmed by partner": partner.name,
+        },
+        autoresponse: mail.body,
+      }).catch(() => {});
+    }
   };
 
   useEffect(() => {
@@ -546,10 +573,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
         {/* Generate invites */}
         <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5">
-          <h3 className="font-display text-sm tracking-wide mb-1">Generate Invite Tickets</h3>
+          <h3 className="font-display text-sm tracking-wide mb-1">Generate Invites</h3>
           <p className="text-sm text-zinc-500 mb-4">
-            Each invite is a QR code. When your guest scans it and fills in their details, they
-            get a confirmed festival ticket — credited to you.
+            Each invite is a QR code. Your guest scans it and fills in their details — the
+            request arrives as <span className="text-amber-400">Pending</span>, credited to
+            you. Once it's confirmed, they automatically receive their ticket QR by email.
             {quota !== null && (
               <span className="text-amber-400/90">
                 {" "}

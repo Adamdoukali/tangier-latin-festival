@@ -19,6 +19,7 @@ import {
   updateCollaborator,
   deleteCollaborator,
   collaboratorsReady,
+  commissionColumnsReady,
   formatMoney,
   commissionLabel,
   type Collaborator,
@@ -85,6 +86,7 @@ function referralUrl(code: string): string {
 function AdminCollaborators() {
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
   const [ready, setReady] = useState(true);
+  const [commissionReady, setCommissionReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -94,8 +96,13 @@ function AdminCollaborators() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    const [ok, s] = await Promise.all([collaboratorsReady(), getCollaboratorStats()]);
+    const [ok, commOk, s] = await Promise.all([
+      collaboratorsReady(),
+      commissionColumnsReady(),
+      getCollaboratorStats(),
+    ]);
     setReady(ok);
+    setCommissionReady(commOk);
     setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
     setLoading(false);
   }, []);
@@ -210,6 +217,28 @@ function AdminCollaborators() {
               Supabase project. Open the Supabase Dashboard → SQL Editor and run the script in{" "}
               <code className="font-mono bg-amber-500/10 px-1 rounded">supabase/schema.sql</code>{" "}
               (in the project repo), then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Commission columns missing */}
+      {ready && !commissionReady && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-200/90">
+            <p className="font-semibold text-amber-300">
+              Commission options need a database update
+            </p>
+            <p className="mt-1">
+              The commission <em>type</em> (per person) and <em>currency</em> (MAD) can't be
+              saved yet — the database is missing two columns. Open the Supabase Dashboard →
+              SQL Editor, run the script in{" "}
+              <code className="font-mono bg-amber-500/10 px-1 rounded">
+                supabase/commission.sql
+              </code>
+              , then refresh this page. Until then, collaborators save with the classic
+              percentage commission only.
             </p>
           </div>
         </div>

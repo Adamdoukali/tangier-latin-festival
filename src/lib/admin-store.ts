@@ -113,6 +113,13 @@ export function packLabel(
   return pack.sub ? `${pack.name} — ${pack.sub}` : pack.name;
 }
 
+/** Public verification page for a ticket — this is what ticket QRs encode,
+ *  so any phone camera opens it and shows valid / pending / already used. */
+export function ticketUrl(code: string): string {
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/ticket?code=${code}`;
+}
+
 export function generateTicketCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "TLF-";
@@ -277,19 +284,24 @@ const collabFromRow = (r: any): Collaborator => ({
 });
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// Insert that tolerates a DB that hasn't run supabase/schema.sql yet:
-// if the error complains about an unknown column, retry without the
-// optional attribution columns.
+// Insert that tolerates a DB that hasn't run the latest supabase/*.sql:
+// when the error complains about an unknown column, retry without the
+// column(s) it actually names — never strip the others, they may be fine.
 async function insertRow(
   table: string,
   row: Record<string, unknown>,
   optionalCols: string[] = []
 ): Promise<Record<string, unknown>> {
-  let { data, error } = await supabase!.from(table).insert(row).select().single();
-  if (error && optionalCols.some((c) => error!.message?.includes(c))) {
-    const stripped = { ...row };
-    for (const c of optionalCols) delete stripped[c];
-    ({ data, error } = await supabase!.from(table).insert(stripped).select().single());
+  const attempt = { ...row };
+  let { data, error } = await supabase!.from(table).insert(attempt).select().single();
+  while (
+    error &&
+    optionalCols.some((c) => attempt[c] !== undefined && error!.message?.includes(c))
+  ) {
+    for (const c of optionalCols) {
+      if (error.message?.includes(c)) delete attempt[c];
+    }
+    ({ data, error } = await supabase!.from(table).insert(attempt).select().single());
   }
   if (error) throw error;
   return data as Record<string, unknown>;
@@ -613,6 +625,27 @@ export async function getBookingById(id: string): Promise<Booking | undefined> {
   return (await getBookings()).find((b) => b.id === id);
 }
 
+/** Look up a booking by its ticket code (used by the public /ticket page). */
+export async function getBookingByTicketCode(code: string): Promise<Booking | undefined> {
+  const wanted = code.trim().toUpperCase();
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("bookings")
+        .select("*")
+        .eq("ticket_code", wanted)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return bookingFromRow(data);
+    } catch (e) {
+      warn("getBookingByTicketCode", e);
+    }
+  }
+  return readStore<Booking>(BOOKINGS_KEY).find(
+    (b) => b.ticketCode.toUpperCase() === wanted
+  );
+}
+
 export async function addBooking(
   booking: Omit<Booking, "id" | "ticketCode" | "createdAt">
 ): Promise<Booking> {
@@ -885,11 +918,13 @@ export async function redeemInvite(
         return { success: false, error: "This invite has already been used." };
       }
 
+      // Redemptions arrive as PENDING — the ticket is only issued when the
+      // festival team (or the partner) confirms, which auto-sends the QR.
       const booking = await addBooking({
         ...data,
         packId: invite.packId,
         packName: invite.packName,
-        status: "confirmed",
+        status: "pending",
         source: "invite",
         collaboratorId: invite.collaboratorId ?? null,
         inviteId: invite.id,
@@ -910,7 +945,7 @@ export async function redeemInvite(
     ...data,
     packId: invite.packId,
     packName: invite.packName,
-    status: "confirmed",
+    status: "pending",
     source: "invite",
     collaboratorId: invite.collaboratorId ?? null,
     inviteId: invite.id,
@@ -937,6 +972,18 @@ export async function redeemInvite(
 export async function collaboratorsReady(): Promise<boolean> {
   if (!useDb()) return true; // local mode always "works"
   const { error } = await supabase!.from("collaborators").select("id").limit(1);
+  return !error;
+}
+
+/** True when the commission_type/commission_currency columns exist
+ *  (created by supabase/commission.sql). While they're missing, the
+ *  per-person / MAD choices can't be saved. */
+export async function commissionColumnsReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!
+    .from("collaborators")
+    .select("commission_type")
+    .limit(1);
   return !error;
 }
 

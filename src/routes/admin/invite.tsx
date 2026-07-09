@@ -185,7 +185,8 @@ function AdminInvite() {
           QR Invite Generator
         </h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Generate invite QR codes. When scanned, clients fill in their info and get a confirmed ticket.
+          Generate invite QR codes. When scanned, clients fill in their info and arrive as a
+          pending booking — confirming it automatically sends them their ticket QR.
         </p>
       </div>
 

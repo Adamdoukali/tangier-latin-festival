@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TourismRouteImport } from './routes/tourism'
+import { Route as TicketRouteImport } from './routes/ticket'
 import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as RedeemRouteImport } from './routes/redeem'
@@ -34,6 +35,11 @@ import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 const TourismRoute = TourismRouteImport.update({
   id: '/tourism',
   path: '/tourism',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicketRoute = TicketRouteImport.update({
+  id: '/ticket',
+  path: '/ticket',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TestimonialsRoute = TestimonialsRouteImport.update({
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/redeem': typeof RedeemRoute
   '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/redeem': typeof RedeemRoute
   '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/redeem': typeof RedeemRoute
   '/reels': typeof ReelsRoute
   '/testimonials': typeof TestimonialsRoute
+  '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/redeem'
     | '/reels'
     | '/testimonials'
+    | '/ticket'
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/redeem'
     | '/reels'
     | '/testimonials'
+    | '/ticket'
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/redeem'
     | '/reels'
     | '/testimonials'
+    | '/ticket'
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
@@ -292,6 +304,7 @@ export interface RootRouteChildren {
   RedeemRoute: typeof RedeemRoute
   ReelsRoute: typeof ReelsRoute
   TestimonialsRoute: typeof TestimonialsRoute
+  TicketRoute: typeof TicketRoute
   TourismRoute: typeof TourismRoute
 }
 
@@ -302,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/tourism'
       fullPath: '/tourism'
       preLoaderRoute: typeof TourismRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ticket': {
+      id: '/ticket'
+      path: '/ticket'
+      fullPath: '/ticket'
+      preLoaderRoute: typeof TicketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/testimonials': {
@@ -482,6 +502,7 @@ const rootRouteChildren: RootRouteChildren = {
   RedeemRoute: RedeemRoute,
   ReelsRoute: ReelsRoute,
   TestimonialsRoute: TestimonialsRoute,
+  TicketRoute: TicketRoute,
   TourismRoute: TourismRoute,
 }
 export const routeTree = rootRouteImport
