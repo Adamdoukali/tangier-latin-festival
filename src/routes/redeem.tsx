@@ -136,7 +136,10 @@ function RedeemPage() {
           Country: form.country,
           Notes: form.notes,
         },
-        autoresponse: bookingAutoResponse("en"),
+        autoresponse: bookingAutoResponse("en", {
+          code: result.booking.ticketCode,
+          url: ticketUrl(result.booking.ticketCode),
+        }),
       }).catch(() => {});
       // QR of the guest's ticket page — shows "pending" now and becomes
       // their valid ticket automatically once the booking is confirmed.

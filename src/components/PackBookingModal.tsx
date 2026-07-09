@@ -6,6 +6,8 @@ import {
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
+  ticketUrl,
+  type Booking,
 } from "@/lib/admin-store";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
@@ -30,6 +32,7 @@ export function PackBookingModal({
 }) {
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
+  const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -120,6 +123,33 @@ export function PackBookingModal({
               <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
             <h3 className="font-display text-2xl mb-3">{t("packFormTitle")}</h3>
+            {reservation && (
+              <div className="mx-auto max-w-sm mb-5 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                <p className="text-[10px] tracking-widest uppercase text-muted-foreground">
+                  {lang === "fr"
+                    ? "Votre numéro de réservation"
+                    : lang === "es"
+                      ? "Tu número de reserva"
+                      : "Your Reservation Number"}
+                </p>
+                <code className="mt-1 inline-block font-mono text-2xl font-bold text-gold">
+                  {reservation.ticketCode}
+                </code>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {lang === "fr"
+                    ? "Suivez votre réservation à tout moment :"
+                    : lang === "es"
+                      ? "Sigue tu reserva en cualquier momento:"
+                      : "Follow your booking at any time:"}
+                </p>
+                <a
+                  href={ticketUrl(reservation.ticketCode)}
+                  className="mt-0.5 inline-block text-xs text-gold hover:opacity-80 underline break-all"
+                >
+                  {ticketUrl(reservation.ticketCode)}
+                </a>
+              </div>
+            )}
             <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
               {t("packFormSuccess")}
             </p>
@@ -155,6 +185,28 @@ export function PackBookingModal({
               const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
               const customerEmail = String(formData.get("Email") ?? "");
 
+              // Record the booking FIRST so the guest gets their reservation
+              // number on screen and in the auto-reply email.
+              let created: Booking | null = null;
+              try {
+                created = await addBooking({
+                  packId: pack.id ?? "",
+                  packName: pack.sub ? `${pack.name} — ${pack.sub}` : pack.name,
+                  customerName,
+                  email: customerEmail,
+                  phone,
+                  country: String(formData.get("Country") ?? ""),
+                  numPeople: isDouble ? 2 : 1,
+                  danceLevel: "",
+                  notes: String(formData.get("Notes") ?? ""),
+                  status: "pending",
+                  source: collaborator ? "referral" : "website",
+                  collaboratorId: collaborator?.id ?? null,
+                });
+              } catch (dbErr) {
+                console.warn("Could not record booking in database:", dbErr);
+              }
+
               try {
                 const sent = await sendFormNotification({
                   subject: `New Pack Booking: ${pack.name}`,
@@ -165,34 +217,21 @@ export function PackBookingModal({
                     Phone: phone,
                     Country: String(formData.get("Country") ?? ""),
                     Notes: String(formData.get("Notes") ?? ""),
+                    ...(created ? { Reservation: created.ticketCode } : {}),
                     ...(collaborator ? { Referral: collaborator.code } : {}),
                   },
-                  autoresponse: bookingAutoResponse(lang),
+                  autoresponse: bookingAutoResponse(
+                    lang,
+                    created
+                      ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) }
+                      : undefined
+                  ),
                 });
-                if (!sent) throw new Error("Submit failed");
+                // Booking already recorded — an email hiccup shouldn't make
+                // the guest resubmit and create a duplicate.
+                if (!sent && !created) throw new Error("Submit failed");
 
-                // Record the booking in the database so it shows up in the
-                // admin panel (pending until the team confirms payment).
-                try {
-                  await addBooking({
-                    packId: pack.id ?? "",
-                    packName: pack.sub ? `${pack.name} — ${pack.sub}` : pack.name,
-                    customerName,
-                    email: String(formData.get("Email") ?? ""),
-                    phone,
-                    country: String(formData.get("Country") ?? ""),
-                    numPeople: isDouble ? 2 : 1,
-                    danceLevel: "",
-                    notes: String(formData.get("Notes") ?? ""),
-                    status: "pending",
-                    source: collaborator ? "referral" : "website",
-                    collaboratorId: collaborator?.id ?? null,
-                  });
-                } catch (dbErr) {
-                  // Email already went through — don't fail the user's booking.
-                  console.warn("Could not record booking in database:", dbErr);
-                }
-
+                setReservation(created);
                 setSubmitted(true);
               } catch (err) {
                 console.error(err);

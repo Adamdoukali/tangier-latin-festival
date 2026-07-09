@@ -20,12 +20,14 @@ import {
   deleteCollaborator,
   collaboratorsReady,
   commissionColumnsReady,
+  languageColumnReady,
   formatMoney,
   commissionLabel,
   type Collaborator,
   type CollaboratorStats,
   type CommissionType,
   type CommissionCurrency,
+  type PartnerLanguage,
 } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/collaborators")({
@@ -40,11 +42,12 @@ interface CollabForm {
   commission: number;
   commissionType: CommissionType;
   commissionCurrency: CommissionCurrency;
+  language: PartnerLanguage;
   notes: string;
   active: boolean;
   username: string;
   accessCode: string;
-  inviteQuota: string; // keep as text in the form; "" = unlimited
+  inviteQuota: string; // legacy field, kept so edits don't wipe it
 }
 
 const emptyForm: CollabForm = {
@@ -55,12 +58,19 @@ const emptyForm: CollabForm = {
   commission: 0,
   commissionType: "percent",
   commissionCurrency: "EUR",
+  language: "en",
   notes: "",
   active: true,
   username: "",
   accessCode: "",
   inviteQuota: "",
 };
+
+const LANGUAGES: { value: PartnerLanguage; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "fr", label: "Français" },
+  { value: "es", label: "Español" },
+];
 
 function generateAccessCode(): string {
   const chars = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -78,31 +88,36 @@ function suggestCode(name: string): string {
     .slice(0, 12);
 }
 
-function referralUrl(code: string): string {
+function referralUrl(code: string, lang?: PartnerLanguage): string {
   const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/packs?ref=${code}`;
+  return `${base}/packs?ref=${code}${lang && lang !== "en" ? `&lang=${lang}` : ""}`;
 }
 
 function AdminCollaborators() {
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
   const [ready, setReady] = useState(true);
   const [commissionReady, setCommissionReady] = useState(true);
+  const [langReady, setLangReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CollabForm>(emptyForm);
+  // Auto-suggest the referral code from the name until it's edited by hand.
+  const [codeTouched, setCodeTouched] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    const [ok, commOk, s] = await Promise.all([
+    const [ok, commOk, langOk, s] = await Promise.all([
       collaboratorsReady(),
       commissionColumnsReady(),
+      languageColumnReady(),
       getCollaboratorStats(),
     ]);
     setReady(ok);
     setCommissionReady(commOk);
+    setLangReady(langOk);
     setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
     setLoading(false);
   }, []);
@@ -114,6 +129,7 @@ function AdminCollaborators() {
   const openNew = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setCodeTouched(false);
     setSaveError("");
     setShowForm(true);
   };
@@ -128,12 +144,14 @@ function AdminCollaborators() {
       commission: c.commission ?? 0,
       commissionType: c.commissionType ?? "percent",
       commissionCurrency: c.commissionCurrency ?? "EUR",
+      language: c.language ?? "en",
       notes: c.notes ?? "",
       active: c.active,
       username: c.username ?? "",
       accessCode: c.accessCode ?? "",
       inviteQuota: c.inviteQuota == null ? "" : String(c.inviteQuota),
     });
+    setCodeTouched(true);
     setSaveError("");
     setShowForm(true);
   };
@@ -182,7 +200,7 @@ function AdminCollaborators() {
   };
 
   const copyLink = (c: Collaborator) => {
-    navigator.clipboard.writeText(referralUrl(c.code));
+    navigator.clipboard.writeText(referralUrl(c.code, c.language));
     setCopiedId(c.id);
     setTimeout(() => setCopiedId(null), 1500);
   };
@@ -244,6 +262,26 @@ function AdminCollaborators() {
         </div>
       )}
 
+      {/* Language column missing */}
+      {ready && !langReady && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-200/90">
+            <p className="font-semibold text-amber-300">
+              Partner language needs a database update
+            </p>
+            <p className="mt-1">
+              The partner's language choice can't be saved yet. Open the Supabase Dashboard →
+              SQL Editor, run the script in{" "}
+              <code className="font-mono bg-amber-500/10 px-1 rounded">
+                supabase/partner-language.sql
+              </code>
+              , then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* How it works */}
       <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 text-sm text-zinc-400 space-y-1.5">
         <p className="font-display text-sm tracking-wide text-zinc-200 mb-2">How tracking works</p>
@@ -252,15 +290,15 @@ function AdminCollaborators() {
           link — any pack booking made through it is attributed to them.
         </p>
         <p>
-          · <span className="text-zinc-300">Inviting:</span> generate QR invites on the{" "}
-          <span className="text-zinc-300">QR Invites</span> page and pick the collaborator — every
-          redeemed invite counts toward them.
+          · <span className="text-zinc-300">Confirming:</span> bookings arrive as Pending; when
+          you (or the partner) confirm after payment, the guest automatically receives their
+          ticket QR with their names and details.
         </p>
         <p>
           · <span className="text-zinc-300">Self-service:</span> give a partner a username +
-          access code below and they can sign in at{" "}
-          <code className="font-mono text-violet-400/90">/partner</code> to generate their own
-          invites (within their limit) and watch their stats.
+          access code and they can sign in at{" "}
+          <code className="font-mono text-violet-400/90">/partner</code> — in their own
+          language — to track and confirm their bookings and see their commission.
         </p>
       </div>
 
@@ -300,9 +338,7 @@ function AdminCollaborators() {
                         ) : (
                           <span className="text-zinc-600">no portal account</span>
                         )}
-                        {c.inviteQuota != null && (
-                          <span className="text-zinc-600"> · limit {c.inviteQuota}</span>
-                        )}
+                        <span className="text-zinc-600 uppercase"> · {c.language ?? "en"}</span>
                       </p>
                     </td>
                     <td className="px-5 py-3">
@@ -317,7 +353,7 @@ function AdminCollaborators() {
                               ? "text-emerald-400"
                               : "text-zinc-600 hover:text-zinc-300"
                           }`}
-                          title={`Copy referral link: ${referralUrl(c.code)}`}
+                          title={`Copy referral link: ${referralUrl(c.code, c.language)}`}
                         >
                           {copiedId === c.id ? (
                             <CheckCircle2 className="h-3.5 w-3.5" />
@@ -414,11 +450,9 @@ function AdminCollaborators() {
                     setForm((f) => ({
                       ...f,
                       name: e.target.value,
-                      code: editingId || f.code ? f.code : suggestCode(e.target.value),
+                      code:
+                        editingId || codeTouched ? f.code : suggestCode(e.target.value),
                     }))
-                  }
-                  onBlur={() =>
-                    setForm((f) => (f.code ? f : { ...f, code: suggestCode(f.name) }))
                   }
                   placeholder="e.g. Salsero Madrid"
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
@@ -432,15 +466,17 @@ function AdminCollaborators() {
                 <input
                   type="text"
                   value={form.code}
-                  onChange={(e) =>
-                    setForm({ ...form, code: e.target.value.toUpperCase().replace(/\s/g, "") })
-                  }
+                  onChange={(e) => {
+                    const v = e.target.value.toUpperCase().replace(/\s/g, "");
+                    setCodeTouched(v !== "");
+                    setForm({ ...form, code: v });
+                  }}
                   placeholder="SALSERO"
                   className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
                 />
                 {form.code && (
                   <p className="mt-1.5 text-[11px] text-zinc-500 break-all">
-                    Referral link: {referralUrl(form.code)}
+                    Referral link: {referralUrl(form.code, form.language)}
                   </p>
                 )}
               </div>
@@ -538,15 +574,41 @@ function AdminCollaborators() {
                 </p>
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.active}
-                  onChange={(e) => setForm({ ...form, active: e.target.checked })}
-                  className="accent-amber-500"
-                />
-                Active
-              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    Language
+                  </label>
+                  <select
+                    value={form.language}
+                    onChange={(e) =>
+                      setForm({ ...form, language: e.target.value as PartnerLanguage })
+                    }
+                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                  >
+                    {LANGUAGES.map((l) => (
+                      <option key={l.value} value={l.value}>
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-[11px] text-zinc-500">
+                    Their portal displays in this language, and their links open the website
+                    in it for their guests.
+                  </p>
+                </div>
+                <div className="flex items-start pt-7">
+                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.active}
+                      onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                      className="accent-amber-500"
+                    />
+                    Active
+                  </label>
+                </div>
+              </div>
 
               {/* Portal account */}
               <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4 space-y-3">
@@ -555,7 +617,7 @@ function AdminCollaborators() {
                 </p>
                 <p className="text-xs text-zinc-500 -mt-1">
                   Lets this partner sign in at <code className="font-mono">/partner</code> to
-                  generate their own invites and see their sales.
+                  track their bookings, confirm them, and see their commission.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -597,19 +659,6 @@ function AdminCollaborators() {
                       </button>
                     </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                    Invite limit (empty = unlimited)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.inviteQuota}
-                    onChange={(e) => setForm({ ...form, inviteQuota: e.target.value })}
-                    placeholder="e.g. 50"
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
-                  />
                 </div>
               </div>
 

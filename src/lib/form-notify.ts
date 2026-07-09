@@ -60,29 +60,49 @@ export async function sendFormNotification(n: FormNotification): Promise<boolean
   }
 }
 
-/** The 24-hour pending-booking auto-reply, in the customer's language. */
-export function bookingAutoResponse(lang: string): string {
+/** The 24-hour pending-booking auto-reply, in the customer's language.
+ *  When the reservation number is known, it's included with a link to
+ *  the ticket page where the guest can track their booking. */
+export function bookingAutoResponse(
+  lang: string,
+  reservation?: { code: string; url: string }
+): string {
   if (lang === "fr") {
+    const refBlock = reservation
+      ? `Votre numéro de réservation : ${reservation.code}\n` +
+        `Suivez votre réservation ici : ${reservation.url}\n\n`
+      : "";
     return (
       "Bonjour,\n\n" +
       "Merci pour votre demande de réservation au Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger).\n\n" +
+      refBlock +
       "Votre demande est maintenant EN ATTENTE. Un membre de notre équipe vous contactera sous 24 heures pour confirmer votre réservation et vous envoyer les détails de paiement.\n\n" +
       "— L'équipe du Tangier International Latin Festival\n" +
       "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
     );
   }
   if (lang === "es") {
+    const refBlock = reservation
+      ? `Tu número de reserva: ${reservation.code}\n` +
+        `Sigue tu reserva aquí: ${reservation.url}\n\n`
+      : "";
     return (
       "Hola,\n\n" +
       "Gracias por tu solicitud de reserva para el Tangier International Latin Festival (07–11 de enero de 2027 · Hotel Kenzi Solazur, Tánger).\n\n" +
+      refBlock +
       "Tu solicitud está ahora PENDIENTE. Un miembro de nuestro equipo te contactará en un plazo de 24 horas para confirmar tu reserva y enviarte los detalles de pago.\n\n" +
       "— El equipo del Tangier International Latin Festival\n" +
       "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
     );
   }
+  const refBlock = reservation
+    ? `Your reservation number: ${reservation.code}\n` +
+      `Track your booking here: ${reservation.url}\n\n`
+    : "";
   return (
     "Hello,\n\n" +
     "Thank you for your booking request for the Tangier International Latin Festival (January 07–11, 2027 · Kenzi Solazur Hotel, Tangier).\n\n" +
+    refBlock +
     "Your request is now PENDING. One of our team members will contact you within 24 hours to confirm your booking and send you the payment details.\n\n" +
     "— The Tangier International Latin Festival team\n" +
     "contact@tangierlatinfestival.com · +212 6 64 01 02 79"

@@ -65,6 +65,7 @@ export interface Invite {
 
 export type CommissionType = "percent" | "per_person";
 export type CommissionCurrency = "EUR" | "MAD";
+export type PartnerLanguage = "en" | "fr" | "es";
 
 export interface Collaborator {
   id: string;
@@ -77,6 +78,8 @@ export interface Collaborator {
   commissionType?: CommissionType;
   /** Currency of per-person amounts; % commissions are always in € (sales are in €) */
   commissionCurrency?: CommissionCurrency;
+  /** Portal UI language; the partner's guest links open the site in it too */
+  language?: PartnerLanguage;
   active: boolean;
   notes?: string;
   /** Partner Portal login (optional — no account without it) */
@@ -274,6 +277,7 @@ const collabFromRow = (r: any): Collaborator => ({
   commission: r.commission != null ? Number(r.commission) : 0,
   commissionType: (r.commission_type as CommissionType) ?? "percent",
   commissionCurrency: (r.commission_currency as CommissionCurrency) ?? "EUR",
+  language: (r.language as PartnerLanguage) ?? "en",
   active: !!r.active,
   notes: r.notes ?? undefined,
   username: r.username ?? undefined,
@@ -987,6 +991,13 @@ export async function commissionColumnsReady(): Promise<boolean> {
   return !error;
 }
 
+/** True when the language column exists (supabase/partner-language.sql). */
+export async function languageColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("collaborators").select("language").limit(1);
+  return !error;
+}
+
 export async function getCollaborators(): Promise<Collaborator[]> {
   if (useDb()) {
     try {
@@ -1050,13 +1061,21 @@ export async function addCollaborator(
           commission: c.commission ?? 0,
           commission_type: c.commissionType ?? "percent",
           commission_currency: c.commissionCurrency ?? "EUR",
+          language: c.language ?? "en",
           active: c.active,
           notes: c.notes || null,
           username: c.username?.trim().toLowerCase() || null,
           access_code: c.accessCode || null,
           invite_quota: c.inviteQuota ?? null,
         },
-        ["username", "access_code", "invite_quota", "commission_type", "commission_currency"]
+        [
+          "username",
+          "access_code",
+          "invite_quota",
+          "commission_type",
+          "commission_currency",
+          "language",
+        ]
       );
       return collabFromRow(data);
     } catch (e) {
@@ -1091,6 +1110,7 @@ export async function updateCollaborator(
       if (updates.commissionType !== undefined) row.commission_type = updates.commissionType;
       if (updates.commissionCurrency !== undefined)
         row.commission_currency = updates.commissionCurrency;
+      if (updates.language !== undefined) row.language = updates.language;
       if (updates.active !== undefined) row.active = updates.active;
       if (updates.notes !== undefined) row.notes = updates.notes || null;
       if (updates.username !== undefined)
@@ -1098,7 +1118,7 @@ export async function updateCollaborator(
       if (updates.accessCode !== undefined) row.access_code = updates.accessCode || null;
       if (updates.inviteQuota !== undefined) row.invite_quota = updates.inviteQuota;
       if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
-      const optionalCols = ["commission_type", "commission_currency"];
+      const optionalCols = ["commission_type", "commission_currency", "language"];
       let { data, error } = await supabase!
         .from("collaborators")
         .update(row)

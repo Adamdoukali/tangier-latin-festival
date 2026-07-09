@@ -17,7 +17,9 @@ import {
   getCollaboratorByCode,
   getRememberedReferral,
   packLabel,
+  ticketUrl,
   type Pack,
+  type Booking,
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel, type Language } from "@/lib/translations";
@@ -47,6 +49,7 @@ function BookPage() {
   const [selected, setSelected] = useState<Pack | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
@@ -84,6 +87,28 @@ function BookPage() {
       : undefined;
     const customerName = form.names.map((n) => n.trim()).join(" & ");
 
+    // Record the pending booking FIRST so the guest gets a reservation
+    // number on the success screen and in the auto-reply email.
+    let created: Booking | null = null;
+    try {
+      created = await addBooking({
+        packId: selected.id,
+        packName: packLabel(selected),
+        customerName,
+        email: form.email,
+        phone: form.phone,
+        country: form.country,
+        numPeople: form.names.length,
+        danceLevel: "",
+        notes: form.notes,
+        status: "pending",
+        source: collaborator ? "referral" : "website",
+        collaboratorId: collaborator?.id ?? null,
+      });
+    } catch (dbErr) {
+      console.warn("Could not record booking:", dbErr);
+    }
+
     try {
       // Notify the festival team + automatic reply to the customer
       const sent = await sendFormNotification({
@@ -95,32 +120,21 @@ function BookPage() {
           Phone: form.phone,
           Country: form.country,
           Notes: form.notes,
+          ...(created ? { Reservation: created.ticketCode } : {}),
           ...(collaborator ? { Referral: collaborator.code } : {}),
         },
-        autoresponse: bookingAutoResponse(lang),
+        autoresponse: bookingAutoResponse(
+          lang,
+          created
+            ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) }
+            : undefined
+        ),
       });
-      if (!sent) throw new Error("Submit failed");
+      // The booking is safely recorded — an email hiccup shouldn't make the
+      // guest resubmit (that would create a duplicate reservation).
+      if (!sent && !created) throw new Error("Submit failed");
 
-      // Record the pending booking in the system
-      try {
-        await addBooking({
-          packId: selected.id,
-          packName: packLabel(selected),
-          customerName,
-          email: form.email,
-          phone: form.phone,
-          country: form.country,
-          numPeople: form.names.length,
-          danceLevel: "",
-          notes: form.notes,
-          status: "pending",
-          source: collaborator ? "referral" : "website",
-          collaboratorId: collaborator?.id ?? null,
-        });
-      } catch (dbErr) {
-        console.warn("Could not record booking:", dbErr);
-      }
-
+      setReservation(created);
       setDone(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
@@ -150,6 +164,33 @@ function BookPage() {
           <p className="mt-2 inline-block px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs tracking-widest uppercase">
             {tr("Status: Pending", "Statut : En attente", "Estado: Pendiente")}
           </p>
+          {reservation && (
+            <div className="mt-5 rounded-2xl border border-amber-500/25 bg-zinc-900/70 p-5 text-center">
+              <p className="text-[10px] tracking-widest uppercase text-zinc-500">
+                {tr(
+                  "Your Reservation Number",
+                  "Votre numéro de réservation",
+                  "Tu número de reserva"
+                )}
+              </p>
+              <code className="mt-1.5 inline-block font-mono text-2xl font-bold text-amber-400">
+                {reservation.ticketCode}
+              </code>
+              <p className="mt-3 text-xs text-zinc-500">
+                {tr(
+                  "Keep this number — you can follow your booking at any time:",
+                  "Gardez ce numéro — suivez votre réservation à tout moment :",
+                  "Guarda este número — sigue tu reserva en cualquier momento:"
+                )}
+              </p>
+              <a
+                href={ticketUrl(reservation.ticketCode)}
+                className="mt-1 inline-block text-xs text-amber-400 hover:text-amber-300 underline break-all"
+              >
+                {ticketUrl(reservation.ticketCode)}
+              </a>
+            </div>
+          )}
           <p className="mt-5 text-sm text-zinc-400 leading-relaxed">
             {tr(
               "Our team will respond within 24 hours to confirm your booking and send you the payment details by email.",
