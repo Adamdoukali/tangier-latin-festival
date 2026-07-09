@@ -12,8 +12,6 @@ import { useEffect } from "react";
 import { translations, Language } from "../lib/translations";
 import { rememberReferral } from "../lib/admin-store";
 
-import { WhatsAppButton } from "../components/WhatsAppButton";
-
 import appCss from "../styles.css?url";
 
 const rootSearchSchema = z.object({
@@ -138,7 +136,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <WhatsAppButton lang={lang} />
         <Scripts />
       </body>
     </html>
