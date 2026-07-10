@@ -66,7 +66,9 @@ function AdminInvite() {
     );
     const p = allPacks.filter((pk) => pk.active);
     setPacks(p);
-    setCollaborators(allCollabs.filter((c) => c.active));
+    // Keep the full list so origin chips resolve even for deactivated partners;
+    // the generation dropdown filters to active ones itself.
+    setCollaborators(allCollabs);
     if (!selectedPackId && p.length > 0) setSelectedPackId(p[0].id);
   }, [selectedPackId]);
 
@@ -242,11 +244,13 @@ function AdminInvite() {
               title="Attribute these invites to a collaborator"
             >
               <option value="">No collaborator</option>
-              {collaborators.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.code})
-                </option>
-              ))}
+              {collaborators
+                .filter((c) => c.active)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.code})
+                  </option>
+                ))}
             </select>
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           </div>
@@ -481,6 +485,13 @@ function AdminInvite() {
                   {previewInvite.assignee && (
                     <p className="text-[10px] font-semibold text-amber-600 mt-2 uppercase tracking-widest border border-amber-200 rounded bg-amber-50 px-2 py-1 inline-block">
                       For: {previewInvite.assignee}
+                    </p>
+                  )}
+                  {previewInvite.collaboratorId && (
+                    <p className="text-[10px] font-semibold text-violet-600 mt-2 uppercase tracking-widest border border-violet-200 rounded bg-violet-50 px-2 py-1 inline-block">
+                      Partner:{" "}
+                      {collaborators.find((c) => c.id === previewInvite.collaboratorId)?.name ??
+                        "Collaborator"}
                     </p>
                   )}
                   {previewInvite.used && previewInvite.redeemedBy && (

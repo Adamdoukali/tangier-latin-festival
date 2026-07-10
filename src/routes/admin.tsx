@@ -5,6 +5,7 @@ import {
   Ticket,
   QrCode,
   Users,
+  Building2,
   ArrowLeft,
   Menu,
   X,
@@ -23,6 +24,7 @@ const navItems = [
   { to: "/admin/bookings", label: "Bookings", icon: Ticket, exact: false },
   { to: "/admin/invite", label: "QR Invites", icon: QrCode, exact: false },
   { to: "/admin/collaborators", label: "Collaborators", icon: Users, exact: false },
+  { to: "/admin/hotel", label: "Hotel", icon: Building2, exact: false },
 ];
 
 function AdminLayout() {

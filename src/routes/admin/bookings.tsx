@@ -747,6 +747,24 @@ function AdminBookings() {
                     {qrBooking.ticketCode}
                   </code>
                   <p className="text-xs text-gray-500 mt-1">{qrBooking.packName}</p>
+                  {/* Where this booking came from */}
+                  {(() => {
+                    const partner = qrBooking.collaboratorId
+                      ? collaborators.find((c) => c.id === qrBooking.collaboratorId)
+                      : undefined;
+                    const origin = partner
+                      ? `Partner: ${partner.name}${qrBooking.inviteCode ? ` · invite ${qrBooking.inviteCode}` : ""}`
+                      : qrBooking.inviteCode
+                        ? `Invite ${qrBooking.inviteCode}`
+                        : qrBooking.source === "website"
+                          ? "Website booking"
+                          : "Manual booking";
+                    return (
+                      <p className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-widest text-violet-600 border border-violet-200 bg-violet-50 rounded px-2 py-1">
+                        {origin}
+                      </p>
+                    );
+                  })()}
                 </div>
 
                 {/* Send the ticket to the guest */}

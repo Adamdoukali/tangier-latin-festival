@@ -5,17 +5,19 @@ import {
   Package,
   DollarSign,
   Clock,
-  CheckCircle2,
-  UserCheck,
+  BedDouble,
+  Bed,
   TrendingUp,
   ArrowRight,
 } from "lucide-react";
 import {
   getStats,
   getBookings,
+  getPacks,
   getCollaboratorStats,
   formatMoney,
   commissionLabel,
+  packRoomCategory,
   type Booking,
   type CollaboratorStats,
 } from "@/lib/admin-store";
@@ -34,19 +36,32 @@ function AdminDashboard() {
     totalPacks: 0,
     activePacks: 0,
   });
+  const [roomCounts, setRoomCounts] = useState({ double: 0, single: 0, fullpass: 0 });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [collabStats, setCollabStats] = useState<CollaboratorStats[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [s, bookings, cs] = await Promise.all([
+      const [s, bookings, packs, cs] = await Promise.all([
         getStats(),
         getBookings(),
+        getPacks(),
         getCollaboratorStats(),
       ]);
       if (cancelled) return;
       setStats(s);
+      // Non-declined bookings split by pack type
+      const catOf = (b: Booking) => {
+        const p = packs.find((x) => x.id === b.packId);
+        return packRoomCategory(p?.name ?? b.packName);
+      };
+      const live = bookings.filter((b) => b.status !== "declined");
+      setRoomCounts({
+        double: live.filter((b) => catOf(b) === "double").length,
+        single: live.filter((b) => catOf(b) === "single").length,
+        fullpass: live.filter((b) => catOf(b) === "fullpass").length,
+      });
       setRecentBookings(
         bookings
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -61,20 +76,28 @@ function AdminDashboard() {
 
   const cards = [
     {
-      label: "Total Bookings",
-      value: stats.totalBookings,
-      icon: Ticket,
+      label: "Double Rooms",
+      value: roomCounts.double,
+      icon: BedDouble,
       color: "from-blue-500 to-blue-700",
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
     },
     {
-      label: "Revenue (€)",
-      value: stats.totalRevenue.toLocaleString(),
-      icon: DollarSign,
-      color: "from-emerald-500 to-emerald-700",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
+      label: "Single Rooms",
+      value: roomCounts.single,
+      icon: Bed,
+      color: "from-violet-500 to-violet-700",
+      iconBg: "bg-violet-100",
+      iconColor: "text-violet-600",
+    },
+    {
+      label: "Full Pass",
+      value: roomCounts.fullpass,
+      icon: Ticket,
+      color: "from-cyan-500 to-cyan-700",
+      iconBg: "bg-cyan-100",
+      iconColor: "text-cyan-700",
     },
     {
       label: "Pending",
@@ -85,20 +108,12 @@ function AdminDashboard() {
       iconColor: "text-amber-600",
     },
     {
-      label: "Confirmed",
-      value: stats.confirmedBookings,
-      icon: CheckCircle2,
-      color: "from-violet-500 to-violet-700",
-      iconBg: "bg-violet-100",
-      iconColor: "text-violet-600",
-    },
-    {
-      label: "Checked In",
-      value: stats.checkedIn,
-      icon: UserCheck,
-      color: "from-cyan-500 to-cyan-700",
-      iconBg: "bg-cyan-100",
-      iconColor: "text-cyan-700",
+      label: "Revenue (€)",
+      value: stats.totalRevenue.toLocaleString(),
+      icon: DollarSign,
+      color: "from-emerald-500 to-emerald-700",
+      iconBg: "bg-emerald-100",
+      iconColor: "text-emerald-600",
     },
     {
       label: "Active Packs",
@@ -106,7 +121,7 @@ function AdminDashboard() {
       icon: Package,
       color: "from-pink-500 to-pink-700",
       iconBg: "bg-pink-100",
-      iconColor: "text-pink-400",
+      iconColor: "text-pink-500",
     },
   ];
 

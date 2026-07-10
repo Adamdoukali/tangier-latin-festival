@@ -29,6 +29,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminPacksRouteImport } from './routes/admin/packs'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
+import { Route as AdminHotelRouteImport } from './routes/admin/hotel'
 import { Route as AdminCollaboratorsRouteImport } from './routes/admin/collaborators'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 
@@ -132,6 +133,11 @@ const AdminInviteRoute = AdminInviteRouteImport.update({
   path: '/invite',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHotelRoute = AdminHotelRouteImport.update({
+  id: '/hotel',
+  path: '/hotel',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCollaboratorsRoute = AdminCollaboratorsRouteImport.update({
   id: '/collaborators',
   path: '/collaborators',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
+    | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
+    | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/tourism'
     | '/admin/bookings'
     | '/admin/collaborators'
+    | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
@@ -450,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInviteRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/hotel': {
+      id: '/admin/hotel'
+      path: '/hotel'
+      fullPath: '/admin/hotel'
+      preLoaderRoute: typeof AdminHotelRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/collaborators': {
       id: '/admin/collaborators'
       path: '/collaborators'
@@ -470,6 +489,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
   AdminCollaboratorsRoute: typeof AdminCollaboratorsRoute
+  AdminHotelRoute: typeof AdminHotelRoute
   AdminInviteRoute: typeof AdminInviteRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPacksRoute: typeof AdminPacksRoute
@@ -479,6 +499,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
   AdminCollaboratorsRoute: AdminCollaboratorsRoute,
+  AdminHotelRoute: AdminHotelRoute,
   AdminInviteRoute: AdminInviteRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPacksRoute: AdminPacksRoute,
