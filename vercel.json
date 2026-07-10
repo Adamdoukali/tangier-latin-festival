@@ -1,9 +1,21 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.tangierlatinfestival.com" }],
+      "destination": "https://www.tangierlatinfestival.com/admin",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "has": [{ "type": "host", "value": "admin.tangierlatinfestival.com" }],
       "destination": "https://www.tangierlatinfestival.com/admin/:path*",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "partner.tangierlatinfestival.com" }],
+      "destination": "https://www.tangierlatinfestival.com/partner",
       "permanent": false
     },
     {
