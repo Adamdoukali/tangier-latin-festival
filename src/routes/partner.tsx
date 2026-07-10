@@ -224,6 +224,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       });
       sendFormNotification({
         subject: mail.subject,
+        guestSubject: mail.subject,
+        ticket: { code: updated.ticketCode, url: ticketUrl(updated.ticketCode) },
         fields: {
           name: updated.customerName,
           email: updated.email,

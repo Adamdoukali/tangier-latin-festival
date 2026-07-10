@@ -210,6 +210,12 @@ export function PackBookingModal({
               try {
                 const sent = await sendFormNotification({
                   subject: `New Pack Booking: ${pack.name}`,
+                  guestSubject:
+                    lang === "fr"
+                      ? "Votre demande de réservation — Tangier International Latin Festival"
+                      : lang === "es"
+                        ? "Tu solicitud de reserva — Tangier International Latin Festival"
+                        : "Your reservation request — Tangier International Latin Festival",
                   fields: {
                     name: customerName,
                     email: customerEmail,

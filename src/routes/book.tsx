@@ -117,6 +117,11 @@ function BookPage() {
       // Notify the festival team + automatic reply to the customer
       const sent = await sendFormNotification({
         subject: `New Booking Request: ${selected.name} (${selected.sub})`,
+        guestSubject: tr(
+          "Your reservation request — Tangier International Latin Festival",
+          "Votre demande de réservation — Tangier International Latin Festival",
+          "Tu solicitud de reserva — Tangier International Latin Festival"
+        ),
         fields: {
           name: customerName,
           email: form.email,

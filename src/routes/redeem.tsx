@@ -126,6 +126,7 @@ function RedeemPage() {
       // (the redemption arrives as PENDING until the team confirms).
       sendFormNotification({
         subject: `Invite redeemed (pending): ${result.booking.packName} — ${result.booking.customerName}`,
+        guestSubject: "Your reservation request — Tangier International Latin Festival",
         fields: {
           name: result.booking.customerName,
           email: form.email,

@@ -1,11 +1,13 @@
 // ─── Form notifications with free customer auto-reply ────────────────
-// Primary channel: FormSubmit.co — notifies the festival inbox AND
-// sends an automatic reply to the customer (their free _autoresponse
-// feature). Requires a one-time activation click in the festival inbox.
+// Preferred channel: Resend via our own server function (branded HTML
+// from @tangierlatinfestival.com, QR code attached on ticket emails).
+// Free tier, activates automatically once RESEND_API_KEY is configured.
 //
-// Fallback: Web3Forms (the original channel, no auto-reply) — used
-// automatically if FormSubmit is unavailable or not activated yet, so
-// submissions are never lost.
+// Fallback 1: FormSubmit.co — notifies the festival inbox AND sends an
+// automatic reply to the customer (their free _autoresponse feature).
+// Fallback 2: Web3Forms (no auto-reply) — so submissions are never lost.
+
+import { sendEmailViaResend } from "./email-server";
 
 const FESTIVAL_EMAIL = "contact@tangierlatinfestival.com";
 const WEB3FORMS_KEY = "132f8460-381d-4f1b-861e-acb51f25e842";
@@ -17,9 +19,37 @@ export interface FormNotification {
   fields: Record<string, string>;
   /** Message automatically emailed back to the customer */
   autoresponse: string;
+  /** Subject of the customer's email (Resend); defaults to `subject` */
+  guestSubject?: string;
+  /** When set, the ticket QR is attached + a ticket button shown (Resend) */
+  ticket?: { code: string; url: string } | null;
 }
 
 export async function sendFormNotification(n: FormNotification): Promise<boolean> {
+  // 0) Resend through our server — branded email + QR attachment.
+  //    Skipped silently when RESEND_API_KEY isn't configured yet.
+  if (n.fields.email) {
+    try {
+      const res = await sendEmailViaResend({
+        data: {
+          guestEmail: n.fields.email,
+          guestName: n.fields.name ?? "",
+          subject: n.subject,
+          fields: n.fields,
+          message: n.autoresponse,
+          guestSubject: n.guestSubject ?? n.subject,
+          ticket: n.ticket ?? null,
+        },
+      });
+      if (res.sent) return true;
+      if (res.reason !== "not-configured") {
+        console.warn("[form-notify] Resend send failed, falling back:", res.reason);
+      }
+    } catch (e) {
+      console.warn("[form-notify] Resend unavailable, falling back:", e);
+    }
+  }
+
   // 1) FormSubmit (with free auto-reply to the customer)
   try {
     const res = await fetch(`https://formsubmit.co/ajax/${FESTIVAL_EMAIL}`, {
