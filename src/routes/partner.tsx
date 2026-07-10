@@ -27,6 +27,7 @@ import {
   packLabel,
   ticketUrl,
   partnerShareLink,
+  packRoomCategory,
   type Collaborator,
   type Pack,
   type Booking,
@@ -317,29 +318,41 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            {
-              label: tr("Bookings", "Réservations", "Reservas"),
-              value: myBookings.filter((b) => b.status !== "declined").length,
-              icon: Ticket,
-            },
-            {
-              label: tr("Tickets Sold", "Billets vendus", "Entradas vendidas"),
-              value: ticketsSold,
-              icon: CheckCircle2,
-            },
-            {
-              label: tr("Sales", "Ventes", "Ventas"),
-              value: `€${sales.toLocaleString()}`,
-              icon: Euro,
-            },
-            {
-              label: `Commission (${commissionLabel(partner)})`,
-              value: formatMoney(earned.amount, earned.currency),
-              icon: Euro,
-            },
-          ].map((s) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {(() => {
+            const live = myBookings.filter((b) => b.status !== "declined");
+            const catOf = (b: Booking) => {
+              const p = allPacks.find((x) => x.id === b.packId);
+              return packRoomCategory(p?.name ?? b.packName);
+            };
+            return [
+              {
+                label: tr("Double Rooms", "Chambres doubles", "Habitaciones dobles"),
+                value: live.filter((b) => catOf(b) === "double").length,
+                icon: Ticket,
+              },
+              {
+                label: tr("Single Rooms", "Chambres simples", "Habitaciones individuales"),
+                value: live.filter((b) => catOf(b) === "single").length,
+                icon: Ticket,
+              },
+              {
+                label: tr("Full Pass", "Full Pass", "Full Pass"),
+                value: live.filter((b) => catOf(b) === "fullpass").length,
+                icon: CheckCircle2,
+              },
+              {
+                label: tr("Sales", "Ventes", "Ventas"),
+                value: `€${sales.toLocaleString()}`,
+                icon: Euro,
+              },
+              {
+                label: `Commission (${commissionLabel(partner)})`,
+                value: formatMoney(earned.amount, earned.currency),
+                icon: Euro,
+              },
+            ];
+          })().map((s) => (
             <div
               key={s.label}
               className="rounded-xl border border-gray-200 bg-white shadow-sm p-4"

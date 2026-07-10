@@ -6,6 +6,7 @@ import {
   QrCode,
   Users,
   Building2,
+  Watch,
   ArrowLeft,
   Menu,
   X,
@@ -25,6 +26,7 @@ const navItems = [
   { to: "/admin/invite", label: "QR Invites", icon: QrCode, exact: false },
   { to: "/admin/collaborators", label: "Collaborators", icon: Users, exact: false },
   { to: "/admin/hotel", label: "Hotel", icon: Building2, exact: false },
+  { to: "/admin/bracelets", label: "Bracelets", icon: Watch, exact: false },
 ];
 
 function AdminLayout() {

@@ -44,6 +44,8 @@ export interface Booking {
   /** ISO dates (YYYY-MM-DD) from the booking form; hotel planning */
   arrivalDate?: string | null;
   departureDate?: string | null;
+  /** Bracelet category override; null = automatic from the pack */
+  bracelet?: BraceletCategory | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -268,6 +270,7 @@ const bookingFromRow = (r: any): Booking => ({
   notes: r.notes ?? "",
   arrivalDate: r.arrival_date ?? null,
   departureDate: r.departure_date ?? null,
+  bracelet: (r.bracelet as BraceletCategory) ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
   collaboratorId: r.collaborator_id ?? null,
@@ -1241,6 +1244,55 @@ export function packRoomCategory(packName: string): PackRoomCategory {
   if (/single|simple|individual/.test(n)) return "single";
   if (/double|doble/.test(n)) return "double";
   return "fullpass";
+}
+
+// ─── Bracelets ──────────────────────────────────────────────────────
+
+export type BraceletCategory = "artist" | "hotel" | "fullpass";
+
+/** The bracelet a booking's guests get: the manual override when set,
+ *  otherwise automatic — room packs → hotel bracelet, rest → full pass. */
+export function effectiveBracelet(
+  booking: Booking,
+  packs: Pack[]
+): BraceletCategory {
+  if (booking.bracelet) return booking.bracelet;
+  const pack = packs.find((p) => p.id === booking.packId);
+  const cat = packRoomCategory(pack?.name ?? booking.packName);
+  return cat === "fullpass" ? "fullpass" : "hotel";
+}
+
+/** True when the bracelet column exists (supabase/bracelets.sql). */
+export async function braceletColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("bookings").select("bracelet").limit(1);
+  return !error;
+}
+
+/** Set (or clear with null) a booking's bracelet category. */
+export async function updateBookingBracelet(
+  id: string,
+  bracelet: BraceletCategory | null
+): Promise<void> {
+  if (useDb() && !isLocalId(id)) {
+    const { error } = await supabase!.from("bookings").update({ bracelet }).eq("id", id);
+    if (error) {
+      warn("updateBookingBracelet", error);
+      if (/bracelet/i.test(error.message ?? "")) {
+        throw new Error(
+          "The bracelet column doesn't exist yet — run supabase/bracelets.sql in the Supabase SQL Editor."
+        );
+      }
+      throw new Error(error.message || "Could not save the bracelet category.");
+    }
+    return;
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    bookings[idx] = { ...bookings[idx], bracelet };
+    writeStore(BOOKINGS_KEY, bookings);
+  }
 }
 
 /** "€1,234" or "1,234 MAD" */
