@@ -370,9 +370,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
                       )
                     : tr(
-                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}.`,
-                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}.`,
-                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}.`
+                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
+                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
+                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
                       )}
                 </p>
                 <div className="mt-3 h-2 rounded-full bg-zinc-800 overflow-hidden">

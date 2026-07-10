@@ -713,7 +713,9 @@ function AdminCollaborators() {
                 </p>
                 <p className="text-xs text-zinc-500 -mt-1">
                   A bonus goal shown in their portal: bring this many people → win this
-                  amount. Leave the goal empty for no mission. Editable anytime.
+                  amount. While the mission is running, those first sales earn NO
+                  commission — commission starts on sales made after the goal is reached.
+                  Leave the goal empty for no mission. Editable anytime.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>

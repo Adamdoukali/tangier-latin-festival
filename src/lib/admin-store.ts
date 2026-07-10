@@ -1248,15 +1248,35 @@ export function commissionLabel(c: Collaborator): string {
  *  Basis: non-declined bookings that came through their link (free
  *  invite tickets don't pay commission).
  *  - percent:    % of the € sales value
- *  - per_person: fixed amount × number of people, in € or MAD */
+ *  - per_person: fixed amount × number of people, in € or MAD
+ *
+ *  When the collaborator has a mission (missionGoal > 0), their FIRST
+ *  sales only fill the mission — no commission on them. Commission
+ *  starts on the bookings that come after the goal is reached. A
+ *  booking that crosses the goal line is consumed by the mission. */
 export function collaboratorCommission(
   c: Collaborator,
   bookings: Booking[],
   packs: Pack[]
 ): { amount: number; currency: CommissionCurrency } {
-  const mine = bookings.filter(
-    (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
-  );
+  let mine = bookings
+    .filter(
+      (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
+    )
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  const goal = c.missionGoal ?? 0;
+  if (goal > 0) {
+    let counted = 0;
+    mine = mine.filter((b) => {
+      if (counted < goal) {
+        counted += b.numPeople || 1;
+        return false; // consumed by the mission
+      }
+      return true;
+    });
+  }
+
   if ((c.commissionType ?? "percent") === "per_person") {
     const people = mine.reduce((s, b) => s + (b.numPeople || 1), 0);
     return {
@@ -1264,7 +1284,11 @@ export function collaboratorCommission(
       currency: c.commissionCurrency ?? "EUR",
     };
   }
-  const revenue = collaboratorRevenue(c.id, bookings, packs);
+  const priceOf = (packId: string) => {
+    const p = packs.find((x) => x.id === packId);
+    return p ? parseInt(p.price, 10) || 0 : 0;
+  };
+  const revenue = mine.reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
   return {
     amount: Math.round(revenue * ((c.commission ?? 0) / 100) * 100) / 100,
     currency: "EUR",
