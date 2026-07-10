@@ -35,3 +35,4 @@ dist-ssr
 .workspace/
 
 .vercel
+.env*

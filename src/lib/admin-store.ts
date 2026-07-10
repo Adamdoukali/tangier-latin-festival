@@ -130,6 +130,19 @@ export function ticketUrl(code: string): string {
   return `${base}/ticket?code=${code}`;
 }
 
+/** The partner's shareable booking link. On the live site it's the short
+ *  subdomain form (tickets.tangierlatinfestival.com/CODE → /book?ref=CODE
+ *  via a host redirect); locally it falls back to the direct path. The
+ *  /book page applies the partner's language automatically. */
+export function partnerShareLink(code: string): string {
+  const host = typeof window !== "undefined" ? window.location.host : "";
+  if (host.endsWith("tangierlatinfestival.com")) {
+    return `https://tickets.tangierlatinfestival.com/${code}`;
+  }
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/book?ref=${code}`;
+}
+
 export function generateTicketCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "TLF-";

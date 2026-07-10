@@ -181,10 +181,10 @@ function AdminInvite() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="font-display text-2xl tracking-wide text-zinc-100">
+        <h2 className="font-display text-2xl tracking-wide text-gray-900">
           QR Invite Generator
         </h2>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-gray-500">
           Generate invite QR codes. When scanned, clients fill in their info and arrive as a
           pending booking — confirming it automatically sends them their ticket QR.
         </p>
@@ -192,23 +192,23 @@ function AdminInvite() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4">
-          <p className="text-xs tracking-widest uppercase text-zinc-500">Total</p>
-          <p className="mt-1 font-display text-2xl text-zinc-100">{invites.length}</p>
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+          <p className="text-xs tracking-widest uppercase text-gray-500">Total</p>
+          <p className="mt-1 font-display text-2xl text-gray-900">{invites.length}</p>
         </div>
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4">
-          <p className="text-xs tracking-widest uppercase text-zinc-500">Unused</p>
-          <p className="mt-1 font-display text-2xl text-emerald-400">{unusedCount}</p>
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+          <p className="text-xs tracking-widest uppercase text-gray-500">Unused</p>
+          <p className="mt-1 font-display text-2xl text-emerald-600">{unusedCount}</p>
         </div>
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-4">
-          <p className="text-xs tracking-widest uppercase text-zinc-500">Redeemed</p>
-          <p className="mt-1 font-display text-2xl text-amber-400">{usedCount}</p>
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+          <p className="text-xs tracking-widest uppercase text-gray-500">Redeemed</p>
+          <p className="mt-1 font-display text-2xl text-amber-600">{usedCount}</p>
         </div>
       </div>
 
       {/* Generator Controls */}
-      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5">
-        <h3 className="font-display text-sm tracking-wide text-zinc-200 mb-4">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5">
+        <h3 className="font-display text-sm tracking-wide text-gray-800 mb-4">
           Generate Invites
         </h3>
         <div className="flex flex-col sm:flex-row gap-3">
@@ -217,7 +217,7 @@ function AdminInvite() {
             <select
               value={selectedPackId}
               onChange={(e) => setSelectedPackId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+              className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 pr-8 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
             >
               <option value="">Select a pack</option>
               {packs.map((p) => {
@@ -230,7 +230,7 @@ function AdminInvite() {
                 );
               })}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           </div>
 
           {/* Collaborator select */}
@@ -238,7 +238,7 @@ function AdminInvite() {
             <select
               value={selectedCollabId}
               onChange={(e) => setSelectedCollabId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+              className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 pr-8 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
               title="Attribute these invites to a collaborator"
             >
               <option value="">No collaborator</option>
@@ -248,7 +248,7 @@ function AdminInvite() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           </div>
 
           {/* Assignee Input */}
@@ -258,7 +258,7 @@ function AdminInvite() {
               placeholder="Assignee name (Optional)"
               value={assignee}
               onChange={(e) => setAssignee(e.target.value)}
-              className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
             />
           </div>
 
@@ -273,7 +273,7 @@ function AdminInvite() {
           <button
             onClick={() => setShowBulk(true)}
             disabled={!selectedPackId}
-            className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 px-4 py-2.5 text-sm font-semibold text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-lg border border-amber-200 px-4 py-2.5 text-sm font-semibold text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Zap className="h-4 w-4" /> Bulk Generate
           </button>
@@ -282,7 +282,7 @@ function AdminInvite() {
 
       {/* Invites Grid */}
       {invites.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 px-5 py-16 text-center text-sm text-zinc-600">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
           No invites generated yet. Select a pack and click "Generate" to get started.
         </div>
       ) : (
@@ -290,10 +290,10 @@ function AdminInvite() {
           {invites.map((inv) => (
             <div
               key={inv.id}
-              className={`rounded-xl border bg-zinc-900/50 p-4 transition-all duration-300 ${
+              className={`rounded-xl border bg-white shadow-sm p-4 transition-all duration-300 ${
                 inv.used
-                  ? "border-zinc-800/30 opacity-70"
-                  : "border-zinc-800/60 hover:border-zinc-700/60"
+                  ? "border-gray-100 opacity-70"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
               {/* QR Preview */}
@@ -302,7 +302,7 @@ function AdminInvite() {
                 onClick={() => openPreview(inv)}
               >
                 {qrUrls[inv.id] ? (
-                  <div className="rounded-lg border border-zinc-700/30 bg-zinc-100 p-2 inline-block hover:scale-105 transition">
+                  <div className="rounded-lg border border-gray-200 bg-zinc-100 p-2 inline-block hover:scale-105 transition">
                     <img
                       src={qrUrls[inv.id]}
                       alt={`QR ${inv.code}`}
@@ -310,35 +310,35 @@ function AdminInvite() {
                     />
                   </div>
                 ) : (
-                  <div className="w-28 h-28 rounded-lg border border-zinc-700/30 bg-zinc-800/50 grid place-items-center">
-                    <QrCode className="h-8 w-8 text-zinc-700" />
+                  <div className="w-28 h-28 rounded-lg border border-gray-200 bg-white grid place-items-center">
+                    <QrCode className="h-8 w-8 text-gray-300" />
                   </div>
                 )}
               </div>
 
               {/* Code & Status */}
               <div className="text-center">
-                <code className="text-xs font-mono text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded">
+                <code className="text-xs font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
                   {inv.code}
                 </code>
-                <p className="text-xs text-zinc-500 mt-1">{inv.packName}</p>
+                <p className="text-xs text-gray-500 mt-1">{inv.packName}</p>
                 {inv.assignee && (
-                  <p className="text-[10px] font-semibold text-zinc-300 mt-1.5 uppercase tracking-widest border border-zinc-700/50 rounded bg-zinc-800/40 px-2 py-0.5 inline-block">
+                  <p className="text-[10px] font-semibold text-gray-700 mt-1.5 uppercase tracking-widest border border-gray-300/50 rounded bg-gray-50 px-2 py-0.5 inline-block">
                     For: {inv.assignee}
                   </p>
                 )}
                 {inv.collaboratorId && (
-                  <p className="text-[10px] font-semibold text-violet-300 mt-1.5 uppercase tracking-widest border border-violet-500/30 rounded bg-violet-500/10 px-2 py-0.5 inline-block">
+                  <p className="text-[10px] font-semibold text-violet-700 mt-1.5 uppercase tracking-widest border border-violet-200 rounded bg-violet-50 px-2 py-0.5 inline-block">
                     {collaborators.find((c) => c.id === inv.collaboratorId)?.name ?? "Collaborator"}
                   </p>
                 )}
                 {inv.used && (
                   <div className="mt-1.5">
-                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400">
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600">
                       <CheckCircle2 className="h-3 w-3" /> Redeemed
                     </span>
                     {inv.redeemedBy && (
-                      <p className="text-[10px] text-zinc-500 flex items-center justify-center gap-1 mt-0.5">
+                      <p className="text-[10px] text-gray-500 flex items-center justify-center gap-1 mt-0.5">
                         <User className="h-2.5 w-2.5" /> {inv.redeemedBy}
                       </p>
                     )}
@@ -352,8 +352,8 @@ function AdminInvite() {
                   onClick={() => copyLink(inv.id, inv.code)}
                   className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                     copiedId === `link-${inv.id}`
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60"
+                      ? "text-emerald-600 bg-emerald-50"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   }`}
                   title="Copy invite link"
                 >
@@ -367,8 +367,8 @@ function AdminInvite() {
                   onClick={() => copyCode(inv.id, inv.code)}
                   className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                     copiedId === inv.id
-                      ? "text-emerald-400 bg-emerald-500/10"
-                      : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60"
+                      ? "text-emerald-600 bg-emerald-50"
+                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                   }`}
                   title="Copy code"
                 >
@@ -380,14 +380,14 @@ function AdminInvite() {
                 </button>
                 <button
                   onClick={() => downloadQr(inv)}
-                  className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
                   title="Download QR"
                 >
                   <Download className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(inv.id)}
-                  className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                  className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                   title="Delete"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -400,24 +400,24 @@ function AdminInvite() {
 
       {/* Bulk Generate Modal */}
       {showBulk && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg text-zinc-100">
+              <h3 className="font-display text-lg text-gray-900">
                 Bulk Generate
               </h3>
               <button
                 onClick={() => setShowBulk(false)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-sm text-zinc-500 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Generate multiple invite codes at once for the selected pack.
             </p>
             <div>
-              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+              <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                 Number of Invites
               </label>
               <input
@@ -428,13 +428,13 @@ function AdminInvite() {
                 onChange={(e) =>
                   setBulkCount(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))
                 }
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setShowBulk(false)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -451,20 +451,20 @@ function AdminInvite() {
 
       {/* QR Preview Modal */}
       {previewInvite && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 text-center">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg text-zinc-100">Invite QR Code</h3>
+              <h3 className="font-display text-lg text-gray-900">Invite QR Code</h3>
               <button
                 onClick={() => setPreviewInvite(null)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             {previewQr && (
               <div className="flex flex-col items-center gap-4">
-                <div className="rounded-xl border border-zinc-700/40 bg-zinc-100 p-4 inline-block">
+                <div className="rounded-xl border border-gray-200 bg-zinc-100 p-4 inline-block">
                   <img
                     src={previewQr}
                     alt="QR Code"
@@ -472,42 +472,42 @@ function AdminInvite() {
                   />
                 </div>
                 <div>
-                  <code className="text-sm font-mono text-amber-400/80 bg-amber-500/10 px-2.5 py-1 rounded">
+                  <code className="text-sm font-mono text-amber-700 bg-amber-50 px-2.5 py-1 rounded">
                     {previewInvite.code}
                   </code>
-                  <p className="text-xs text-zinc-500 mt-2">
+                  <p className="text-xs text-gray-500 mt-2">
                     {previewInvite.packName}
                   </p>
                   {previewInvite.assignee && (
-                    <p className="text-[10px] font-semibold text-amber-400 mt-2 uppercase tracking-widest border border-amber-500/20 rounded bg-amber-500/10 px-2 py-1 inline-block">
+                    <p className="text-[10px] font-semibold text-amber-600 mt-2 uppercase tracking-widest border border-amber-200 rounded bg-amber-50 px-2 py-1 inline-block">
                       For: {previewInvite.assignee}
                     </p>
                   )}
                   {previewInvite.used && previewInvite.redeemedBy && (
-                    <p className="text-xs text-emerald-400/80 mt-1 flex items-center justify-center gap-1">
+                    <p className="text-xs text-emerald-600/80 mt-1 flex items-center justify-center gap-1">
                       <CheckCircle2 className="h-3 w-3" /> Redeemed by {previewInvite.redeemedBy}
                     </p>
                   )}
-                  <p className="text-[10px] text-zinc-600 mt-2 break-all">
+                  <p className="text-[10px] text-gray-400 mt-2 break-all">
                     {getRedeemUrl(previewInvite.code)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => downloadQr(previewInvite)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-100 text-amber-600 hover:bg-amber-100 transition cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" /> Download
                   </button>
                   <button
                     onClick={() => copyLink(previewInvite.id, previewInvite.code)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
                     <Link2 className="h-3.5 w-3.5" /> Copy Link
                   </button>
                   <button
                     onClick={() => copyCode(previewInvite.id, previewInvite.code)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
                     <Copy className="h-3.5 w-3.5" /> Copy Code
                   </button>
@@ -520,22 +520,22 @@ function AdminInvite() {
 
       {/* Delete Confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
-            <h3 className="font-display text-lg text-zinc-100">Delete Invite?</h3>
-            <p className="mt-2 text-sm text-zinc-500">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
+            <h3 className="font-display text-lg text-gray-900">Delete Invite?</h3>
+            <p className="mt-2 text-sm text-gray-500">
               This will permanently remove this invite code.
             </p>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
                 Delete
               </button>

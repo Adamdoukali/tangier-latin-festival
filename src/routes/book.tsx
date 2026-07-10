@@ -66,6 +66,23 @@ function BookPage() {
     getActivePacks().then(setPacks);
   }, []);
 
+  // Short partner links (tickets.tangierlatinfestival.com/CODE) carry no
+  // ?lang — open the page in the partner's configured language instead.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("lang")) return;
+    const ref = params.get("ref") || getRememberedReferral();
+    if (!ref) return;
+    getCollaboratorByCode(ref)
+      .then((c) => {
+        if (c?.language && c.language !== "en") {
+          params.set("lang", c.language);
+          window.location.replace(`${window.location.pathname}?${params}`);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const isTwoPerson = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
 
   const choosePack = (p: Pack) => {

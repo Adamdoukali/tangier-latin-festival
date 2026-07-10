@@ -210,10 +210,10 @@ function AdminPacks() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-zinc-100">
+          <h2 className="font-display text-2xl tracking-wide text-gray-900">
             Pack Management
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-gray-500">
             Create and manage festival packs that appear on the main website.
           </p>
         </div>
@@ -227,9 +227,9 @@ function AdminPacks() {
 
       {/* DB seed banner */}
       {dbEmpty && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 space-y-3">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <p className="text-sm text-amber-200/90 flex-1">
+            <p className="text-sm text-amber-800 flex-1">
               The database has no packs yet — the packs below are the built-in defaults, and edits
               will only be saved on this device. Push them to the database so they're shared with
               the whole website and every admin.
@@ -242,27 +242,27 @@ function AdminPacks() {
               {seeding ? "Pushing…" : "Push packs to database"}
             </button>
           </div>
-          {seedError && <p className="text-sm font-medium text-red-400">{seedError}</p>}
+          {seedError && <p className="text-sm font-medium text-red-600">{seedError}</p>}
         </div>
       )}
 
       {/* Ordering error */}
       {orderError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {orderError}
         </div>
       )}
 
       {/* Category sections */}
       {categories.map((cat, catIdx) => (
-        <section key={cat} className="rounded-2xl border border-zinc-800/60 bg-zinc-900/30">
+        <section key={cat} className="rounded-2xl border border-gray-200 bg-white/30">
           {/* Category header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800/60">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200">
             <div className="flex items-center gap-1">
               <button
                 onClick={() => moveCategory(cat, -1)}
                 disabled={catIdx === 0}
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 title="Move this category up"
               >
                 <ChevronUp className="h-4 w-4" />
@@ -270,21 +270,21 @@ function AdminPacks() {
               <button
                 onClick={() => moveCategory(cat, 1)}
                 disabled={catIdx === categories.length - 1}
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                 title="Move this category down"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
             </div>
-            <h3 className="font-display text-base tracking-wide text-zinc-100 uppercase">
+            <h3 className="font-display text-base tracking-wide text-gray-900 uppercase">
               {cat}
             </h3>
-            <span className="text-xs text-zinc-600">
+            <span className="text-xs text-gray-400">
               {groups[cat].length} pack{groups[cat].length === 1 ? "" : "s"}
             </span>
             <button
               onClick={() => setPreviewCategory(cat)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-300 bg-violet-500/10 border border-violet-500/20 hover:bg-violet-500/20 transition cursor-pointer"
+              className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-200 transition cursor-pointer"
               title="Preview how this category looks on the website"
             >
               <Eye className="h-3.5 w-3.5" /> Preview
@@ -296,27 +296,27 @@ function AdminPacks() {
             {groups[cat].map((pack, i) => (
               <div
                 key={pack.id}
-                className={`relative rounded-xl border bg-zinc-900/50 p-5 transition-all duration-300 ${
+                className={`relative rounded-xl border bg-white shadow-sm p-5 transition-all duration-300 ${
                   pack.active
-                    ? "border-zinc-800/60 hover:border-zinc-700/60"
-                    : "border-zinc-800/30 opacity-60"
+                    ? "border-gray-200 hover:border-gray-300"
+                    : "border-gray-100 opacity-60"
                 }`}
               >
                 {/* Position + badges + order controls */}
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="h-6 w-6 grid place-items-center rounded-full bg-zinc-800/80 text-[11px] font-bold text-zinc-400 border border-zinc-700/50">
+                  <span className="h-6 w-6 grid place-items-center rounded-full bg-gray-100/80 text-[11px] font-bold text-gray-600 border border-gray-300/50">
                     {i + 1}
                   </span>
                   {pack.popular && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[10px] tracking-widest uppercase font-medium border border-amber-500/20">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[10px] tracking-widest uppercase font-medium border border-amber-200">
                       <Star className="h-3 w-3" /> Popular
                     </span>
                   )}
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${
                       pack.active
-                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
-                        : "bg-zinc-800/40 text-zinc-500 border-zinc-700/40"
+                        ? "bg-emerald-100 text-emerald-600 border-emerald-200"
+                        : "bg-gray-50 text-gray-500 border-gray-200"
                     }`}
                   >
                     {pack.active ? "Active" : "Inactive"}
@@ -325,7 +325,7 @@ function AdminPacks() {
                     <button
                       onClick={() => movePackInCategory(pack, -1)}
                       disabled={i === 0}
-                      className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                       title="Move left on the website"
                     >
                       <ArrowLeft className="h-3.5 w-3.5" />
@@ -333,7 +333,7 @@ function AdminPacks() {
                     <button
                       onClick={() => movePackInCategory(pack, 1)}
                       disabled={i === groups[cat].length - 1}
-                      className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
                       title="Move right on the website"
                     >
                       <ArrowRight className="h-3.5 w-3.5" />
@@ -342,13 +342,13 @@ function AdminPacks() {
                 </div>
 
                 {/* Pack info */}
-                <h3 className="font-display text-xl text-zinc-100">{pack.name}</h3>
-                <p className="text-xs text-zinc-500 tracking-wide uppercase mt-0.5">
+                <h3 className="font-display text-xl text-gray-900">{pack.name}</h3>
+                <p className="text-xs text-gray-500 tracking-wide uppercase mt-0.5">
                   {pack.sub}
                 </p>
-                <p className="mt-3 font-display text-3xl text-amber-400">
+                <p className="mt-3 font-display text-3xl text-amber-600">
                   {pack.price}{" "}
-                  <span className="text-xs text-zinc-500 font-normal tracking-widest uppercase">
+                  <span className="text-xs text-gray-500 font-normal tracking-widest uppercase">
                     {pack.currency || "€"}
                   </span>
                 </p>
@@ -356,7 +356,7 @@ function AdminPacks() {
                 {/* Features */}
                 <ul className="mt-4 space-y-1.5">
                   {pack.features.map((f, fi) => (
-                    <li key={fi} className="flex items-start gap-2 text-sm text-zinc-400">
+                    <li key={fi} className="flex items-start gap-2 text-sm text-gray-600">
                       <Check className="h-3.5 w-3.5 text-amber-500/60 mt-0.5 shrink-0" />
                       {f}
                     </li>
@@ -364,19 +364,19 @@ function AdminPacks() {
                 </ul>
 
                 {/* Actions */}
-                <div className="mt-5 pt-4 border-t border-zinc-800/40 flex items-center gap-2">
+                <div className="mt-5 pt-4 border-t border-gray-200 flex items-center gap-2">
                   <button
                     onClick={() => openEdit(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Edit
                   </button>
                   <button
                     onClick={() => toggleActive(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
                   >
                     {pack.active ? (
-                      <ToggleRight className="h-3.5 w-3.5 text-emerald-400" />
+                      <ToggleRight className="h-3.5 w-3.5 text-emerald-600" />
                     ) : (
                       <ToggleLeft className="h-3.5 w-3.5" />
                     )}
@@ -384,14 +384,14 @@ function AdminPacks() {
                   </button>
                   <button
                     onClick={() => togglePopular(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
                   >
-                    <Star className={`h-3.5 w-3.5 ${pack.popular ? "text-amber-400" : ""}`} />
+                    <Star className={`h-3.5 w-3.5 ${pack.popular ? "text-amber-600" : ""}`} />
                     {pack.popular ? "Unfeature" : "Feature"}
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(pack.id)}
-                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                    className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600/70 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -403,7 +403,7 @@ function AdminPacks() {
       ))}
 
       {packs.length === 0 && (
-        <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 px-5 py-16 text-center text-sm text-zinc-600">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
           No packs yet. Click "Add Pack" to create your first one.
         </div>
       )}
@@ -416,19 +416,19 @@ function AdminPacks() {
             if (e.target === e.currentTarget) setPreviewCategory(null);
           }}
         >
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800/60 bg-zinc-950 p-6">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-200 bg-slate-100 p-6">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-display text-lg text-zinc-100 flex items-center gap-2">
-                <Eye className="h-4 w-4 text-violet-400" /> Website Preview — {previewCategory}
+              <h3 className="font-display text-lg text-gray-900 flex items-center gap-2">
+                <Eye className="h-4 w-4 text-violet-600" /> Website Preview — {previewCategory}
               </h3>
               <button
                 onClick={() => setPreviewCategory(null)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-zinc-500 mb-6">
+            <p className="text-xs text-gray-500 mb-6">
               This is how visitors see this category on the packs page (inactive packs are hidden
               there).
             </p>
@@ -440,8 +440,8 @@ function AdminPacks() {
                     key={p.id}
                     className={`relative rounded-2xl p-5 border text-center ${
                       p.popular
-                        ? "border-amber-500/60 bg-gradient-to-b from-amber-500/10 to-transparent -mt-3 shadow-lg shadow-amber-500/10"
-                        : "border-zinc-700/60 bg-zinc-900/60"
+                        ? "border-amber-500/60 bg-gradient-to-b from-amber-50 to-transparent -mt-3 shadow-lg shadow-amber-50"
+                        : "border-gray-300 bg-white/60"
                     }`}
                   >
                     {p.popular && (
@@ -449,20 +449,20 @@ function AdminPacks() {
                         Populaire
                       </span>
                     )}
-                    <p className="font-display text-lg text-zinc-100 mt-1">{p.name}</p>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">
+                    <p className="font-display text-lg text-gray-900 mt-1">{p.name}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
                       {p.sub}
                     </p>
-                    <p className="mt-3 font-display text-3xl text-zinc-100">
+                    <p className="mt-3 font-display text-3xl text-gray-900">
                       {p.price}
-                      <span className="text-xs text-zinc-500 ml-1">
+                      <span className="text-xs text-gray-500 ml-1">
                         {p.currency || "€"}
                         {priceUnitLabel(p, "en") ? ` / ${priceUnitLabel(p, "en")}` : ""}
                       </span>
                     </p>
                     <ul className="mt-3 space-y-1 text-left">
                       {p.features.slice(0, 4).map((f, fi) => (
-                        <li key={fi} className="flex items-start gap-1.5 text-[11px] text-zinc-400">
+                        <li key={fi} className="flex items-start gap-1.5 text-[11px] text-gray-600">
                           <Check className="h-3 w-3 text-amber-500/70 mt-0.5 shrink-0" />
                           {f}
                         </li>
@@ -476,7 +476,7 @@ function AdminPacks() {
                 href="/packs"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-violet-300 hover:text-violet-200 underline"
+                className="text-xs text-violet-700 hover:text-violet-200 underline"
               >
                 Open the real packs page in a new tab →
               </a>
@@ -487,22 +487,22 @@ function AdminPacks() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
-            <h3 className="font-display text-lg text-zinc-100">Delete Pack?</h3>
-            <p className="mt-2 text-sm text-zinc-500">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
+            <h3 className="font-display text-lg text-gray-900">Delete Pack?</h3>
+            <p className="mt-2 text-sm text-gray-500">
               This action cannot be undone. All data related to this pack will be lost.
             </p>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
                 Delete
               </button>
@@ -513,15 +513,15 @@ function AdminPacks() {
 
       {/* Pack Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg text-zinc-100">
+              <h3 className="font-display text-lg text-gray-900">
                 {editingId ? "Edit Pack" : "New Pack"}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -530,7 +530,7 @@ function AdminPacks() {
             <div className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Pack Name
                 </label>
                 <input
@@ -538,19 +538,19 @@ function AdminPacks() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Gold"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Category
                 </label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 >
                   <option value="Hotel Packs (Double)">Hotel Packs (Double)</option>
                   <option value="Hotel Packs (Single)">Hotel Packs (Single)</option>
@@ -561,7 +561,7 @@ function AdminPacks() {
 
               {/* Subtitle */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Subtitle
                 </label>
                 <input
@@ -569,14 +569,14 @@ function AdminPacks() {
                   value={form.sub}
                   onChange={(e) => setForm({ ...form, sub: e.target.value })}
                   placeholder="e.g. VIP Pack"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {/* Price & Currency */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Price
                   </label>
                   <input
@@ -584,17 +584,17 @@ function AdminPacks() {
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
                     placeholder="e.g. 2299"
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Currency
                   </label>
                   <select
                     value={form.currency}
                     onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   >
                     <option value="€">EUR (€)</option>
                     <option value="$">USD ($)</option>
@@ -605,7 +605,7 @@ function AdminPacks() {
 
               {/* Features */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Features
                 </label>
                 <div className="space-y-2">
@@ -616,12 +616,12 @@ function AdminPacks() {
                         value={f}
                         onChange={(e) => updateFeature(i, e.target.value)}
                         placeholder="e.g. VIP lounge access"
-                        className="flex-1 rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                       />
                       {form.features.length > 1 && (
                         <button
                           onClick={() => removeFeatureField(i)}
-                          className="text-zinc-600 hover:text-red-400 transition cursor-pointer"
+                          className="text-gray-400 hover:text-red-600 transition cursor-pointer"
                         >
                           <X className="h-4 w-4" />
                         </button>
@@ -631,7 +631,7 @@ function AdminPacks() {
                 </div>
                 <button
                   onClick={addFeatureField}
-                  className="mt-2 inline-flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition cursor-pointer"
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 transition cursor-pointer"
                 >
                   <Plus className="h-3 w-3" /> Add feature
                 </button>
@@ -648,7 +648,7 @@ function AdminPacks() {
                     }
                     className="accent-amber-500"
                   />
-                  <span className="text-sm text-zinc-400">Popular</span>
+                  <span className="text-sm text-gray-600">Popular</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -659,7 +659,7 @@ function AdminPacks() {
                     }
                     className="accent-amber-500"
                   />
-                  <span className="text-sm text-zinc-400">Active</span>
+                  <span className="text-sm text-gray-600">Active</span>
                 </label>
               </div>
             </div>
@@ -668,7 +668,7 @@ function AdminPacks() {
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>

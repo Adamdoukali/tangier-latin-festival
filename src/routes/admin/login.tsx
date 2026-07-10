@@ -32,36 +32,45 @@ function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background styling */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/20 via-zinc-950 to-zinc-950 pointer-events-none" />
+    <div
+      className="min-h-screen bg-slate-100 flex flex-col"
+      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+    >
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <div className="h-16 w-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 grid place-items-center shadow-[0_0_40px_-10px_rgba(245,158,11,0.5)] mb-6">
-            <Lock className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="font-display text-3xl text-zinc-100 tracking-wide">
-            Admin Access
-          </h1>
-          <p className="text-zinc-500 mt-2 text-sm">
-            Enter your credentials to manage the festival.
-          </p>
-        </div>
+      {/* Banner — swap for a custom image anytime */}
+      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
+          Tangier International
+        </p>
+        <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
+          LATIN FESTIVAL
+        </h1>
+        <p className="mt-2 text-slate-300 text-sm">
+          January 07–11, 2027 · Kenzi Solazur Hotel, Tangier —{" "}
+          <span className="text-amber-300 font-semibold">Admin Portal</span>
+        </p>
+      </div>
 
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/60 p-8 rounded-3xl shadow-2xl">
-          <form onSubmit={handleLogin} className="space-y-5">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                {error}
-              </div>
-            )}
-            <div>
-              <label className="block text-xs font-semibold tracking-wider text-zinc-400 uppercase mb-2">
-                Email Address
-              </label>
+      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+            {/* Card header */}
+            <div className="bg-[#333a45] px-6 py-4 text-center">
+              <h2 className="text-white text-lg font-semibold">Admin Login</h2>
+            </div>
+
+            <form onSubmit={handleLogin} className="p-8 space-y-5">
+              <p className="text-center text-sm font-semibold text-gray-700">
+                Please enter your admin credentials
+              </p>
+              {error && (
+                <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+                  {error}
+                </div>
+              )}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                   <Mail className="h-5 w-5" />
                 </div>
                 <input
@@ -69,18 +78,12 @@ function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                  placeholder="admin@tangierlatinfestival.com"
+                  className="w-full bg-white border border-gray-300 rounded-md py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                  placeholder="Email Address"
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold tracking-wider text-zinc-400 uppercase mb-2">
-                Password
-              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                   <Lock className="h-5 w-5" />
                 </div>
                 <input
@@ -88,20 +91,25 @@ function AdminLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all"
-                  placeholder="••••••••••••"
+                  className="w-full bg-white border border-gray-300 rounded-md py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                  placeholder="Password"
                 />
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full bg-amber-600 hover:bg-amber-500 text-white rounded-xl py-3.5 font-medium shadow-lg shadow-amber-900/20 transition-all flex items-center justify-center gap-2 group mt-2"
-            >
-              Sign In
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </form>
+              <div className="pt-2 text-center">
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all group cursor-pointer"
+                >
+                  Admin Login
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </form>
+          </div>
+          <p className="mt-6 text-center text-xs text-gray-400">
+            tangierlatinfestival.com · contact@tangierlatinfestival.com
+          </p>
         </div>
       </div>
     </div>

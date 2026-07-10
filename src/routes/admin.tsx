@@ -64,7 +64,12 @@ function AdminLayout() {
   return (
     // translate="no": browser auto-translate rewrites React's DOM and used to
     // crash the panel; the back office is internal, so opt out entirely.
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex notranslate" translate="no">
+    <div
+      className="min-h-screen bg-slate-100 text-gray-900 flex notranslate"
+      translate="no"
+      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+    >
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -73,30 +78,30 @@ function AdminLayout() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — classic navy like the exhibitor portals */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800/60 flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#13234d] flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800/60">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 grid place-items-center">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center">
               <span className="font-display text-sm text-white font-bold">T</span>
             </div>
             <div className="leading-tight">
-              <div className="font-display text-sm tracking-wide text-zinc-100">
+              <div className="font-display text-sm tracking-wide text-white">
                 TLF Admin
               </div>
-              <div className="text-[10px] tracking-widest text-zinc-500 uppercase">
+              <div className="text-[10px] tracking-widest text-slate-400 uppercase">
                 Back Office
               </div>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+            className="lg:hidden text-slate-400 hover:text-white transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -113,11 +118,11 @@ function AdminLayout() {
                 onClick={() => setSidebarOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   active
-                    ? "bg-amber-500/15 text-amber-400 border border-amber-500/20"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 border border-transparent"
+                    ? "bg-white/10 text-amber-300 border border-amber-400/30"
+                    : "text-slate-300 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
-                <item.icon className={`h-4.5 w-4.5 ${active ? "text-amber-400" : ""}`} />
+                <item.icon className={`h-4.5 w-4.5 ${active ? "text-amber-300" : ""}`} />
                 {item.label}
               </Link>
             );
@@ -125,10 +130,10 @@ function AdminLayout() {
         </nav>
 
         {/* Back to site */}
-        <div className="px-3 py-4 border-t border-zinc-800/60 space-y-1">
+        <div className="px-3 py-4 border-t border-white/10 space-y-1">
           <Link
             to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 transition"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to website
@@ -138,7 +143,7 @@ function AdminLayout() {
               logoutAdmin();
               navigate({ to: "/admin/login", replace: true });
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-500/80 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             Sign Out
@@ -149,14 +154,14 @@ function AdminLayout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/60 px-6 py-4 flex items-center gap-4">
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex items-center gap-4">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+            className="lg:hidden text-gray-600 hover:text-gray-800 transition cursor-pointer"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="font-display text-lg tracking-wide text-zinc-100">
+          <h1 className="font-display text-lg tracking-wide text-gray-900">
             {navItems.find((n) =>
               isActive(n.to, n.exact)
             )?.label ?? "Admin"}

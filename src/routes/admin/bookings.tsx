@@ -245,10 +245,10 @@ function AdminBookings() {
     );
 
   const statusStyles: Record<string, string> = {
-    pending: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-    confirmed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-    "checked-in": "bg-cyan-500/15 text-cyan-400 border-cyan-500/20",
-    declined: "bg-red-500/15 text-red-400 border-red-500/20",
+    pending: "bg-amber-100 text-amber-600 border-amber-200",
+    confirmed: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    "checked-in": "bg-cyan-100 text-cyan-700 border-cyan-200",
+    declined: "bg-red-100 text-red-600 border-red-200",
   };
 
   return (
@@ -256,10 +256,10 @@ function AdminBookings() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-zinc-100">
+          <h2 className="font-display text-2xl tracking-wide text-gray-900">
             Booking Management
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm text-gray-500">
             Manage tickets, change statuses, and generate QR codes.
           </p>
         </div>
@@ -277,13 +277,13 @@ function AdminBookings() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, or ticket code..."
-            className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 pl-9 pr-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
           />
         </div>
         <div className="relative">
@@ -292,7 +292,7 @@ function AdminBookings() {
             onChange={(e) =>
               setStatusFilter(e.target.value as BookingStatus | "all")
             }
-            className="appearance-none rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-4 pr-8 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+            className="appearance-none rounded-lg border border-gray-300 bg-white px-4 pr-8 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -300,17 +300,17 @@ function AdminBookings() {
             <option value="checked-in">Checked In</option>
             <option value="declined">Declined</option>
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
         </div>
       </div>
 
       {/* Status change error (e.g. database constraint) */}
       {statusError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start justify-between gap-3">
-          <p className="text-sm text-red-300">{statusError}</p>
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start justify-between gap-3">
+          <p className="text-sm text-red-700">{statusError}</p>
           <button
             onClick={() => setStatusError("")}
-            className="text-red-400/70 hover:text-red-300 transition cursor-pointer shrink-0"
+            className="text-red-600/70 hover:text-red-700 transition cursor-pointer shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -318,9 +318,9 @@ function AdminBookings() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-zinc-600">
+          <div className="px-5 py-16 text-center text-sm text-gray-400">
             {bookings.length === 0
               ? 'No bookings yet. Click "Add Booking" to create one.'
               : "No bookings match your filters."}
@@ -329,7 +329,7 @@ function AdminBookings() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800/60 text-xs tracking-widest uppercase text-zinc-500">
+                <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
                   <th className="px-5 py-3 text-left font-medium">Customer</th>
                   <th className="px-5 py-3 text-left font-medium">Ticket</th>
                   <th className="px-5 py-3 text-left font-medium">Pack</th>
@@ -339,24 +339,24 @@ function AdminBookings() {
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-gray-100">
                 {filtered.map((b) => (
                   <tr
                     key={b.id}
-                    className="hover:bg-zinc-800/30 transition"
+                    className="hover:bg-gray-50 transition"
                   >
                     <td className="px-5 py-3">
-                      <p className="font-medium text-zinc-200">{b.customerName}</p>
-                      <p className="text-xs text-zinc-500">{b.email}</p>
+                      <p className="font-medium text-gray-800">{b.customerName}</p>
+                      <p className="text-xs text-gray-500">{b.email}</p>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <code className="text-xs font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
                           {b.ticketCode}
                         </code>
                         <button
                           onClick={() => copyCode(b.ticketCode)}
-                          className="text-zinc-600 hover:text-zinc-400 transition cursor-pointer"
+                          className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
                           title="Copy code"
                         >
                           <Copy className="h-3 w-3" />
@@ -383,9 +383,9 @@ function AdminBookings() {
                           .join(" · ");
                         return (
                           <>
-                            <p className="text-zinc-300">{name}</p>
+                            <p className="text-gray-700">{name}</p>
                             {detail && (
-                              <p className="text-[11px] text-zinc-500 mt-0.5 max-w-[220px] truncate" title={detail}>
+                              <p className="text-[11px] text-gray-500 mt-0.5 max-w-[220px] truncate" title={detail}>
                                 {detail}
                               </p>
                             )}
@@ -401,29 +401,29 @@ function AdminBookings() {
                         if (b.inviteCode) {
                           return (
                             <div>
-                              <span className="inline-flex items-center gap-1 text-xs text-violet-400">
+                              <span className="inline-flex items-center gap-1 text-xs text-violet-600">
                                 <Link2 className="h-3 w-3" />
-                                <code className="font-mono bg-violet-500/10 px-1 py-0.5 rounded text-[10px]">
+                                <code className="font-mono bg-violet-50 px-1 py-0.5 rounded text-[10px]">
                                   {b.inviteCode}
                                 </code>
                               </span>
                               {partner && (
-                                <p className="text-[11px] text-zinc-500 mt-0.5">{partner.name}</p>
+                                <p className="text-[11px] text-gray-500 mt-0.5">{partner.name}</p>
                               )}
                             </div>
                           );
                         }
                         if (b.source === "referral") {
                           return (
-                            <span className="text-xs text-emerald-400">
+                            <span className="text-xs text-emerald-600">
                               Referral{partner ? ` / ${partner.name}` : ""}
                             </span>
                           );
                         }
                         if (b.source === "website") {
-                          return <span className="text-xs text-blue-400">Website</span>;
+                          return <span className="text-xs text-blue-600">Website</span>;
                         }
-                        return <span className="text-xs text-zinc-600">Manual</span>;
+                        return <span className="text-xs text-gray-400">Manual</span>;
                       })()}
                     </td>
                     <td className="px-5 py-3">
@@ -440,14 +440,14 @@ function AdminBookings() {
                         <option value="declined">Declined</option>
                       </select>
                     </td>
-                    <td className="px-5 py-3 text-zinc-500 whitespace-nowrap">
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
                       {new Date(b.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => emailCustomer(b)}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
                           title={
                             b.status === "pending"
                               ? "Email customer: we respond within 24h"
@@ -458,14 +458,14 @@ function AdminBookings() {
                         </button>
                         <button
                           onClick={() => showQr(b)}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-violet-400 hover:bg-violet-500/10 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition cursor-pointer"
                           title="View QR Code"
                         >
                           <QrCode className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(b.id)}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -482,13 +482,13 @@ function AdminBookings() {
 
       {/* Add Booking Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg text-zinc-100">New Booking</h3>
+              <h3 className="font-display text-lg text-gray-900">New Booking</h3>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -497,13 +497,13 @@ function AdminBookings() {
             <div className="space-y-4">
               {/* Pack Select */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Pack
                 </label>
                 <select
                   value={form.packId}
                   onChange={(e) => setForm({ ...form, packId: e.target.value })}
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                 >
                   <option value="">Select a pack</option>
                   {/* Inactive packs stay hidden on the website but can be booked
@@ -516,16 +516,16 @@ function AdminBookings() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-[11px] text-zinc-500">
+                <p className="mt-1.5 text-[11px] text-gray-500">
                   Need a special reservation (e.g. more than 4 nights)? Create the pack on
-                  the Packs page with <span className="text-zinc-400">Active off</span> — it
+                  the Packs page with <span className="text-gray-600">Active off</span> — it
                   stays hidden from the website but you can book it here.
                 </p>
               </div>
 
               {/* Name */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Customer Name
                 </label>
                 <input
@@ -535,14 +535,14 @@ function AdminBookings() {
                     setForm({ ...form, customerName: e.target.value })
                   }
                   placeholder="Full name"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Email
                   </label>
                   <input
@@ -550,11 +550,11 @@ function AdminBookings() {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="email@example.com"
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Phone
                   </label>
                   <input
@@ -562,7 +562,7 @@ function AdminBookings() {
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+212..."
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
@@ -570,7 +570,7 @@ function AdminBookings() {
               {/* Country & People */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Country
                   </label>
                   <input
@@ -580,11 +580,11 @@ function AdminBookings() {
                       setForm({ ...form, country: e.target.value })
                     }
                     placeholder="Morocco"
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Number of People
                   </label>
                   <input
@@ -594,7 +594,7 @@ function AdminBookings() {
                     onChange={(e) =>
                       setForm({ ...form, numPeople: parseInt(e.target.value) || 1 })
                     }
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
@@ -602,18 +602,18 @@ function AdminBookings() {
               {/* Arrival & Departure */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Arrival Date
                   </label>
                   <input
                     type="date"
                     value={form.arrival}
                     onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Departure Date
                   </label>
                   <input
@@ -621,14 +621,14 @@ function AdminBookings() {
                     value={form.departure}
                     min={form.arrival || undefined}
                     onChange={(e) => setForm({ ...form, departure: e.target.value })}
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition [color-scheme:dark]"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
                   />
                 </div>
               </div>
 
               {/* Dance Level */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Dance Level
                 </label>
                 <select
@@ -636,7 +636,7 @@ function AdminBookings() {
                   onChange={(e) =>
                     setForm({ ...form, danceLevel: e.target.value })
                   }
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                 >
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
@@ -647,7 +647,7 @@ function AdminBookings() {
 
               {/* Notes */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Notes (optional)
                 </label>
                 <textarea
@@ -655,13 +655,13 @@ function AdminBookings() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   placeholder="Special requests..."
                   rows={2}
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition resize-none"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
                 />
               </div>
 
               {/* Status */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Initial Status
                 </label>
                 <select
@@ -669,7 +669,7 @@ function AdminBookings() {
                   onChange={(e) =>
                     setForm({ ...form, status: e.target.value as BookingStatus })
                   }
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                 >
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
@@ -683,7 +683,7 @@ function AdminBookings() {
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -700,16 +700,16 @@ function AdminBookings() {
 
       {/* QR Code Modal */}
       {qrBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 text-center">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg text-zinc-100">Ticket QR Code</h3>
+              <h3 className="font-display text-lg text-gray-900">Ticket QR Code</h3>
               <button
                 onClick={() => {
                   setQrBooking(null);
                   setAutoEmail(null);
                 }}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -720,10 +720,10 @@ function AdminBookings() {
               <div
                 className={`mb-4 rounded-lg border px-3 py-2 text-xs ${
                   autoEmail === "sent"
-                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                     : autoEmail === "failed"
-                      ? "border-red-500/30 bg-red-500/10 text-red-300"
-                      : "border-zinc-700/60 bg-zinc-800/40 text-zinc-400"
+                      ? "border-red-200 bg-red-50 text-red-700"
+                      : "border-gray-300 bg-gray-50 text-gray-600"
                 }`}
               >
                 {autoEmail === "sent"
@@ -736,17 +736,17 @@ function AdminBookings() {
 
             {qrDataUrl && (
               <div className="flex flex-col items-center gap-4">
-                <div className="rounded-xl border border-zinc-700/40 bg-zinc-100 p-4 inline-block">
+                <div className="rounded-xl border border-gray-200 bg-zinc-100 p-4 inline-block">
                   <img src={qrDataUrl} alt="QR Code" className="w-48 h-48" />
                 </div>
                 <div>
-                  <p className="font-display text-sm text-zinc-200">
+                  <p className="font-display text-sm text-gray-800">
                     {qrBooking.customerName}
                   </p>
-                  <code className="text-xs font-mono text-amber-400/80 bg-amber-500/10 px-2 py-0.5 rounded mt-1 inline-block">
+                  <code className="text-xs font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-1 inline-block">
                     {qrBooking.ticketCode}
                   </code>
-                  <p className="text-xs text-zinc-500 mt-1">{qrBooking.packName}</p>
+                  <p className="text-xs text-gray-500 mt-1">{qrBooking.packName}</p>
                 </div>
 
                 {/* Send the ticket to the guest */}
@@ -756,7 +756,7 @@ function AdminBookings() {
                       href={waTicketLink(qrBooking)!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-[#25D366]/15 text-[#4ade80] hover:bg-[#25D366]/25 transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-green-50 text-[#16a34a] hover:bg-green-100 transition"
                     >
                       <Phone className="h-3.5 w-3.5" /> WhatsApp Ticket
                     </a>
@@ -764,7 +764,7 @@ function AdminBookings() {
                   {qrBooking.email && (
                     <button
                       onClick={() => emailCustomer(qrBooking)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-600 hover:bg-emerald-100 transition cursor-pointer"
                     >
                       <Mail className="h-3.5 w-3.5" /> Email Ticket
                     </button>
@@ -773,19 +773,19 @@ function AdminBookings() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={downloadQr}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-100 text-amber-600 hover:bg-amber-100 transition cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" /> Download
                   </button>
                   <button
                     onClick={() => copyCode(ticketUrl(qrBooking.ticketCode))}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
                     <Link2 className="h-3.5 w-3.5" /> Copy Link
                   </button>
                   <button
                     onClick={() => copyCode(qrBooking.ticketCode)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
                     <Copy className="h-3.5 w-3.5" /> Copy Code
                   </button>
@@ -798,24 +798,24 @@ function AdminBookings() {
 
       {/* Delete Confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
-            <h3 className="font-display text-lg text-zinc-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
+            <h3 className="font-display text-lg text-gray-900">
               Delete Booking?
             </h3>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-gray-500">
               This will permanently remove this booking and its ticket.
             </p>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
                 Delete
               </button>

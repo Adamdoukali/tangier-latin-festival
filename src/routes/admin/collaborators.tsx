@@ -25,6 +25,7 @@ import {
   missionColumnsReady,
   formatMoney,
   commissionLabel,
+  partnerShareLink,
   type Collaborator,
   type CollaboratorStats,
   type CommissionType,
@@ -96,10 +97,10 @@ function suggestCode(name: string): string {
     .slice(0, 12);
 }
 
-// The partner link is the /book funnel (guests choose a pack + register).
-function referralUrl(code: string, lang?: PartnerLanguage): string {
-  const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/book?ref=${code}${lang && lang !== "en" ? `&lang=${lang}` : ""}`;
+// The partner link: short subdomain form on the live site
+// (tickets.tangierlatinfestival.com/CODE), /book?ref locally.
+function referralUrl(code: string, _lang?: PartnerLanguage): string {
+  return partnerShareLink(code);
 }
 
 function AdminCollaborators() {
@@ -289,8 +290,8 @@ function AdminCollaborators() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-zinc-100">Collaborators</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h2 className="font-display text-2xl tracking-wide text-gray-900">Collaborators</h2>
+          <p className="mt-1 text-sm text-gray-500">
             Partners who sell tickets or distribute invites. Every sale and invite is tracked per
             collaborator.
           </p>
@@ -305,14 +306,14 @@ function AdminCollaborators() {
 
       {/* DB setup notice */}
       {!ready && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-200/90">
-            <p className="font-semibold text-amber-300">Database setup required</p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">Database setup required</p>
             <p className="mt-1">
               The <code className="font-mono">collaborators</code> table doesn't exist yet in your
               Supabase project. Open the Supabase Dashboard → SQL Editor and run the script in{" "}
-              <code className="font-mono bg-amber-500/10 px-1 rounded">supabase/schema.sql</code>{" "}
+              <code className="font-mono bg-amber-50 px-1 rounded">supabase/schema.sql</code>{" "}
               (in the project repo), then refresh this page.
             </p>
           </div>
@@ -321,17 +322,17 @@ function AdminCollaborators() {
 
       {/* Commission columns missing */}
       {ready && !commissionReady && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-200/90">
-            <p className="font-semibold text-amber-300">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
               Commission options need a database update
             </p>
             <p className="mt-1">
               The commission <em>type</em> (per person) and <em>currency</em> (MAD) can't be
               saved yet — the database is missing two columns. Open the Supabase Dashboard →
               SQL Editor, run the script in{" "}
-              <code className="font-mono bg-amber-500/10 px-1 rounded">
+              <code className="font-mono bg-amber-50 px-1 rounded">
                 supabase/commission.sql
               </code>
               , then refresh this page. Until then, collaborators save with the classic
@@ -343,14 +344,14 @@ function AdminCollaborators() {
 
       {/* Mission columns missing */}
       {ready && !missionReady && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-200/90">
-            <p className="font-semibold text-amber-300">Missions need a database update</p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">Missions need a database update</p>
             <p className="mt-1">
               Mission goals and rewards can't be saved yet. Open the Supabase Dashboard →
               SQL Editor, run the script in{" "}
-              <code className="font-mono bg-amber-500/10 px-1 rounded">
+              <code className="font-mono bg-amber-50 px-1 rounded">
                 supabase/partner-missions.sql
               </code>
               , then refresh this page.
@@ -361,16 +362,16 @@ function AdminCollaborators() {
 
       {/* Language column missing */}
       {ready && !langReady && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-200/90">
-            <p className="font-semibold text-amber-300">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
               Partner language needs a database update
             </p>
             <p className="mt-1">
               The partner's language choice can't be saved yet. Open the Supabase Dashboard →
               SQL Editor, run the script in{" "}
-              <code className="font-mono bg-amber-500/10 px-1 rounded">
+              <code className="font-mono bg-amber-50 px-1 rounded">
                 supabase/partner-language.sql
               </code>
               , then refresh this page.
@@ -380,39 +381,39 @@ function AdminCollaborators() {
       )}
 
       {/* How it works */}
-      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 text-sm text-zinc-400 space-y-1.5">
-        <p className="font-display text-sm tracking-wide text-zinc-200 mb-2">How tracking works</p>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 text-sm text-gray-600 space-y-1.5">
+        <p className="font-display text-sm tracking-wide text-gray-800 mb-2">How tracking works</p>
         <p>
-          · <span className="text-zinc-300">Selling:</span> give each collaborator their referral
+          · <span className="text-gray-700">Selling:</span> give each collaborator their referral
           link — any pack booking made through it is attributed to them.
         </p>
         <p>
-          · <span className="text-zinc-300">Confirming:</span> bookings arrive as Pending; when
+          · <span className="text-gray-700">Confirming:</span> bookings arrive as Pending; when
           you (or the partner) confirm after payment, the guest automatically receives their
           ticket QR with their names and details.
         </p>
         <p>
-          · <span className="text-zinc-300">Self-service:</span> give a partner a username +
+          · <span className="text-gray-700">Self-service:</span> give a partner a username +
           access code and they can sign in at{" "}
-          <code className="font-mono text-violet-400/90">/partner</code> — in their own
+          <code className="font-mono text-violet-700">/partner</code> — in their own
           language — to track and confirm their bookings and see their commission.
         </p>
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 overflow-hidden">
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
-          <div className="px-5 py-16 text-center text-sm text-zinc-600">Loading…</div>
+          <div className="px-5 py-16 text-center text-sm text-gray-400">Loading…</div>
         ) : stats.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-zinc-600">
-            <Users className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+          <div className="px-5 py-16 text-center text-sm text-gray-400">
+            <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
             No collaborators yet. Click "Add Collaborator" to create the first one.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800/60 text-xs tracking-widest uppercase text-zinc-500">
+                <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
                   <th className="px-5 py-3 text-left font-medium">Name</th>
                   <th className="px-5 py-3 text-left font-medium">Code / Link</th>
                   <th className="px-5 py-3 text-right font-medium">Single Rooms</th>
@@ -427,31 +428,31 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/40">
+              <tbody className="divide-y divide-gray-100">
                 {stats.map(({ collaborator: c, ...s }) => (
-                  <tr key={c.id} className="hover:bg-zinc-800/30 transition">
+                  <tr key={c.id} className="hover:bg-gray-50 transition">
                     <td className="px-5 py-3">
-                      <p className="font-medium text-zinc-200">{c.name}</p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="font-medium text-gray-800">{c.name}</p>
+                      <p className="text-xs text-gray-500">
                         {c.username ? (
-                          <span className="font-mono text-violet-400/80">@{c.username}</span>
+                          <span className="font-mono text-violet-700">@{c.username}</span>
                         ) : (
-                          <span className="text-zinc-600">no portal account</span>
+                          <span className="text-gray-400">no portal account</span>
                         )}
-                        <span className="text-zinc-600 uppercase"> · {c.language ?? "en"}</span>
+                        <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
                       </p>
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1.5">
-                        <code className="text-xs font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                        <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
                           {c.code}
                         </code>
                         <button
                           onClick={() => copyLink(c)}
                           className={`p-1 rounded transition cursor-pointer ${
                             copiedId === c.id
-                              ? "text-emerald-400"
-                              : "text-zinc-600 hover:text-zinc-300"
+                              ? "text-emerald-600"
+                              : "text-gray-400 hover:text-gray-700"
                           }`}
                           title={`Copy referral link: ${referralUrl(c.code, c.language)}`}
                         >
@@ -463,20 +464,20 @@ function AdminCollaborators() {
                         </button>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-right text-zinc-300">{s.singleRooms}</td>
-                    <td className="px-5 py-3 text-right text-zinc-300">{s.doubleRooms}</td>
-                    <td className="px-5 py-3 text-right text-zinc-300">{s.fullPass}</td>
-                    <td className="px-5 py-3 text-right text-zinc-200 font-medium">
+                    <td className="px-5 py-3 text-right text-gray-700">{s.singleRooms}</td>
+                    <td className="px-5 py-3 text-right text-gray-700">{s.doubleRooms}</td>
+                    <td className="px-5 py-3 text-right text-gray-700">{s.fullPass}</td>
+                    <td className="px-5 py-3 text-right text-gray-800 font-medium">
                       {s.ticketsSold}
                     </td>
-                    <td className="px-5 py-3 text-right text-emerald-400">
+                    <td className="px-5 py-3 text-right text-emerald-600">
                       {s.revenue.toLocaleString()}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-400">
+                      <span className="text-amber-600">
                         {formatMoney(s.commission, s.commissionCurrency)}
                       </span>
-                      <span className="ml-1.5 text-[10px] text-zinc-500">
+                      <span className="ml-1.5 text-[10px] text-gray-500">
                         ({commissionLabel(c)})
                       </span>
                     </td>
@@ -485,22 +486,22 @@ function AdminCollaborators() {
                         <span
                           className={
                             s.ticketsSold >= c.missionGoal
-                              ? "text-emerald-400"
-                              : "text-zinc-300"
+                              ? "text-emerald-600"
+                              : "text-gray-700"
                           }
                           title={`Bring ${c.missionGoal} people → win ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
                         >
                           {s.ticketsSold >= c.missionGoal ? "✓ " : ""}
                           {Math.min(s.ticketsSold, c.missionGoal)}/{c.missionGoal}
-                          <span className="ml-1.5 text-[10px] text-zinc-500">
+                          <span className="ml-1.5 text-[10px] text-gray-500">
                             ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
                           </span>
                         </span>
                       ) : (
-                        <span className="text-zinc-600">—</span>
+                        <span className="text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-xs text-zinc-500 whitespace-nowrap">
+                    <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
                       {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString() : "never"}
                     </td>
                     <td className="px-5 py-3 text-center">
@@ -510,9 +511,9 @@ function AdminCollaborators() {
                         title={c.active ? "Deactivate" : "Activate"}
                       >
                         {c.active ? (
-                          <ToggleRight className="h-5 w-5 text-emerald-400" />
+                          <ToggleRight className="h-5 w-5 text-emerald-600" />
                         ) : (
-                          <ToggleLeft className="h-5 w-5 text-zinc-600" />
+                          <ToggleLeft className="h-5 w-5 text-gray-400" />
                         )}
                       </button>
                     </td>
@@ -520,14 +521,14 @@ function AdminCollaborators() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => openEdit(c)}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
                           title="Edit"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(c.id)}
-                          className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition cursor-pointer"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -547,7 +548,7 @@ function AdminCollaborators() {
         <div className="flex justify-end">
           <button
             onClick={downloadExcel}
-            className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-300 hover:bg-emerald-500/20 transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-200 transition cursor-pointer"
           >
             <Download className="h-4 w-4" /> Download Excel (rooms &amp; sales)
           </button>
@@ -556,15 +557,15 @@ function AdminCollaborators() {
 
       {/* Add / Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg text-zinc-100">
+              <h3 className="font-display text-lg text-gray-900">
                 {editingId ? "Edit Collaborator" : "New Collaborator"}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
-                className="text-zinc-500 hover:text-zinc-300 transition cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -572,7 +573,7 @@ function AdminCollaborators() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Name
                 </label>
                 <input
@@ -587,12 +588,12 @@ function AdminCollaborators() {
                     }))
                   }
                   placeholder="e.g. Salsero Madrid"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Referral Code
                 </label>
                 <input
@@ -604,10 +605,10 @@ function AdminCollaborators() {
                     setForm({ ...form, code: v });
                   }}
                   placeholder="SALSERO"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-amber-300 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-amber-700 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
                 {form.code && (
-                  <p className="mt-1.5 text-[11px] text-zinc-500 break-all">
+                  <p className="mt-1.5 text-[11px] text-gray-500 break-all">
                     Referral link: {referralUrl(form.code, form.language)}
                   </p>
                 )}
@@ -615,7 +616,7 @@ function AdminCollaborators() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Email
                   </label>
                   <input
@@ -623,11 +624,11 @@ function AdminCollaborators() {
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="partner@email.com"
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Phone
                   </label>
                   <input
@@ -635,19 +636,19 @@ function AdminCollaborators() {
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+212..."
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
 
               {/* Commission deal */}
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
-                <p className="text-xs tracking-widest uppercase text-amber-300 font-semibold">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-amber-700 font-semibold">
                   Commission
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       Type
                     </label>
                     <select
@@ -655,14 +656,14 @@ function AdminCollaborators() {
                       onChange={(e) =>
                         setForm({ ...form, commissionType: e.target.value as CommissionType })
                       }
-                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                     >
                       <option value="percent">% of sales</option>
                       <option value="per_person">Fixed amount per person</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       {form.commissionType === "percent" ? "Percentage" : "Amount / person"}
                     </label>
                     <div className="flex gap-1.5">
@@ -674,10 +675,10 @@ function AdminCollaborators() {
                         onChange={(e) =>
                           setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
                         }
-                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                       />
                       {form.commissionType === "percent" ? (
-                        <span className="grid place-items-center px-3 rounded-lg border border-zinc-700/60 bg-zinc-800/30 text-sm text-zinc-400 shrink-0">
+                        <span className="grid place-items-center px-3 rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-600 shrink-0">
                           %
                         </span>
                       ) : (
@@ -689,7 +690,7 @@ function AdminCollaborators() {
                               commissionCurrency: e.target.value as CommissionCurrency,
                             })
                           }
-                          className="rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer shrink-0"
+                          className="rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer shrink-0"
                           title="Commission currency"
                         >
                           <option value="EUR">€</option>
@@ -699,7 +700,7 @@ function AdminCollaborators() {
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-zinc-500">
+                <p className="text-[11px] text-gray-500">
                   {form.commissionType === "percent"
                     ? "Earns a percentage of the € value of every sale made through their link. Free invite tickets don't count."
                     : "Earns this amount for every person who books through their link (a double room = 2 people). Free invite tickets don't count."}
@@ -707,11 +708,11 @@ function AdminCollaborators() {
               </div>
 
               {/* Mission */}
-              <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
-                <p className="text-xs tracking-widest uppercase text-emerald-300 font-semibold">
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">
                   Mission (optional)
                 </p>
-                <p className="text-xs text-zinc-500 -mt-1">
+                <p className="text-xs text-gray-500 -mt-1">
                   A bonus goal shown in their portal: bring this many people → win this
                   amount. While the mission is running, those first sales earn NO
                   commission — commission starts on sales made after the goal is reached.
@@ -719,7 +720,7 @@ function AdminCollaborators() {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       Goal (people)
                     </label>
                     <input
@@ -728,11 +729,11 @@ function AdminCollaborators() {
                       value={form.missionGoal}
                       onChange={(e) => setForm({ ...form, missionGoal: e.target.value })}
                       placeholder="e.g. 2"
-                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       Reward
                     </label>
                     <div className="flex gap-1.5">
@@ -744,7 +745,7 @@ function AdminCollaborators() {
                           setForm({ ...form, missionReward: parseFloat(e.target.value) || 0 })
                         }
                         placeholder="e.g. 100"
-                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                       />
                       <select
                         value={form.missionCurrency}
@@ -754,7 +755,7 @@ function AdminCollaborators() {
                             missionCurrency: e.target.value as CommissionCurrency,
                           })
                         }
-                        className="rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer shrink-0"
+                        className="rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer shrink-0"
                         title="Reward currency"
                       >
                         <option value="EUR">€</option>
@@ -767,7 +768,7 @@ function AdminCollaborators() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                     Language
                   </label>
                   <select
@@ -775,7 +776,7 @@ function AdminCollaborators() {
                     onChange={(e) =>
                       setForm({ ...form, language: e.target.value as PartnerLanguage })
                     }
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                   >
                     {LANGUAGES.map((l) => (
                       <option key={l.value} value={l.value}>
@@ -783,13 +784,13 @@ function AdminCollaborators() {
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1.5 text-[11px] text-zinc-500">
+                  <p className="mt-1.5 text-[11px] text-gray-500">
                     Their portal displays in this language, and their links open the website
                     in it for their guests.
                   </p>
                 </div>
                 <div className="flex items-start pt-7">
-                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.active}
@@ -802,17 +803,17 @@ function AdminCollaborators() {
               </div>
 
               {/* Portal account */}
-              <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-4 space-y-3">
-                <p className="text-xs tracking-widest uppercase text-violet-300 font-semibold">
+              <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-violet-700 font-semibold">
                   Partner Portal account (optional)
                 </p>
-                <p className="text-xs text-zinc-500 -mt-1">
+                <p className="text-xs text-gray-500 -mt-1">
                   Lets this partner sign in at <code className="font-mono">/partner</code> to
                   track their bookings, confirm them, and see their commission.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       Username
                     </label>
                     <input
@@ -825,11 +826,11 @@ function AdminCollaborators() {
                         })
                       }
                       placeholder="salsero"
-                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                       Access Code
                     </label>
                     <div className="flex gap-1.5">
@@ -838,12 +839,12 @@ function AdminCollaborators() {
                         value={form.accessCode}
                         onChange={(e) => setForm({ ...form, accessCode: e.target.value.trim() })}
                         placeholder="secret code"
-                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm font-mono text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                       />
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, accessCode: generateAccessCode() })}
-                        className="px-2.5 rounded-lg border border-zinc-700/60 text-xs text-zinc-400 hover:text-amber-400 hover:border-amber-500/40 transition cursor-pointer shrink-0"
+                        className="px-2.5 rounded-lg border border-gray-300 text-xs text-gray-600 hover:text-amber-600 hover:border-amber-300 transition cursor-pointer shrink-0"
                         title="Generate a random access code"
                       >
                         ↻
@@ -854,7 +855,7 @@ function AdminCollaborators() {
               </div>
 
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Notes (optional)
                 </label>
                 <textarea
@@ -862,17 +863,17 @@ function AdminCollaborators() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={2}
                   placeholder="Deal terms, region, contact person..."
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition resize-none"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
                 />
               </div>
 
-              {saveError && <p className="text-sm text-red-400">{saveError}</p>}
+              {saveError && <p className="text-sm text-red-600">{saveError}</p>}
             </div>
 
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -889,22 +890,22 @@ function AdminCollaborators() {
 
       {/* Delete Confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-xl border border-zinc-800/60 bg-zinc-900 p-6">
-            <h3 className="font-display text-lg text-zinc-100">Delete Collaborator?</h3>
-            <p className="mt-2 text-sm text-zinc-500">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
+            <h3 className="font-display text-lg text-gray-900">Delete Collaborator?</h3>
+            <p className="mt-2 text-sm text-gray-500">
               Their past bookings and invites stay in the system but lose the attribution link.
             </p>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 rounded-lg text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 transition cursor-pointer"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
                 Delete
               </button>
