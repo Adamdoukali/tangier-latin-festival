@@ -22,6 +22,7 @@ import {
   collaboratorsReady,
   commissionColumnsReady,
   languageColumnReady,
+  missionColumnsReady,
   formatMoney,
   commissionLabel,
   type Collaborator,
@@ -44,6 +45,9 @@ interface CollabForm {
   commissionType: CommissionType;
   commissionCurrency: CommissionCurrency;
   language: PartnerLanguage;
+  missionGoal: string; // "" = no mission
+  missionReward: number;
+  missionCurrency: CommissionCurrency;
   notes: string;
   active: boolean;
   username: string;
@@ -60,6 +64,9 @@ const emptyForm: CollabForm = {
   commissionType: "percent",
   commissionCurrency: "EUR",
   language: "en",
+  missionGoal: "",
+  missionReward: 0,
+  missionCurrency: "EUR",
   notes: "",
   active: true,
   username: "",
@@ -100,6 +107,7 @@ function AdminCollaborators() {
   const [ready, setReady] = useState(true);
   const [commissionReady, setCommissionReady] = useState(true);
   const [langReady, setLangReady] = useState(true);
+  const [missionReady, setMissionReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -111,15 +119,17 @@ function AdminCollaborators() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    const [ok, commOk, langOk, s] = await Promise.all([
+    const [ok, commOk, langOk, missionOk, s] = await Promise.all([
       collaboratorsReady(),
       commissionColumnsReady(),
       languageColumnReady(),
+      missionColumnsReady(),
       getCollaboratorStats(),
     ]);
     setReady(ok);
     setCommissionReady(commOk);
     setLangReady(langOk);
+    setMissionReady(missionOk);
     setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
     setLoading(false);
   }, []);
@@ -147,6 +157,9 @@ function AdminCollaborators() {
       commissionType: c.commissionType ?? "percent",
       commissionCurrency: c.commissionCurrency ?? "EUR",
       language: c.language ?? "en",
+      missionGoal: c.missionGoal ? String(c.missionGoal) : "",
+      missionReward: c.missionReward ?? 0,
+      missionCurrency: c.missionCurrency ?? "EUR",
       notes: c.notes ?? "",
       active: c.active,
       username: c.username ?? "",
@@ -170,6 +183,8 @@ function AdminCollaborators() {
     const payload = {
       ...form,
       inviteQuota: form.inviteQuota.trim() === "" ? null : parseInt(form.inviteQuota, 10) || 0,
+      missionGoal:
+        form.missionGoal.trim() === "" ? null : parseInt(form.missionGoal, 10) || null,
     };
     try {
       if (editingId) {
@@ -221,6 +236,8 @@ function AdminCollaborators() {
       "Sales (EUR)",
       "Commission",
       "Commission Deal",
+      "Mission",
+      "Mission Reward",
       "Active",
     ];
     const rows = stats.map(({ collaborator: c, ...s }) => [
@@ -234,6 +251,10 @@ function AdminCollaborators() {
       s.revenue,
       formatMoney(s.commission, s.commissionCurrency),
       commissionLabel(c),
+      c.missionGoal
+        ? `${Math.min(s.ticketsSold, c.missionGoal)}/${c.missionGoal}${s.ticketsSold >= c.missionGoal ? " (achieved)" : ""}`
+        : "",
+      c.missionGoal ? formatMoney(c.missionReward ?? 0, c.missionCurrency) : "",
       c.active ? "yes" : "no",
     ]);
     const totals = [
@@ -245,6 +266,8 @@ function AdminCollaborators() {
       stats.reduce((a, x) => a + x.fullPass, 0),
       stats.reduce((a, x) => a + x.ticketsSold, 0),
       stats.reduce((a, x) => a + x.revenue, 0),
+      "",
+      "",
       "",
       "",
       "",
@@ -318,6 +341,24 @@ function AdminCollaborators() {
         </div>
       )}
 
+      {/* Mission columns missing */}
+      {ready && !missionReady && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-200/90">
+            <p className="font-semibold text-amber-300">Missions need a database update</p>
+            <p className="mt-1">
+              Mission goals and rewards can't be saved yet. Open the Supabase Dashboard →
+              SQL Editor, run the script in{" "}
+              <code className="font-mono bg-amber-500/10 px-1 rounded">
+                supabase/partner-missions.sql
+              </code>
+              , then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Language column missing */}
       {ready && !langReady && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex gap-3">
@@ -380,6 +421,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
                   <th className="px-5 py-3 text-right font-medium">Sales (€)</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
+                  <th className="px-5 py-3 text-right font-medium">Mission</th>
                   <th className="px-5 py-3 text-left font-medium">Last Active</th>
                   <th className="px-5 py-3 text-center font-medium">Active</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
@@ -437,6 +479,26 @@ function AdminCollaborators() {
                       <span className="ml-1.5 text-[10px] text-zinc-500">
                         ({commissionLabel(c)})
                       </span>
+                    </td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      {c.missionGoal ? (
+                        <span
+                          className={
+                            s.ticketsSold >= c.missionGoal
+                              ? "text-emerald-400"
+                              : "text-zinc-300"
+                          }
+                          title={`Bring ${c.missionGoal} people → win ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
+                        >
+                          {s.ticketsSold >= c.missionGoal ? "✓ " : ""}
+                          {Math.min(s.ticketsSold, c.missionGoal)}/{c.missionGoal}
+                          <span className="ml-1.5 text-[10px] text-zinc-500">
+                            ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-zinc-600">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-xs text-zinc-500 whitespace-nowrap">
                       {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString() : "never"}
@@ -642,6 +704,63 @@ function AdminCollaborators() {
                     ? "Earns a percentage of the € value of every sale made through their link. Free invite tickets don't count."
                     : "Earns this amount for every person who books through their link (a double room = 2 people). Free invite tickets don't count."}
                 </p>
+              </div>
+
+              {/* Mission */}
+              <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
+                <p className="text-xs tracking-widest uppercase text-emerald-300 font-semibold">
+                  Mission (optional)
+                </p>
+                <p className="text-xs text-zinc-500 -mt-1">
+                  A bonus goal shown in their portal: bring this many people → win this
+                  amount. Leave the goal empty for no mission. Editable anytime.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      Goal (people)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={form.missionGoal}
+                      onChange={(e) => setForm({ ...form, missionGoal: e.target.value })}
+                      placeholder="e.g. 2"
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+                      Reward
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="number"
+                        min={0}
+                        value={form.missionReward}
+                        onChange={(e) =>
+                          setForm({ ...form, missionReward: parseFloat(e.target.value) || 0 })
+                        }
+                        placeholder="e.g. 100"
+                        className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      />
+                      <select
+                        value={form.missionCurrency}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            missionCurrency: e.target.value as CommissionCurrency,
+                          })
+                        }
+                        className="rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-2 text-sm text-zinc-100 focus:outline-none focus:border-amber-500/50 transition cursor-pointer shrink-0"
+                        title="Reward currency"
+                      >
+                        <option value="EUR">€</option>
+                        <option value="MAD">MAD</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

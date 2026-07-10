@@ -13,6 +13,7 @@ import {
   Mail,
   Phone,
   Euro,
+  Trophy,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -328,6 +329,63 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </div>
           ))}
         </div>
+
+        {/* Mission — bonus goal set by the festival team */}
+        {(partner.missionGoal ?? 0) > 0 &&
+          (() => {
+            const goal = partner.missionGoal!;
+            const progress = Math.min(ticketsSold, goal);
+            const achieved = ticketsSold >= goal;
+            const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
+            return (
+              <div
+                className={`rounded-xl border p-5 ${
+                  achieved
+                    ? "border-emerald-500/40 bg-emerald-500/10"
+                    : "border-amber-500/30 bg-amber-500/5"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
+                    <Trophy
+                      className={`h-4 w-4 ${achieved ? "text-emerald-400" : "text-amber-400"}`}
+                    />
+                    {achieved
+                      ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
+                      : tr("Your Mission", "Votre mission", "Tu misión")}
+                  </h3>
+                  <span
+                    className={`text-xs font-semibold ${
+                      achieved ? "text-emerald-300" : "text-amber-300"
+                    }`}
+                  >
+                    {progress}/{goal}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm text-zinc-400">
+                  {achieved
+                    ? tr(
+                        `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
+                        `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
+                        `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
+                      )
+                    : tr(
+                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}.`,
+                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}.`,
+                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}.`
+                      )}
+                </p>
+                <div className="mt-3 h-2 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      achieved ? "bg-emerald-500" : "bg-amber-500"
+                    }`}
+                    style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
         {/* Selling links */}
         <div className="rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-5 flex flex-col sm:flex-row gap-5 items-start">
