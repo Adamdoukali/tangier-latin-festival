@@ -44,8 +44,9 @@ export interface Booking {
   /** ISO dates (YYYY-MM-DD) from the booking form; hotel planning */
   arrivalDate?: string | null;
   departureDate?: string | null;
-  /** Bracelet category override; null = automatic from the pack */
-  bracelet?: BraceletCategory | null;
+  /** Bracelet override — a single category or a JSON array with one
+   *  category per guest (e.g. '["artist","hotel"]'); null = automatic */
+  bracelet?: string | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -270,7 +271,7 @@ const bookingFromRow = (r: any): Booking => ({
   notes: r.notes ?? "",
   arrivalDate: r.arrival_date ?? null,
   departureDate: r.departure_date ?? null,
-  bracelet: (r.bracelet as BraceletCategory) ?? null,
+  bracelet: r.bracelet ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
   collaboratorId: r.collaborator_id ?? null,
@@ -1250,16 +1251,38 @@ export function packRoomCategory(packName: string): PackRoomCategory {
 
 export type BraceletCategory = "artist" | "hotel" | "fullpass";
 
-/** The bracelet a booking's guests get: the manual override when set,
- *  otherwise automatic — room packs → hotel bracelet, rest → full pass. */
-export function effectiveBracelet(
-  booking: Booking,
-  packs: Pack[]
-): BraceletCategory {
-  if (booking.bracelet) return booking.bracelet;
+/** One bracelet per guest of a booking. Manual overrides (single value
+ *  or JSON array per guest) win; otherwise automatic — room packs →
+ *  hotel bracelet, everything else → full pass. */
+export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategory[] {
+  const count = Math.max(1, booking.numPeople || 1);
   const pack = packs.find((p) => p.id === booking.packId);
-  const cat = packRoomCategory(pack?.name ?? booking.packName);
-  return cat === "fullpass" ? "fullpass" : "hotel";
+  const def: BraceletCategory =
+    packRoomCategory(pack?.name ?? booking.packName) === "fullpass" ? "fullpass" : "hotel";
+
+  let overrides: Array<BraceletCategory | null> = [];
+  if (booking.bracelet) {
+    try {
+      const parsed = JSON.parse(booking.bracelet);
+      overrides = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      // legacy single value applies to every guest
+      overrides = Array(count).fill(booking.bracelet as BraceletCategory);
+    }
+  }
+  return Array.from({ length: count }, (_, i) => overrides[i] ?? def);
+}
+
+/** Set one guest's bracelet; the whole per-guest array is persisted. */
+export async function setGuestBracelet(
+  booking: Booking,
+  guestIndex: number,
+  value: BraceletCategory,
+  packs: Pack[]
+): Promise<void> {
+  const arr = guestBracelets(booking, packs);
+  arr[guestIndex] = value;
+  await updateBookingBracelet(booking.id, JSON.stringify(arr));
 }
 
 /** True when the bracelet column exists (supabase/bracelets.sql). */
@@ -1269,10 +1292,10 @@ export async function braceletColumnReady(): Promise<boolean> {
   return !error;
 }
 
-/** Set (or clear with null) a booking's bracelet category. */
+/** Set (or clear with null) a booking's raw bracelet value. */
 export async function updateBookingBracelet(
   id: string,
-  bracelet: BraceletCategory | null
+  bracelet: string | null
 ): Promise<void> {
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!.from("bookings").update({ bracelet }).eq("id", id);
