@@ -199,6 +199,7 @@ export function PackBookingModal({
                   numPeople: isDouble ? 2 : 1,
                   danceLevel: "",
                   notes: String(formData.get("Notes") ?? ""),
+                  lang,
                   status: "pending",
                   source: collaborator ? "referral" : "website",
                   collaboratorId: collaborator?.id ?? null,
@@ -216,6 +217,7 @@ export function PackBookingModal({
                       : lang === "es"
                         ? "Tu solicitud de reserva — Tangier International Latin Festival"
                         : "Your reservation request — Tangier International Latin Festival",
+                  lang,
                   fields: {
                     name: customerName,
                     email: customerEmail,

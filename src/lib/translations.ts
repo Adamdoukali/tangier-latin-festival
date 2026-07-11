@@ -1345,9 +1345,37 @@ const dynamicPackDict: Record<string, { en: string; fr: string; es: string }> = 
   "pool parties (1 day only)": { en: "POOL PARTIES (1 DAY ONLY)", fr: "POOL PARTIES (1 JOUR SEULEMENT)", es: "POOL PARTIES (SOLO 1 DÍA)" },
 };
 
+// Segment-based fallback for admin-renamed packs and composite labels
+// (e.g. "Double Room — HOTEL KENZI SOLAZUR (3 NIGHTS)"): translates the
+// known pieces inside the string, leaves the rest (hotel names…) intact.
+const segmentRules: Array<[RegExp, string, string]> = [
+  // [pattern, french, spanish]
+  [/double\s*rooms?/gi, "Chambre Double", "Habitación Doble"],
+  [/single\s*rooms?/gi, "Chambre Simple", "Habitación Individual"],
+  [/chambre double/gi, "Chambre Double", "Habitación Doble"],
+  [/chambre single|chambre simple/gi, "Chambre Simple", "Habitación Individual"],
+  [/(\d+)\s*nights?/gi, "$1 nuits", "$1 noches"],
+  [/without accommodation/gi, "sans hébergement", "sin alojamiento"],
+  [/breakfast/gi, "petit-déjeuner", "desayuno"],
+  [/\bdinner\b/gi, "dîner", "cena"],
+  [/hours of workshops/gi, "heures de workshops", "horas de talleres"],
+  [/all workshops/gi, "tous les workshops", "todos los talleres"],
+  [/social parties/gi, "soirées sociales", "fiestas sociales"],
+  [/international competition/gi, "compétition internationale", "competición internacional"],
+  [/\bhalf\s*board\b/gi, "demi-pension", "media pensión"],
+  [/\bper\s*person\b/gi, "par personne", "por persona"],
+];
+
 export function translateDynamicText(text: string, lang: Language): string {
   const key = (text || "").trim().toLowerCase();
-  return dynamicPackDict[key]?.[lang] || text;
+  const exact = dynamicPackDict[key]?.[lang];
+  if (exact) return exact;
+  if (lang === "en" || !text) return text;
+  let out = text;
+  for (const [re, fr, es] of segmentRules) {
+    out = out.replace(re, lang === "fr" ? fr : es);
+  }
+  return out;
 }
 
 /** Price unit shown after a pack's price:

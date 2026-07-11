@@ -21,14 +21,22 @@ export interface FormNotification {
   autoresponse: string;
   /** Subject of the customer's email (Resend); defaults to `subject` */
   guestSubject?: string;
+  /** Guest's language ('en' | 'fr' | 'es') for the HTML email chrome */
+  lang?: string;
   /** When set, the ticket QR is attached + a ticket button shown (Resend) */
   ticket?: { code: string; url: string } | null;
 }
 
 export async function sendFormNotification(n: FormNotification): Promise<boolean> {
+  // Test hook: E2E tests set this flag to force the interceptable
+  // FormSubmit path instead of the server-side Resend send.
+  const testMode =
+    typeof sessionStorage !== "undefined" &&
+    sessionStorage.getItem("tlf_email_test") === "formsubmit-only";
+
   // 0) Resend through our server — branded email + QR attachment.
   //    Skipped silently when RESEND_API_KEY isn't configured yet.
-  if (n.fields.email) {
+  if (n.fields.email && !testMode) {
     try {
       const res = await sendEmailViaResend({
         data: {
@@ -38,6 +46,7 @@ export async function sendFormNotification(n: FormNotification): Promise<boolean
           fields: n.fields,
           message: n.autoresponse,
           guestSubject: n.guestSubject ?? n.subject,
+          lang: n.lang ?? "en",
           ticket: n.ticket ?? null,
         },
       });
@@ -145,34 +154,98 @@ export function bookingAutoResponse(
   );
 }
 
-/** Confirmation email with the guest's ticket link, sent automatically
- *  when the admin confirms a booking. Bilingual EN/FR (we don't know the
- *  guest's language at confirmation time). */
+/** Confirmation email with the guest's ticket link and every detail of
+ *  their reservation, written entirely in the guest's own language. */
 export function ticketConfirmationEmail(opts: {
   customerName: string;
   packName: string;
   ticketCode: string;
   numPeople: number;
   ticketUrl: string;
+  lang?: string | null;
+  guests?: string[];
+  arrivalDate?: string | null;
+  departureDate?: string | null;
 }): { subject: string; body: string } {
+  const lang = opts.lang === "fr" || opts.lang === "es" ? opts.lang : "en";
   const firstName = opts.customerName.split(/\s|&/)[0] || opts.customerName;
+  const guests =
+    opts.guests && opts.guests.length > 0 ? opts.guests : [opts.customerName];
+  const fmtDate = (d?: string | null) =>
+    d
+      ? new Date(d).toLocaleDateString(
+          lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-GB",
+          { day: "numeric", month: "long", year: "numeric" }
+        )
+      : null;
+  const arrival = fmtDate(opts.arrivalDate);
+  const departure = fmtDate(opts.departureDate);
+
+  const L = {
+    en: {
+      subject: `Your ticket is confirmed! (${opts.ticketCode})`,
+      hello: `Hello ${firstName},`,
+      confirmed: `Great news — your booking at the Tangier International Latin Festival (January 07–11, 2027 · Kenzi Solazur Hotel, Tangier) is CONFIRMED!`,
+      details: "Your reservation details:",
+      pack: "Pack",
+      guests: "Guests",
+      people: (n: number) => `${n} ${n > 1 ? "people" : "person"}`,
+      arrival: "Arrival",
+      departure: "Departure",
+      code: "Reservation number",
+      ticket: "🎫 Your ticket (QR code attached):",
+      show: "Open the link and show the QR code at check-in. Save this email or take a screenshot.",
+      bye: "See you on the dance floor!",
+    },
+    fr: {
+      subject: `Votre billet est confirmé ! (${opts.ticketCode})`,
+      hello: `Bonjour ${firstName},`,
+      confirmed: `Bonne nouvelle — votre réservation au Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger) est CONFIRMÉE !`,
+      details: "Les détails de votre réservation :",
+      pack: "Pack",
+      guests: "Personnes",
+      people: (n: number) => `${n} personne${n > 1 ? "s" : ""}`,
+      arrival: "Arrivée",
+      departure: "Départ",
+      code: "Numéro de réservation",
+      ticket: "🎫 Votre billet (QR code en pièce jointe) :",
+      show: "Ouvrez le lien et présentez le QR code à l'entrée. Gardez cet email ou faites une capture d'écran.",
+      bye: "À très vite sur la piste !",
+    },
+    es: {
+      subject: `¡Tu entrada está confirmada! (${opts.ticketCode})`,
+      hello: `Hola ${firstName},`,
+      confirmed: `¡Buenas noticias — tu reserva para el Tangier International Latin Festival (07–11 de enero de 2027 · Hotel Kenzi Solazur, Tánger) está CONFIRMADA!`,
+      details: "Los detalles de tu reserva:",
+      pack: "Pack",
+      guests: "Personas",
+      people: (n: number) => `${n} persona${n > 1 ? "s" : ""}`,
+      arrival: "Llegada",
+      departure: "Salida",
+      code: "Número de reserva",
+      ticket: "🎫 Tu entrada (código QR adjunto):",
+      show: "Abre el enlace y muestra el código QR en la entrada. Guarda este correo o haz una captura de pantalla.",
+      bye: "¡Nos vemos en la pista!",
+    },
+  }[lang];
+
+  const detailLines = [
+    `• ${L.pack}: ${opts.packName}`,
+    `• ${L.guests}: ${guests.join(" & ")} (${L.people(opts.numPeople)})`,
+    ...(arrival ? [`• ${L.arrival}: ${arrival}`] : []),
+    ...(departure ? [`• ${L.departure}: ${departure}`] : []),
+    `• ${L.code}: ${opts.ticketCode}`,
+  ].join("\n");
+
   return {
-    subject: `Your ticket is confirmed! · Votre billet est confirmé ! (${opts.ticketCode})`,
+    subject: L.subject,
     body:
-      `Hello ${firstName},\n\n` +
-      `Great news — your booking for "${opts.packName}" at the Tangier International Latin Festival (January 07–11, 2027 · Kenzi Solazur Hotel, Tangier) is CONFIRMED!\n\n` +
-      `🎫 Your ticket (QR code included):\n${opts.ticketUrl}\n\n` +
-      `Ticket code: ${opts.ticketCode}\n` +
-      `Guests: ${opts.numPeople}\n\n` +
-      `Open the link and show the QR code at check-in. Save it or take a screenshot.\n\n` +
-      `───────────────\n\n` +
-      `Bonjour ${firstName},\n\n` +
-      `Bonne nouvelle — votre réservation « ${opts.packName} » au Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger) est CONFIRMÉE !\n\n` +
-      `🎫 Votre billet (avec QR code) :\n${opts.ticketUrl}\n\n` +
-      `Code billet : ${opts.ticketCode}\n` +
-      `Personnes : ${opts.numPeople}\n\n` +
-      `Ouvrez le lien et présentez le QR code à l'entrée. Enregistrez-le ou faites une capture d'écran.\n\n` +
-      `See you on the dance floor! / À très vite sur la piste !\n` +
+      `${L.hello}\n\n` +
+      `${L.confirmed}\n\n` +
+      `${L.details}\n${detailLines}\n\n` +
+      `${L.ticket}\n${opts.ticketUrl}\n\n` +
+      `${L.show}\n\n` +
+      `${L.bye}\n` +
       `— Tangier International Latin Festival\n` +
       `contact@tangierlatinfestival.com · +212 6 64 01 02 79`,
   };

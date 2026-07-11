@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getBookingByTicketCode, ticketUrl, type Booking } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
+import { translateDynamicText, type Language } from "@/lib/translations";
 
 export const Route = createFileRoute("/ticket")({
   head: () => ({
@@ -170,19 +171,47 @@ function TicketPage() {
                 </code>
               </div>
               <dl className="mt-5 space-y-2.5 text-sm">
-                {[
-                  [tr("Name", "Nom", "Nombre"), booking.customerName],
-                  [tr("Pack", "Pack", "Pack"), booking.packName],
-                  [
-                    tr("Guests", "Personnes", "Personas"),
-                    String(booking.numPeople || 1),
-                  ],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex justify-between gap-4">
-                    <dt className="text-gray-500 shrink-0">{k}</dt>
-                    <dd className="text-gray-800 text-right">{v}</dd>
-                  </div>
-                ))}
+                {(() => {
+                  const fmt = (d?: string | null) =>
+                    d
+                      ? new Date(d).toLocaleDateString(
+                          lang === "fr" ? "fr-FR" : lang === "es" ? "es-ES" : "en-GB",
+                          { day: "numeric", month: "long", year: "numeric" }
+                        )
+                      : null;
+                  const rows: Array<[string, string]> = [
+                    [tr("Name", "Nom", "Nombre"), booking.customerName],
+                    [
+                      tr("Pack", "Pack", "Pack"),
+                      translateDynamicText(booking.packName, lang as Language),
+                    ],
+                    [tr("Guests", "Personnes", "Personas"), String(booking.numPeople || 1)],
+                  ];
+                  const arrival = fmt(booking.arrivalDate);
+                  const departure = fmt(booking.departureDate);
+                  if (arrival)
+                    rows.push([tr("Arrival", "Arrivée", "Llegada"), arrival]);
+                  if (departure)
+                    rows.push([tr("Departure", "Départ", "Salida"), departure]);
+                  rows.push([
+                    tr("Venue", "Lieu", "Lugar"),
+                    "Kenzi Solazur Hotel, Tangier",
+                  ]);
+                  rows.push([
+                    tr("Festival", "Festival", "Festival"),
+                    tr(
+                      "January 07–11, 2027",
+                      "07–11 janvier 2027",
+                      "07–11 de enero de 2027"
+                    ),
+                  ]);
+                  return rows.map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-4">
+                      <dt className="text-gray-500 shrink-0">{k}</dt>
+                      <dd className="text-gray-800 text-right">{v}</dd>
+                    </div>
+                  ));
+                })()}
               </dl>
             </div>
           </>

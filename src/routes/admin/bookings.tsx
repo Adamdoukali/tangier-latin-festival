@@ -30,6 +30,7 @@ import {
   type Pack,
 } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
+import { translateDynamicText, type Language } from "@/lib/translations";
 
 export const Route = createFileRoute("/admin/bookings")({
   component: AdminBookings,
@@ -121,21 +122,33 @@ function AdminBookings() {
       showQr(updated);
       if (updated.email) {
         setAutoEmail("sending");
+        // Guest's own language: what they booked in, else their partner's
+        const partner = updated.collaboratorId
+          ? collaborators.find((c) => c.id === updated.collaboratorId)
+          : undefined;
+        const bLang = ((updated.lang || partner?.language || "en") as Language) ?? "en";
+        const tUrl =
+          ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
         const mail = ticketConfirmationEmail({
           customerName: updated.customerName,
-          packName: updated.packName,
+          packName: translateDynamicText(updated.packName, bLang),
           ticketCode: updated.ticketCode,
           numPeople: updated.numPeople || 1,
-          ticketUrl: ticketUrl(updated.ticketCode),
+          ticketUrl: tUrl,
+          lang: bLang,
+          guests: updated.customerName.split(/\s*&\s*/),
+          arrivalDate: updated.arrivalDate,
+          departureDate: updated.departureDate,
         });
         sendFormNotification({
-          subject: mail.subject,
+          subject: `Ticket confirmed: ${updated.customerName} (${updated.ticketCode})`,
           guestSubject: mail.subject,
-          ticket: { code: updated.ticketCode, url: ticketUrl(updated.ticketCode) },
+          lang: bLang,
+          ticket: { code: updated.ticketCode, url: tUrl },
           fields: {
             name: updated.customerName,
             email: updated.email,
-            Ticket: ticketUrl(updated.ticketCode),
+            Ticket: tUrl,
             Code: updated.ticketCode,
             Pack: updated.packName,
           },
@@ -149,16 +162,23 @@ function AdminBookings() {
     }
   };
 
-  // Prefilled WhatsApp message with the guest's ticket link
+  // Prefilled WhatsApp message with the guest's ticket link, in their language
   const waTicketLink = (b: Booking): string | null => {
     const digits = (b.phone || "").replace(/\D/g, "");
     if (!digits) return null;
     const firstName = b.customerName.split(/\s|&/)[0] || b.customerName;
+    const partner = b.collaboratorId
+      ? collaborators.find((c) => c.id === b.collaboratorId)
+      : undefined;
+    const bLang = (b.lang || partner?.language || "en") as Language;
+    const tUrl = ticketUrl(b.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
+    const pack = translateDynamicText(b.packName, bLang);
     const text =
-      `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n` +
-      `🎫 Your ticket (show the QR at check-in):\n${ticketUrl(b.ticketCode)}\n\n` +
-      `Code: ${b.ticketCode} · ${b.packName}\n` +
-      `See you January 07–11, 2027 at the Kenzi Solazur, Tangier!`;
+      bLang === "fr"
+        ? `Bonjour ${firstName} ! 🎉 Votre réservation pour le Tangier International Latin Festival est CONFIRMÉE.\n\n🎫 Votre billet (présentez le QR à l'entrée) :\n${tUrl}\n\nCode : ${b.ticketCode} · ${pack}\nRendez-vous du 07 au 11 janvier 2027 au Kenzi Solazur, Tanger !`
+        : bLang === "es"
+          ? `¡Hola ${firstName}! 🎉 Tu reserva para el Tangier International Latin Festival está CONFIRMADA.\n\n🎫 Tu entrada (muestra el QR en la entrada):\n${tUrl}\n\nCódigo: ${b.ticketCode} · ${pack}\n¡Nos vemos del 07 al 11 de enero de 2027 en el Kenzi Solazur, Tánger!`
+          : `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n🎫 Your ticket (show the QR at check-in):\n${tUrl}\n\nCode: ${b.ticketCode} · ${pack}\nSee you January 07–11, 2027 at the Kenzi Solazur, Tangier!`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
   };
 

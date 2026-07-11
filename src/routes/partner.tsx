@@ -39,6 +39,7 @@ import {
   restorePartnerSession,
 } from "@/lib/partner-auth";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
+import { translateDynamicText, type Language } from "@/lib/translations";
 
 export const Route = createFileRoute("/partner")({
   head: () => ({
@@ -228,23 +229,30 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     await reload();
 
     // Confirming automatically sends the guest their ticket (QR page with
-    // the names and details they filled in) — same as from the admin.
+    // the names and details they filled in) — in the guest's own language.
     if (status === "confirmed" && updated?.email) {
+      const bLang = ((updated.lang || partner.language || "en") as "en" | "fr" | "es");
+      const tUrl = ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
       const mail = ticketConfirmationEmail({
         customerName: updated.customerName,
-        packName: updated.packName,
+        packName: translateDynamicText(updated.packName, bLang),
         ticketCode: updated.ticketCode,
         numPeople: updated.numPeople || 1,
-        ticketUrl: ticketUrl(updated.ticketCode),
+        ticketUrl: tUrl,
+        lang: bLang,
+        guests: updated.customerName.split(/\s*&\s*/),
+        arrivalDate: updated.arrivalDate,
+        departureDate: updated.departureDate,
       });
       sendFormNotification({
-        subject: mail.subject,
+        subject: `Ticket confirmed: ${updated.customerName} (${updated.ticketCode})`,
         guestSubject: mail.subject,
-        ticket: { code: updated.ticketCode, url: ticketUrl(updated.ticketCode) },
+        lang: bLang,
+        ticket: { code: updated.ticketCode, url: tUrl },
         fields: {
           name: updated.customerName,
           email: updated.email,
-          Ticket: ticketUrl(updated.ticketCode),
+          Ticket: tUrl,
           Code: updated.ticketCode,
           Pack: updated.packName,
           "Confirmed by partner": partner.name,
@@ -516,9 +524,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       <p className="text-xs text-gray-500 truncate">
                         {(() => {
                           const pack = allPacks.find((p) => p.id === b.packId);
+                          const label = translateDynamicText(
+                            pack ? packLabel(pack) : b.packName,
+                            L as Language
+                          );
                           return pack
-                            ? `${packLabel(pack)} · ${pack.price} ${pack.currency || "€"}`
-                            : b.packName;
+                            ? `${label} · ${pack.price} ${pack.currency || "€"}`
+                            : label;
                         })()}
                         {b.numPeople > 1
                           ? ` · ${b.numPeople} ${tr("people", "personnes", "personas")}`

@@ -122,6 +122,7 @@ function BookPage() {
         notes: form.notes,
         arrivalDate: form.arrival || null,
         departureDate: form.departure || null,
+        lang,
         status: "pending",
         source: collaborator ? "referral" : "website",
         collaboratorId: collaborator?.id ?? null,
@@ -139,6 +140,7 @@ function BookPage() {
           "Votre demande de réservation — Tangier International Latin Festival",
           "Tu solicitud de reserva — Tangier International Latin Festival"
         ),
+        lang,
         fields: {
           name: customerName,
           email: form.email,

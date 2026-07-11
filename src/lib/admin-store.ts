@@ -47,6 +47,8 @@ export interface Booking {
   /** Bracelet override — a single category or a JSON array with one
    *  category per guest (e.g. '["artist","hotel"]'); null = automatic */
   bracelet?: string | null;
+  /** Language the guest booked in ('en' | 'fr' | 'es') */
+  lang?: string | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -272,6 +274,7 @@ const bookingFromRow = (r: any): Booking => ({
   arrivalDate: r.arrival_date ?? null,
   departureDate: r.departure_date ?? null,
   bracelet: r.bracelet ?? null,
+  lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
   collaboratorId: r.collaborator_id ?? null,
@@ -700,13 +703,14 @@ export async function addBooking(
           notes: booking.notes,
           arrival_date: booking.arrivalDate || null,
           departure_date: booking.departureDate || null,
+          lang: booking.lang || null,
           status: booking.status,
           source: booking.source ?? "manual",
           collaborator_id: booking.collaboratorId ?? null,
           invite_id: booking.inviteId ?? null,
           invite_code: booking.inviteCode ?? null,
         },
-        ["source", "collaborator_id", "arrival_date", "departure_date"]
+        ["source", "collaborator_id", "arrival_date", "departure_date", "lang"]
       );
       return bookingFromRow(data);
     } catch (e) {

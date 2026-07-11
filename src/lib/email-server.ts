@@ -29,6 +29,8 @@ export interface EmailPayload {
   message: string;
   /** Guest email subject */
   guestSubject: string;
+  /** Guest's language ('en' | 'fr' | 'es') for buttons/notes */
+  lang?: string;
   /** When set, the QR code is attached and a ticket button is shown */
   ticket?: { code: string; url: string } | null;
 }
@@ -41,10 +43,19 @@ function guestHtml(p: EmailPayload): string {
     .split(/\n{2,}/)
     .map((para) => `<p style="margin:0 0 16px;line-height:1.6">${esc(para).replace(/\n/g, "<br/>")}</p>`)
     .join("");
+  const lang = p.lang === "fr" || p.lang === "es" ? p.lang : "en";
+  const btnText =
+    lang === "fr" ? "🎫 Voir mon billet" : lang === "es" ? "🎫 Ver mi entrada" : "🎫 Open my ticket";
+  const noteText =
+    lang === "fr"
+      ? "le QR code est en pièce jointe de cet email."
+      : lang === "es"
+        ? "el código QR está adjunto a este correo."
+        : "the QR code is attached to this email.";
   const ticketBlock = p.ticket
     ? `<div style="text-align:center;margin:24px 0">
-         <a href="${p.ticket.url}" style="display:inline-block;background:${GOLD};color:#18181b;font-weight:bold;text-decoration:none;padding:14px 28px;border-radius:999px">🎫 Open my ticket / Voir mon billet</a>
-         <p style="margin:12px 0 0;font-size:12px;color:#71717a">Ticket: <b>${esc(p.ticket.code)}</b> — the QR code is attached to this email.<br/>Le QR code est en pièce jointe de cet email.</p>
+         <a href="${p.ticket.url}" style="display:inline-block;background:${GOLD};color:#18181b;font-weight:bold;text-decoration:none;padding:14px 28px;border-radius:999px">${btnText}</a>
+         <p style="margin:12px 0 0;font-size:12px;color:#71717a">Ticket: <b>${esc(p.ticket.code)}</b> — ${noteText}</p>
        </div>`
     : "";
   return `<!doctype html><html><body style="margin:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#27272a">
