@@ -92,52 +92,94 @@ function AdminHotel() {
     r.pack?.features.find((f) => /night|nuit|noche/i.test(f)) ?? r.pack?.sub ?? "";
 
   // Excel-friendly CSV (semicolon + BOM), one row per room
+  // Rooming-list export in the festival's own sheet format:
+  // one row per GUEST, rooms numbered per promoter
+  // (Id chambre / Promoteur · Prénom · Nom · dates · nuits · type ·
+  //  Montant · Commission · Paiement · Reste à payer · Commentaire).
   const downloadExcel = () => {
     const header = [
-      "Partner",
-      "Room Type",
-      "Guest 1",
-      "Guest 2",
-      "People",
-      "Pack",
-      "Arrival",
-      "Departure",
-      "Status",
-      "Reservation",
-      "Email",
-      "Phone",
+      "Id chambre / Promoteur",
+      "Prénom",
+      "Nom",
+      "Date d'entrée",
+      "Date de sortie",
+      "Nombre de nuits",
+      "Type de chambre",
+      "Montant",
+      "Commission",
+      "Paiement",
+      "Reste à payer",
+      "Commentaire",
     ];
-    const rows = rooms.map((r) => [
-      r.partner ? r.partner.name : "Direct",
-      r.category === "double" ? "Double Room" : "Single Room",
-      r.guests[0] ?? "",
-      r.guests[1] ?? "",
-      r.booking.numPeople || r.guests.length,
-      r.pack ? `${r.pack.name} — ${r.pack.sub}` : r.booking.packName,
-      r.booking.arrivalDate ?? "",
-      r.booking.departureDate ?? "",
-      r.booking.status,
-      r.booking.ticketCode,
-      r.booking.email,
-      r.booking.phone,
-    ]);
-    const totals = [
-      "TOTAL",
-      `${doubles.length} double / ${singles.length} single`,
-      "",
-      "",
-      totalGuests,
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ];
+
+    const frDate = (d?: string | null) =>
+      d ? new Date(d).toLocaleDateString("fr-FR") : "";
+    const nightsOfRoom = (r: Room): number | "" => {
+      if (r.booking.arrivalDate && r.booking.departureDate) {
+        const n = Math.round(
+          (new Date(r.booking.departureDate).getTime() -
+            new Date(r.booking.arrivalDate).getTime()) /
+            86400000
+        );
+        if (n > 0) return n;
+      }
+      const feat = r.pack?.features.find((f) => /(\d+)\s*(nights?|nuits?|noches?)/i.test(f));
+      const m = feat?.match(/(\d+)/);
+      return m ? parseInt(m[1], 10) : "";
+    };
+    // Per-guest amount: double rooms are priced per person, singles per room.
+    const guestAmount = (r: Room): number | "" => {
+      const price = parseInt(r.pack?.price ?? "", 10);
+      return Number.isFinite(price) ? price : "";
+    };
+    const guestCommission = (r: Room): number | "" => {
+      const p = r.partner;
+      if (!p || !p.commission) return "";
+      if ((p.commissionType ?? "percent") === "per_person") return p.commission;
+      const amount = guestAmount(r);
+      return amount === "" ? "" : Math.round(amount * (p.commission / 100) * 100) / 100;
+    };
+
+    // Rooms numbered within each promoter group, in the displayed order
+    const csvRows: Array<Array<string | number>> = [];
+    for (const [, g] of sortedGroups) {
+      const promoter = g.rooms[0]?.partner?.name ?? "Direct";
+      const ordered = [
+        ...g.rooms.filter((r) => r.category === "double"),
+        ...g.rooms.filter((r) => r.category === "single"),
+      ];
+      ordered.forEach((r, i) => {
+        const roomId = `Chambre ${i + 1} / ${promoter}`;
+        const roomType = r.pack
+          ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
+          : r.booking.packName;
+        const guestCount = Math.max(r.booking.numPeople || 1, r.guests.length);
+        for (let gi = 0; gi < guestCount; gi++) {
+          const full = (r.guests[gi] ?? "").trim();
+          const parts = full.split(/\s+/);
+          const prenom = parts[0] ?? "";
+          const nom = parts.slice(1).join(" ").toUpperCase();
+          csvRows.push([
+            roomId,
+            prenom,
+            nom,
+            frDate(r.booking.arrivalDate),
+            frDate(r.booking.departureDate),
+            nightsOfRoom(r),
+            roomType,
+            guestAmount(r),
+            guestCommission(r),
+            "", // Paiement — filled in by the team
+            "", // Reste à payer
+            `${r.booking.ticketCode}${r.booking.notes ? ` — ${r.booking.notes}` : ""}`,
+          ]);
+        }
+      });
+    }
+
     const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
     const csv =
-      "﻿" + [header, ...rows, totals].map((r) => r.map(esc).join(";")).join("\r\n");
+      "﻿" + [header, ...csvRows].map((r) => r.map(esc).join(";")).join("\r\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
