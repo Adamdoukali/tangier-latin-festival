@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import * as XLSX from "xlsx";
 import { BedDouble, Bed, Users, Download, Building2 } from "lucide-react";
 import {
   getBookings,
@@ -177,15 +178,25 @@ function AdminHotel() {
       });
     }
 
-    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv =
-      "﻿" + [header, ...csvRows].map((r) => r.map(esc).join(";")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `hotel-rooming-list-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    // Real .xlsx so Excel opens it correctly in every language/locale.
+    const ws = XLSX.utils.aoa_to_sheet([header, ...csvRows]);
+    ws["!cols"] = [
+      { wch: 26 }, // Id chambre / Promoteur
+      { wch: 14 }, // Prénom
+      { wch: 16 }, // Nom
+      { wch: 13 }, // Date d'entrée
+      { wch: 13 }, // Date de sortie
+      { wch: 14 }, // Nombre de nuits
+      { wch: 38 }, // Type de chambre
+      { wch: 10 }, // Montant
+      { wch: 11 }, // Commission
+      { wch: 10 }, // Paiement
+      { wch: 12 }, // Reste à payer
+      { wch: 34 }, // Commentaire
+    ];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Rooming list");
+    XLSX.writeFile(wb, `hotel-rooming-list-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const statusStyles: Record<string, string> = {

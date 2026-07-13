@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
+import * as XLSX from "xlsx";
 import {
   Plus,
   Pencil,
@@ -273,16 +274,12 @@ function AdminCollaborators() {
       "",
       "",
     ];
-    const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
-    const csv =
-      "﻿" +
-      [header, ...rows, totals].map((r) => r.map(esc).join(";")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `collaborators-sales-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    // Real .xlsx so Excel opens it correctly in every language/locale.
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totals]);
+    ws["!cols"] = header.map((h) => ({ wch: Math.max(12, h.length + 4) }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Collaborators");
+    XLSX.writeFile(wb, `collaborators-sales-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   return (
