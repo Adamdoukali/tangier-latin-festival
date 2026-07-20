@@ -22,6 +22,7 @@ import {
   deleteCollaborator,
   collaboratorsReady,
   commissionColumnsReady,
+  commissionRatesReady,
   languageColumnReady,
   missionColumnsReady,
   formatMoney,
@@ -46,6 +47,9 @@ interface CollabForm {
   commission: number;
   commissionType: CommissionType;
   commissionCurrency: CommissionCurrency;
+  commissionDouble: number;
+  commissionSingle: number;
+  commissionFullpass: number;
   language: PartnerLanguage;
   missionGoal: string; // "" = no mission
   missionReward: number;
@@ -65,6 +69,9 @@ const emptyForm: CollabForm = {
   commission: 0,
   commissionType: "percent",
   commissionCurrency: "EUR",
+  commissionDouble: 0,
+  commissionSingle: 0,
+  commissionFullpass: 0,
   language: "en",
   missionGoal: "",
   missionReward: 0,
@@ -110,6 +117,7 @@ function AdminCollaborators() {
   const [commissionReady, setCommissionReady] = useState(true);
   const [langReady, setLangReady] = useState(true);
   const [missionReady, setMissionReady] = useState(true);
+  const [ratesReady, setRatesReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -121,17 +129,19 @@ function AdminCollaborators() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    const [ok, commOk, langOk, missionOk, s] = await Promise.all([
+    const [ok, commOk, langOk, missionOk, ratesOk, s] = await Promise.all([
       collaboratorsReady(),
       commissionColumnsReady(),
       languageColumnReady(),
       missionColumnsReady(),
+      commissionRatesReady(),
       getCollaboratorStats(),
     ]);
     setReady(ok);
     setCommissionReady(commOk);
     setLangReady(langOk);
     setMissionReady(missionOk);
+    setRatesReady(ratesOk);
     setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
     setLoading(false);
   }, []);
@@ -158,6 +168,9 @@ function AdminCollaborators() {
       commission: c.commission ?? 0,
       commissionType: c.commissionType ?? "percent",
       commissionCurrency: c.commissionCurrency ?? "EUR",
+      commissionDouble: c.commissionDouble ?? c.commission ?? 0,
+      commissionSingle: c.commissionSingle ?? c.commission ?? 0,
+      commissionFullpass: c.commissionFullpass ?? c.commission ?? 0,
       language: c.language ?? "en",
       missionGoal: c.missionGoal ? String(c.missionGoal) : "",
       missionReward: c.missionReward ?? 0,
@@ -187,6 +200,10 @@ function AdminCollaborators() {
       inviteQuota: form.inviteQuota.trim() === "" ? null : parseInt(form.inviteQuota, 10) || 0,
       missionGoal:
         form.missionGoal.trim() === "" ? null : parseInt(form.missionGoal, 10) || null,
+      // For per-person deals keep the general amount in sync with the
+      // double-room rate as a fallback for older data paths.
+      commission:
+        form.commissionType === "per_person" ? form.commissionDouble : form.commission,
     };
     try {
       if (editingId) {
@@ -334,6 +351,26 @@ function AdminCollaborators() {
               </code>
               , then refresh this page. Until then, collaborators save with the classic
               percentage commission only.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Split-rate columns missing */}
+      {ready && !ratesReady && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
+              Per-category commission rates need a database update
+            </p>
+            <p className="mt-1">
+              The separate double / single / full pass rates can't be saved yet. Open the
+              Supabase Dashboard → SQL Editor, run the script in{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">
+                supabase/commission-rates.sql
+              </code>
+              , then refresh this page.
             </p>
           </div>
         </div>
@@ -659,48 +696,80 @@ function AdminCollaborators() {
                       <option value="per_person">Fixed amount per person</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                      {form.commissionType === "percent" ? "Percentage" : "Amount / person"}
-                    </label>
-                    <div className="flex gap-1.5">
-                      <input
-                        type="number"
-                        min={0}
-                        max={form.commissionType === "percent" ? 100 : undefined}
-                        value={form.commission}
-                        onChange={(e) =>
-                          setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
-                        }
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
-                      />
-                      {form.commissionType === "percent" ? (
+                  {form.commissionType === "percent" ? (
+                    <div>
+                      <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                        Percentage
+                      </label>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={form.commission}
+                          onChange={(e) =>
+                            setForm({ ...form, commission: parseFloat(e.target.value) || 0 })
+                          }
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                        />
                         <span className="grid place-items-center px-3 rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-600 shrink-0">
                           %
                         </span>
-                      ) : (
-                        <select
-                          value={form.commissionCurrency}
-                          onChange={(e) =>
-                            setForm({
-                              ...form,
-                              commissionCurrency: e.target.value as CommissionCurrency,
-                            })
-                          }
-                          className="rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer shrink-0"
-                          title="Commission currency"
-                        >
-                          <option value="EUR">€</option>
-                          <option value="MAD">MAD</option>
-                        </select>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                        Currency
+                      </label>
+                      <select
+                        value={form.commissionCurrency}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            commissionCurrency: e.target.value as CommissionCurrency,
+                          })
+                        }
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                        title="Commission currency"
+                      >
+                        <option value="EUR">€ (Euro)</option>
+                        <option value="MAD">MAD (Dirham)</option>
+                      </select>
+                    </div>
+                  )}
                 </div>
+
+                {form.commissionType === "per_person" && (
+                  <div className="grid grid-cols-3 gap-3">
+                    {(
+                      [
+                        ["commissionDouble", "Double room / pers"],
+                        ["commissionSingle", "Single room / pers"],
+                        ["commissionFullpass", "Full pass / pers"],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <div key={key}>
+                        <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                          {label}
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={form[key]}
+                          onChange={(e) =>
+                            setForm({ ...form, [key]: parseFloat(e.target.value) || 0 })
+                          }
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <p className="text-[11px] text-gray-500">
                   {form.commissionType === "percent"
                     ? "Earns a percentage of the € value of every sale made through their link. Free invite tickets don't count."
-                    : "Earns this amount for every person who books through their link (a double room = 2 people). Free invite tickets don't count."}
+                    : "Earns a different amount per person depending on what was sold — e.g. 15 for a double room, 10 for a single, 5 for a full pass (a double room = 2 people). Free invite tickets don't count."}
                 </p>
               </div>
 

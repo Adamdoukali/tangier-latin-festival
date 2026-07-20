@@ -86,6 +86,11 @@ export interface Collaborator {
   commissionType?: CommissionType;
   /** Currency of per-person amounts; % commissions are always in € (sales are in €) */
   commissionCurrency?: CommissionCurrency;
+  /** Per-person rates split by what was sold (per_person deals only);
+   *  null falls back to `commission` */
+  commissionDouble?: number | null;
+  commissionSingle?: number | null;
+  commissionFullpass?: number | null;
   /** Portal UI language; the partner's guest links open the site in it too */
   language?: PartnerLanguage;
   /** Bonus mission: bring missionGoal people → win missionReward (null/0 goal = none) */
@@ -306,6 +311,9 @@ const collabFromRow = (r: any): Collaborator => ({
   commission: r.commission != null ? Number(r.commission) : 0,
   commissionType: (r.commission_type as CommissionType) ?? "percent",
   commissionCurrency: (r.commission_currency as CommissionCurrency) ?? "EUR",
+  commissionDouble: r.commission_double != null ? Number(r.commission_double) : null,
+  commissionSingle: r.commission_single != null ? Number(r.commission_single) : null,
+  commissionFullpass: r.commission_fullpass != null ? Number(r.commission_fullpass) : null,
   language: (r.language as PartnerLanguage) ?? "en",
   missionGoal: r.mission_goal ?? null,
   missionReward: r.mission_reward != null ? Number(r.mission_reward) : 0,
@@ -1040,6 +1048,16 @@ export async function missionColumnsReady(): Promise<boolean> {
   return !error;
 }
 
+/** True when the split-rate columns exist (supabase/commission-rates.sql). */
+export async function commissionRatesReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!
+    .from("collaborators")
+    .select("commission_double")
+    .limit(1);
+  return !error;
+}
+
 export async function getCollaborators(): Promise<Collaborator[]> {
   if (useDb()) {
     try {
@@ -1103,6 +1121,9 @@ export async function addCollaborator(
           commission: c.commission ?? 0,
           commission_type: c.commissionType ?? "percent",
           commission_currency: c.commissionCurrency ?? "EUR",
+          commission_double: c.commissionDouble ?? null,
+          commission_single: c.commissionSingle ?? null,
+          commission_fullpass: c.commissionFullpass ?? null,
           language: c.language ?? "en",
           mission_goal: c.missionGoal ?? null,
           mission_reward: c.missionReward ?? 0,
@@ -1119,6 +1140,9 @@ export async function addCollaborator(
           "invite_quota",
           "commission_type",
           "commission_currency",
+          "commission_double",
+          "commission_single",
+          "commission_fullpass",
           "language",
           "mission_goal",
           "mission_reward",
@@ -1158,6 +1182,12 @@ export async function updateCollaborator(
       if (updates.commissionType !== undefined) row.commission_type = updates.commissionType;
       if (updates.commissionCurrency !== undefined)
         row.commission_currency = updates.commissionCurrency;
+      if (updates.commissionDouble !== undefined)
+        row.commission_double = updates.commissionDouble;
+      if (updates.commissionSingle !== undefined)
+        row.commission_single = updates.commissionSingle;
+      if (updates.commissionFullpass !== undefined)
+        row.commission_fullpass = updates.commissionFullpass;
       if (updates.language !== undefined) row.language = updates.language;
       if (updates.missionGoal !== undefined) row.mission_goal = updates.missionGoal;
       if (updates.missionReward !== undefined) row.mission_reward = updates.missionReward;
@@ -1173,6 +1203,9 @@ export async function updateCollaborator(
       const optionalCols = [
         "commission_type",
         "commission_currency",
+        "commission_double",
+        "commission_single",
+        "commission_fullpass",
         "language",
         "mission_goal",
         "mission_reward",
@@ -1328,10 +1361,27 @@ export function formatMoney(value: number, currency: CommissionCurrency = "EUR")
   return currency === "MAD" ? `${n} MAD` : `€${n}`;
 }
 
-/** Human label of a collaborator's deal: "10%" or "50 MAD / person" */
+/** Per-person rate for one pack category, falling back to the general amount. */
+export function perPersonRate(c: Collaborator, cat: PackRoomCategory): number {
+  const v =
+    cat === "double"
+      ? c.commissionDouble
+      : cat === "single"
+        ? c.commissionSingle
+        : c.commissionFullpass;
+  return v ?? c.commission ?? 0;
+}
+
+/** Human label of a collaborator's deal: "10%", "50 MAD / person" or the
+ *  split rates when they differ per category. */
 export function commissionLabel(c: Collaborator): string {
   if ((c.commissionType ?? "percent") === "per_person") {
-    return `${formatMoney(c.commission ?? 0, c.commissionCurrency ?? "EUR")} / person`;
+    const cur = c.commissionCurrency ?? "EUR";
+    const d = perPersonRate(c, "double");
+    const s = perPersonRate(c, "single");
+    const f = perPersonRate(c, "fullpass");
+    if (d === s && s === f) return `${formatMoney(d, cur)} / person`;
+    return `${formatMoney(d, cur)} double · ${formatMoney(s, cur)} single · ${formatMoney(f, cur)} full pass`;
   }
   return `${c.commission ?? 0}%`;
 }
@@ -1370,9 +1420,14 @@ export function collaboratorCommission(
   }
 
   if ((c.commissionType ?? "percent") === "per_person") {
-    const people = mine.reduce((s, b) => s + (b.numPeople || 1), 0);
+    // Rate depends on what was sold: double room / single room / full pass
+    const amount = mine.reduce((s, b) => {
+      const pack = packs.find((x) => x.id === b.packId);
+      const cat = packRoomCategory(pack?.name ?? b.packName);
+      return s + perPersonRate(c, cat) * (b.numPeople || 1);
+    }, 0);
     return {
-      amount: (c.commission ?? 0) * people,
+      amount: Math.round(amount * 100) / 100,
       currency: c.commissionCurrency ?? "EUR",
     };
   }

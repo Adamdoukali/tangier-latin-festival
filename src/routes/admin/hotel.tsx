@@ -7,6 +7,7 @@ import {
   getPacks,
   getCollaborators,
   packRoomCategory,
+  perPersonRate,
   type Booking,
   type Pack,
   type Collaborator,
@@ -135,8 +136,12 @@ function AdminHotel() {
     };
     const guestCommission = (r: Room): number | "" => {
       const p = r.partner;
-      if (!p || !p.commission) return "";
-      if ((p.commissionType ?? "percent") === "per_person") return p.commission;
+      if (!p) return "";
+      if ((p.commissionType ?? "percent") === "per_person") {
+        const rate = perPersonRate(p, r.category);
+        return rate || "";
+      }
+      if (!p.commission) return "";
       const amount = guestAmount(r);
       return amount === "" ? "" : Math.round(amount * (p.commission / 100) * 100) / 100;
     };
