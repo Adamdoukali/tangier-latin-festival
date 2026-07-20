@@ -1,13 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as XLSX from "xlsx";
-import { BedDouble, Bed, Users, Download, Building2 } from "lucide-react";
+import {
+  BedDouble,
+  Bed,
+  Users,
+  Download,
+  Building2,
+  Search,
+  UserCheck,
+  AlertTriangle,
+  X,
+  KeyRound,
+} from "lucide-react";
 import {
   getBookings,
   getPacks,
   getCollaborators,
   packRoomCategory,
   perPersonRate,
+  updateBookingStatus,
+  updateBookingRoomNumber,
+  roomNumberColumnReady,
   type Booking,
   type Pack,
   type Collaborator,
@@ -30,17 +44,54 @@ function AdminHotel() {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [includePending, setIncludePending] = useState(false);
+  const [search, setSearch] = useState("");
+  const [roomReady, setRoomReady] = useState(true);
+  const [error, setError] = useState("");
+  // Bumped after a failed save so uncontrolled room inputs re-mount and
+  // show the real stored value instead of the unsaved typed text.
+  const [resetKey, setResetKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
-      setBookings(b);
-      setPacks(p);
-      setCollaborators(c);
-      setLoading(false);
-    })();
+  const reload = useCallback(async () => {
+    const [b, p, c, roomOk] = await Promise.all([
+      getBookings(),
+      getPacks(),
+      getCollaborators(),
+      roomNumberColumnReady(),
+    ]);
+    setBookings(b);
+    setPacks(p);
+    setCollaborators(c);
+    setRoomReady(roomOk);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  // Check-in at the door: confirmed → checked-in (and back if mistaken)
+  const toggleArrived = async (b: Booking) => {
+    setError("");
+    try {
+      await updateBookingStatus(b.id, b.status === "checked-in" ? "confirmed" : "checked-in");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+    await reload();
+  };
+
+  const saveRoomNumber = async (b: Booking, value: string) => {
+    if ((b.roomNumber ?? "") === value.trim()) return;
+    setError("");
+    try {
+      await updateBookingRoomNumber(b.id, value);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setResetKey((k) => k + 1);
+    }
+    await reload();
+  };
 
   // Rooms only (single + double), confirmed/checked-in by default
   const rooms = bookings
@@ -49,6 +100,19 @@ function AdminHotel() {
         ? b.status !== "declined"
         : b.status === "confirmed" || b.status === "checked-in"
     )
+    .filter((b) => {
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      const partner = b.collaboratorId
+        ? collaborators.find((c) => c.id === b.collaboratorId)
+        : undefined;
+      return (
+        b.customerName.toLowerCase().includes(q) ||
+        b.ticketCode.toLowerCase().includes(q) ||
+        (b.roomNumber ?? "").toLowerCase().includes(q) ||
+        (partner?.name.toLowerCase().includes(q) ?? false)
+      );
+    })
     .map((b) => {
       const pack = packs.find((p) => p.id === b.packId);
       const category = packRoomCategory(pack?.name ?? b.packName);
@@ -101,6 +165,7 @@ function AdminHotel() {
   const downloadExcel = () => {
     const header = [
       "Id chambre / Promoteur",
+      "N° chambre",
       "Prénom",
       "Nom",
       "Date d'entrée",
@@ -167,6 +232,7 @@ function AdminHotel() {
           const nom = parts.slice(1).join(" ").toUpperCase();
           csvRows.push([
             roomId,
+            r.booking.roomNumber ?? "",
             prenom,
             nom,
             frDate(r.booking.arrivalDate),
@@ -187,6 +253,7 @@ function AdminHotel() {
     const ws = XLSX.utils.aoa_to_sheet([header, ...csvRows]);
     ws["!cols"] = [
       { wch: 26 }, // Id chambre / Promoteur
+      { wch: 11 }, // N° chambre
       { wch: 14 }, // Prénom
       { wch: 16 }, // Nom
       { wch: 13 }, // Date d'entrée
@@ -216,40 +283,86 @@ function AdminHotel() {
         <thead>
           <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
             <th className="px-4 py-2.5 text-left font-medium">#</th>
+            <th className="px-4 py-2.5 text-left font-medium">Room Nº</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 1</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 2</th>
             <th className="px-4 py-2.5 text-left font-medium">Nights</th>
             <th className="px-4 py-2.5 text-left font-medium">Arrival → Departure</th>
-            <th className="px-4 py-2.5 text-left font-medium">Status</th>
+            <th className="px-4 py-2.5 text-left font-medium">Check-in</th>
             <th className="px-4 py-2.5 text-left font-medium">Reservation</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
-          {list.map((r, i) => (
-            <tr key={r.booking.id} className="hover:bg-gray-50 transition">
-              <td className="px-4 py-2.5 text-gray-400">{i + 1}</td>
-              <td className="px-4 py-2.5 font-medium text-gray-900">{r.guests[0] ?? "—"}</td>
-              <td className="px-4 py-2.5 text-gray-700">
-                {r.category === "double" ? (r.guests[1] ?? "—") : ""}
-              </td>
-              <td className="px-4 py-2.5 text-gray-600">{nightsOf(r)}</td>
-              <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
-              </td>
-              <td className="px-4 py-2.5">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles[r.booking.status] ?? ""}`}
-                >
-                  {r.booking.status}
-                </span>
-              </td>
-              <td className="px-4 py-2.5">
-                <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                  {r.booking.ticketCode}
-                </code>
-              </td>
-            </tr>
-          ))}
+        <tbody className="divide-y divide-gray-100" key={resetKey}>
+          {list.map((r, i) => {
+            const arrived = r.booking.status === "checked-in";
+            return (
+              <tr
+                key={r.booking.id}
+                className={`transition ${arrived ? "bg-cyan-50/50 hover:bg-cyan-50" : "hover:bg-gray-50"}`}
+              >
+                <td className="px-4 py-2.5 text-gray-400">{i + 1}</td>
+                <td className="px-4 py-2.5">
+                  <div className="relative w-24">
+                    <KeyRound className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-300 pointer-events-none" />
+                    <input
+                      type="text"
+                      defaultValue={r.booking.roomNumber ?? ""}
+                      placeholder="—"
+                      onBlur={(e) => saveRoomNumber(r.booking, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                      }}
+                      className={`w-24 rounded-md border pl-7 pr-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-amber-500 transition ${
+                        r.booking.roomNumber
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : "border-gray-300 bg-white text-gray-900"
+                      }`}
+                      title="Hotel room number — press Enter to save"
+                    />
+                  </div>
+                </td>
+                <td className="px-4 py-2.5 font-medium text-gray-900">{r.guests[0] ?? "—"}</td>
+                <td className="px-4 py-2.5 text-gray-700">
+                  {r.category === "double" ? (r.guests[1] ?? "—") : ""}
+                </td>
+                <td className="px-4 py-2.5 text-gray-600">{nightsOf(r)}</td>
+                <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                  {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
+                </td>
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  {r.booking.status === "pending" ? (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles.pending}`}
+                    >
+                      pending
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => toggleArrived(r.booking)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wide uppercase font-semibold border transition cursor-pointer ${
+                        arrived
+                          ? "bg-cyan-100 text-cyan-700 border-cyan-300 hover:bg-cyan-200"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-cyan-400 hover:text-cyan-700"
+                      }`}
+                      title={
+                        arrived
+                          ? "Guest arrived — click to undo"
+                          : "Mark the guests as arrived (check-in)"
+                      }
+                    >
+                      <UserCheck className="h-3.5 w-3.5" />
+                      {arrived ? "Arrived ✓" : "Check in"}
+                    </button>
+                  )}
+                </td>
+                <td className="px-4 py-2.5">
+                  <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                    {r.booking.ticketCode}
+                  </code>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -277,8 +390,40 @@ function AdminHotel() {
         </button>
       </div>
 
+      {/* Room-number column missing */}
+      {!roomReady && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
+              Room numbers need a database update
+            </p>
+            <p className="mt-1">
+              Assigning room numbers can't be saved yet. Open the Supabase Dashboard → SQL
+              Editor, run the script in{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">
+                supabase/room-number.sql
+              </code>
+              , then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start justify-between gap-3">
+          <p className="text-sm text-red-700">{error}</p>
+          <button
+            onClick={() => setError("")}
+            className="text-red-400 hover:text-red-600 transition cursor-pointer shrink-0"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs tracking-widest uppercase text-gray-500">Double Rooms</p>
@@ -300,18 +445,40 @@ function AdminHotel() {
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{totalGuests}</p>
         </div>
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs tracking-widest uppercase text-gray-500">Arrived</p>
+            <UserCheck className="h-4 w-4 text-cyan-600" />
+          </div>
+          <p className="mt-1 font-display text-2xl text-gray-900">
+            {rooms.filter((r) => r.booking.status === "checked-in").length}
+            <span className="text-sm text-gray-400 font-normal"> / {rooms.length}</span>
+          </p>
+        </div>
       </div>
 
-      {/* Filter */}
-      <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={includePending}
-          onChange={(e) => setIncludePending(e.target.checked)}
-          className="accent-amber-500"
-        />
-        Include pending bookings (not confirmed yet)
-      </label>
+      {/* Search + filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search a guest, reservation, partner or room number…"
+            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+          />
+        </div>
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            checked={includePending}
+            onChange={(e) => setIncludePending(e.target.checked)}
+            className="accent-amber-500"
+          />
+          Include pending bookings (not confirmed yet)
+        </label>
+      </div>
 
       {/* Groups */}
       {loading ? (

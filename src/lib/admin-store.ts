@@ -49,6 +49,8 @@ export interface Booking {
   bracelet?: string | null;
   /** JSON array of booleans — has each guest received their bracelet? */
   braceletGiven?: string | null;
+  /** Real hotel room number assigned at check-in (e.g. "214") */
+  roomNumber?: string | null;
   /** Language the guest booked in ('en' | 'fr' | 'es') */
   lang?: string | null;
   status: BookingStatus;
@@ -282,6 +284,7 @@ const bookingFromRow = (r: any): Booking => ({
   departureDate: r.departure_date ?? null,
   bracelet: r.bracelet ?? null,
   braceletGiven: r.bracelet_given ?? null,
+  roomNumber: r.room_number ?? null,
   lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
@@ -1345,6 +1348,43 @@ export async function braceletGivenColumnReady(): Promise<boolean> {
   if (!useDb()) return true;
   const { error } = await supabase!.from("bookings").select("bracelet_given").limit(1);
   return !error;
+}
+
+/** True when the room_number column exists (supabase/room-number.sql). */
+export async function roomNumberColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("bookings").select("room_number").limit(1);
+  return !error;
+}
+
+/** Set (or clear) the real hotel room number of a booking. */
+export async function updateBookingRoomNumber(
+  id: string,
+  roomNumber: string | null
+): Promise<void> {
+  const value = roomNumber?.trim() || null;
+  if (useDb() && !isLocalId(id)) {
+    const { error } = await supabase!
+      .from("bookings")
+      .update({ room_number: value })
+      .eq("id", id);
+    if (error) {
+      warn("updateBookingRoomNumber", error);
+      if (/room_number/i.test(error.message ?? "")) {
+        throw new Error(
+          "The room_number column doesn't exist yet — run supabase/room-number.sql in the Supabase SQL Editor."
+        );
+      }
+      throw new Error(error.message || "Could not save the room number.");
+    }
+    return;
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    bookings[idx] = { ...bookings[idx], roomNumber: value };
+    writeStore(BOOKINGS_KEY, bookings);
+  }
 }
 
 /** Toggle one guest's "bracelet received" flag. */
