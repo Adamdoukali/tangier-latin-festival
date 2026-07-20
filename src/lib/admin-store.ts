@@ -47,6 +47,8 @@ export interface Booking {
   /** Bracelet override — a single category or a JSON array with one
    *  category per guest (e.g. '["artist","hotel"]'); null = automatic */
   bracelet?: string | null;
+  /** JSON array of booleans — has each guest received their bracelet? */
+  braceletGiven?: string | null;
   /** Language the guest booked in ('en' | 'fr' | 'es') */
   lang?: string | null;
   status: BookingStatus;
@@ -279,6 +281,7 @@ const bookingFromRow = (r: any): Booking => ({
   arrivalDate: r.arrival_date ?? null,
   departureDate: r.departure_date ?? null,
   bracelet: r.bracelet ?? null,
+  braceletGiven: r.bracelet_given ?? null,
   lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
@@ -1320,6 +1323,61 @@ export async function setGuestBracelet(
   const arr = guestBracelets(booking, packs);
   arr[guestIndex] = value;
   await updateBookingBracelet(booking.id, JSON.stringify(arr));
+}
+
+/** Has each guest of the booking received their bracelet? */
+export function guestBraceletsGiven(booking: Booking): boolean[] {
+  const count = Math.max(1, booking.numPeople || 1);
+  let given: boolean[] = [];
+  if (booking.braceletGiven) {
+    try {
+      const parsed = JSON.parse(booking.braceletGiven);
+      if (Array.isArray(parsed)) given = parsed.map(Boolean);
+    } catch {
+      /* treat as none given */
+    }
+  }
+  return Array.from({ length: count }, (_, i) => given[i] ?? false);
+}
+
+/** True when the bracelet_given column exists (supabase/bracelet-given.sql). */
+export async function braceletGivenColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("bookings").select("bracelet_given").limit(1);
+  return !error;
+}
+
+/** Toggle one guest's "bracelet received" flag. */
+export async function setGuestBraceletGiven(
+  booking: Booking,
+  guestIndex: number,
+  given: boolean
+): Promise<void> {
+  const arr = guestBraceletsGiven(booking);
+  arr[guestIndex] = given;
+  const value = JSON.stringify(arr);
+  if (useDb() && !isLocalId(booking.id)) {
+    const { error } = await supabase!
+      .from("bookings")
+      .update({ bracelet_given: value })
+      .eq("id", booking.id);
+    if (error) {
+      warn("setGuestBraceletGiven", error);
+      if (/bracelet_given/i.test(error.message ?? "")) {
+        throw new Error(
+          "The bracelet_given column doesn't exist yet — run supabase/bracelet-given.sql in the Supabase SQL Editor."
+        );
+      }
+      throw new Error(error.message || "Could not save the bracelet status.");
+    }
+    return;
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === booking.id);
+  if (idx !== -1) {
+    bookings[idx] = { ...bookings[idx], braceletGiven: value };
+    writeStore(BOOKINGS_KEY, bookings);
+  }
 }
 
 /** True when the bracelet column exists (supabase/bracelets.sql). */

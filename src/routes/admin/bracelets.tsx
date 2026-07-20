@@ -1,13 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
-import { Mic2, Building2, Ticket, AlertTriangle, X } from "lucide-react";
+import {
+  Mic2,
+  Building2,
+  Ticket,
+  AlertTriangle,
+  X,
+  Search,
+  ToggleLeft,
+  ToggleRight,
+} from "lucide-react";
 import {
   getBookings,
   getPacks,
   getCollaborators,
   guestBracelets,
   setGuestBracelet,
+  guestBraceletsGiven,
+  setGuestBraceletGiven,
   braceletColumnReady,
+  braceletGivenColumnReady,
   packLabel,
   type Booking,
   type Pack,
@@ -54,6 +66,7 @@ interface GuestRow {
   guestIndex: number;
   guestName: string;
   bracelet: BraceletCategory;
+  given: boolean;
   pack: Pack | undefined;
   partner: Collaborator | undefined;
 }
@@ -63,21 +76,25 @@ function AdminBracelets() {
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [ready, setReady] = useState(true);
+  const [givenReady, setGivenReady] = useState(true);
   const [includePending, setIncludePending] = useState(false);
+  const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
-    const [b, p, c, ok] = await Promise.all([
+    const [b, p, c, ok, givenOk] = await Promise.all([
       getBookings(),
       getPacks(),
       getCollaborators(),
       braceletColumnReady(),
+      braceletGivenColumnReady(),
     ]);
     setBookings(b);
     setPacks(p);
     setCollaborators(c);
     setReady(ok);
+    setGivenReady(givenOk);
     setLoading(false);
   }, []);
 
@@ -96,6 +113,7 @@ function AdminBracelets() {
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     .flatMap((b) => {
       const brs = guestBracelets(b, packs);
+      const given = guestBraceletsGiven(b);
       const names = b.customerName
         .split(/\s*&\s*/)
         .map((s) => s.trim())
@@ -105,17 +123,38 @@ function AdminBracelets() {
         guestIndex: i,
         guestName: names[i] ?? `Guest ${i + 1}`,
         bracelet,
+        given: given[i] ?? false,
         pack: packs.find((p) => p.id === b.packId),
         partner: b.collaboratorId
           ? collaborators.find((c) => c.id === b.collaboratorId)
           : undefined,
       }));
+    })
+    .filter((r) => {
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      return (
+        r.guestName.toLowerCase().includes(q) ||
+        r.booking.customerName.toLowerCase().includes(q) ||
+        r.booking.ticketCode.toLowerCase().includes(q) ||
+        (r.partner?.name.toLowerCase().includes(q) ?? false)
+      );
     });
 
   const changeBracelet = async (row: GuestRow, value: BraceletCategory) => {
     setError("");
     try {
       await setGuestBracelet(row.booking, row.guestIndex, value, packs);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+    await reload();
+  };
+
+  const toggleGiven = async (row: GuestRow) => {
+    setError("");
+    try {
+      await setGuestBraceletGiven(row.booking, row.guestIndex, !row.given);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -133,6 +172,26 @@ function AdminBracelets() {
           their roommate keeps the Hotel one — change anyone with the selector on their row.
         </p>
       </div>
+
+      {/* bracelet_given column missing */}
+      {ready && !givenReady && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
+              The "received" toggle needs a database update
+            </p>
+            <p className="mt-1">
+              Marking bracelets as handed out can't be saved yet. Open the Supabase
+              Dashboard → SQL Editor, run the script in{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">
+                supabase/bracelet-given.sql
+              </code>
+              , then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Column missing */}
       {!ready && (
@@ -168,6 +227,7 @@ function AdminBracelets() {
       <div className="grid grid-cols-3 gap-4">
         {CATEGORIES.map((cat) => {
           const mine = rows.filter((r) => r.bracelet === cat.key);
+          const given = mine.filter((r) => r.given).length;
           return (
             <div key={cat.key} className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
               <div className="flex items-center justify-between">
@@ -181,22 +241,36 @@ function AdminBracelets() {
                 <cat.icon className={`h-4 w-4 ${cat.accent}`} />
               </div>
               <p className="mt-1 font-display text-2xl text-gray-900">{mine.length}</p>
-              <p className="text-[11px] text-gray-400">bracelets</p>
+              <p className="text-[11px] text-gray-400">
+                bracelets · <span className="text-emerald-600 font-medium">{given} received</span>
+              </p>
             </div>
           );
         })}
       </div>
 
-      {/* Filter */}
-      <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={includePending}
-          onChange={(e) => setIncludePending(e.target.checked)}
-          className="accent-amber-500"
-        />
-        Include pending bookings (not confirmed yet)
-      </label>
+      {/* Search + filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search a guest by name, reservation or partner…"
+            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+          />
+        </div>
+        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
+          <input
+            type="checkbox"
+            checked={includePending}
+            onChange={(e) => setIncludePending(e.target.checked)}
+            className="accent-amber-500"
+          />
+          Include pending bookings (not confirmed yet)
+        </label>
+      </div>
 
       {/* Category sections */}
       {loading ? (
@@ -216,7 +290,12 @@ function AdminBracelets() {
                   <cat.icon className="h-4 w-4 text-amber-300" />
                   {cat.title}
                 </h3>
-                <p className="text-xs text-slate-300">{mine.length} bracelets</p>
+                <p className="text-xs text-slate-300">
+                  {mine.length} bracelets ·{" "}
+                  <span className="text-emerald-300">
+                    {mine.filter((r) => r.given).length} received
+                  </span>
+                </p>
               </div>
               {mine.length === 0 ? (
                 <p className="px-5 py-8 text-center text-sm text-gray-400">
@@ -232,6 +311,7 @@ function AdminBracelets() {
                         <th className="px-4 py-2.5 text-left font-medium">Partner</th>
                         <th className="px-4 py-2.5 text-left font-medium">Reservation</th>
                         <th className="px-4 py-2.5 text-left font-medium">Category</th>
+                        <th className="px-4 py-2.5 text-center font-medium">Received</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -274,6 +354,33 @@ function AdminBracelets() {
                             {!r.booking.bracelet && (
                               <span className="ml-1.5 text-[10px] text-gray-400">auto</span>
                             )}
+                          </td>
+                          <td className="px-4 py-2.5 text-center">
+                            <button
+                              onClick={() => toggleGiven(r)}
+                              className="cursor-pointer align-middle inline-flex items-center gap-1.5"
+                              title={
+                                r.given
+                                  ? "Bracelet handed out — click to undo"
+                                  : "Mark bracelet as handed out"
+                              }
+                            >
+                              {r.given ? (
+                                <>
+                                  <ToggleRight className="h-6 w-6 text-emerald-500" />
+                                  <span className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">
+                                    Yes
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <ToggleLeft className="h-6 w-6 text-gray-300" />
+                                  <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                                    No
+                                  </span>
+                                </>
+                              )}
+                            </button>
                           </td>
                         </tr>
                       ))}
