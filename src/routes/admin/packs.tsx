@@ -14,6 +14,8 @@ import {
   ChevronUp,
   ChevronDown,
   Eye,
+  EyeOff,
+  Lock,
 } from "lucide-react";
 import {
   getPacks,
@@ -214,7 +216,10 @@ function AdminPacks() {
             Pack Management
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Create and manage festival packs that appear on the main website.
+            Create and manage festival packs. Visible packs appear on the website;{" "}
+            <span className="text-violet-600 font-medium">private packs</span> exist only
+            here — perfect for special deals you book yourself (partners and the public
+            never see them).
           </p>
         </div>
         <button
@@ -313,13 +318,21 @@ function AdminPacks() {
                     </span>
                   )}
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${
                       pack.active
                         ? "bg-emerald-100 text-emerald-600 border-emerald-200"
-                        : "bg-gray-50 text-gray-500 border-gray-200"
+                        : "bg-violet-50 text-violet-600 border-violet-200"
                     }`}
                   >
-                    {pack.active ? "Active" : "Inactive"}
+                    {pack.active ? (
+                      <>
+                        <Eye className="h-3 w-3" /> Visible on website
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="h-3 w-3" /> Private
+                      </>
+                    )}
                   </span>
                   <span className="ml-auto flex items-center gap-1">
                     <button
@@ -374,13 +387,18 @@ function AdminPacks() {
                   <button
                     onClick={() => toggleActive(pack)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+                    title={
+                      pack.active
+                        ? "Hide from the website — becomes a private admin-only pack"
+                        : "Publish on the website booking pages"
+                    }
                   >
                     {pack.active ? (
-                      <ToggleRight className="h-3.5 w-3.5 text-emerald-600" />
+                      <EyeOff className="h-3.5 w-3.5" />
                     ) : (
-                      <ToggleLeft className="h-3.5 w-3.5" />
+                      <Eye className="h-3.5 w-3.5 text-emerald-600" />
                     )}
-                    {pack.active ? "Deactivate" : "Activate"}
+                    {pack.active ? "Hide from website" : "Show on website"}
                   </button>
                   <button
                     onClick={() => togglePopular(pack)}
@@ -659,9 +677,15 @@ function AdminPacks() {
                     }
                     className="accent-amber-500"
                   />
-                  <span className="text-sm text-gray-600">Active</span>
+                  <span className="text-sm text-gray-600">Visible on website</span>
                 </label>
               </div>
+              <p className="mt-2 text-[11px] text-gray-500">
+                Uncheck "Visible on website" to create a{" "}
+                <span className="text-violet-600 font-medium">private pack</span>: it never
+                appears on the website or partner links — only you can book it, from the
+                Bookings page ("special" packs in the pack list).
+              </p>
             </div>
 
             {/* Save */}

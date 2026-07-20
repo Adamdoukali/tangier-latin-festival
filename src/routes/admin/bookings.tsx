@@ -532,7 +532,7 @@ function AdminBookings() {
                   {packs.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
-                      {p.active ? "" : "  · special (hidden from website)"}
+                      {p.active ? "" : "  · PRIVATE (admin only)"}
                     </option>
                   ))}
                 </select>
