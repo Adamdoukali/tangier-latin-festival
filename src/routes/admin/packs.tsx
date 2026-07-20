@@ -47,7 +47,7 @@ interface PackFormData {
 const emptyForm: PackFormData = {
   name: "",
   sub: "",
-  category: "chambre double",
+  category: "",
   price: "",
   currency: "€",
   features: [""],
@@ -149,7 +149,7 @@ function AdminPacks() {
     setForm({
       name: pack.name,
       sub: pack.sub,
-      category: pack.category || "chambre double",
+      category: pack.category || "Other",
       price: pack.price,
       currency: pack.currency || "€",
       features: pack.features.length ? [...pack.features] : [""],
@@ -163,10 +163,15 @@ function AdminPacks() {
     const cleanFeatures = form.features.filter((f) => f.trim() !== "");
     if (!form.name.trim() || !form.price.trim() || cleanFeatures.length === 0) return;
 
+    const clean = {
+      ...form,
+      category: form.category.trim() || "Other",
+      features: cleanFeatures,
+    };
     if (editingId) {
-      await updatePack(editingId, { ...form, features: cleanFeatures });
+      await updatePack(editingId, clean);
     } else {
-      await addPack({ ...form, features: cleanFeatures });
+      await addPack(clean);
     }
     setShowForm(false);
     setEditingId(null);
@@ -560,21 +565,39 @@ function AdminPacks() {
                 />
               </div>
 
-              {/* Category */}
+              {/* Category — pick an existing one or type a brand-new one
+                  (e.g. "VIP"); new categories get their own section on the
+                  website automatically once a visible pack uses them */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
                   Category
                 </label>
-                <select
+                <input
+                  type="text"
+                  list="pack-category-options"
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
-                >
-                  <option value="Hotel Packs (Double)">Hotel Packs (Double)</option>
-                  <option value="Hotel Packs (Single)">Hotel Packs (Single)</option>
-                  <option value="Full Pass">Full Pass</option>
-                  <option value="Other">Other</option>
-                </select>
+                  placeholder='Pick one or type a new one, e.g. "VIP"'
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                />
+                <datalist id="pack-category-options">
+                  {Array.from(
+                    new Set([
+                      ...packs.map((p) => p.category || "Other"),
+                      "Hotel Packs (Double)",
+                      "Hotel Packs (Single)",
+                      "Full Pass",
+                      "VIP",
+                      "Other",
+                    ])
+                  ).map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+                <p className="mt-1.5 text-[11px] text-gray-500">
+                  Type anything to create a new category — it becomes its own section here
+                  and on the website (visible packs only).
+                </p>
               </div>
 
               {/* Subtitle */}
