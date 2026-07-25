@@ -1514,6 +1514,30 @@ export function formatMoneyPair(m: Money): string {
   return parts.length ? parts.join(" + ") : "€0";
 }
 
+/** Rate used only to state a partner's figures in THEIR currency
+ *  (a euro partner sees euros, a dirham partner sees dirhams).
+ *  Edit this single value if the rate moves. */
+export const EUR_TO_MAD = 11;
+
+/** The one currency a partner is accounted in — the currency of their
+ *  commission deal. All their amounts are shown in it. */
+export function partnerCurrency(c: Collaborator): CommissionCurrency {
+  return c.commissionCurrency ?? "EUR";
+}
+
+/** Express a per-currency amount as a single figure in one currency. */
+export function moneyIn(m: Money, currency: CommissionCurrency): number {
+  const value =
+    currency === "MAD" ? m.mad + m.eur * EUR_TO_MAD : m.eur + m.mad / EUR_TO_MAD;
+  return Math.round(value * 100) / 100;
+}
+
+/** A partner's amount, written in their own currency: "300 MAD" / "€750". */
+export function formatForPartner(m: Money, c: Collaborator): string {
+  const cur = partnerCurrency(c);
+  return formatMoney(moneyIn(m, cur), cur);
+}
+
 /** Per-person rate for one pack category, falling back to the general amount. */
 export function perPersonRate(c: Collaborator, cat: PackRoomCategory): number {
   const v =

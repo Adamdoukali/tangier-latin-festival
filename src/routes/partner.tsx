@@ -24,7 +24,7 @@ import {
   collaboratorCommission,
   commissionLabel,
   formatMoney,
-  formatMoneyPair,
+  formatForPartner,
   emptyMoney,
   type Money,
   packLabel,
@@ -351,12 +351,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               },
               {
                 label: tr("Sales", "Ventes", "Ventas"),
-                value: formatMoneyPair(sales),
+                value: formatForPartner(sales, partner),
                 icon: Euro,
               },
               {
                 label: `Commission (${commissionLabel(partner)})`,
-                value: formatMoneyPair(earned),
+                value: formatForPartner(earned, partner),
                 icon: Euro,
               },
             ];

@@ -27,7 +27,9 @@ import {
   languageColumnReady,
   missionColumnsReady,
   formatMoney,
-  formatMoneyPair,
+  formatForPartner,
+  partnerCurrency,
+  moneyIn,
   commissionLabel,
   partnerShareLink,
   type Collaborator,
@@ -269,10 +271,9 @@ function AdminCollaborators() {
       "Double Rooms",
       "Full Pass",
       "Tickets Sold",
-      "Sales (EUR)",
-      "Sales (MAD)",
-      "Commission (EUR)",
-      "Commission (MAD)",
+      "Currency",
+      "Sales",
+      "Commission",
       "Commission Deal",
       "Mission",
       "Mission Reward",
@@ -286,10 +287,9 @@ function AdminCollaborators() {
       s.doubleRooms,
       s.fullPass,
       s.ticketsSold,
-      s.revenue.eur,
-      s.revenue.mad,
-      s.commission.eur,
-      s.commission.mad,
+      partnerCurrency(c),
+      moneyIn(s.revenue, partnerCurrency(c)),
+      moneyIn(s.commission, partnerCurrency(c)),
       commissionLabel(c),
       c.missionGoal
         ? `${Math.min(s.ticketsSold, c.missionGoal)}/${c.missionGoal}${s.ticketsSold >= c.missionGoal ? " (achieved)" : ""}`
@@ -305,17 +305,41 @@ function AdminCollaborators() {
       visibleStats.reduce((a, x) => a + x.doubleRooms, 0),
       visibleStats.reduce((a, x) => a + x.fullPass, 0),
       visibleStats.reduce((a, x) => a + x.ticketsSold, 0),
-      visibleStats.reduce((a, x) => a + x.revenue.eur, 0),
-      visibleStats.reduce((a, x) => a + x.revenue.mad, 0),
-      visibleStats.reduce((a, x) => a + x.commission.eur, 0),
-      visibleStats.reduce((a, x) => a + x.commission.mad, 0),
+      // Totals per currency group so euro and dirham partners stay apart
+      "EUR partners",
+      visibleStats
+        .filter((x) => partnerCurrency(x.collaborator) === "EUR")
+        .reduce((a, x) => a + moneyIn(x.revenue, "EUR"), 0),
+      visibleStats
+        .filter((x) => partnerCurrency(x.collaborator) === "EUR")
+        .reduce((a, x) => a + moneyIn(x.commission, "EUR"), 0),
+      "",
+      "",
+      "",
+      "",
+    ];
+    const totalsMad = [
+      "TOTAL",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "MAD partners",
+      visibleStats
+        .filter((x) => partnerCurrency(x.collaborator) === "MAD")
+        .reduce((a, x) => a + moneyIn(x.revenue, "MAD"), 0),
+      visibleStats
+        .filter((x) => partnerCurrency(x.collaborator) === "MAD")
+        .reduce((a, x) => a + moneyIn(x.commission, "MAD"), 0),
       "",
       "",
       "",
       "",
     ];
     // Real .xlsx so Excel opens it correctly in every language/locale.
-    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totals]);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totals, totalsMad]);
     ws["!cols"] = header.map((h) => ({ wch: Math.max(12, h.length + 4) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Collaborators");
@@ -540,10 +564,12 @@ function AdminCollaborators() {
                       {s.ticketsSold}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
-                      {formatMoneyPair(s.revenue)}
+                      {formatForPartner(s.revenue, c)}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">{formatMoneyPair(s.commission)}</span>
+                      <span className="text-amber-600">
+                        {formatForPartner(s.commission, c)}
+                      </span>
                       <span className="ml-1.5 text-[10px] text-gray-500">
                         ({commissionLabel(c)})
                       </span>

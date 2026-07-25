@@ -20,8 +20,10 @@ import {
   packRoomCategory,
   guestOrigin,
   emptyMoney,
-  addMoney,
   formatMoneyPair,
+  formatForPartner,
+  partnerCurrency,
+  moneyIn,
   type Booking,
   type Pack,
   type CollaboratorStats,
@@ -359,10 +361,12 @@ function AdminDashboard() {
                     <td className="px-5 py-3 text-right text-gray-700">{cs.fullPass}</td>
                     <td className="px-5 py-3 text-right text-gray-800">{cs.ticketsSold}</td>
                     <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
-                      {formatMoneyPair(cs.revenue)}
+                      {formatForPartner(cs.revenue, cs.collaborator)}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">{formatMoneyPair(cs.commission)}</span>
+                      <span className="text-amber-600">
+                        {formatForPartner(cs.commission, cs.collaborator)}
+                      </span>
                       <span className="ml-1.5 text-[10px] text-gray-500">
                         ({commissionLabel(cs.collaborator)})
                       </span>
@@ -385,13 +389,26 @@ function AdminDashboard() {
                   <td className="px-5 py-3 text-right font-medium text-gray-900">
                     {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
                   </td>
+                  {/* Totals grouped by the partner's own currency */}
                   <td className="px-5 py-3 text-right font-medium text-emerald-600 whitespace-nowrap">
-                    {formatMoneyPair(collabStats.reduce((s, c) => addMoney(s, c.revenue), emptyMoney()))}
+                    {formatMoneyPair({
+                      eur: collabStats
+                        .filter((c) => partnerCurrency(c.collaborator) === "EUR")
+                        .reduce((s, c) => s + moneyIn(c.revenue, "EUR"), 0),
+                      mad: collabStats
+                        .filter((c) => partnerCurrency(c.collaborator) === "MAD")
+                        .reduce((s, c) => s + moneyIn(c.revenue, "MAD"), 0),
+                    })}
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-amber-600 whitespace-nowrap">
-                    {formatMoneyPair(
-                      collabStats.reduce((s, c) => addMoney(s, c.commission), emptyMoney())
-                    )}
+                    {formatMoneyPair({
+                      eur: collabStats
+                        .filter((c) => partnerCurrency(c.collaborator) === "EUR")
+                        .reduce((s, c) => s + moneyIn(c.commission, "EUR"), 0),
+                      mad: collabStats
+                        .filter((c) => partnerCurrency(c.collaborator) === "MAD")
+                        .reduce((s, c) => s + moneyIn(c.commission, "MAD"), 0),
+                    })}
                   </td>
                 </tr>
               </tbody>
