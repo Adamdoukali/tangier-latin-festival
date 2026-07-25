@@ -1274,10 +1274,10 @@ export interface CollaboratorStats {
   singleRooms: number;
   doubleRooms: number;
   fullPass: number;
-  revenue: number;
+  /** Sales in the currency each pack is priced in — never converted */
+  revenue: Money;
   /** Commission earned (% of sales, or fixed amount × people) */
-  commission: number;
-  commissionCurrency: CommissionCurrency;
+  commission: Money;
 }
 
 export type GuestOrigin = "morocco" | "international" | "unknown";
@@ -1473,26 +1473,45 @@ export async function updateBookingBracelet(
   }
 }
 
-/** Exchange rate used to show € sales in dirhams as well.
- *  Edit this single value if the rate moves. */
-export const EUR_TO_MAD = 11;
-
-/** € → MAD (rounded to the dirham) */
-export function eurToMad(eur: number): number {
-  return Math.round(eur * EUR_TO_MAD);
+/** Money kept per currency — never converted, so euro sales and dirham
+ *  sales stay separate and honest. */
+export interface Money {
+  eur: number;
+  mad: number;
 }
 
-/** A pack's price expressed in euros (MAD-priced packs are converted). */
-export function packPriceEur(pack: Pack | undefined): number {
-  if (!pack) return 0;
-  const price = parseInt(pack.price, 10) || 0;
-  return /mad|dh/i.test(pack.currency ?? "") ? Math.round(price / EUR_TO_MAD) : price;
+export const emptyMoney = (): Money => ({ eur: 0, mad: 0 });
+
+export const addMoney = (a: Money, b: Money): Money => ({
+  eur: a.eur + b.eur,
+  mad: a.mad + b.mad,
+});
+
+/** A pack's price in its own currency. */
+export function packPrice(pack: Pack | undefined): {
+  amount: number;
+  currency: CommissionCurrency;
+} {
+  if (!pack) return { amount: 0, currency: "EUR" };
+  const amount = parseInt(pack.price, 10) || 0;
+  return {
+    amount,
+    currency: /mad|dh/i.test(pack.currency ?? "") ? "MAD" : "EUR",
+  };
 }
 
 /** "€1,234" or "1,234 MAD" */
 export function formatMoney(value: number, currency: CommissionCurrency = "EUR"): string {
   const n = value.toLocaleString();
   return currency === "MAD" ? `${n} MAD` : `€${n}`;
+}
+
+/** "€1,234", "8,250 MAD", "€1,234 + 8,250 MAD" or "€0" — never converts. */
+export function formatMoneyPair(m: Money): string {
+  const parts: string[] = [];
+  if (m.eur) parts.push(formatMoney(m.eur, "EUR"));
+  if (m.mad) parts.push(formatMoney(m.mad, "MAD"));
+  return parts.length ? parts.join(" + ") : "€0";
 }
 
 /** Per-person rate for one pack category, falling back to the general amount. */
@@ -1534,7 +1553,7 @@ export function collaboratorCommission(
   c: Collaborator,
   bookings: Booking[],
   packs: Pack[]
-): { amount: number; currency: CommissionCurrency } {
+): Money {
   let mine = bookings
     .filter(
       (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
@@ -1560,41 +1579,47 @@ export function collaboratorCommission(
       const cat = packRoomCategory(pack?.name ?? b.packName);
       return s + perPersonRate(c, cat) * (b.numPeople || 1);
     }, 0);
-    return {
-      amount: Math.round(amount * 100) / 100,
-      currency: c.commissionCurrency ?? "EUR",
-    };
+    const rounded = Math.round(amount * 100) / 100;
+    return (c.commissionCurrency ?? "EUR") === "MAD"
+      ? { eur: 0, mad: rounded }
+      : { eur: rounded, mad: 0 };
   }
-  const priceOf = (packId: string) => {
-    const p = packs.find((x) => x.id === packId);
-    return packPriceEur(p);
-  };
-  const revenue = mine.reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
+  // Percentage deals: a share of the sales, in each sale's own currency.
+  const pct = (c.commission ?? 0) / 100;
+  const sales = salesOf(mine, packs);
   return {
-    amount: Math.round(revenue * ((c.commission ?? 0) / 100) * 100) / 100,
-    currency: "EUR",
+    eur: Math.round(sales.eur * pct * 100) / 100,
+    mad: Math.round(sales.mad * pct * 100) / 100,
   };
 }
 
-/** Sales revenue (€) attributed to one collaborator: non-declined,
- *  non-invite bookings × pack price. Shared by admin and the portal. */
+/** Sum bookings by the currency their pack is actually priced in. */
+function salesOf(bookings: Booking[], packs: Pack[]): Money {
+  return bookings.reduce((acc, b) => {
+    const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
+    const value = amount * (b.numPeople || 1);
+    return currency === "MAD"
+      ? { ...acc, mad: acc.mad + value }
+      : { ...acc, eur: acc.eur + value };
+  }, emptyMoney());
+}
+
+/** Sales attributed to one collaborator, split by currency (never
+ *  converted): non-declined, non-invite bookings × pack price. */
 export function collaboratorRevenue(
   collaboratorId: string,
   bookings: Booking[],
   packs: Pack[]
-): number {
-  const priceOf = (packId: string) => {
-    const p = packs.find((x) => x.id === packId);
-    return packPriceEur(p);
-  };
-  return bookings
-    .filter(
+): Money {
+  return salesOf(
+    bookings.filter(
       (b) =>
         b.collaboratorId === collaboratorId &&
         b.status !== "declined" &&
         b.source !== "invite"
-    )
-    .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
+    ),
+    packs
+  );
 }
 
 export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
@@ -1604,18 +1629,15 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
     getBookings(),
     getPacks(),
   ]);
-  const priceOf = (packId: string) => {
-    const p = packs.find((x) => x.id === packId);
-    return packPriceEur(p);
-  };
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
     const myBookings = bookings.filter(
       (b) => b.collaboratorId === c.id && b.status !== "declined"
     );
-    const revenue = myBookings
-      .filter((b) => b.source !== "invite")
-      .reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
+    const revenue = salesOf(
+      myBookings.filter((b) => b.source !== "invite"),
+      packs
+    );
     const earned = collaboratorCommission(c, bookings, packs);
     const catOf = (b: Booking) => {
       const p = packs.find((x) => x.id === b.packId);
@@ -1631,8 +1653,7 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       doubleRooms: myBookings.filter((b) => catOf(b) === "double").length,
       fullPass: myBookings.filter((b) => catOf(b) === "fullpass").length,
       revenue,
-      commission: earned.amount,
-      commissionCurrency: earned.currency,
+      commission: earned,
     };
   });
 }
@@ -1662,12 +1683,11 @@ export async function getStats() {
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
   const checkedIn = bookings.filter((b) => b.status === "checked-in").length;
 
-  const totalRevenue = bookings
-    .filter((b) => b.status !== "declined")
-    .reduce((sum, b) => {
-      const pack = packs.find((p) => p.id === b.packId);
-      return sum + packPriceEur(pack) * b.numPeople;
-    }, 0);
+  // Split by the currency each pack is priced in — never converted.
+  const totalRevenue = salesOf(
+    bookings.filter((b) => b.status !== "declined"),
+    packs
+  );
 
   const totalPacks = packs.length;
   const activePacks = packs.filter((p) => p.active).length;

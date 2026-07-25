@@ -14,6 +14,7 @@ import {
   ToggleRight,
   Users,
   Download,
+  Search,
 } from "lucide-react";
 import {
   getCollaboratorStats,
@@ -26,7 +27,7 @@ import {
   languageColumnReady,
   missionColumnsReady,
   formatMoney,
-  eurToMad,
+  formatMoneyPair,
   commissionLabel,
   partnerShareLink,
   type Collaborator,
@@ -128,6 +129,7 @@ function AdminCollaborators() {
   const [saveError, setSaveError] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const reload = useCallback(async () => {
     const [ok, commOk, langOk, missionOk, ratesOk, s] = await Promise.all([
@@ -244,6 +246,20 @@ function AdminCollaborators() {
 
   // Excel-friendly export of the table (semicolon-delimited CSV with a
   // UTF-8 BOM opens directly in Excel with proper accents and columns).
+  // Search filters the table and what the Excel export contains.
+  const visibleStats = stats.filter(({ collaborator: c }) => {
+    if (!search.trim()) return true;
+    const q = search.trim().toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.code.toLowerCase().includes(q) ||
+      (c.username ?? "").toLowerCase().includes(q) ||
+      (c.email ?? "").toLowerCase().includes(q) ||
+      (c.phone ?? "").toLowerCase().includes(q) ||
+      (c.notes ?? "").toLowerCase().includes(q)
+    );
+  });
+
   const downloadExcel = () => {
     const header = [
       "Collaborator",
@@ -255,13 +271,14 @@ function AdminCollaborators() {
       "Tickets Sold",
       "Sales (EUR)",
       "Sales (MAD)",
-      "Commission",
+      "Commission (EUR)",
+      "Commission (MAD)",
       "Commission Deal",
       "Mission",
       "Mission Reward",
       "Active",
     ];
-    const rows = stats.map(({ collaborator: c, ...s }) => [
+    const rows = visibleStats.map(({ collaborator: c, ...s }) => [
       c.name,
       c.code,
       (c.language ?? "en").toUpperCase(),
@@ -269,9 +286,10 @@ function AdminCollaborators() {
       s.doubleRooms,
       s.fullPass,
       s.ticketsSold,
-      s.revenue,
-      eurToMad(s.revenue),
-      formatMoney(s.commission, s.commissionCurrency),
+      s.revenue.eur,
+      s.revenue.mad,
+      s.commission.eur,
+      s.commission.mad,
       commissionLabel(c),
       c.missionGoal
         ? `${Math.min(s.ticketsSold, c.missionGoal)}/${c.missionGoal}${s.ticketsSold >= c.missionGoal ? " (achieved)" : ""}`
@@ -283,13 +301,14 @@ function AdminCollaborators() {
       "TOTAL",
       "",
       "",
-      stats.reduce((a, x) => a + x.singleRooms, 0),
-      stats.reduce((a, x) => a + x.doubleRooms, 0),
-      stats.reduce((a, x) => a + x.fullPass, 0),
-      stats.reduce((a, x) => a + x.ticketsSold, 0),
-      stats.reduce((a, x) => a + x.revenue, 0),
-      eurToMad(stats.reduce((a, x) => a + x.revenue, 0)),
-      "",
+      visibleStats.reduce((a, x) => a + x.singleRooms, 0),
+      visibleStats.reduce((a, x) => a + x.doubleRooms, 0),
+      visibleStats.reduce((a, x) => a + x.fullPass, 0),
+      visibleStats.reduce((a, x) => a + x.ticketsSold, 0),
+      visibleStats.reduce((a, x) => a + x.revenue.eur, 0),
+      visibleStats.reduce((a, x) => a + x.revenue.mad, 0),
+      visibleStats.reduce((a, x) => a + x.commission.eur, 0),
+      visibleStats.reduce((a, x) => a + x.commission.mad, 0),
       "",
       "",
       "",
@@ -438,11 +457,23 @@ function AdminCollaborators() {
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search a collaborator by name, code, username, email or phone…"
+          className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+        />
+      </div>
+
       {/* Table */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
           <div className="px-5 py-16 text-center text-sm text-gray-400">Loading…</div>
-        ) : stats.length === 0 ? (
+        ) : visibleStats.length === 0 ? (
           <div className="px-5 py-16 text-center text-sm text-gray-400">
             <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
             No collaborators yet. Click "Add Collaborator" to create the first one.
@@ -467,7 +498,7 @@ function AdminCollaborators() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {stats.map(({ collaborator: c, ...s }) => (
+                {visibleStats.map(({ collaborator: c, ...s }) => (
                   <tr key={c.id} className="hover:bg-gray-50 transition">
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-800">{c.name}</p>
@@ -508,16 +539,11 @@ function AdminCollaborators() {
                     <td className="px-5 py-3 text-right text-gray-800 font-medium">
                       {s.ticketsSold}
                     </td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-emerald-600">€{s.revenue.toLocaleString()}</span>
-                      <span className="block text-[10px] text-gray-400">
-                        {eurToMad(s.revenue).toLocaleString()} MAD
-                      </span>
+                    <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
+                      {formatMoneyPair(s.revenue)}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">
-                        {formatMoney(s.commission, s.commissionCurrency)}
-                      </span>
+                      <span className="text-amber-600">{formatMoneyPair(s.commission)}</span>
                       <span className="ml-1.5 text-[10px] text-gray-500">
                         ({commissionLabel(c)})
                       </span>

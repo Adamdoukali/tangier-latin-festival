@@ -19,7 +19,9 @@ import {
   commissionLabel,
   packRoomCategory,
   guestOrigin,
-  eurToMad,
+  emptyMoney,
+  addMoney,
+  formatMoneyPair,
   type Booking,
   type Pack,
   type CollaboratorStats,
@@ -35,7 +37,7 @@ function AdminDashboard() {
     pendingBookings: 0,
     confirmedBookings: 0,
     checkedIn: 0,
-    totalRevenue: 0,
+    totalRevenue: emptyMoney(),
     totalPacks: 0,
     activePacks: 0,
   });
@@ -115,8 +117,8 @@ function AdminDashboard() {
       iconColor: "text-amber-600",
     },
     {
-      label: "Revenue (€)",
-      value: stats.totalRevenue.toLocaleString(),
+      label: "Revenue",
+      value: formatMoneyPair(stats.totalRevenue),
       icon: DollarSign,
       color: "from-emerald-500 to-emerald-700",
       iconBg: "bg-emerald-100",
@@ -356,16 +358,11 @@ function AdminDashboard() {
                     <td className="px-5 py-3 text-right text-gray-700">{cs.doubleRooms}</td>
                     <td className="px-5 py-3 text-right text-gray-700">{cs.fullPass}</td>
                     <td className="px-5 py-3 text-right text-gray-800">{cs.ticketsSold}</td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-emerald-600">€{cs.revenue.toLocaleString()}</span>
-                      <span className="block text-[10px] text-gray-400">
-                        {eurToMad(cs.revenue).toLocaleString()} MAD
-                      </span>
+                    <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
+                      {formatMoneyPair(cs.revenue)}
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">
-                        {formatMoney(cs.commission, cs.commissionCurrency)}
-                      </span>
+                      <span className="text-amber-600">{formatMoneyPair(cs.commission)}</span>
                       <span className="ml-1.5 text-[10px] text-gray-500">
                         ({commissionLabel(cs.collaborator)})
                       </span>
@@ -388,30 +385,13 @@ function AdminDashboard() {
                   <td className="px-5 py-3 text-right font-medium text-gray-900">
                     {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right whitespace-nowrap">
-                    <span className="font-medium text-emerald-600">
-                      €{collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}
-                    </span>
-                    <span className="block text-[10px] text-gray-400">
-                      {eurToMad(
-                        collabStats.reduce((s, c) => s + c.revenue, 0)
-                      ).toLocaleString()}{" "}
-                      MAD
-                    </span>
+                  <td className="px-5 py-3 text-right font-medium text-emerald-600 whitespace-nowrap">
+                    {formatMoneyPair(collabStats.reduce((s, c) => addMoney(s, c.revenue), emptyMoney()))}
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-amber-600 whitespace-nowrap">
-                    {(() => {
-                      const eur = collabStats
-                        .filter((c) => c.commissionCurrency !== "MAD")
-                        .reduce((s, c) => s + c.commission, 0);
-                      const mad = collabStats
-                        .filter((c) => c.commissionCurrency === "MAD")
-                        .reduce((s, c) => s + c.commission, 0);
-                      const parts = [];
-                      if (eur > 0 || mad === 0) parts.push(formatMoney(eur, "EUR"));
-                      if (mad > 0) parts.push(formatMoney(mad, "MAD"));
-                      return parts.join(" + ");
-                    })()}
+                    {formatMoneyPair(
+                      collabStats.reduce((s, c) => addMoney(s, c.commission), emptyMoney())
+                    )}
                   </td>
                 </tr>
               </tbody>

@@ -24,6 +24,9 @@ import {
   collaboratorCommission,
   commissionLabel,
   formatMoney,
+  formatMoneyPair,
+  emptyMoney,
+  type Money,
   packLabel,
   ticketUrl,
   partnerShareLink,
@@ -193,11 +196,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
-  const [sales, setSales] = useState(0);
-  const [earned, setEarned] = useState<{ amount: number; currency: "EUR" | "MAD" }>({
-    amount: 0,
-    currency: "EUR",
-  });
+  const [sales, setSales] = useState<Money>(emptyMoney());
+  const [earned, setEarned] = useState<Money>(emptyMoney());
   const [statusError, setStatusError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [refQr, setRefQr] = useState("");
@@ -351,12 +351,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               },
               {
                 label: tr("Sales", "Ventes", "Ventas"),
-                value: `€${sales.toLocaleString()}`,
+                value: formatMoneyPair(sales),
                 icon: Euro,
               },
               {
                 label: `Commission (${commissionLabel(partner)})`,
-                value: formatMoney(earned.amount, earned.currency),
+                value: formatMoneyPair(earned),
                 icon: Euro,
               },
             ];
