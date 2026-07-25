@@ -18,7 +18,10 @@ import {
   formatMoney,
   commissionLabel,
   packRoomCategory,
+  guestOrigin,
+  eurToMad,
   type Booking,
+  type Pack,
   type CollaboratorStats,
 } from "@/lib/admin-store";
 
@@ -39,6 +42,8 @@ function AdminDashboard() {
   const [roomCounts, setRoomCounts] = useState({ double: 0, single: 0, fullpass: 0 });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [collabStats, setCollabStats] = useState<CollaboratorStats[]>([]);
+  const [liveBookings, setLiveBookings] = useState<Booking[]>([]);
+  const [allPacks, setAllPacks] = useState<Pack[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +62,8 @@ function AdminDashboard() {
         return packRoomCategory(p?.name ?? b.packName);
       };
       const live = bookings.filter((b) => b.status !== "declined");
+      setLiveBookings(live);
+      setAllPacks(packs);
       setRoomCounts({
         double: live.filter((b) => catOf(b) === "double").length,
         single: live.filter((b) => catOf(b) === "single").length,
@@ -172,6 +179,99 @@ function AdminDashboard() {
         ))}
       </div>
 
+      {/* Guests by origin — Morocco vs international, per pack type */}
+      {(() => {
+        const catOf = (b: Booking) => {
+          const p = allPacks.find((x) => x.id === b.packId);
+          return packRoomCategory(p?.name ?? b.packName);
+        };
+        const people = (list: Booking[]) =>
+          list.reduce((s, b) => s + (b.numPeople || 1), 0);
+        const rowsData = [
+          {
+            key: "morocco",
+            label: "Morocco",
+            dot: "bg-emerald-500",
+            cls: "text-emerald-700",
+          },
+          {
+            key: "international",
+            label: "International (étranger)",
+            dot: "bg-blue-500",
+            cls: "text-blue-700",
+          },
+          {
+            key: "unknown",
+            label: "Not specified",
+            dot: "bg-gray-300",
+            cls: "text-gray-400",
+          },
+        ].map((o) => {
+          const mine = liveBookings.filter((b) => guestOrigin(b) === o.key);
+          return {
+            ...o,
+            double: people(mine.filter((b) => catOf(b) === "double")),
+            single: people(mine.filter((b) => catOf(b) === "single")),
+            fullpass: people(mine.filter((b) => catOf(b) === "fullpass")),
+            total: people(mine),
+          };
+        });
+        const visible = rowsData.filter((r) => r.key !== "unknown" || r.total > 0);
+        return (
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <h3 className="font-display text-sm tracking-wide text-gray-800">
+                Guests by Origin
+              </h3>
+              <span className="text-xs text-gray-400">
+                people · declined excluded
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[10px] tracking-widest uppercase text-gray-500 border-b border-gray-200">
+                    <th className="px-5 py-3">Origin</th>
+                    <th className="px-5 py-3 text-right">Double Rooms</th>
+                    <th className="px-5 py-3 text-right">Single Rooms</th>
+                    <th className="px-5 py-3 text-right">Full Pass</th>
+                    <th className="px-5 py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {visible.map((r) => (
+                    <tr key={r.key} className="hover:bg-gray-50 transition">
+                      <td className={`px-5 py-3 font-medium ${r.cls}`}>
+                        <span
+                          className={`inline-block h-2 w-2 rounded-full mr-2 align-middle ${r.dot}`}
+                        />
+                        {r.label}
+                      </td>
+                      <td className="px-5 py-3 text-right text-gray-800">{r.double}</td>
+                      <td className="px-5 py-3 text-right text-gray-800">{r.single}</td>
+                      <td className="px-5 py-3 text-right text-gray-800">{r.fullpass}</td>
+                      <td className="px-5 py-3 text-right font-semibold text-gray-900">
+                        {r.total}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t border-gray-200 bg-gray-50/60">
+                    <td className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500">
+                      Total
+                    </td>
+                    {(["double", "single", "fullpass", "total"] as const).map((k) => (
+                      <td key={k} className="px-5 py-3 text-right font-medium text-gray-900">
+                        {rowsData.reduce((s, r) => s + r[k], 0)}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
@@ -239,7 +339,7 @@ function AdminDashboard() {
                   <th className="px-5 py-3 text-right">Double Rooms</th>
                   <th className="px-5 py-3 text-right">Full Pass</th>
                   <th className="px-5 py-3 text-right">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right">Sales (€)</th>
+                  <th className="px-5 py-3 text-right">Sales</th>
                   <th className="px-5 py-3 text-right">Commission</th>
                 </tr>
               </thead>
@@ -256,8 +356,11 @@ function AdminDashboard() {
                     <td className="px-5 py-3 text-right text-gray-700">{cs.doubleRooms}</td>
                     <td className="px-5 py-3 text-right text-gray-700">{cs.fullPass}</td>
                     <td className="px-5 py-3 text-right text-gray-800">{cs.ticketsSold}</td>
-                    <td className="px-5 py-3 text-right text-emerald-600">
-                      {cs.revenue.toLocaleString()}
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <span className="text-emerald-600">€{cs.revenue.toLocaleString()}</span>
+                      <span className="block text-[10px] text-gray-400">
+                        {eurToMad(cs.revenue).toLocaleString()} MAD
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
                       <span className="text-amber-600">
@@ -285,8 +388,16 @@ function AdminDashboard() {
                   <td className="px-5 py-3 text-right font-medium text-gray-900">
                     {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-emerald-600">
-                    {collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}
+                  <td className="px-5 py-3 text-right whitespace-nowrap">
+                    <span className="font-medium text-emerald-600">
+                      €{collabStats.reduce((s, c) => s + c.revenue, 0).toLocaleString()}
+                    </span>
+                    <span className="block text-[10px] text-gray-400">
+                      {eurToMad(
+                        collabStats.reduce((s, c) => s + c.revenue, 0)
+                      ).toLocaleString()}{" "}
+                      MAD
+                    </span>
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-amber-600 whitespace-nowrap">
                     {(() => {

@@ -1280,6 +1280,26 @@ export interface CollaboratorStats {
   commissionCurrency: CommissionCurrency;
 }
 
+export type GuestOrigin = "morocco" | "international" | "unknown";
+
+/** Where a booking's guests come from. Country names are typed by hand
+ *  (Morocco / Maroc / Marruecos / typos…), so we also fall back to the
+ *  phone number: +212 or a local Moroccan mobile (06/07/6x/7x). */
+export function guestOrigin(booking: Booking): GuestOrigin {
+  const c = (booking.country ?? "").trim().toLowerCase();
+  if (c) {
+    if (/^(ma|mar)$|maroc|marroc|morocc|morroc|marruecos|المغرب/.test(c)) return "morocco";
+    return "international";
+  }
+  const digits = (booking.phone ?? "").replace(/[^\d+]/g, "");
+  if (!digits) return "unknown";
+  if (/^(\+?212)/.test(digits)) return "morocco";
+  if (/^\+/.test(digits)) return "international"; // any other country code
+  const local = digits.replace(/^0+/, "");
+  if (/^[67]\d{8}$/.test(local)) return "morocco"; // 06…/07… mobile
+  return "unknown";
+}
+
 export type PackRoomCategory = "single" | "double" | "fullpass";
 
 /** Classify a pack by its name: single room / double room / full pass. */
@@ -1453,6 +1473,22 @@ export async function updateBookingBracelet(
   }
 }
 
+/** Exchange rate used to show € sales in dirhams as well.
+ *  Edit this single value if the rate moves. */
+export const EUR_TO_MAD = 11;
+
+/** € → MAD (rounded to the dirham) */
+export function eurToMad(eur: number): number {
+  return Math.round(eur * EUR_TO_MAD);
+}
+
+/** A pack's price expressed in euros (MAD-priced packs are converted). */
+export function packPriceEur(pack: Pack | undefined): number {
+  if (!pack) return 0;
+  const price = parseInt(pack.price, 10) || 0;
+  return /mad|dh/i.test(pack.currency ?? "") ? Math.round(price / EUR_TO_MAD) : price;
+}
+
 /** "€1,234" or "1,234 MAD" */
 export function formatMoney(value: number, currency: CommissionCurrency = "EUR"): string {
   const n = value.toLocaleString();
@@ -1531,7 +1567,7 @@ export function collaboratorCommission(
   }
   const priceOf = (packId: string) => {
     const p = packs.find((x) => x.id === packId);
-    return p ? parseInt(p.price, 10) || 0 : 0;
+    return packPriceEur(p);
   };
   const revenue = mine.reduce((s, b) => s + priceOf(b.packId) * (b.numPeople || 1), 0);
   return {
@@ -1549,7 +1585,7 @@ export function collaboratorRevenue(
 ): number {
   const priceOf = (packId: string) => {
     const p = packs.find((x) => x.id === packId);
-    return p ? parseInt(p.price, 10) || 0 : 0;
+    return packPriceEur(p);
   };
   return bookings
     .filter(
@@ -1570,7 +1606,7 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
   ]);
   const priceOf = (packId: string) => {
     const p = packs.find((x) => x.id === packId);
-    return p ? parseInt(p.price, 10) || 0 : 0;
+    return packPriceEur(p);
   };
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
@@ -1630,8 +1666,7 @@ export async function getStats() {
     .filter((b) => b.status !== "declined")
     .reduce((sum, b) => {
       const pack = packs.find((p) => p.id === b.packId);
-      const price = pack ? parseInt(pack.price, 10) : 0;
-      return sum + price * b.numPeople;
+      return sum + packPriceEur(pack) * b.numPeople;
     }, 0);
 
   const totalPacks = packs.length;

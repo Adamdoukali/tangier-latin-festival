@@ -253,13 +253,26 @@ function AdminBookings() {
 
   const filtered = bookings
     .filter((b) => statusFilter === "all" || b.status === statusFilter)
-    .filter(
-      (b) =>
-        !search ||
-        b.customerName.toLowerCase().includes(search.toLowerCase()) ||
-        b.ticketCode.toLowerCase().includes(search.toLowerCase()) ||
-        b.email.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter((b) => {
+      if (!search.trim()) return true;
+      const q = search.trim().toLowerCase();
+      // Also match the source: partner/referral name & code, invite code,
+      // or the source itself ("website", "manual", "referral").
+      const partner = b.collaboratorId
+        ? collaborators.find((c) => c.id === b.collaboratorId)
+        : undefined;
+      return (
+        b.customerName.toLowerCase().includes(q) ||
+        b.ticketCode.toLowerCase().includes(q) ||
+        b.email.toLowerCase().includes(q) ||
+        b.phone.toLowerCase().includes(q) ||
+        b.packName.toLowerCase().includes(q) ||
+        (b.inviteCode ?? "").toLowerCase().includes(q) ||
+        (b.source ?? "").toLowerCase().includes(q) ||
+        (partner?.name.toLowerCase().includes(q) ?? false) ||
+        (partner?.code.toLowerCase().includes(q) ?? false)
+      );
+    })
     .sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
@@ -302,7 +315,7 @@ function AdminBookings() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, or ticket code..."
+            placeholder="Search by name, email, ticket, pack or partner / referral…"
             className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
           />
         </div>

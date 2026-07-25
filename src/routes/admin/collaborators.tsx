@@ -26,6 +26,7 @@ import {
   languageColumnReady,
   missionColumnsReady,
   formatMoney,
+  eurToMad,
   commissionLabel,
   partnerShareLink,
   type Collaborator,
@@ -253,6 +254,7 @@ function AdminCollaborators() {
       "Full Pass",
       "Tickets Sold",
       "Sales (EUR)",
+      "Sales (MAD)",
       "Commission",
       "Commission Deal",
       "Mission",
@@ -268,6 +270,7 @@ function AdminCollaborators() {
       s.fullPass,
       s.ticketsSold,
       s.revenue,
+      eurToMad(s.revenue),
       formatMoney(s.commission, s.commissionCurrency),
       commissionLabel(c),
       c.missionGoal
@@ -285,6 +288,7 @@ function AdminCollaborators() {
       stats.reduce((a, x) => a + x.fullPass, 0),
       stats.reduce((a, x) => a + x.ticketsSold, 0),
       stats.reduce((a, x) => a + x.revenue, 0),
+      eurToMad(stats.reduce((a, x) => a + x.revenue, 0)),
       "",
       "",
       "",
@@ -454,7 +458,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Double Rooms</th>
                   <th className="px-5 py-3 text-right font-medium">Full Pass</th>
                   <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right font-medium">Sales (€)</th>
+                  <th className="px-5 py-3 text-right font-medium">Sales</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
                   <th className="px-5 py-3 text-right font-medium">Mission</th>
                   <th className="px-5 py-3 text-left font-medium">Last Active</th>
@@ -504,8 +508,11 @@ function AdminCollaborators() {
                     <td className="px-5 py-3 text-right text-gray-800 font-medium">
                       {s.ticketsSold}
                     </td>
-                    <td className="px-5 py-3 text-right text-emerald-600">
-                      {s.revenue.toLocaleString()}
+                    <td className="px-5 py-3 text-right whitespace-nowrap">
+                      <span className="text-emerald-600">€{s.revenue.toLocaleString()}</span>
+                      <span className="block text-[10px] text-gray-400">
+                        {eurToMad(s.revenue).toLocaleString()} MAD
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
                       <span className="text-amber-600">

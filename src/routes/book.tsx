@@ -350,10 +350,12 @@ function BookPage() {
               </div>
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  {tr("Country", "Pays", "País")}
+                  {tr("Country", "Pays", "País")} <span className="text-red-400">*</span>
                 </label>
+                {/* Required: feeds the Morocco / international split in the admin */}
                 <input
                   type="text"
+                  required
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Morocco"
