@@ -64,7 +64,9 @@ function AdminInvite() {
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       )
     );
-    const p = allPacks.filter((pk) => pk.active);
+    // Private (admin-only) packs are invitable too — invites are always
+    // handed out by the team, never listed on the website.
+    const p = allPacks;
     setPacks(p);
     // Keep the full list so origin chips resolve even for deactivated partners;
     // the generation dropdown filters to active ones itself.
@@ -228,6 +230,7 @@ function AdminInvite() {
                   <option key={p.id} value={p.id}>
                     {p.name}
                     {nights ? ` · ${nights}` : ` · ${p.sub}`} — {p.price} {p.currency || "€"}
+                    {p.active ? "" : "  · PRIVATE (admin only)"}
                   </option>
                 );
               })}
