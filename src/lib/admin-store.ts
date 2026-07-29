@@ -53,6 +53,8 @@ export interface Booking {
   roomNumber?: string | null;
   /** Room type (e.g. "Vue sur mer", "Duplexe junior") */
   roomType?: string | null;
+  /** JSON array of per-guest overrides [{firstName, lastName, email, phone, origin, notes}] */
+  guestDetails?: string | null;
   /** Language the guest booked in ('en' | 'fr' | 'es') */
   lang?: string | null;
   status: BookingStatus;
@@ -288,6 +290,7 @@ const bookingFromRow = (r: any): Booking => ({
   braceletGiven: r.bracelet_given ?? null,
   roomNumber: r.room_number ?? null,
   roomType: r.room_type ?? null,
+  guestDetails: typeof r.guest_details === "string" ? r.guest_details : r.guest_details ? JSON.stringify(r.guest_details) : null,
   lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
@@ -1478,6 +1481,150 @@ export async function updateBookingRoomType(
     bookings[idx] = { ...bookings[idx], roomType: value };
     writeStore(BOOKINGS_KEY, bookings);
   }
+}
+
+export interface GuestDetail {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  origin?: "morocco" | "international";
+  notes?: string;
+}
+
+export interface ClientGuest {
+  id: string;
+  bookingId: string;
+  guestIndex: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  origin: "morocco" | "international";
+  country: string;
+  ticketCode: string;
+  packName: string;
+  roomNumber?: string | null;
+  roomType?: string | null;
+  status: BookingStatus;
+  collaboratorName?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+/** True when the guest_details column exists (supabase/guest-details.sql). */
+export async function guestDetailsColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("bookings").select("guest_details").limit(1);
+  return !error;
+}
+
+/** Set (or update) the per-guest details JSON of a booking. */
+export async function updateBookingGuestDetails(
+  id: string,
+  guestDetails: string | null
+): Promise<void> {
+  const value = guestDetails?.trim() || null;
+  if (useDb() && !isLocalId(id)) {
+    const { error } = await supabase!
+      .from("bookings")
+      .update({ guest_details: value })
+      .eq("id", id);
+    if (error) {
+      warn("updateBookingGuestDetails", error);
+      if (/guest_details/i.test(error.message ?? "")) {
+        throw new Error(
+          "The guest_details column doesn't exist yet — run supabase/guest-details.sql in the Supabase SQL Editor."
+        );
+      }
+      throw new Error(error.message || "Could not save guest details.");
+    }
+    return;
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    bookings[idx] = { ...bookings[idx], guestDetails: value };
+    writeStore(BOOKINGS_KEY, bookings);
+  }
+}
+
+/** Parse per-guest details array stored in guestDetails JSON. */
+export function parseGuestDetails(raw?: string | null): GuestDetail[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Extracts every individual client guest from all bookings, merging per-guest overrides. */
+export function getClients(
+  bookings: Booking[],
+  packs: Pack[] = [],
+  collaborators: Collaborator[] = []
+): ClientGuest[] {
+  const clients: ClientGuest[] = [];
+
+  for (const b of bookings) {
+    if (b.status === "declined") continue;
+    const count = bookingPeopleCount(b, packs);
+    const overrides = parseGuestDetails(b.guestDetails);
+    const partner = b.collaboratorId
+      ? collaborators.find((c) => c.id === b.collaboratorId)
+      : undefined;
+    const names = b.customerName
+      .split(/\s*&\s*/)
+      .map((g) => g.trim())
+      .filter(Boolean);
+
+    const defaultOrigin = guestOrigin(b);
+
+    for (let gi = 0; gi < count; gi++) {
+      const ov = overrides[gi] ?? {};
+      const rawName = (names[gi] ?? names[0] ?? b.customerName).trim();
+      const parts = rawName.split(/\s+/);
+
+      const firstName = ov.firstName !== undefined ? ov.firstName : (parts[0] ?? "");
+      const lastName =
+        ov.lastName !== undefined ? ov.lastName : parts.slice(1).join(" ");
+      const fullName = `${firstName} ${lastName}`.trim() || rawName;
+
+      const email = ov.email !== undefined ? ov.email : (gi === 0 ? b.email : "");
+      const phone = ov.phone !== undefined ? ov.phone : (gi === 0 ? b.phone : "");
+      const origin: "morocco" | "international" =
+        ov.origin ? ov.origin : defaultOrigin;
+      const notes = ov.notes !== undefined ? ov.notes : (gi === 0 ? b.notes : "");
+
+      clients.push({
+        id: `${b.id}-${gi}`,
+        bookingId: b.id,
+        guestIndex: gi,
+        firstName,
+        lastName,
+        fullName,
+        email,
+        phone,
+        origin,
+        country: b.country || (origin === "morocco" ? "Morocco" : "Étranger"),
+        ticketCode: b.ticketCode,
+        packName: b.packName,
+        roomNumber: b.roomNumber,
+        roomType: b.roomType,
+        status: b.status,
+        collaboratorName: partner ? `${partner.name} (${partner.code})` : "Direct",
+        notes,
+        createdAt: b.createdAt,
+      });
+    }
+  }
+
+  return clients.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 /** Toggle one guest's "bracelet received" flag. */

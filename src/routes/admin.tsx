@@ -21,6 +21,7 @@ export const Route = createFileRoute("/admin")({
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/clients", label: "Clients", icon: Users, exact: false },
   { to: "/admin/packs", label: "Packs", icon: Package, exact: false },
   { to: "/admin/bookings", label: "Bookings", icon: Ticket, exact: false },
   { to: "/admin/invite", label: "QR Invites", icon: QrCode, exact: false },
