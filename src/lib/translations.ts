@@ -1323,6 +1323,16 @@ const dynamicPackDict: Record<string, { en: string; fr: string; es: string }> = 
   "chambre simple": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
   "double room": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
   "single room": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "hotel packs (single)": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "hotel packs (double)": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "hotel pack (single)": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "hotel pack (double)": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "hotel packs (single": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "hotel packs (double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "single pack": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "double pack": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "single room packs": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "double room packs": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
   "hotel chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
   "hotel chambre single": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
   "chambres doubles": { en: "Double Rooms", fr: "Chambres Doubles", es: "Habitaciones Dobles" },
@@ -1368,10 +1378,16 @@ export function translateDynamicText(text: string, lang: Language): string {
   let out = text;
 
   // Clean out unwanted "hotel" or "hôtel" prefix from category/pack strings if specified
-  out = out.replace(/\bhotel\s*/gi, "").replace(/\bhôtel\s*/gi, "");
+  out = out
+    .replace(/\bhotel\s*packs?\s*\(single\)/gi, "Single Room")
+    .replace(/\bhotel\s*packs?\s*\(double\)/gi, "Double Room")
+    .replace(/\bhotel\s*/gi, "")
+    .replace(/\bhôtel\s*/gi, "");
 
   if (lang === "en") {
     out = out
+      .replace(/hotel\s*packs?\s*\(single\)|single\s*pack/gi, "Single Room")
+      .replace(/hotel\s*packs?\s*\(double\)|double\s*pack/gi, "Double Room")
       .replace(/chambre\s*double/gi, "Double Room")
       .replace(/chambre\s*single|chambre\s*simple/gi, "Single Room")
       .replace(/(\d+)\s*nuits/gi, "$1 Nights")
@@ -1383,6 +1399,8 @@ export function translateDynamicText(text: string, lang: Language): string {
 
   // Segment-based fallbacks for French and Spanish
   const segmentRules: Array<[RegExp, string, string]> = [
+    [/hotel\s*packs?\s*\(single\)|single\s*pack/gi, "Chambre Single", "Habitación Single"],
+    [/hotel\s*packs?\s*\(double\)|double\s*pack/gi, "Chambre Double", "Habitación Doble"],
     [/double\s*rooms?/gi, "Chambre Double", "Habitación Doble"],
     [/single\s*rooms?/gi, "Chambre Single", "Habitación Single"],
     [/chambre\s*double/gi, "Chambre Double", "Habitación Doble"],
