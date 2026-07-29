@@ -33,6 +33,15 @@ export const Route = createFileRoute("/admin/packs")({
   component: AdminPacks,
 });
 
+function formatCategoryTitle(cat: string): string {
+  const c = (cat || "").trim();
+  if (/hotel\s*packs?\s*\(single\)|chambre\s*single|single\s*run/i.test(c)) return "Single Room";
+  if (/hotel\s*packs?\s*\(double\)|chambre\s*double/i.test(c)) return "Double Room";
+  if (c === "Hotel Packs (Single)") return "Single Room";
+  if (c === "Hotel Packs (Double)") return "Double Room";
+  return c;
+}
+
 interface PackFormData {
   name: string;
   sub: string;
@@ -287,7 +296,7 @@ function AdminPacks() {
               </button>
             </div>
             <h3 className="font-display text-base tracking-wide text-gray-900 uppercase">
-              {cat}
+              {formatCategoryTitle(cat)}
             </h3>
             <span className="text-xs text-gray-400">
               {groups[cat].length} pack{groups[cat].length === 1 ? "" : "s"}
@@ -584,8 +593,8 @@ function AdminPacks() {
                   {Array.from(
                     new Set([
                       ...packs.map((p) => p.category || "Other"),
-                      "Hotel Packs (Double)",
-                      "Hotel Packs (Single)",
+                      "Double Room",
+                      "Single Room",
                       "Full Pass",
                       "VIP",
                       "Other",

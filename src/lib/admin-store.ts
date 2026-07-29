@@ -1442,8 +1442,8 @@ export const ROOM_TYPES: RoomTypeOption[] = [
   { id: "Twin vue sur mer", label: "Twin vue sur mer", capacity: 30 },
   { id: "Triple", label: "Triple", capacity: 10 },
   { id: "Duplex", label: "Duplex", capacity: 20 },
-  { id: "Duplexe junior", label: "Duplexe junior" },
-  { id: "Duplexe senior", label: "Duplexe senior" },
+  { id: "Duplexe junior", label: "Duplexe junior", capacity: 18 },
+  { id: "Duplexe senior", label: "Duplexe senior", capacity: 2 },
 ];
 
 /** True when the room_type column exists (supabase/room-type.sql). */
