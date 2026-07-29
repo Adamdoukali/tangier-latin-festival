@@ -20,6 +20,7 @@ import {
   getCollaborators,
   packRoomCategory,
   bookingPeopleCount,
+  guestOrigin,
   perPersonRate,
   updateBookingStatus,
   updateBookingRoomNumber,
@@ -48,6 +49,7 @@ function AdminHotel() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [originFilter, setOriginFilter] = useState<"all" | "morocco" | "international">("all");
   const [includePending, setIncludePending] = useState(false);
   const [search, setSearch] = useState("");
   const [roomReady, setRoomReady] = useState(true);
@@ -156,9 +158,20 @@ function AdminHotel() {
         new Date(a.booking.createdAt).getTime() - new Date(b.booking.createdAt).getTime()
     );
 
+  const moroccanRooms = rooms.filter((r) => guestOrigin(r.booking) === "morocco");
+  const internationalRooms = rooms.filter((r) => guestOrigin(r.booking) === "international");
+  const moroccanGuests = moroccanRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
+  const internationalGuests = internationalRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
+
+  const displayedRooms = rooms.filter((r) => {
+    if (originFilter === "morocco") return guestOrigin(r.booking) === "morocco";
+    if (originFilter === "international") return guestOrigin(r.booking) === "international";
+    return true;
+  });
+
   // Group by partner (direct bookings last)
   const groups = new Map<string, { title: string; rooms: Room[] }>();
-  for (const r of rooms) {
+  for (const r of displayedRooms) {
     const key = r.partner?.id ?? "zzz-direct";
     const title = r.partner
       ? `${r.partner.name} (${r.partner.code})`
@@ -170,9 +183,9 @@ function AdminHotel() {
     a === "zzz-direct" ? 1 : b === "zzz-direct" ? -1 : 0
   );
 
-  const doubles = rooms.filter((r) => r.category === "double");
-  const singles = rooms.filter((r) => r.category === "single");
-  const totalGuests = rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
+  const doubles = displayedRooms.filter((r) => r.category === "double");
+  const singles = displayedRooms.filter((r) => r.category === "single");
+  const totalGuests = displayedRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
 
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
   const nightsOf = (r: Room) =>
@@ -183,12 +196,13 @@ function AdminHotel() {
   // one row per GUEST, rooms numbered per promoter
   // (Id chambre / Promoteur · Prénom · Nom · dates · nuits · type ·
   //  Montant · Commission · Paiement · Reste à payer · Commentaire).
-  const downloadExcel = () => {
+  const downloadExcel = (targetOrigin: "all" | "morocco" | "international" = "all") => {
     const header = [
       "Id chambre / Promoteur",
       "N° chambre",
       "Prénom",
       "Nom",
+      "Origine / Pays",
       "Date d'entrée",
       "Date de sortie",
       "Nombre de nuits",
@@ -241,12 +255,18 @@ function AdminHotel() {
         ...g.rooms.filter((r) => r.category === "single"),
       ];
       ordered.forEach((r, i) => {
+        const orig = guestOrigin(r.booking);
+        if (targetOrigin !== "all" && orig !== targetOrigin) return;
+
         const roomId = `Chambre ${i + 1} / ${promoter}`;
         const roomType = r.booking.roomType
           ? r.booking.roomType
           : r.pack
           ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
           : r.booking.packName;
+        const originText =
+          orig === "morocco" ? "Maroc 🇲🇦" : `${r.booking.country || "Étranger"} 🌐`;
+
         const guestCount = Math.max(r.booking.numPeople || 1, r.guests.length);
         for (let gi = 0; gi < guestCount; gi++) {
           const full = (r.guests[gi] ?? "").trim();
@@ -258,6 +278,7 @@ function AdminHotel() {
             r.booking.roomNumber ?? "",
             prenom,
             nom,
+            originText,
             frDate(r.booking.arrivalDate),
             frDate(r.booking.departureDate),
             nightsOfRoom(r),
@@ -279,6 +300,7 @@ function AdminHotel() {
       { wch: 11 }, // N° chambre
       { wch: 14 }, // Prénom
       { wch: 16 }, // Nom
+      { wch: 18 }, // Origine / Pays
       { wch: 13 }, // Date d'entrée
       { wch: 13 }, // Date de sortie
       { wch: 14 }, // Nombre de nuits
@@ -290,8 +312,20 @@ function AdminHotel() {
       { wch: 34 }, // Commentaire
     ];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Rooming list");
-    XLSX.writeFile(wb, `hotel-rooming-list-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const sheetName =
+      targetOrigin === "morocco"
+        ? "Maroc"
+        : targetOrigin === "international"
+        ? "Étranger"
+        : "Rooming list";
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const suffix =
+      targetOrigin === "morocco"
+        ? "maroc"
+        : targetOrigin === "international"
+        ? "etranger"
+        : "all";
+    XLSX.writeFile(wb, `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   const statusStyles: Record<string, string> = {
@@ -310,6 +344,7 @@ function AdminHotel() {
             <th className="px-4 py-2.5 text-left font-medium">Room Type</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 1</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 2</th>
+            <th className="px-4 py-2.5 text-left font-medium">Origin</th>
             <th className="px-4 py-2.5 text-left font-medium">Nights</th>
             <th className="px-4 py-2.5 text-left font-medium">Arrival → Departure</th>
             <th className="px-4 py-2.5 text-left font-medium">Check-in</th>
@@ -370,6 +405,17 @@ function AdminHotel() {
                 <td className="px-4 py-2.5 text-gray-700">
                   {r.category === "double" ? (r.guests[1] ?? "—") : ""}
                 </td>
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  {guestOrigin(r.booking) === "morocco" ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span>🇲🇦</span> Morocco
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <span>🌐</span> {r.booking.country ? r.booking.country : "Étranger"}
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-gray-600">{nightsOf(r)}</td>
                 <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                   {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
@@ -426,13 +472,32 @@ function AdminHotel() {
             Kenzi Solazur.
           </p>
         </div>
-        <button
-          onClick={downloadExcel}
-          disabled={rooms.length === 0}
-          className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100 transition cursor-pointer self-start disabled:opacity-40"
-        >
-          <Download className="h-4 w-4" /> Download Excel (rooming list)
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => downloadExcel("morocco")}
+            disabled={moroccanRooms.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition cursor-pointer disabled:opacity-40"
+            title="Download Excel containing only Moroccan guests"
+          >
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 Excel Maroc ({moroccanGuests} guests)
+          </button>
+          <button
+            onClick={() => downloadExcel("international")}
+            disabled={internationalRooms.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition cursor-pointer disabled:opacity-40"
+            title="Download Excel containing only Étranger / International guests"
+          >
+            <Download className="h-3.5 w-3.5" /> 🌐 Excel Étranger ({internationalGuests} guests)
+          </button>
+          <button
+            onClick={() => downloadExcel("all")}
+            disabled={rooms.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer disabled:opacity-40"
+            title="Download Excel containing all rooms and guests"
+          >
+            <Download className="h-3.5 w-3.5" /> 📁 Excel All ({totalGuests} guests)
+          </button>
+        </div>
       </div>
 
       {/* Room-number column missing */}
@@ -563,26 +628,63 @@ function AdminHotel() {
       </div>
 
       {/* Search + filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search a guest, reservation, partner or room number…"
-            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
-          />
+      <div className="flex flex-col gap-3">
+        {/* Origin Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">Filter Origin:</span>
+          <button
+            onClick={() => setOriginFilter("all")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              originFilter === "all"
+                ? "bg-gray-900 text-white shadow-xs"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            All Rooms ({rooms.length} rooms · {rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)} guests)
+          </button>
+          <button
+            onClick={() => setOriginFilter("morocco")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+              originFilter === "morocco"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+            }`}
+          >
+            <span>🇲🇦</span> Morocco ({moroccanRooms.length} rooms · {moroccanGuests} guests)
+          </button>
+          <button
+            onClick={() => setOriginFilter("international")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+              originFilter === "international"
+                ? "bg-blue-600 text-white shadow-xs"
+                : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
+            }`}
+          >
+            <span>🌐</span> Étranger ({internationalRooms.length} rooms · {internationalGuests} guests)
+          </button>
         </div>
-        <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
-          <input
-            type="checkbox"
-            checked={includePending}
-            onChange={(e) => setIncludePending(e.target.checked)}
-            className="accent-amber-500"
-          />
-          Include pending bookings (not confirmed yet)
-        </label>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search a guest, reservation, partner or room number…"
+              className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+            />
+          </div>
+          <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={includePending}
+              onChange={(e) => setIncludePending(e.target.checked)}
+              className="accent-amber-500"
+            />
+            Include pending bookings (not confirmed yet)
+          </label>
+        </div>
       </div>
 
       {/* Groups */}
