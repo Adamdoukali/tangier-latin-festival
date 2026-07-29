@@ -1317,65 +1317,97 @@ export const translatedHomeProgramme = {
 // ─── Dynamic pack text translation ──────────────────────────────────
 // Admin-managed packs are stored with French/English source strings;
 // this maps the known ones to the active language at render time.
-// Unknown strings are returned unchanged.
 const dynamicPackDict: Record<string, { en: string; fr: string; es: string }> = {
   "chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
-  "chambre single": { en: "Single Room", fr: "Chambre Simple", es: "Habitación Individual" },
+  "chambre single": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "chambre simple": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "double room": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "single room": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "hotel chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
+  "hotel chambre single": { en: "Single Room", fr: "Chambre Single", es: "Habitación Single" },
+  "chambres doubles": { en: "Double Rooms", fr: "Chambres Doubles", es: "Habitaciones Dobles" },
+  "chambres simples": { en: "Single Rooms", fr: "Chambres Simples", es: "Habitaciones Single" },
   "full pass": { en: "Full Pass", fr: "Full Pass", es: "Full Pass" },
   "basic ticket": { en: "Basic Ticket", fr: "Billet Basique", es: "Entrada Básica" },
   "couple pass": { en: "Couple Pass", fr: "Pass Couple", es: "Pase Pareja" },
   "party pass": { en: "Party Pass", fr: "Pass Soirée", es: "Pase Fiesta" },
   "day pass": { en: "Day Pass", fr: "Pass Journée", es: "Pase de Día" },
-  "solazur hotel tangier (2 nights)": { en: "SOLAZUR HOTEL TANGIER (2 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (2 NUITS)", es: "HOTEL SOLAZUR TÁNGER (2 NOCHES)" },
-  "solazur hotel tangier (3 nights)": { en: "SOLAZUR HOTEL TANGIER (3 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (3 NUITS)", es: "HOTEL SOLAZUR TÁNGER (3 NOCHES)" },
-  "solazur hotel tangier (4 nights)": { en: "SOLAZUR HOTEL TANGIER (4 NIGHTS)", fr: "HÔTEL SOLAZUR TANGER (4 NUITS)", es: "HOTEL SOLAZUR TÁNGER (4 NOCHES)" },
+  "solazur hotel tangier (2 nights)": { en: "SOLAZUR TANGIER (2 NIGHTS)", fr: "SOLAZUR TANGER (2 NUITS)", es: "SOLAZUR TÁNGER (2 NOCHES)" },
+  "solazur hotel tangier (3 nights)": { en: "SOLAZUR TANGIER (3 NIGHTS)", fr: "SOLAZUR TANGER (3 NUITS)", es: "SOLAZUR TÁNGER (3 NOCHES)" },
+  "solazur hotel tangier (4 nights)": { en: "SOLAZUR TANGIER (4 NIGHTS)", fr: "SOLAZUR TANGER (4 NUITS)", es: "SOLAZUR TÁNGER (4 NOCHES)" },
+  "solazur tangier (2 nights)": { en: "SOLAZUR TANGIER (2 NIGHTS)", fr: "SOLAZUR TANGER (2 NUITS)", es: "SOLAZUR TÁNGER (2 NOCHES)" },
+  "solazur tangier (3 nights)": { en: "SOLAZUR TANGIER (3 NIGHTS)", fr: "SOLAZUR TANGER (3 NUITS)", es: "SOLAZUR TÁNGER (3 NOCHES)" },
+  "solazur tangier (4 nights)": { en: "SOLAZUR TANGIER (4 NIGHTS)", fr: "SOLAZUR TANGER (4 NUITS)", es: "SOLAZUR TÁNGER (4 NOCHES)" },
   "without accommodation": { en: "WITHOUT ACCOMMODATION", fr: "SANS HÉBERGEMENT", es: "SIN ALOJAMIENTO" },
+  "saturday or sunday": { en: "SATURDAY OR SUNDAY", fr: "SAMEDI OU DIMANCHE", es: "SÁBADO O DOMINGO" },
   "2 nights": { en: "2 NIGHTS", fr: "2 NUITS", es: "2 NOCHES" },
   "3 nights": { en: "3 NIGHTS", fr: "3 NUITS", es: "3 NOCHES" },
   "4 nights": { en: "4 NIGHTS", fr: "4 NUITS", es: "4 NOCHES" },
+  "5 nights": { en: "5 NIGHTS", fr: "5 NUITS", es: "5 NOCHES" },
   "breakfast": { en: "BREAKFAST", fr: "PETIT-DÉJEUNER", es: "DESAYUNO" },
   "dinner": { en: "DINNER", fr: "DÎNER", es: "CENA" },
   "all workshops": { en: "ALL WORKSHOPS", fr: "TOUS LES WORKSHOPS", es: "TODOS LOS TALLERES" },
-  "shows": { en: "SHOWS", fr: "SHOWS", es: "SHOWS" },
+  "shows": { en: "SHOWS", fr: "SHOWS & SPECTACLES", es: "SHOWS & ESPECTÁCULOS" },
   "social parties": { en: "SOCIAL PARTIES", fr: "SOIRÉES SOCIALES", es: "FIESTAS SOCIALES" },
   "pool parties": { en: "POOL PARTIES", fr: "POOL PARTIES", es: "POOL PARTIES" },
-  "1 leader + 1 follower": { en: "1 LEADER + 1 FOLLOWER", fr: "1 LEADER + 1 FOLLOWER", es: "1 LEADER + 1 FOLLOWER" },
+  "1 leader + 1 follower": { en: "1 LEADER + 1 FOLLOWER", fr: "1 LEADER + 1 FOLLOWER", es: "1 LÍDER + 1 SEGUIDOR" },
   "shows & parties": { en: "SHOWS & PARTIES", fr: "SHOWS & SOIRÉES", es: "SHOWS & FIESTAS" },
   "(no workshops)": { en: "(NO WORKSHOPS)", fr: "(SANS WORKSHOPS)", es: "(SIN TALLERES)" },
   "pool parties (1 day only)": { en: "POOL PARTIES (1 DAY ONLY)", fr: "POOL PARTIES (1 JOUR SEULEMENT)", es: "POOL PARTIES (SOLO 1 DÍA)" },
+  "half board": { en: "HALF BOARD", fr: "DEMI-PENSION", es: "MEDIA PENSIÓN" },
+  "access to all workshops": { en: "ACCESS TO ALL WORKSHOPS", fr: "ACCÈS À TOUS LES WORKSHOPS", es: "ACCESO A TODOS LOS TALLERES" },
+  "access to all parties": { en: "ACCESS TO ALL PARTIES", fr: "ACCÈS À TOUTES LES SOIRÉES", es: "ACCESO A TODAS LAS FIESTAS" },
 };
 
-// Segment-based fallback for admin-renamed packs and composite labels
-// (e.g. "Double Room — HOTEL KENZI SOLAZUR (3 NIGHTS)"): translates the
-// known pieces inside the string, leaves the rest (hotel names…) intact.
-const segmentRules: Array<[RegExp, string, string]> = [
-  // [pattern, french, spanish]
-  [/double\s*rooms?/gi, "Chambre Double", "Habitación Doble"],
-  [/single\s*rooms?/gi, "Chambre Simple", "Habitación Individual"],
-  [/chambre double/gi, "Chambre Double", "Habitación Doble"],
-  [/chambre single|chambre simple/gi, "Chambre Simple", "Habitación Individual"],
-  [/(\d+)\s*nights?/gi, "$1 nuits", "$1 noches"],
-  [/without accommodation/gi, "sans hébergement", "sin alojamiento"],
-  [/breakfast/gi, "petit-déjeuner", "desayuno"],
-  [/\bdinner\b/gi, "dîner", "cena"],
-  [/hours of workshops/gi, "heures de workshops", "horas de talleres"],
-  [/all workshops/gi, "tous les workshops", "todos los talleres"],
-  [/social parties/gi, "soirées sociales", "fiestas sociales"],
-  [/international competition/gi, "compétition internationale", "competición internacional"],
-  [/\bhalf\s*board\b/gi, "demi-pension", "media pensión"],
-  [/\bper\s*person\b/gi, "par personne", "por persona"],
-];
-
 export function translateDynamicText(text: string, lang: Language): string {
-  const key = (text || "").trim().toLowerCase();
+  if (!text) return "";
+  const key = text.trim().toLowerCase();
   const exact = dynamicPackDict[key]?.[lang];
   if (exact) return exact;
-  if (lang === "en" || !text) return text;
+
   let out = text;
+
+  // Clean out unwanted "hotel" or "hôtel" prefix from category/pack strings if specified
+  out = out.replace(/\bhotel\s*/gi, "").replace(/\bhôtel\s*/gi, "");
+
+  if (lang === "en") {
+    out = out
+      .replace(/chambre\s*double/gi, "Double Room")
+      .replace(/chambre\s*single|chambre\s*simple/gi, "Single Room")
+      .replace(/(\d+)\s*nuits/gi, "$1 Nights")
+      .replace(/sans\s*hébergement/gi, "WITHOUT ACCOMMODATION")
+      .replace(/petit-déjeuner/gi, "BREAKFAST")
+      .replace(/dîner/gi, "DINNER");
+    return out.trim();
+  }
+
+  // Segment-based fallbacks for French and Spanish
+  const segmentRules: Array<[RegExp, string, string]> = [
+    [/double\s*rooms?/gi, "Chambre Double", "Habitación Doble"],
+    [/single\s*rooms?/gi, "Chambre Single", "Habitación Single"],
+    [/chambre\s*double/gi, "Chambre Double", "Habitación Doble"],
+    [/chambre\s*single|chambre\s*simple/gi, "Chambre Single", "Habitación Single"],
+    [/full\s*pass/gi, "Full Pass", "Full Pass"],
+    [/(\d+)\s*nights?/gi, "$1 nuits", "$1 noches"],
+    [/(\d+)\s*nuits/gi, "$1 nuits", "$1 noches"],
+    [/without\s*accommodation/gi, "sans hébergement", "sin alojamiento"],
+    [/saturday\s*or\s*sunday/gi, "samedi ou dimanche", "sábado o domingo"],
+    [/breakfast/gi, "petit-déjeuner", "desayuno"],
+    [/\bdinner\b/gi, "dîner", "cena"],
+    [/hours\s*of\s*workshops/gi, "heures de workshops", "horas de talleres"],
+    [/all\s*workshops/gi, "tous les workshops", "todos los talleres"],
+    [/social\s*parties/gi, "soirées sociales", "fiestas sociales"],
+    [/shows\s*&\s*parties/gi, "shows & soirées", "shows & fiestas"],
+    [/pool\s*parties/gi, "pool parties", "pool parties"],
+    [/international\s*competition/gi, "compétition internationale", "competición internacional"],
+    [/\bhalf\s*board\b/gi, "demi-pension", "media pensión"],
+    [/\bper\s*person\b/gi, "par personne", "por persona"],
+  ];
+
   for (const [re, fr, es] of segmentRules) {
     out = out.replace(re, lang === "fr" ? fr : es);
   }
-  return out;
+  return out.trim();
 }
 
 /** Price unit shown after a pack's price:

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2 } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
+import { translateDynamicText } from "@/lib/translations";
 import {
   addBooking,
   getCollaboratorByCode,
@@ -106,8 +107,12 @@ export function PackBookingModal({
               <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
                 {t("packFormSelectedPack")}
               </p>
-              <p className="font-display text-xl truncate">{pack.name}</p>
-              <p className="text-xs text-muted-foreground">{pack.sub}</p>
+              <p className="font-display text-xl truncate">
+                {translateDynamicText(pack.name, lang)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {translateDynamicText(pack.sub, lang)}
+              </p>
             </div>
             <div className="text-right shrink-0">
               <span className="font-display text-2xl text-gold">{pack.price}</span>
