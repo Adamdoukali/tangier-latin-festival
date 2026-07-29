@@ -12,16 +12,21 @@ import {
   AlertTriangle,
   X,
   KeyRound,
+  Hotel,
 } from "lucide-react";
 import {
   getBookings,
   getPacks,
   getCollaborators,
   packRoomCategory,
+  bookingPeopleCount,
   perPersonRate,
   updateBookingStatus,
   updateBookingRoomNumber,
+  updateBookingRoomType,
   roomNumberColumnReady,
+  roomTypeColumnReady,
+  ROOM_TYPES,
   type Booking,
   type Pack,
   type Collaborator,
@@ -46,6 +51,7 @@ function AdminHotel() {
   const [includePending, setIncludePending] = useState(false);
   const [search, setSearch] = useState("");
   const [roomReady, setRoomReady] = useState(true);
+  const [roomTypeReady, setRoomTypeReady] = useState(true);
   const [error, setError] = useState("");
   // Bumped after a failed save so uncontrolled room inputs re-mount and
   // show the real stored value instead of the unsaved typed text.
@@ -53,16 +59,18 @@ function AdminHotel() {
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
-    const [b, p, c, roomOk] = await Promise.all([
+    const [b, p, c, roomOk, roomTypeOk] = await Promise.all([
       getBookings(),
       getPacks(),
       getCollaborators(),
       roomNumberColumnReady(),
+      roomTypeColumnReady(),
     ]);
     setBookings(b);
     setPacks(p);
     setCollaborators(c);
     setRoomReady(roomOk);
+    setRoomTypeReady(roomTypeOk);
     setLoading(false);
   }, []);
 
@@ -93,6 +101,18 @@ function AdminHotel() {
     await reload();
   };
 
+  const saveRoomType = async (b: Booking, value: string) => {
+    if ((b.roomType ?? "") === value.trim()) return;
+    setError("");
+    try {
+      await updateBookingRoomType(b.id, value);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setResetKey((k) => k + 1);
+    }
+    await reload();
+  };
+
   // Rooms only (single + double), confirmed/checked-in by default
   const rooms = bookings
     .filter((b) =>
@@ -110,6 +130,7 @@ function AdminHotel() {
         b.customerName.toLowerCase().includes(q) ||
         b.ticketCode.toLowerCase().includes(q) ||
         (b.roomNumber ?? "").toLowerCase().includes(q) ||
+        (b.roomType ?? "").toLowerCase().includes(q) ||
         (partner?.name.toLowerCase().includes(q) ?? false)
       );
     })
@@ -151,7 +172,7 @@ function AdminHotel() {
 
   const doubles = rooms.filter((r) => r.category === "double");
   const singles = rooms.filter((r) => r.category === "single");
-  const totalGuests = rooms.reduce((s, r) => s + (r.booking.numPeople || r.guests.length), 0);
+  const totalGuests = rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
 
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
   const nightsOf = (r: Room) =>
@@ -221,7 +242,9 @@ function AdminHotel() {
       ];
       ordered.forEach((r, i) => {
         const roomId = `Chambre ${i + 1} / ${promoter}`;
-        const roomType = r.pack
+        const roomType = r.booking.roomType
+          ? r.booking.roomType
+          : r.pack
           ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
           : r.booking.packName;
         const guestCount = Math.max(r.booking.numPeople || 1, r.guests.length);
@@ -284,6 +307,7 @@ function AdminHotel() {
           <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
             <th className="px-4 py-2.5 text-left font-medium">#</th>
             <th className="px-4 py-2.5 text-left font-medium">Room Nº</th>
+            <th className="px-4 py-2.5 text-left font-medium">Room Type</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 1</th>
             <th className="px-4 py-2.5 text-left font-medium">Guest 2</th>
             <th className="px-4 py-2.5 text-left font-medium">Nights</th>
@@ -320,6 +344,27 @@ function AdminHotel() {
                       title="Hotel room number — press Enter to save"
                     />
                   </div>
+                </td>
+                <td className="px-4 py-2.5">
+                  <select
+                    value={r.booking.roomType ?? ""}
+                    onChange={(e) => saveRoomType(r.booking, e.target.value)}
+                    className={`rounded-md border px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500 transition cursor-pointer ${
+                      r.booking.roomType
+                        ? "border-amber-200 bg-amber-50 text-amber-900 font-bold"
+                        : "border-gray-300 bg-white text-gray-400 font-normal"
+                    }`}
+                    title="Select hotel room type"
+                  >
+                    <option value="" className="text-gray-400">
+                      — Select room type —
+                    </option>
+                    {ROOM_TYPES.map((rt) => (
+                      <option key={rt.id} value={rt.label} className="text-gray-900 font-normal">
+                        {rt.label}{rt.capacity ? ` (${rt.capacity})` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td className="px-4 py-2.5 font-medium text-gray-900">{r.guests[0] ?? "—"}</td>
                 <td className="px-4 py-2.5 text-gray-700">
@@ -410,6 +455,26 @@ function AdminHotel() {
         </div>
       )}
 
+      {/* Room-type column missing */}
+      {!roomTypeReady && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800">
+            <p className="font-semibold text-amber-700">
+              Room types need a database update
+            </p>
+            <p className="mt-1">
+              Assigning room types can't be saved yet. Open the Supabase Dashboard → SQL
+              Editor, run the script in{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">
+                supabase/room-type.sql
+              </code>
+              , then refresh this page.
+            </p>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start justify-between gap-3">
           <p className="text-sm text-red-700">{error}</p>
@@ -454,6 +519,46 @@ function AdminHotel() {
             {rooms.filter((r) => r.booking.status === "checked-in").length}
             <span className="text-sm text-gray-400 font-normal"> / {rooms.length}</span>
           </p>
+        </div>
+      </div>
+
+      {/* Room Type Inventory Allocation Overview */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Hotel className="h-4 w-4 text-amber-600" /> Room Type Allocation & Inventory
+          </h4>
+          <span className="text-xs text-slate-500">
+            {rooms.filter((r) => r.booking.roomType).length} of {rooms.length} rooms assigned
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
+          {ROOM_TYPES.map((rt) => {
+            const count = rooms.filter((r) => r.booking.roomType === rt.label).length;
+            const isOver = rt.capacity !== undefined && count > rt.capacity;
+            return (
+              <div
+                key={rt.id}
+                className={`p-2.5 rounded-lg border flex flex-col justify-between transition ${
+                  count > 0 ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-gray-50/50"
+                }`}
+              >
+                <span className="font-medium text-gray-800 truncate">{rt.label}</span>
+                <div className="mt-1 flex items-baseline justify-between">
+                  <span className={`font-bold text-sm ${isOver ? "text-red-600" : count > 0 ? "text-amber-700" : "text-gray-400"}`}>
+                    {count}
+                  </span>
+                  {rt.capacity !== undefined ? (
+                    <span className={`text-[11px] font-mono ${isOver ? "text-red-500 font-bold" : "text-gray-400"}`}>
+                      / {rt.capacity} max
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-gray-300 font-mono">—</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -506,7 +611,7 @@ function AdminHotel() {
                 </h3>
                 <p className="text-xs text-slate-300">
                   {gDoubles.length} double · {gSingles.length} single ·{" "}
-                  {g.rooms.reduce((s, r) => s + (r.booking.numPeople || r.guests.length), 0)}{" "}
+                  {g.rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)}{" "}
                   guests
                 </p>
               </div>

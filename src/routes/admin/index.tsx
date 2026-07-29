@@ -19,6 +19,7 @@ import {
   commissionLabel,
   packRoomCategory,
   guestOrigin,
+  bookingPeopleCount,
   emptyMoney,
   formatMoneyPair,
   formatForPartner,
@@ -190,7 +191,7 @@ function AdminDashboard() {
           return packRoomCategory(p?.name ?? b.packName);
         };
         const people = (list: Booking[]) =>
-          list.reduce((s, b) => s + (b.numPeople || 1), 0);
+          list.reduce((s, b) => s + bookingPeopleCount(b, allPacks), 0);
         const rowsData = [
           {
             key: "morocco",

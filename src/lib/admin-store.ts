@@ -51,6 +51,8 @@ export interface Booking {
   braceletGiven?: string | null;
   /** Real hotel room number assigned at check-in (e.g. "214") */
   roomNumber?: string | null;
+  /** Room type (e.g. "Vue sur mer", "Duplexe junior") */
+  roomType?: string | null;
   /** Language the guest booked in ('en' | 'fr' | 'es') */
   lang?: string | null;
   status: BookingStatus;
@@ -285,6 +287,7 @@ const bookingFromRow = (r: any): Booking => ({
   bracelet: r.bracelet ?? null,
   braceletGiven: r.bracelet_given ?? null,
   roomNumber: r.room_number ?? null,
+  roomType: r.room_type ?? null,
   lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
@@ -1284,7 +1287,8 @@ export type GuestOrigin = "morocco" | "international" | "unknown";
 
 /** Where a booking's guests come from. Country names are typed by hand
  *  (Morocco / Maroc / Marruecos / typos…), so we also fall back to the
- *  phone number: +212 or a local Moroccan mobile (06/07/6x/7x). */
+ *  phone number: +212 or a local Moroccan mobile (06/07/6x/7x).
+ *  When no country or phone is specified, defaults to "morocco". */
 export function guestOrigin(booking: Booking): GuestOrigin {
   const c = (booking.country ?? "").trim().toLowerCase();
   if (c) {
@@ -1292,12 +1296,14 @@ export function guestOrigin(booking: Booking): GuestOrigin {
     return "international";
   }
   const digits = (booking.phone ?? "").replace(/[^\d+]/g, "");
-  if (!digits) return "unknown";
-  if (/^(\+?212)/.test(digits)) return "morocco";
-  if (/^\+/.test(digits)) return "international"; // any other country code
-  const local = digits.replace(/^0+/, "");
-  if (/^[67]\d{8}$/.test(local)) return "morocco"; // 06…/07… mobile
-  return "unknown";
+  if (digits) {
+    if (/^(\+?212)/.test(digits)) return "morocco";
+    if (/^\+/.test(digits)) return "international"; // any other country code
+    const local = digits.replace(/^0+/, "");
+    if (/^[67]\d{8}$/.test(local)) return "morocco"; // 06…/07… mobile
+  }
+  // When country is unassigned, default to "morocco"
+  return "morocco";
 }
 
 export type PackRoomCategory = "single" | "double" | "fullpass";
@@ -1308,6 +1314,18 @@ export function packRoomCategory(packName: string): PackRoomCategory {
   if (/single|simple|individual/.test(n)) return "single";
   if (/double|doble/.test(n)) return "double";
   return "fullpass";
+}
+
+/** Calculate total people for a booking based on numPeople, customerName splits (&), and room category (double room = 2 people min). */
+export function bookingPeopleCount(booking: Booking, packs?: Pack[]): number {
+  const pack = packs?.find((p) => p.id === booking.packId);
+  const cat = packRoomCategory(pack?.name ?? booking.packName);
+  const guestCount = booking.customerName.split(/\s*&\s*/).filter(Boolean).length;
+  let count = Math.max(booking.numPeople || 1, guestCount);
+  if (cat === "double") {
+    count = Math.max(2, count);
+  }
+  return count;
 }
 
 // ─── Bracelets ──────────────────────────────────────────────────────
@@ -1403,6 +1421,61 @@ export async function updateBookingRoomNumber(
   const idx = bookings.findIndex((b) => b.id === id);
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], roomNumber: value };
+    writeStore(BOOKINGS_KEY, bookings);
+  }
+}
+
+export interface RoomTypeOption {
+  id: string;
+  label: string;
+  capacity?: number;
+}
+
+export const ROOM_TYPES: RoomTypeOption[] = [
+  { id: "Vue sur mer", label: "Vue sur mer", capacity: 60 },
+  { id: "Vue sur piscine", label: "Vue sur piscine", capacity: 60 },
+  { id: "Vue normal", label: "Vue normal", capacity: 60 },
+  { id: "Twin normal", label: "Twin normal", capacity: 50 },
+  { id: "Twin vue sur mer", label: "Twin vue sur mer", capacity: 30 },
+  { id: "Triple", label: "Triple", capacity: 10 },
+  { id: "Duplex", label: "Duplex", capacity: 20 },
+  { id: "Duplexe junior", label: "Duplexe junior" },
+  { id: "Duplexe senior", label: "Duplexe senior" },
+];
+
+/** True when the room_type column exists (supabase/room-type.sql). */
+export async function roomTypeColumnReady(): Promise<boolean> {
+  if (!useDb()) return true;
+  const { error } = await supabase!.from("bookings").select("room_type").limit(1);
+  return !error;
+}
+
+/** Set (or clear) the hotel room type of a booking. */
+export async function updateBookingRoomType(
+  id: string,
+  roomType: string | null
+): Promise<void> {
+  const value = roomType?.trim() || null;
+  if (useDb() && !isLocalId(id)) {
+    const { error } = await supabase!
+      .from("bookings")
+      .update({ room_type: value })
+      .eq("id", id);
+    if (error) {
+      warn("updateBookingRoomType", error);
+      if (/room_type/i.test(error.message ?? "")) {
+        throw new Error(
+          "The room_type column doesn't exist yet — run supabase/room-type.sql in the Supabase SQL Editor."
+        );
+      }
+      throw new Error(error.message || "Could not save the room type.");
+    }
+    return;
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx !== -1) {
+    bookings[idx] = { ...bookings[idx], roomType: value };
     writeStore(BOOKINGS_KEY, bookings);
   }
 }
