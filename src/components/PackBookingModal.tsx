@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2 } from "lucide-react";
+import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText } from "@/lib/translations";
@@ -7,8 +7,10 @@ import {
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
+  validateDiscountCode,
   ticketUrl,
   type Booking,
+  type DiscountCode,
 } from "@/lib/admin-store";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
@@ -36,6 +38,39 @@ export function PackBookingModal({
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Discount code state
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
+  const [validatingCode, setValidatingCode] = useState(false);
+
+  const basePrice = parseInt(pack.price, 10) || 0;
+  const finalPrice = Math.max(0, basePrice - discountAmount);
+
+  const handleApplyDiscount = async () => {
+    if (!discountInput.trim()) return;
+    setValidatingCode(true);
+    setDiscountMsg(null);
+    const result = await validateDiscountCode(discountInput, basePrice);
+    if (result.valid && result.discount && result.discountAmount != null) {
+      setAppliedDiscount(result.discount);
+      setDiscountAmount(result.discountAmount);
+      setDiscountMsg({
+        success: true,
+        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discountAmount}`})!`,
+      });
+    } else {
+      setAppliedDiscount(null);
+      setDiscountAmount(0);
+      setDiscountMsg({
+        success: false,
+        text: result.error || "Invalid discount code",
+      });
+    }
+    setValidatingCode(false);
+  };
 
   // Memoize large country lists to prevent lag when opening the modal
   const phoneOptions = useMemo(() => {
@@ -115,8 +150,22 @@ export function PackBookingModal({
               </p>
             </div>
             <div className="text-right shrink-0">
-              <span className="font-display text-2xl text-gold">{pack.price}</span>
-              <span className="text-xs text-muted-foreground block">{pack.currency || "€"}</span>
+              {discountAmount > 0 ? (
+                <div>
+                  <span className="text-xs text-muted-foreground line-through block">
+                    {pack.price} {pack.currency || "€"}
+                  </span>
+                  <span className="font-display text-2xl text-gold">{finalPrice}</span>
+                  <span className="text-[10px] text-emerald-400 font-semibold block uppercase tracking-wider">
+                    {pack.currency || "€"} (-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`})
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <span className="font-display text-2xl text-gold">{pack.price}</span>
+                  <span className="text-xs text-muted-foreground block">{pack.currency || "€"}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -208,6 +257,9 @@ export function PackBookingModal({
                   status: "pending",
                   source: collaborator ? "referral" : "website",
                   collaboratorId: collaborator?.id ?? null,
+                  discountCode: appliedDiscount?.code ?? null,
+                  discountAmount: discountAmount,
+                  discountCodeId: appliedDiscount?.id ?? null,
                 });
               } catch (dbErr) {
                 console.warn("Could not record booking in database:", dbErr);
@@ -361,17 +413,45 @@ export function PackBookingModal({
               </Select>
             </div>
 
-            {/* Notes */}
+            {/* Promo / Discount Code */}
             <div>
-              <label className="block text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                {t("packFormNotes")}
+              <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                <Tag className="h-3 w-3 text-gold" />
+                {lang === "fr" ? "Code promo / Réduction" : lang === "es" ? "Código promocional / Descuento" : "Discount Code / Promo Code"}
               </label>
-              <textarea
-                name="Notes"
-                rows={3}
-                className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition resize-none placeholder:text-muted-foreground/50"
-                placeholder="..."
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={discountInput}
+                  onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+                  placeholder="e.g. VIP50"
+                  className="flex-1 rounded-xl border border-border bg-card/40 px-4 py-2.5 font-mono text-sm uppercase focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={validatingCode || !discountInput.trim()}
+                  className="px-5 py-2.5 rounded-xl bg-gold/90 hover:bg-gold text-primary-foreground font-semibold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
+                >
+                  {validatingCode ? "..." : lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply"}
+                </button>
+              </div>
+              {discountMsg && (
+                <div
+                  className={`mt-2 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                    discountMsg.success
+                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                      : "bg-destructive/10 border border-destructive/20 text-destructive"
+                  }`}
+                >
+                  {discountMsg.success ? (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                  ) : (
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                  )}
+                  <span>{discountMsg.text}</span>
+                </div>
+              )}
             </div>
 
             {/* Submit */}

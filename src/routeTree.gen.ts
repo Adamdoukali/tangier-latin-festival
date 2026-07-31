@@ -30,6 +30,7 @@ import { Route as AdminPacksRouteImport } from './routes/admin/packs'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
 import { Route as AdminHotelRouteImport } from './routes/admin/hotel'
+import { Route as AdminDiscountsRouteImport } from './routes/admin/discounts'
 import { Route as AdminCollaboratorsRouteImport } from './routes/admin/collaborators'
 import { Route as AdminClientsRouteImport } from './routes/admin/clients'
 import { Route as AdminBraceletsRouteImport } from './routes/admin/bracelets'
@@ -140,6 +141,11 @@ const AdminHotelRoute = AdminHotelRouteImport.update({
   path: '/hotel',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminDiscountsRoute = AdminDiscountsRouteImport.update({
+  id: '/discounts',
+  path: '/discounts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCollaboratorsRoute = AdminCollaboratorsRouteImport.update({
   id: '/collaborators',
   path: '/collaborators',
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
+  '/admin/discounts': typeof AdminDiscountsRoute
   '/admin/hotel': typeof AdminHotelRoute
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
+    | '/admin/discounts'
     | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
+    | '/admin/discounts'
     | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
@@ -318,6 +329,7 @@ export interface FileRouteTypes {
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
+    | '/admin/discounts'
     | '/admin/hotel'
     | '/admin/invite'
     | '/admin/login'
@@ -493,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminHotelRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/discounts': {
+      id: '/admin/discounts'
+      path: '/discounts'
+      fullPath: '/admin/discounts'
+      preLoaderRoute: typeof AdminDiscountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/collaborators': {
       id: '/admin/collaborators'
       path: '/collaborators'
@@ -529,6 +548,7 @@ interface AdminRouteChildren {
   AdminBraceletsRoute: typeof AdminBraceletsRoute
   AdminClientsRoute: typeof AdminClientsRoute
   AdminCollaboratorsRoute: typeof AdminCollaboratorsRoute
+  AdminDiscountsRoute: typeof AdminDiscountsRoute
   AdminHotelRoute: typeof AdminHotelRoute
   AdminInviteRoute: typeof AdminInviteRoute
   AdminLoginRoute: typeof AdminLoginRoute
@@ -541,6 +561,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBraceletsRoute: AdminBraceletsRoute,
   AdminClientsRoute: AdminClientsRoute,
   AdminCollaboratorsRoute: AdminCollaboratorsRoute,
+  AdminDiscountsRoute: AdminDiscountsRoute,
   AdminHotelRoute: AdminHotelRoute,
   AdminInviteRoute: AdminInviteRoute,
   AdminLoginRoute: AdminLoginRoute,

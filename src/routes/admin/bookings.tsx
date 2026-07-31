@@ -416,11 +416,16 @@ function AdminBookings() {
                           .join(" · ");
                         return (
                           <>
-                            <p className="text-gray-700">{name}</p>
+                            <p className="text-gray-700 font-medium">{name}</p>
                             {detail && (
                               <p className="text-[11px] text-gray-500 mt-0.5 max-w-[220px] truncate" title={detail}>
                                 {detail}
                               </p>
+                            )}
+                            {b.discountCode && (
+                              <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono font-semibold">
+                                Code: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
+                              </span>
                             )}
                           </>
                         );

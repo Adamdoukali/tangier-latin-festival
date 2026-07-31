@@ -19,6 +19,7 @@ import {
   partnerLogin,
   getPacks,
   getBookings,
+  getDiscountCodes,
   updateBookingStatus,
   collaboratorRevenue,
   collaboratorCommission,
@@ -203,7 +204,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [refQr, setRefQr] = useState("");
 
   const reload = useCallback(async () => {
-    const [packs, allBookings] = await Promise.all([getPacks(), getBookings()]);
+    const [packs, allBookings, discounts] = await Promise.all([getPacks(), getBookings(), getDiscountCodes()]);
     setAllPacks(packs);
     const mine = allBookings
       .filter((b) => b.collaboratorId === partner.id)
@@ -215,7 +216,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         .reduce((s, b) => s + (b.numPeople || 1), 0)
     );
     setSales(collaboratorRevenue(partner.id, mine, packs));
-    setEarned(collaboratorCommission(partner, mine, packs));
+    setEarned(collaboratorCommission(partner, mine, packs, discounts));
   }, [partner]);
 
   const changeBookingStatus = async (id: string, status: BookingStatus) => {
@@ -544,6 +545,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           : ""}{" "}
                         · {new Date(b.createdAt).toLocaleDateString()}
                       </p>
+                      {b.discountCode && (
+                        <p className="mt-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
+                            Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
+                          </span>
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {hasTicket && (

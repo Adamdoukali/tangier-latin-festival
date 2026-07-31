@@ -9,6 +9,8 @@ import {
   Ticket,
   Calendar,
   MapPin,
+  Tag,
+  AlertCircle,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import {
@@ -16,10 +18,12 @@ import {
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
+  validateDiscountCode,
   packLabel,
   ticketUrl,
   type Pack,
   type Booking,
+  type DiscountCode,
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel, type Language } from "@/lib/translations";
@@ -52,6 +56,13 @@ function BookPage() {
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
 
+  // Discount code state
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
+  const [validatingCode, setValidatingCode] = useState(false);
+
   const [form, setForm] = useState({
     names: [""] as string[],
     email: "",
@@ -82,6 +93,49 @@ function BookPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Automatically check ?discount= URL param if present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const discParam = params.get("discount");
+    if (discParam) {
+      setDiscountInput(discParam.toUpperCase());
+      validateDiscountCode(discParam, selected ? parseInt(selected.price, 10) || 0 : 0).then((res) => {
+        if (res.valid && res.discount && res.discountAmount != null) {
+          setAppliedDiscount(res.discount);
+          setDiscountAmount(res.discountAmount);
+          setDiscountMsg({
+            success: true,
+            text: `Discount code "${res.discount.code}" applied (-${res.discount.discountType === "percent" ? `${res.discount.discountAmount}%` : `€${res.discount.discountAmount}`})!`,
+          });
+        }
+      });
+    }
+  }, [selected]);
+
+  const handleApplyDiscount = async () => {
+    if (!discountInput.trim()) return;
+    setValidatingCode(true);
+    setDiscountMsg(null);
+    const baseP = selected ? parseInt(selected.price, 10) || 0 : 0;
+    const result = await validateDiscountCode(discountInput, baseP);
+    if (result.valid && result.discount && result.discountAmount != null) {
+      setAppliedDiscount(result.discount);
+      setDiscountAmount(result.discountAmount);
+      setDiscountMsg({
+        success: true,
+        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discount.discountAmount}`})!`,
+      });
+    } else {
+      setAppliedDiscount(null);
+      setDiscountAmount(0);
+      setDiscountMsg({
+        success: false,
+        text: result.error || "Invalid discount code",
+      });
+    }
+    setValidatingCode(false);
+  };
 
   const isTwoPerson = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
 
@@ -126,6 +180,9 @@ function BookPage() {
         status: "pending",
         source: collaborator ? "referral" : "website",
         collaboratorId: collaborator?.id ?? null,
+        discountCode: appliedDiscount?.code ?? null,
+        discountAmount: discountAmount,
+        discountCodeId: appliedDiscount?.id ?? null,
       });
     } catch (dbErr) {
       console.warn("Could not record booking:", dbErr);
@@ -262,13 +319,33 @@ function BookPage() {
               </h2>
               <p className="text-xs text-gray-500">{translateDynamicText(selected.sub, L)}</p>
             </div>
-            <p className="font-display text-2xl text-amber-600 whitespace-nowrap">
-              {selected.price}
-              <span className="text-xs text-gray-500 ml-1">
-                {selected.currency || "€"}
-                {unit ? ` / ${unit}` : ""}
-              </span>
-            </p>
+            <div className="text-right">
+              {discountAmount > 0 ? (
+                <div>
+                  <span className="text-xs text-gray-400 line-through block">
+                    {selected.price} {selected.currency || "€"}
+                  </span>
+                  <span className="font-display text-2xl text-amber-600 font-bold">
+                    {Math.max(0, (parseInt(selected.price, 10) || 0) - discountAmount)}
+                    <span className="text-xs text-gray-600 ml-1">
+                      {selected.currency || "€"}
+                      {unit ? ` / ${unit}` : ""}
+                    </span>
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold block uppercase tracking-wider">
+                    Discount Applied (-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`})
+                  </span>
+                </div>
+              ) : (
+                <p className="font-display text-2xl text-amber-600 whitespace-nowrap">
+                  {selected.price}
+                  <span className="text-xs text-gray-500 ml-1">
+                    {selected.currency || "€"}
+                    {unit ? ` / ${unit}` : ""}
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -395,6 +472,47 @@ function BookPage() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
+            </div>
+
+            {/* Discount Code */}
+            <div>
+              <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-amber-500" />
+                {tr("Discount Code", "Code promo / Réduction", "Código de descuento")}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={discountInput}
+                  onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+                  placeholder="e.g. VIP50"
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={validatingCode || !discountInput.trim()}
+                  className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50"
+                >
+                  {validatingCode ? "..." : tr("Apply", "Appliquer", "Aplicar")}
+                </button>
+              </div>
+              {discountMsg && (
+                <div
+                  className={`mt-2 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                    discountMsg.success
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                  }`}
+                >
+                  {discountMsg.success ? (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+                  ) : (
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
+                  )}
+                  <span>{discountMsg.text}</span>
+                </div>
+              )}
             </div>
 
             <div>

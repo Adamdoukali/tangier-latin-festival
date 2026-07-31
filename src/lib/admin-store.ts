@@ -62,6 +62,26 @@ export interface Booking {
   collaboratorId?: string | null;
   inviteId?: string;
   inviteCode?: string;
+  discountCode?: string | null;
+  discountAmount?: number | null;
+  discountCodeId?: string | null;
+  createdAt: string;
+}
+
+export type DiscountType = "fixed" | "percent";
+
+export interface DiscountCode {
+  id: string;
+  code: string;
+  discountAmount: number;
+  discountType: DiscountType;
+  /** Optional custom collaborator commission (e.g., €10) when used on referral links */
+  commissionOverride?: number | null;
+  commissionType?: CommissionType;
+  maxUses?: number | null;
+  usedCount: number;
+  active: boolean;
+  notes?: string;
   createdAt: string;
 }
 
@@ -122,6 +142,7 @@ const PACKS_KEY = "tlf_admin_packs";
 const BOOKINGS_KEY = "tlf_admin_bookings";
 const INVITES_KEY = "tlf_admin_invites";
 const COLLABS_KEY = "tlf_admin_collaborators";
+const DISCOUNTS_KEY = "tlf_admin_discounts";
 const SEEDED_KEY = "tlf_admin_seeded_v4";
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -297,8 +318,39 @@ const bookingFromRow = (r: any): Booking => ({
   collaboratorId: r.collaborator_id ?? null,
   inviteId: r.invite_id ?? undefined,
   inviteCode: r.invite_code ?? undefined,
+  discountCode: r.discount_code ?? null,
+  discountAmount: r.discount_amount != null ? Number(r.discount_amount) : 0,
+  discountCodeId: r.discount_code_id ?? null,
   createdAt: r.created_at,
 });
+
+const discountFromRow = (r: any): DiscountCode => ({
+  id: r.id,
+  code: r.code,
+  discountAmount: Number(r.discount_amount) || 0,
+  discountType: (r.discount_type as DiscountType) || "fixed",
+  commissionOverride: r.commission_override != null ? Number(r.commission_override) : null,
+  commissionType: (r.commission_type as CommissionType) || "fixed",
+  maxUses: r.max_uses != null ? Number(r.max_uses) : null,
+  usedCount: Number(r.used_count) || 0,
+  active: !!r.active,
+  notes: r.notes ?? "",
+  createdAt: r.created_at || new Date().toISOString(),
+});
+
+const discountToRow = (d: Partial<DiscountCode>): Record<string, any> => {
+  const row: Record<string, any> = {};
+  if (d.code !== undefined) row.code = d.code.trim().toUpperCase();
+  if (d.discountAmount !== undefined) row.discount_amount = d.discountAmount;
+  if (d.discountType !== undefined) row.discount_type = d.discountType;
+  if (d.commissionOverride !== undefined) row.commission_override = d.commissionOverride;
+  if (d.commissionType !== undefined) row.commission_type = d.commissionType;
+  if (d.maxUses !== undefined) row.max_uses = d.maxUses;
+  if (d.usedCount !== undefined) row.used_count = d.usedCount;
+  if (d.active !== undefined) row.active = d.active;
+  if (d.notes !== undefined) row.notes = d.notes;
+  return row;
+};
 
 const inviteFromRow = (r: any): Invite => ({
   id: r.id,
@@ -706,6 +758,9 @@ export async function addBooking(
   booking: Omit<Booking, "id" | "ticketCode" | "createdAt">
 ): Promise<Booking> {
   const ticketCode = generateTicketCode();
+  if (booking.discountCode) {
+    incrementDiscountUsage(booking.discountCode).catch(() => {});
+  }
   if (useDb()) {
     try {
       const data = await insertRow(
@@ -729,8 +784,20 @@ export async function addBooking(
           collaborator_id: booking.collaboratorId ?? null,
           invite_id: booking.inviteId ?? null,
           invite_code: booking.inviteCode ?? null,
+          discount_code: booking.discountCode ?? null,
+          discount_amount: booking.discountAmount ?? 0,
+          discount_code_id: booking.discountCodeId ?? null,
         },
-        ["source", "collaborator_id", "arrival_date", "departure_date", "lang"]
+        [
+          "source",
+          "collaborator_id",
+          "arrival_date",
+          "departure_date",
+          "lang",
+          "discount_code",
+          "discount_amount",
+          "discount_code_id",
+        ]
       );
       return bookingFromRow(data);
     } catch (e) {
@@ -798,6 +865,162 @@ export async function deleteBooking(id: string): Promise<boolean> {
   if (filtered.length === bookings.length) return false;
   writeStore(BOOKINGS_KEY, filtered);
   return true;
+}
+
+// ─── Discount Codes CRUD ─────────────────────────────────────────────
+
+export async function getDiscountCodes(): Promise<DiscountCode[]> {
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("discount_codes")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(discountFromRow);
+    } catch (e) {
+      warn("getDiscountCodes", e);
+    }
+  }
+  return readStore<DiscountCode>(DISCOUNTS_KEY);
+}
+
+export async function getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined> {
+  const wanted = code.trim().toUpperCase();
+  if (useDb()) {
+    try {
+      const { data, error } = await supabase!
+        .from("discount_codes")
+        .select("*")
+        .eq("code", wanted)
+        .maybeSingle();
+      if (error) throw error;
+      if (data) return discountFromRow(data);
+    } catch (e) {
+      warn("getDiscountCodeByCode", e);
+    }
+  }
+  return readStore<DiscountCode>(DISCOUNTS_KEY).find(
+    (d) => d.code.toUpperCase() === wanted
+  );
+}
+
+export async function addDiscountCode(
+  discount: Omit<DiscountCode, "id" | "createdAt" | "usedCount">
+): Promise<DiscountCode> {
+  const cleanCode = discount.code.trim().toUpperCase();
+  if (useDb()) {
+    try {
+      const data = await insertRow("discount_codes", {
+        code: cleanCode,
+        discount_amount: discount.discountAmount,
+        discount_type: discount.discountType || "fixed",
+        commission_override: discount.commissionOverride ?? null,
+        commission_type: discount.commissionType || "fixed",
+        max_uses: discount.maxUses ?? null,
+        used_count: 0,
+        active: discount.active ?? true,
+        notes: discount.notes ?? null,
+      });
+      return discountFromRow(data);
+    } catch (e) {
+      warn("addDiscountCode", e);
+    }
+  }
+  const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);
+  const newDiscount: DiscountCode = {
+    ...discount,
+    code: cleanCode,
+    id: generateId(),
+    usedCount: 0,
+    createdAt: new Date().toISOString(),
+  };
+  discounts.push(newDiscount);
+  writeStore(DISCOUNTS_KEY, discounts);
+  return newDiscount;
+}
+
+export async function updateDiscountCode(
+  id: string,
+  updates: Partial<Omit<DiscountCode, "id" | "createdAt">>
+): Promise<DiscountCode | null> {
+  if (useDb() && !isLocalId(id)) {
+    try {
+      const { data, error } = await supabase!
+        .from("discount_codes")
+        .update(discountToRow(updates))
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return discountFromRow(data);
+    } catch (e) {
+      warn("updateDiscountCode", e);
+    }
+  }
+  const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);
+  const idx = discounts.findIndex((d) => d.id === id);
+  if (idx === -1) return null;
+  discounts[idx] = { ...discounts[idx], ...updates };
+  if (updates.code) discounts[idx].code = updates.code.trim().toUpperCase();
+  writeStore(DISCOUNTS_KEY, discounts);
+  return discounts[idx];
+}
+
+export async function deleteDiscountCode(id: string): Promise<boolean> {
+  if (useDb() && !isLocalId(id)) {
+    try {
+      const { error } = await supabase!.from("discount_codes").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      warn("deleteDiscountCode", e);
+    }
+  }
+  const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);
+  const filtered = discounts.filter((d) => d.id !== id);
+  if (filtered.length === discounts.length) return false;
+  writeStore(DISCOUNTS_KEY, filtered);
+  return true;
+}
+
+export async function incrementDiscountUsage(code: string): Promise<void> {
+  const d = await getDiscountCodeByCode(code);
+  if (!d) return;
+  const newCount = (d.usedCount || 0) + 1;
+  await updateDiscountCode(d.id, { usedCount: newCount });
+}
+
+export function calculateDiscountAmount(
+  discount: DiscountCode,
+  basePrice: number
+): number {
+  if (!discount || !discount.active) return 0;
+  if (discount.discountType === "percent") {
+    return Math.round((basePrice * (discount.discountAmount / 100)) * 100) / 100;
+  }
+  return Math.min(basePrice, discount.discountAmount);
+}
+
+export async function validateDiscountCode(
+  code: string,
+  basePrice: number = 0
+): Promise<{ valid: boolean; error?: string; discount?: DiscountCode; discountAmount?: number }> {
+  if (!code || !code.trim()) {
+    return { valid: false, error: "Empty code" };
+  }
+  const d = await getDiscountCodeByCode(code);
+  if (!d) {
+    return { valid: false, error: "Invalid discount code" };
+  }
+  if (!d.active) {
+    return { valid: false, error: "This discount code is no longer active" };
+  }
+  if (d.maxUses != null && d.maxUses > 0 && d.usedCount >= d.maxUses) {
+    return { valid: false, error: "This discount code has reached its maximum uses" };
+  }
+  const discountAmount = calculateDiscountAmount(d, basePrice);
+  return { valid: true, discount: d, discountAmount };
 }
 
 // ─── Invites CRUD ───────────────────────────────────────────────────
@@ -1795,7 +2018,8 @@ export function commissionLabel(c: Collaborator): string {
 export function collaboratorCommission(
   c: Collaborator,
   bookings: Booking[],
-  packs: Pack[]
+  packs: Pack[],
+  discountCodes: DiscountCode[] = []
 ): Money {
   let mine = bookings
     .filter(
@@ -1815,32 +2039,69 @@ export function collaboratorCommission(
     });
   }
 
-  if ((c.commissionType ?? "percent") === "per_person") {
-    // Rate depends on what was sold: double room / single room / full pass
-    const amount = mine.reduce((s, b) => {
+  const cur = c.commissionCurrency ?? "EUR";
+
+  return mine.reduce((acc, b) => {
+    // Find discount code if used on this booking
+    const disc = b.discountCode
+      ? discountCodes.find(
+          (d) =>
+            d.code.toUpperCase() === b.discountCode?.toUpperCase() ||
+            d.id === b.discountCodeId
+        )
+      : undefined;
+
+    // Check if the discount code overrides collaborator commission (e.g. lowered to €10)
+    if (disc && disc.commissionOverride != null) {
+      const overrideVal = disc.commissionOverride;
+      const type = disc.commissionType ?? "fixed";
+      if (type === "percent") {
+        const pack = packs.find((x) => x.id === b.packId);
+        const { amount, currency } = packPrice(pack);
+        const netPackPrice = Math.max(0, amount - (b.discountAmount || 0));
+        const saleValue = netPackPrice * (b.numPeople || 1);
+        const commValue = Math.round(saleValue * (overrideVal / 100) * 100) / 100;
+        return currency === "MAD"
+          ? { ...acc, mad: acc.mad + commValue }
+          : { ...acc, eur: acc.eur + commValue };
+      } else {
+        // Fixed amount override (e.g., €10 per person)
+        const commValue = Math.round(overrideVal * (b.numPeople || 1) * 100) / 100;
+        return cur === "MAD"
+          ? { ...acc, mad: acc.mad + commValue }
+          : { ...acc, eur: acc.eur + commValue };
+      }
+    }
+
+    // Standard collaborator commission calculation
+    if ((c.commissionType ?? "percent") === "per_person") {
       const pack = packs.find((x) => x.id === b.packId);
       const cat = packRoomCategory(pack?.name ?? b.packName);
-      return s + perPersonRate(c, cat) * (b.numPeople || 1);
-    }, 0);
-    const rounded = Math.round(amount * 100) / 100;
-    return (c.commissionCurrency ?? "EUR") === "MAD"
-      ? { eur: 0, mad: rounded }
-      : { eur: rounded, mad: 0 };
-  }
-  // Percentage deals: a share of the sales, in each sale's own currency.
-  const pct = (c.commission ?? 0) / 100;
-  const sales = salesOf(mine, packs);
-  return {
-    eur: Math.round(sales.eur * pct * 100) / 100,
-    mad: Math.round(sales.mad * pct * 100) / 100,
-  };
+      const rate = perPersonRate(c, cat);
+      const amount = Math.round(rate * (b.numPeople || 1) * 100) / 100;
+      return cur === "MAD"
+        ? { ...acc, mad: acc.mad + amount }
+        : { ...acc, eur: acc.eur + amount };
+    } else {
+      const pct = (c.commission ?? 0) / 100;
+      const pack = packs.find((x) => x.id === b.packId);
+      const { amount, currency } = packPrice(pack);
+      const netPackPrice = Math.max(0, amount - (b.discountAmount || 0));
+      const value = netPackPrice * (b.numPeople || 1);
+      const commValue = Math.round(value * pct * 100) / 100;
+      return currency === "MAD"
+        ? { ...acc, mad: acc.mad + commValue }
+        : { ...acc, eur: acc.eur + commValue };
+    }
+  }, emptyMoney());
 }
 
 /** Sum bookings by the currency their pack is actually priced in. */
 function salesOf(bookings: Booking[], packs: Pack[]): Money {
   return bookings.reduce((acc, b) => {
     const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
-    const value = amount * (b.numPeople || 1);
+    const netAmount = Math.max(0, amount - (b.discountAmount || 0));
+    const value = netAmount * (b.numPeople || 1);
     return currency === "MAD"
       ? { ...acc, mad: acc.mad + value }
       : { ...acc, eur: acc.eur + value };
@@ -1866,11 +2127,12 @@ export function collaboratorRevenue(
 }
 
 export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
-  const [collaborators, invites, bookings, packs] = await Promise.all([
+  const [collaborators, invites, bookings, packs, discountCodes] = await Promise.all([
     getCollaborators(),
     getInvites(),
     getBookings(),
     getPacks(),
+    getDiscountCodes(),
   ]);
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
@@ -1881,7 +2143,7 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       myBookings.filter((b) => b.source !== "invite"),
       packs
     );
-    const earned = collaboratorCommission(c, bookings, packs);
+    const earned = collaboratorCommission(c, bookings, packs, discountCodes);
     const catOf = (b: Booking) => {
       const p = packs.find((x) => x.id === b.packId);
       return packRoomCategory(p?.name ?? b.packName);
