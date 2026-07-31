@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import {
   Ticket,
   Package,
-  DollarSign,
+  Users,
   Clock,
   BedDouble,
   Bed,
@@ -14,7 +14,9 @@ import {
   getStats,
   getBookings,
   getPacks,
+  getCollaborators,
   getCollaboratorStats,
+  getClients,
   formatMoney,
   commissionLabel,
   packRoomCategory,
@@ -27,7 +29,9 @@ import {
   moneyIn,
   type Booking,
   type Pack,
+  type Collaborator,
   type CollaboratorStats,
+  type ClientGuest,
 } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/")({
@@ -49,15 +53,18 @@ function AdminDashboard() {
   const [collabStats, setCollabStats] = useState<CollaboratorStats[]>([]);
   const [liveBookings, setLiveBookings] = useState<Booking[]>([]);
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [allClients, setAllClients] = useState<ClientGuest[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [s, bookings, packs, cs] = await Promise.all([
+      const [s, bookings, packs, cs, collabs] = await Promise.all([
         getStats(),
         getBookings(),
         getPacks(),
         getCollaboratorStats(),
+        getCollaborators(),
       ]);
       if (cancelled) return;
       setStats(s);
@@ -69,6 +76,11 @@ function AdminDashboard() {
       const live = bookings.filter((b) => b.status !== "declined");
       setLiveBookings(live);
       setAllPacks(packs);
+      setCollaborators(collabs);
+
+      const clientList = getClients(live, packs, collabs);
+      setAllClients(clientList);
+
       setRoomCounts({
         double: live.filter((b) => catOf(b) === "double").length,
         single: live.filter((b) => catOf(b) === "single").length,
@@ -120,9 +132,9 @@ function AdminDashboard() {
       iconColor: "text-amber-600",
     },
     {
-      label: "Revenue",
-      value: formatMoneyPair(stats.totalRevenue),
-      icon: DollarSign,
+      label: "Total Clients",
+      value: allClients.length,
+      icon: Users,
       color: "from-emerald-500 to-emerald-700",
       iconBg: "bg-emerald-100",
       iconColor: "text-emerald-600",
@@ -186,12 +198,10 @@ function AdminDashboard() {
 
       {/* Guests by origin — Morocco vs international, per pack type */}
       {(() => {
-        const catOf = (b: Booking) => {
-          const p = allPacks.find((x) => x.id === b.packId);
-          return packRoomCategory(p?.name ?? b.packName);
+        const catOfClient = (c: ClientGuest) => {
+          const p = allPacks.find((x) => x.id === c.packName);
+          return packRoomCategory(p?.name ?? c.packName);
         };
-        const people = (list: Booking[]) =>
-          list.reduce((s, b) => s + bookingPeopleCount(b, allPacks), 0);
         const rowsData = [
           {
             key: "morocco",
@@ -205,23 +215,17 @@ function AdminDashboard() {
             dot: "bg-blue-500",
             cls: "text-blue-700",
           },
-          {
-            key: "unknown",
-            label: "Not specified",
-            dot: "bg-gray-300",
-            cls: "text-gray-400",
-          },
         ].map((o) => {
-          const mine = liveBookings.filter((b) => guestOrigin(b) === o.key);
+          const mine = allClients.filter((c) => c.origin === o.key);
           return {
             ...o,
-            double: people(mine.filter((b) => catOf(b) === "double")),
-            single: people(mine.filter((b) => catOf(b) === "single")),
-            fullpass: people(mine.filter((b) => catOf(b) === "fullpass")),
-            total: people(mine),
+            double: mine.filter((c) => catOfClient(c) === "double").length,
+            single: mine.filter((c) => catOfClient(c) === "single").length,
+            fullpass: mine.filter((c) => catOfClient(c) === "fullpass").length,
+            total: mine.length,
           };
         });
-        const visible = rowsData.filter((r) => r.key !== "unknown" || r.total > 0);
+        const visible = rowsData;
         return (
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
