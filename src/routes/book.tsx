@@ -19,6 +19,7 @@ import {
   getCollaboratorByCode,
   getRememberedReferral,
   validateDiscountCode,
+  calculateDiscountAmount,
   packLabel,
   ticketUrl,
   type Pack,
@@ -94,16 +95,21 @@ function BookPage() {
       .catch(() => {});
   }, []);
 
-  // Automatically check ?discount= URL param if present
+  // Automatically check ?discount= URL param or sessionStorage if present
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const discParam = params.get("discount");
+    const discParam = params.get("discount") || sessionStorage.getItem("tlf_discount_code");
     if (discParam) {
-      setDiscountInput(discParam.toUpperCase());
-      validateDiscountCode(discParam, selected ? parseInt(selected.price, 10) || 0 : 0).then((res) => {
-        if (res.valid && res.discount && res.discountAmount != null) {
+      const code = discParam.trim().toUpperCase();
+      setDiscountInput(code);
+      const baseP = selected ? parseInt(selected.price, 10) || 0 : 0;
+      validateDiscountCode(code, baseP).then((res) => {
+        if (res.valid && res.discount) {
           setAppliedDiscount(res.discount);
-          setDiscountAmount(res.discountAmount);
+          sessionStorage.setItem("tlf_discount_code", res.discount.code);
+          const amt = calculateDiscountAmount(res.discount, baseP);
+          setDiscountAmount(amt);
           setDiscountMsg({
             success: true,
             text: `Discount code "${res.discount.code}" applied (-${res.discount.discountType === "percent" ? `${res.discount.discountAmount}%` : `€${res.discount.discountAmount}`})!`,
@@ -119,9 +125,13 @@ function BookPage() {
     setDiscountMsg(null);
     const baseP = selected ? parseInt(selected.price, 10) || 0 : 0;
     const result = await validateDiscountCode(discountInput, baseP);
-    if (result.valid && result.discount && result.discountAmount != null) {
+    if (result.valid && result.discount) {
       setAppliedDiscount(result.discount);
-      setDiscountAmount(result.discountAmount);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("tlf_discount_code", result.discount.code);
+      }
+      const amt = calculateDiscountAmount(result.discount, baseP);
+      setDiscountAmount(amt);
       setDiscountMsg({
         success: true,
         text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discount.discountAmount}`})!`,
@@ -129,6 +139,9 @@ function BookPage() {
     } else {
       setAppliedDiscount(null);
       setDiscountAmount(0);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("tlf_discount_code");
+      }
       setDiscountMsg({
         success: false,
         text: result.error || "Invalid discount code",
@@ -137,11 +150,25 @@ function BookPage() {
     setValidatingCode(false);
   };
 
+  const handleClearDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountInput("");
+    setDiscountAmount(0);
+    setDiscountMsg(null);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("tlf_discount_code");
+    }
+  };
+
   const isTwoPerson = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
 
   const choosePack = (p: Pack) => {
     setSelected(p);
     setForm((f) => ({ ...f, names: isTwoPerson(p) ? ["", ""] : [""] }));
+    if (appliedDiscount) {
+      const baseP = parseInt(p.price, 10) || 0;
+      setDiscountAmount(calculateDiscountAmount(appliedDiscount, baseP));
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -566,7 +593,7 @@ function BookPage() {
   // ── Step 1: choose a pack ──
   return (
     <Shell>
-      <div className="text-center mb-10">
+      <div className="text-center mb-8">
         <h1 className="font-display text-3xl md:text-4xl text-gray-900 tracking-wide">
           {tr("Choose Your Pack", "Choisissez votre pack", "Elige tu pack")}
         </h1>
@@ -579,12 +606,73 @@ function BookPage() {
         </p>
       </div>
 
+      {/* PROMO / DISCOUNT CODE BAR ON STEP 1 */}
+      <div className="max-w-md mx-auto mb-8 rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <Tag className="h-4 w-4 text-amber-500" />
+          <span className="text-xs font-bold tracking-widest uppercase text-gray-700">
+            {tr("Have a Discount Code?", "Code Promo / Réduction ?", "¿Tienes un código de descuento?")}
+          </span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={discountInput}
+            onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+            placeholder="e.g. VIP50"
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition"
+          />
+          <button
+            type="button"
+            onClick={handleApplyDiscount}
+            disabled={validatingCode || !discountInput.trim()}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50"
+          >
+            {validatingCode ? "..." : tr("Apply", "Appliquer", "Aplicar")}
+          </button>
+        </div>
+        {discountMsg && (
+          <div
+            className={`mt-2 p-2.5 rounded-lg text-xs font-medium flex items-center justify-between gap-2 ${
+              discountMsg.success
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              {discountMsg.success ? (
+                <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
+              ) : (
+                <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
+              )}
+              <span>{discountMsg.text}</span>
+            </div>
+            {discountMsg.success && (
+              <button
+                type="button"
+                onClick={handleClearDiscount}
+                className="text-[11px] text-gray-500 hover:text-gray-700 underline shrink-0 cursor-pointer"
+              >
+                {tr("Remove", "Effacer", "Quitar")}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {packs.length === 0 ? (
         <p className="text-center text-sm text-gray-400 py-16">{tr("Loading…", "Chargement…", "Cargando…")}</p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {packs.map((p) => {
             const unit = priceUnitLabel(p, L);
+            const baseP = parseInt(p.price, 10) || 0;
+            const discAmt = appliedDiscount
+              ? calculateDiscountAmount(appliedDiscount, baseP)
+              : 0;
+            const finalP = Math.max(0, baseP - discAmt);
+            const hasDiscount = discAmt > 0;
+
             return (
               <button
                 key={p.id}
@@ -601,19 +689,53 @@ function BookPage() {
                     {tr("Popular", "Populaire", "Popular")}
                   </span>
                 )}
+
+                {/* RED DISCOUNT GRAPHIC BADGE */}
+                {hasDiscount && (
+                  <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-md animate-pulse">
+                    <Tag className="h-3 w-3" />
+                    -{appliedDiscount?.discountType === "percent"
+                      ? `${appliedDiscount.discountAmount}%`
+                      : `€${discAmt}`}
+                  </span>
+                )}
+
                 <p className="font-display text-lg text-gray-900">
                   {translateDynamicText(p.name, L)}
                 </p>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
                   {translateDynamicText(p.sub, L)}
                 </p>
-                <p className="mt-3 font-display text-3xl text-amber-600">
-                  {p.price}
-                  <span className="text-xs text-gray-500 ml-1">
-                    {p.currency || "€"}
-                    {unit ? ` / ${unit}` : ""}
-                  </span>
-                </p>
+
+                {/* PRICE DISPLAY WITH RED DISCOUNT GRAPHICS */}
+                {hasDiscount ? (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <span className="line-through">
+                        {p.price} {p.currency || "€"}
+                      </span>
+                      <span className="text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded uppercase">
+                        {tr("Save", "Économisez", "Ahorra")} €{discAmt}
+                      </span>
+                    </div>
+                    <p className="font-display text-3xl text-amber-600 font-bold">
+                      {finalP}
+                      <span className="text-xs text-gray-500 ml-1">
+                        {p.currency || "€"}
+                        {unit ? ` / ${unit}` : ""}
+                      </span>
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-3 font-display text-3xl text-amber-600">
+                    {p.price}
+                    <span className="text-xs text-gray-500 ml-1">
+                      {p.currency || "€"}
+                      {unit ? ` / ${unit}` : ""}
+                    </span>
+                  </p>
+                )}
+
                 <ul className="mt-3 space-y-1">
                   {p.features.slice(0, 4).map((f, fi) => (
                     <li key={fi} className="flex items-start gap-1.5 text-[11px] text-gray-600">
@@ -625,6 +747,7 @@ function BookPage() {
                 <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
                   <Ticket className="h-3.5 w-3.5" />
                   {tr("Choose this pack →", "Choisir ce pack →", "Elegir este pack →")}
+                  {hasDiscount ? ` (${tr("Save", "Économisez", "Ahorra")} €${discAmt})` : ""}
                 </span>
               </button>
             );

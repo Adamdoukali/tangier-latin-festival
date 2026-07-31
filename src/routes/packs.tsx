@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Check } from "lucide-react";
+import { Check, Tag, AlertCircle, X, Sparkles } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel } from "@/lib/translations";
-import { getActivePacks } from "@/lib/admin-store";
+import {
+  getActivePacks,
+  validateDiscountCode,
+  calculateDiscountAmount,
+  type DiscountCode,
+} from "@/lib/admin-store";
 import { PackBookingModal } from "@/components/PackBookingModal";
 
 export const Route = createFileRoute("/packs")({
@@ -28,6 +33,12 @@ function PacksPage() {
     currency?: string;
   } | null>(null);
 
+  // Discount Code State
+  const [discountInput, setDiscountInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
+  const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
+  const [validatingCode, setValidatingCode] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     getActivePacks().then((p) => {
@@ -37,6 +48,84 @@ function PacksPage() {
       cancelled = true;
     };
   }, []);
+
+  // Check ?discount= parameter in URL or sessionStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get("discount");
+    const storedCode = sessionStorage.getItem("tlf_discount_code");
+    const codeToValidate = (urlCode || storedCode || "").trim().toUpperCase();
+
+    if (codeToValidate) {
+      setDiscountInput(codeToValidate);
+      setValidatingCode(true);
+      validateDiscountCode(codeToValidate, 0).then((res) => {
+        if (res.valid && res.discount) {
+          setAppliedDiscount(res.discount);
+          sessionStorage.setItem("tlf_discount_code", res.discount.code);
+          setDiscountMsg({
+            success: true,
+            text:
+              lang === "fr"
+                ? `Code promo "${res.discount.code}" appliqué sur tous les packs !`
+                : lang === "es"
+                ? `¡Código promocional "${res.discount.code}" aplicado en todos los packs!`
+                : `Discount code "${res.discount.code}" applied on all packs!`,
+          });
+        }
+        setValidatingCode(false);
+      });
+    }
+  }, [lang]);
+
+  const handleApplyDiscount = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!discountInput.trim()) return;
+    setValidatingCode(true);
+    setDiscountMsg(null);
+    const result = await validateDiscountCode(discountInput, 0);
+    if (result.valid && result.discount) {
+      setAppliedDiscount(result.discount);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("tlf_discount_code", result.discount.code);
+      }
+      setDiscountMsg({
+        success: true,
+        text:
+          lang === "fr"
+            ? `Code promo "${result.discount.code}" appliqué sur tous les packs !`
+            : lang === "es"
+            ? `¡Código promocional "${result.discount.code}" aplicado en todos los packs!`
+            : `Discount code "${result.discount.code}" applied on all packs!`,
+      });
+    } else {
+      setAppliedDiscount(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("tlf_discount_code");
+      }
+      setDiscountMsg({
+        success: false,
+        text:
+          result.error ||
+          (lang === "fr"
+            ? "Code promo invalide"
+            : lang === "es"
+            ? "Código no válido"
+            : "Invalid discount code"),
+      });
+    }
+    setValidatingCode(false);
+  };
+
+  const handleClearDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountInput("");
+    setDiscountMsg(null);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("tlf_discount_code");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,8 +151,124 @@ function PacksPage() {
 
       <AnimatedPriceBanner />
 
+      {/* PUBLIC PROMO / DISCOUNT CODE BAR */}
+      <div className="max-w-4xl mx-auto px-6 pt-12 pb-4">
+        <div className="relative rounded-3xl border border-primary/30 bg-gradient-to-br from-card/90 via-card/50 to-primary/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl overflow-hidden">
+          {/* Subtle background glow */}
+          <div className="absolute -top-24 -right-24 w-60 h-60 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-gold/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-left flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Tag className="h-4 w-4 text-gold" />
+                <span className="text-xs font-bold tracking-[0.25em] uppercase text-gold">
+                  {lang === "fr"
+                    ? "CODE PROMO & RÉDUCTIONS"
+                    : lang === "es"
+                    ? "CÓDIGO PROMOCIONAL Y DESCUENTOS"
+                    : "PROMO CODE & DISCOUNTS"}
+                </span>
+              </div>
+              <h3 className="font-display text-xl md:text-2xl font-bold text-foreground">
+                {lang === "fr"
+                  ? "Avez-vous un code de réduction ?"
+                  : lang === "es"
+                  ? "¿Tienes un código de descuento?"
+                  : "Have a discount code?"}
+              </h3>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                {lang === "fr"
+                  ? "Entrez votre code ci-dessous pour afficher les prix réduits sur tous nos packs."
+                  : lang === "es"
+                  ? "Introduce tu código a continuación para ver los precios reducidos en todos los packs."
+                  : "Enter your promo code below to see instant discounted prices on all festival packs."}
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleApplyDiscount}
+              className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0"
+            >
+              <div className="relative flex-1 sm:w-64">
+                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                <input
+                  type="text"
+                  value={discountInput}
+                  onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+                  placeholder={
+                    lang === "fr" ? "ex: VIP50" : lang === "es" ? "ej: VIP50" : "e.g. VIP50"
+                  }
+                  className="w-full rounded-2xl border border-border/80 bg-background/80 pl-10 pr-8 py-3 text-sm font-mono uppercase text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition shadow-inner"
+                />
+                {discountInput && (
+                  <button
+                    type="button"
+                    onClick={handleClearDiscount}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={validatingCode || !discountInput.trim()}
+                className="rounded-2xl bg-gradient-to-r from-primary via-amber-500 to-amber-600 text-primary-foreground font-bold px-6 py-3 text-sm uppercase tracking-wider hover:opacity-95 transition shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                {validatingCode ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    <span>...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>
+                      {lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply Code"}
+                    </span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {discountMsg && (
+            <div
+              className={`mt-4 p-3 rounded-2xl text-xs font-semibold flex items-center justify-between gap-3 ${
+                discountMsg.success
+                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
+                  : "bg-destructive/10 border border-destructive/30 text-destructive"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {discountMsg.success ? (
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                )}
+                <span>{discountMsg.text}</span>
+              </div>
+              {discountMsg.success && (
+                <button
+                  type="button"
+                  onClick={handleClearDiscount}
+                  className="text-xs text-muted-foreground hover:text-foreground underline shrink-0 cursor-pointer"
+                >
+                  {lang === "fr"
+                    ? "Supprimer le code"
+                    : lang === "es"
+                    ? "Quitar código"
+                    : "Remove code"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* PACKS GRID */}
-      <section className="py-24 bg-card/30">
+      <section className="py-16 bg-card/30">
         <div className="mx-auto max-w-7xl px-6">
           {Object.entries(
             packs.reduce((acc, pack) => {
@@ -83,6 +288,13 @@ function PacksPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {catPacks.map((p) => {
                   const isPopular = p.popular;
+                  const basePriceNum = parseInt(p.price, 10) || 0;
+                  const discAmt = appliedDiscount
+                    ? calculateDiscountAmount(appliedDiscount, basePriceNum)
+                    : 0;
+                  const finalPriceNum = Math.max(0, basePriceNum - discAmt);
+                  const hasDiscount = discAmt > 0;
+
                   return (
                     <div
                       key={p.id || `${translateDynamic(p.name)}-${translateDynamic(p.sub)}`}
@@ -101,6 +313,16 @@ function PacksPage() {
                         </div>
                       )}
 
+                      {/* RED DISCOUNT GRAPHIC BADGE */}
+                      {hasDiscount && (
+                        <div className="absolute top-4 right-4 z-20 bg-gradient-to-r from-red-600 via-red-500 to-rose-600 text-white font-black text-xs md:text-sm px-3.5 py-1.5 rounded-full shadow-lg shadow-red-900/40 tracking-wider flex items-center gap-1.5 border border-red-400/40 animate-pulse">
+                          <Tag className="h-3.5 w-3.5" />
+                          -{appliedDiscount?.discountType === "percent"
+                            ? `${appliedDiscount.discountAmount}%`
+                            : `€${discAmt}`}
+                        </div>
+                      )}
+
                       <div className="relative z-10 flex flex-col flex-1 text-left">
                         <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
                           {translateDynamic(p.name)}
@@ -109,17 +331,44 @@ function PacksPage() {
                           {translateDynamic(p.sub)}
                         </p>
 
-                        <div className="mt-8 md:mt-10 flex items-end gap-2">
-                          <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
-                            {p.price}
-                          </span>
-                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
-                            {p.currency || "€"}
-                            {priceUnitLabel(p, lang as "en" | "fr" | "es")
-                              ? ` / ${priceUnitLabel(p, lang as "en" | "fr" | "es")}`
-                              : ""}
-                          </span>
-                        </div>
+                        {/* PRICE SECTION WITH RED DISCOUNT GRAPHICS */}
+                        {hasDiscount ? (
+                          <div className="mt-8 md:mt-10 flex flex-col items-start gap-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm md:text-base font-bold text-muted-foreground/60 line-through">
+                                {p.price} {p.currency || "€"}
+                              </span>
+                              <span className="bg-red-500/20 text-red-400 text-[10px] md:text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-red-500/30">
+                                Save {appliedDiscount?.discountType === "percent"
+                                  ? `${appliedDiscount.discountAmount}%`
+                                  : `€${discAmt}`}
+                              </span>
+                            </div>
+                            <div className="flex items-end gap-2">
+                              <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-gold leading-none">
+                                {finalPriceNum}
+                              </span>
+                              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                                {p.currency || "€"}
+                                {priceUnitLabel(p, lang as "en" | "fr" | "es")
+                                  ? ` / ${priceUnitLabel(p, lang as "en" | "fr" | "es")}`
+                                  : ""}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="mt-8 md:mt-10 flex items-end gap-2">
+                            <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
+                              {p.price}
+                            </span>
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
+                              {p.currency || "€"}
+                              {priceUnitLabel(p, lang as "en" | "fr" | "es")
+                                ? ` / ${priceUnitLabel(p, lang as "en" | "fr" | "es")}`
+                                : ""}
+                            </span>
+                          </div>
+                        )}
 
                         <div className="my-8 md:my-10 h-px w-full bg-gradient-to-r from-border/80 via-border/30 to-transparent" />
 
@@ -160,6 +409,7 @@ function PacksPage() {
                         >
                           <span className="relative z-10">
                             {isPopular ? t("getStartedBtn") : t("choosePackBtn")}
+                            {hasDiscount ? ` (Save €${discAmt})` : ""}
                           </span>
                         </button>
                       </div>
@@ -174,7 +424,12 @@ function PacksPage() {
 
       {/* PACK BOOKING MODAL */}
       {selectedPack && (
-        <PackBookingModal pack={selectedPack} onClose={() => setSelectedPack(null)} />
+        <PackBookingModal
+          pack={selectedPack}
+          onClose={() => setSelectedPack(null)}
+          initialDiscountCode={appliedDiscount?.code || discountInput}
+          initialDiscount={appliedDiscount}
+        />
       )}
     </div>
   );

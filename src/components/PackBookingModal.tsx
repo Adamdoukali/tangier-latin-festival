@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -8,6 +8,7 @@ import {
   getCollaboratorByCode,
   getRememberedReferral,
   validateDiscountCode,
+  calculateDiscountAmount,
   ticketUrl,
   type Booking,
   type DiscountCode,
@@ -29,9 +30,13 @@ const filteredCountries = countries.filter(c => ALLOWED_COUNTRY_CODES.has(c.code
 export function PackBookingModal({
   pack,
   onClose,
+  initialDiscountCode,
+  initialDiscount,
 }: {
   pack: { id?: string; name: string; sub: string; price: string; currency?: string };
   onClose: () => void;
+  initialDiscountCode?: string;
+  initialDiscount?: DiscountCode | null;
 }) {
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
@@ -40,13 +45,63 @@ export function PackBookingModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Discount code state
-  const [discountInput, setDiscountInput] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
+  const [discountInput, setDiscountInput] = useState(
+    initialDiscountCode || initialDiscount?.code || ""
+  );
+  const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(
+    initialDiscount || null
+  );
+  const basePrice = parseInt(pack.price, 10) || 0;
+  const [discountAmount, setDiscountAmount] = useState(
+    initialDiscount ? calculateDiscountAmount(initialDiscount, basePrice) : 0
+  );
+  const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(
+    initialDiscount
+      ? {
+          success: true,
+          text: `Discount code "${initialDiscount.code}" applied (-${
+            initialDiscount.discountType === "percent"
+              ? `${initialDiscount.discountAmount}%`
+              : `€${calculateDiscountAmount(initialDiscount, basePrice)}`
+          })!`,
+        }
+      : null
+  );
   const [validatingCode, setValidatingCode] = useState(false);
 
-  const basePrice = parseInt(pack.price, 10) || 0;
+  useEffect(() => {
+    if (initialDiscount) {
+      const amt = calculateDiscountAmount(initialDiscount, basePrice);
+      setAppliedDiscount(initialDiscount);
+      setDiscountAmount(amt);
+      setDiscountInput(initialDiscount.code);
+      setDiscountMsg({
+        success: true,
+        text: `Discount code "${initialDiscount.code}" applied (-${
+          initialDiscount.discountType === "percent"
+            ? `${initialDiscount.discountAmount}%`
+            : `€${amt}`
+        })!`,
+      });
+    } else if (initialDiscountCode) {
+      validateDiscountCode(initialDiscountCode, basePrice).then((res) => {
+        if (res.valid && res.discount && res.discountAmount != null) {
+          setAppliedDiscount(res.discount);
+          setDiscountAmount(res.discountAmount);
+          setDiscountInput(res.discount.code);
+          setDiscountMsg({
+            success: true,
+            text: `Discount code "${res.discount.code}" applied (-${
+              res.discount.discountType === "percent"
+                ? `${res.discount.discountAmount}%`
+                : `€${res.discountAmount}`
+            })!`,
+          });
+        }
+      });
+    }
+  }, [initialDiscount, initialDiscountCode, basePrice]);
+
   const finalPrice = Math.max(0, basePrice - discountAmount);
 
   const handleApplyDiscount = async () => {
@@ -151,13 +206,18 @@ export function PackBookingModal({
             </div>
             <div className="text-right shrink-0">
               {discountAmount > 0 ? (
-                <div>
+                <div className="flex flex-col items-end">
+                  <span className="bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm mb-0.5">
+                    -{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`}
+                  </span>
                   <span className="text-xs text-muted-foreground line-through block">
                     {pack.price} {pack.currency || "€"}
                   </span>
-                  <span className="font-display text-2xl text-gold">{finalPrice}</span>
-                  <span className="text-[10px] text-emerald-400 font-semibold block uppercase tracking-wider">
-                    {pack.currency || "€"} (-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`})
+                  <span className="font-display text-2xl text-gold font-bold">
+                    {finalPrice} <span className="text-xs font-normal text-muted-foreground">{pack.currency || "€"}</span>
+                  </span>
+                  <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+                    Save {appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`}
                   </span>
                 </div>
               ) : (
