@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import {
   partnerLogin,
+  requestPasswordReset,
+  resetPartnerPassword,
   getPacks,
   getBookings,
   getDiscountCodes,
@@ -61,8 +63,18 @@ function getBookingUrl(code: string, _lang?: string): string {
 function PartnerPortal() {
   const [checking, setChecking] = useState(true);
   const [partner, setPartner] = useState<Collaborator | null>(null);
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [view, setView] = useState<"login" | "forgot" | "reset">("login");
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("resetToken");
+      if (token) {
+        setResetToken(token);
+        setView("reset");
+      }
+    }
     restorePartnerSession().then((c) => {
       setPartner(c);
       setChecking(false);
@@ -77,18 +89,43 @@ function PartnerPortal() {
     );
   }
 
-  return partner ? (
-    <Portal partner={partner} onSignOut={() => setPartner(null)} />
-  ) : (
-    <LoginScreen onLogin={setPartner} />
-  );
+  if (partner) {
+    return <Portal partner={partner} onSignOut={() => setPartner(null)} />;
+  }
+
+  if (view === "reset" && resetToken) {
+    return (
+      <SetPasswordScreen
+        token={resetToken}
+        onSuccess={() => {
+          if (typeof window !== "undefined") {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          setView("login");
+        }}
+        onBackToLogin={() => setView("login")}
+      />
+    );
+  }
+
+  if (view === "forgot") {
+    return <RequestResetScreen onBackToLogin={() => setView("login")} />;
+  }
+
+  return <LoginScreen onLogin={setPartner} onForgotPassword={() => setView("forgot")} />;
 }
 
 // ─── Login ────────────────────────────────────────────────────────────
 
-function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
-  const [username, setUsername] = useState("");
-  const [accessCode, setAccessCode] = useState("");
+function LoginScreen({
+  onLogin,
+  onForgotPassword,
+}: {
+  onLogin: (c: Collaborator) => void;
+  onForgotPassword: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -96,9 +133,9 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const result = await partnerLogin(username, accessCode);
+    const result = await partnerLogin(email, password);
     if (result.success) {
-      savePartnerSession(username.trim().toLowerCase(), accessCode.trim());
+      savePartnerSession(email.trim().toLowerCase(), password.trim());
       onLogin(result.collaborator);
     } else {
       setError(result.error);
@@ -113,7 +150,7 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
 
-      {/* Banner — swap for a custom image anytime */}
+      {/* Banner */}
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
         <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
           Tangier International
@@ -137,42 +174,51 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <p className="text-center text-sm font-semibold text-gray-700">
-                Please enter the USERNAME provided by the festival team
+                Please enter your registered email and password
               </p>
               {error && (
-                <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+                <div className="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm text-center font-medium leading-relaxed">
                   {error}
                 </div>
               )}
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
-                placeholder="User Name"
+                placeholder="Partner Email"
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
               <input
                 type="password"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                placeholder="Access Code"
+                placeholder="Password"
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
+                >
+                  Forgot / Set Password?
+                </button>
+              </div>
               <div className="pt-2 text-center">
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full"
                 >
                   <Lock className="h-4 w-4" /> {busy ? "Signing in…" : "Partner Login"}
                 </button>
               </div>
               <p className="text-[11px] text-gray-400 text-center">
-                No account? Ask the festival team for your credentials.
+                New account? Your account must be activated by an administrator before logging in.
               </p>
             </form>
           </div>
@@ -180,6 +226,212 @@ function LoginScreen({ onLogin }: { onLogin: (c: Collaborator) => void }) {
             <Link to="/" className="text-xs text-gray-400 hover:text-gray-600 transition">
               ← Back to the festival website
             </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Request Password Reset ───────────────────────────────────────────
+
+function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const res = await requestPasswordReset(email);
+    setBusy(false);
+    if (res.success) {
+      setSent(true);
+    } else {
+      setError(res.error || "Failed to send password setup email.");
+    }
+  };
+
+  return (
+    <div
+      className="min-h-screen bg-slate-100 flex flex-col"
+      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+    >
+      <div className="w-full bg-[#13234d] py-10 px-6 text-center shadow-md">
+        <h1 className="text-white text-3xl font-bold tracking-wide">Set / Reset Password</h1>
+      </div>
+
+      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-[#333a45] px-6 py-4 text-center">
+            <h2 className="text-white text-lg font-semibold">Password Setup</h2>
+          </div>
+
+          <div className="p-8">
+            {sent ? (
+              <div className="text-center space-y-4">
+                <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800">Email Sent!</h3>
+                <p className="text-sm text-gray-600">
+                  If an account exists for <strong className="text-gray-900">{email}</strong>, we have emailed you a link to create or reset your password.
+                </p>
+                <button
+                  onClick={onBackToLogin}
+                  className="mt-4 bg-[#13234d] text-white px-6 py-2.5 rounded-md text-sm font-semibold hover:bg-slate-800 transition cursor-pointer"
+                >
+                  Return to Login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <p className="text-sm text-gray-600 text-center">
+                  Enter your registered partner email to receive a password creation or reset link.
+                </p>
+                {error && (
+                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+                    {error}
+                  </div>
+                )}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="Partner Email"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {busy ? "Sending link…" : "Send Password Setup Email"}
+                </button>
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={onBackToLogin}
+                    className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Set New Password ──────────────────────────────────────────────────
+
+function SetPasswordScreen({
+  token,
+  onSuccess,
+  onBackToLogin,
+}: {
+  token: string;
+  onSuccess: () => void;
+  onBackToLogin: () => void;
+}) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    const res = await resetPartnerPassword(token, newPassword);
+    setBusy(false);
+    if (res.success) {
+      setSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+      }, 2000);
+    } else {
+      setError(res.error || "Could not reset password.");
+    }
+  };
+
+  return (
+    <div
+      className="min-h-screen bg-slate-100 flex flex-col"
+      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+    >
+      <div className="w-full bg-[#13234d] py-10 px-6 text-center shadow-md">
+        <h1 className="text-white text-3xl font-bold tracking-wide">Create Password</h1>
+      </div>
+
+      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+        <div className="w-full max-w-md bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-[#333a45] px-6 py-4 text-center">
+            <h2 className="text-white text-lg font-semibold">Set Your Password</h2>
+          </div>
+
+          <div className="p-8">
+            {success ? (
+              <div className="text-center space-y-4">
+                <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
+                <h3 className="text-lg font-semibold text-gray-800">Password Saved!</h3>
+                <p className="text-sm text-gray-600">
+                  Your password has been created successfully. Redirecting you to sign in…
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <p className="text-sm text-gray-600 text-center">
+                  Please choose a password for your Partner Portal account (min 6 characters).
+                </p>
+                {error && (
+                  <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
+                    {error}
+                  </div>
+                )}
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  placeholder="New Password"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  placeholder="Confirm New Password"
+                  className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {busy ? "Saving password…" : "Set Password"}
+                </button>
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={onBackToLogin}
+                    className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>

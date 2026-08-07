@@ -15,12 +15,17 @@ import {
   Users,
   Download,
   Search,
+  Mail,
+  KeyRound,
+  ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
 import {
   getCollaboratorStats,
   addCollaborator,
   updateCollaborator,
   deleteCollaborator,
+  requestPasswordReset,
   collaboratorsReady,
   commissionColumnsReady,
   commissionRatesReady,
@@ -81,7 +86,7 @@ const emptyForm: CollabForm = {
   missionReward: 0,
   missionCurrency: "EUR",
   notes: "",
-  active: true,
+  active: false, // Default newly created accounts to inactive until admin activates them!
   username: "",
   accessCode: "",
   inviteQuota: "",
@@ -191,22 +196,23 @@ function AdminCollaborators() {
     setShowForm(true);
   };
 
+  const [resetSentId, setResetSentId] = useState<string | null>(null);
+
   const handleSave = async () => {
     if (!form.name.trim() || !form.code.trim()) {
       setSaveError("Name and code are required.");
       return;
     }
-    if (form.username.trim() && !form.accessCode.trim()) {
-      setSaveError("Set an access code for the portal account (or clear the username).");
+    if (!form.email.trim()) {
+      setSaveError("Partner email is required so they can set their password and log in.");
       return;
     }
     const payload = {
       ...form,
+      email: form.email.trim().toLowerCase(),
       inviteQuota: form.inviteQuota.trim() === "" ? null : parseInt(form.inviteQuota, 10) || 0,
       missionGoal:
         form.missionGoal.trim() === "" ? null : parseInt(form.missionGoal, 10) || null,
-      // For per-person deals keep the general amount in sync with the
-      // double-room rate as a fallback for older data paths.
       commission:
         form.commissionType === "per_person" ? form.commissionDouble : form.commission,
     };
@@ -214,7 +220,11 @@ function AdminCollaborators() {
       if (editingId) {
         await updateCollaborator(editingId, payload);
       } else {
-        await addCollaborator(payload);
+        const created = await addCollaborator(payload);
+        // Automatically send password setup link to partner's email
+        if (created.email) {
+          requestPasswordReset(created.email).catch(() => {});
+        }
       }
       setShowForm(false);
       setEditingId(null);
@@ -223,9 +233,21 @@ function AdminCollaborators() {
       const msg = e instanceof Error ? e.message : String(e);
       setSaveError(
         msg.includes("duplicate")
-          ? "This code or username is already taken — pick another one."
+          ? "This referral code or email is already registered."
           : msg
       );
+    }
+  };
+
+  const handleSendResetEmail = async (c: Collaborator) => {
+    if (!c.email) return;
+    const res = await requestPasswordReset(c.email);
+    if (res.success) {
+      setResetSentId(c.id);
+      setTimeout(() => setResetSentId(null), 3000);
+      if (res.resetUrl) {
+        navigator.clipboard.writeText(res.resetUrl);
+      }
     }
   };
 
@@ -507,7 +529,7 @@ function AdminCollaborators() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
-                  <th className="px-5 py-3 text-left font-medium">Name</th>
+                  <th className="px-5 py-3 text-left font-medium">Partner / Email</th>
                   <th className="px-5 py-3 text-left font-medium">Code / Link</th>
                   <th className="px-5 py-3 text-right font-medium">Single Rooms</th>
                   <th className="px-5 py-3 text-right font-medium">Double Rooms</th>
@@ -517,7 +539,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
                   <th className="px-5 py-3 text-right font-medium">Mission</th>
                   <th className="px-5 py-3 text-left font-medium">Last Active</th>
-                  <th className="px-5 py-3 text-center font-medium">Active</th>
+                  <th className="px-5 py-3 text-center font-medium">Status</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
@@ -527,10 +549,10 @@ function AdminCollaborators() {
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-800">{c.name}</p>
                       <p className="text-xs text-gray-500">
-                        {c.username ? (
-                          <span className="font-mono text-violet-700">@{c.username}</span>
+                        {c.email ? (
+                          <span className="text-gray-600 font-mono">{c.email}</span>
                         ) : (
-                          <span className="text-gray-400">no portal account</span>
+                          <span className="text-red-400">no email specified</span>
                         )}
                         <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
                       </p>
@@ -600,18 +622,43 @@ function AdminCollaborators() {
                     <td className="px-5 py-3 text-center">
                       <button
                         onClick={() => toggleActive(c)}
-                        className="cursor-pointer align-middle"
-                        title={c.active ? "Deactivate" : "Activate"}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                          c.active
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                            : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                        }`}
+                        title={c.active ? "Click to deactivate account" : "Click to activate account"}
                       >
                         {c.active ? (
-                          <ToggleRight className="h-5 w-5 text-emerald-600" />
+                          <>
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Active
+                          </>
                         ) : (
-                          <ToggleLeft className="h-5 w-5 text-gray-400" />
+                          <>
+                            <ShieldAlert className="h-3.5 w-3.5 text-amber-600" /> Inactive
+                          </>
                         )}
                       </button>
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {c.email && (
+                          <button
+                            onClick={() => handleSendResetEmail(c)}
+                            className={`p-1.5 rounded-lg transition cursor-pointer ${
+                              resetSentId === c.id
+                                ? "text-emerald-600 bg-emerald-50"
+                                : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
+                            }`}
+                            title={
+                              resetSentId === c.id
+                                ? "Password link copied & email sent!"
+                                : "Send password setup link to email (copies link to clipboard)"
+                            }
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => openEdit(c)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
@@ -927,55 +974,42 @@ function AdminCollaborators() {
                 </div>
               </div>
 
-              {/* Portal account */}
+              {/* Portal account & security */}
               <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 space-y-3">
-                <p className="text-xs tracking-widest uppercase text-violet-700 font-semibold">
-                  Partner Portal account (optional)
-                </p>
-                <p className="text-xs text-gray-500 -mt-1">
-                  Lets this partner sign in at <code className="font-mono">/partner</code> to
-                  track their bookings, confirm them, and see their commission.
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                      Username
-                    </label>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs tracking-widest uppercase text-violet-700 font-semibold">
+                    Partner Portal &amp; Security
+                  </p>
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 cursor-pointer">
                     <input
-                      type="text"
-                      value={form.username}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          username: e.target.value.toLowerCase().replace(/\s/g, ""),
-                        })
-                      }
-                      placeholder="salsero"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                      type="checkbox"
+                      checked={form.active}
+                      onChange={(e) => setForm({ ...form, active: e.target.checked })}
+                      className="accent-emerald-600 h-4 w-4"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                      Access Code
-                    </label>
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text"
-                        value={form.accessCode}
-                        onChange={(e) => setForm({ ...form, accessCode: e.target.value.trim() })}
-                        placeholder="secret code"
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setForm({ ...form, accessCode: generateAccessCode() })}
-                        className="px-2.5 rounded-lg border border-gray-300 text-xs text-gray-600 hover:text-amber-600 hover:border-amber-300 transition cursor-pointer shrink-0"
-                        title="Generate a random access code"
-                      >
-                        ↻
-                      </button>
-                    </div>
-                  </div>
+                    <span className={form.active ? "text-emerald-700 font-bold" : "text-amber-700"}>
+                      {form.active ? "Activated" : "Inactive (Pending)"}
+                    </span>
+                  </label>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Partners sign in at <code className="font-mono text-violet-700">/partner</code> using
+                  their email and password. Passwords are set by partners via email link — they are never shown in plain text.
+                </p>
+                <div className="p-2.5 rounded-md bg-white border border-violet-100 text-xs text-gray-600 space-y-1">
+                  <p>
+                    <span className="font-semibold text-gray-800">Account status:</span>{" "}
+                    {form.active ? (
+                      <span className="text-emerald-700 font-semibold">Active — Partner can sign in</span>
+                    ) : (
+                      <span className="text-amber-700 font-semibold">
+                        Inactive — Partner cannot log in until you activate the account.
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-gray-500">
+                    When created, an email with a password setup link will be automatically sent to the partner.
+                  </p>
                 </div>
               </div>
 

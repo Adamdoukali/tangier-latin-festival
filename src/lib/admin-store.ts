@@ -127,13 +127,23 @@ export interface Collaborator {
   missionCurrency?: CommissionCurrency;
   active: boolean;
   notes?: string;
-  /** Partner Portal login (optional — no account without it) */
+  /** Partner Portal login */
   username?: string;
   accessCode?: string;
+  passwordHash?: string;
+  resetToken?: string;
+  resetTokenExpires?: string;
   /** Max invites they may generate in the portal; null/undefined = unlimited */
   inviteQuota?: number | null;
   lastSeenAt?: string | null;
   createdAt: string;
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(password.trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 // ─── Keys (localStorage fallback) ───────────────────────────────────
@@ -386,6 +396,9 @@ const collabFromRow = (r: any): Collaborator => ({
   notes: r.notes ?? undefined,
   username: r.username ?? undefined,
   accessCode: r.access_code ?? undefined,
+  passwordHash: r.password_hash ?? undefined,
+  resetToken: r.reset_token ?? undefined,
+  resetTokenExpires: r.reset_token_expires ?? undefined,
   inviteQuota: r.invite_quota ?? null,
   lastSeenAt: r.last_seen_at ?? null,
   createdAt: r.created_at,
@@ -1322,23 +1335,126 @@ export async function countInvitesByCollaborator(collaboratorId: string): Promis
   return (await getInvites()).filter((i) => i.collaboratorId === collaboratorId).length;
 }
 
-/** Partner Portal login: username + access code against active collaborators. */
+/** Partner Portal login: email (or username) + password against collaborators. */
 export async function partnerLogin(
-  username: string,
-  accessCode: string
+  identifier: string,
+  password: string
 ): Promise<{ success: true; collaborator: Collaborator } | { success: false; error: string }> {
-  const u = username.trim().toLowerCase();
+  const cleanId = identifier.trim().toLowerCase();
+  const cleanPass = password.trim();
   const all = await getCollaborators();
-  const found = all.find((c) => (c.username ?? "").toLowerCase() === u);
-  if (!found || !found.accessCode || found.accessCode !== accessCode.trim()) {
-    return { success: false, error: "Wrong username or access code." };
+  const found = all.find(
+    (c) =>
+      (c.email ?? "").toLowerCase() === cleanId ||
+      (c.username ?? "").toLowerCase() === cleanId
+  );
+  if (!found) {
+    return { success: false, error: "No account found with this email." };
   }
+
+  // Account activation check: Account must be activated by admin before login
   if (!found.active) {
-    return { success: false, error: "This account has been deactivated. Contact the festival team." };
+    return {
+      success: false,
+      error: "Your account is not activated yet. Please wait for an administrator to activate your account.",
+    };
   }
+
+  let passMatches = false;
+  if (found.passwordHash) {
+    const hashed = await hashPassword(cleanPass);
+    passMatches = hashed === found.passwordHash;
+  } else if (found.accessCode) {
+    // Legacy fallback to access code
+    passMatches = found.accessCode === cleanPass;
+  }
+
+  if (!passMatches) {
+    if (!found.passwordHash && !found.accessCode) {
+      return {
+        success: false,
+        error: "Password has not been set yet. Please click 'Forgot / Set Password' to create your password.",
+      };
+    }
+    return { success: false, error: "Incorrect password." };
+  }
+
   // Best-effort "last active" stamp — ignore failures.
   updateCollaborator(found.id, { lastSeenAt: new Date().toISOString() }).catch(() => {});
   return { success: true, collaborator: found };
+}
+
+/** Request password reset / setup link via email. */
+export async function requestPasswordReset(
+  email: string
+): Promise<{ success: boolean; error?: string; resetUrl?: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  const all = await getCollaborators();
+  const found = all.find((c) => (c.email ?? "").toLowerCase() === cleanEmail);
+  if (!found) {
+    return { success: false, error: "No partner account found with that email address." };
+  }
+
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  const resetToken = Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
+  const resetTokenExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
+
+  await updateCollaborator(found.id, { resetToken, resetTokenExpires });
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const resetUrl = `${origin}/partner?resetToken=${resetToken}`;
+
+  // Dynamically import sendFormNotification to avoid circular dependencies if any
+  const { sendFormNotification } = await import("./form-notify");
+
+  sendFormNotification({
+    subject: "Set / Reset Your Partner Portal Password — Tangier Latin Festival",
+    fields: {
+      email: found.email!,
+      name: found.name,
+      resetUrl,
+    },
+    autoresponse:
+      `Hello ${found.name},\n\n` +
+      `You requested to set or reset your password for the Tangier International Latin Festival Partner Portal.\n\n` +
+      `Click the following link to create your password:\n${resetUrl}\n\n` +
+      `This link is valid for 24 hours.\n\n` +
+      `If you did not request this, please ignore this email.\n\n` +
+      `— Tangier International Latin Festival Team`,
+    guestSubject: "Set / Reset Your Partner Portal Password",
+    lang: found.language ?? "en",
+  }).catch(() => {});
+
+  return { success: true, resetUrl };
+}
+
+/** Reset or set partner password using reset token. */
+export async function resetPartnerPassword(
+  token: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanPass = newPassword.trim();
+  if (!cleanPass || cleanPass.length < 6) {
+    return { success: false, error: "Password must be at least 6 characters long." };
+  }
+  const all = await getCollaborators();
+  const found = all.find((c) => c.resetToken === token.trim());
+  if (!found) {
+    return { success: false, error: "Invalid or expired password reset link." };
+  }
+  if (found.resetTokenExpires && new Date(found.resetTokenExpires).getTime() < Date.now()) {
+    return { success: false, error: "Password reset link has expired. Please request a new one." };
+  }
+
+  const pHash = await hashPassword(cleanPass);
+  await updateCollaborator(found.id, {
+    passwordHash: pHash,
+    resetToken: null as any,
+    resetTokenExpires: null as any,
+  });
+
+  return { success: true };
 }
 
 export async function addCollaborator(
@@ -1363,15 +1479,21 @@ export async function addCollaborator(
           mission_goal: c.missionGoal ?? null,
           mission_reward: c.missionReward ?? 0,
           mission_currency: c.missionCurrency ?? "EUR",
-          active: c.active,
+          active: c.active ?? false,
           notes: c.notes || null,
           username: c.username?.trim().toLowerCase() || null,
           access_code: c.accessCode || null,
+          password_hash: c.passwordHash || null,
+          reset_token: c.resetToken || null,
+          reset_token_expires: c.resetTokenExpires || null,
           invite_quota: c.inviteQuota ?? null,
         },
         [
           "username",
           "access_code",
+          "password_hash",
+          "reset_token",
+          "reset_token_expires",
           "invite_quota",
           "commission_type",
           "commission_currency",
@@ -1433,6 +1555,9 @@ export async function updateCollaborator(
       if (updates.username !== undefined)
         row.username = updates.username?.trim().toLowerCase() || null;
       if (updates.accessCode !== undefined) row.access_code = updates.accessCode || null;
+      if (updates.passwordHash !== undefined) row.password_hash = updates.passwordHash || null;
+      if (updates.resetToken !== undefined) row.reset_token = updates.resetToken || null;
+      if (updates.resetTokenExpires !== undefined) row.reset_token_expires = updates.resetTokenExpires || null;
       if (updates.inviteQuota !== undefined) row.invite_quota = updates.inviteQuota;
       if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
       const optionalCols = [
@@ -1818,7 +1943,7 @@ export function getClients(
       const email = ov.email !== undefined ? ov.email : (gi === 0 ? b.email : "");
       const phone = ov.phone !== undefined ? ov.phone : (gi === 0 ? b.phone : "");
       const origin: "morocco" | "international" =
-        ov.origin ? ov.origin : defaultOrigin;
+        ov.origin ? ov.origin : defaultOrigin === "international" ? "international" : "morocco";
       const notes = ov.notes !== undefined ? ov.notes : (gi === 0 ? b.notes : "");
 
       clients.push({
