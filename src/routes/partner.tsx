@@ -522,7 +522,6 @@ function SignUpScreen({ onSuccess, onCancel }: { onSuccess: () => void; onCancel
 
 // ─── Portal ───────────────────────────────────────────────────────────
 
-// ─── Portal ───────────────────────────────────────────────────────────
 
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const L = partner.language ?? "en";
