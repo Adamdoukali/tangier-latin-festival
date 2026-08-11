@@ -1447,6 +1447,17 @@ export async function requestPasswordReset(
 
   await updateCollaborator(found.id, { resetToken, resetTokenExpires });
 
+  // Also persist token to localStorage as safety fallback
+  try {
+    const COLLABS_KEY = "tlf_admin_collaborators";
+    const local: Collaborator[] = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
+    const idx = local.findIndex((c) => c.id === found.id);
+    if (idx >= 0) {
+      local[idx] = { ...local[idx], resetToken, resetTokenExpires };
+      localStorage.setItem(COLLABS_KEY, JSON.stringify(local));
+    }
+  } catch (_) { /* ignore in SSR */ }
+
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const resetUrl = `${origin}/partner?resetToken=${resetToken}`;
 
@@ -1483,8 +1494,21 @@ export async function resetPartnerPassword(
   if (!cleanPass || cleanPass.length < 6) {
     return { success: false, error: "Password must be at least 6 characters long." };
   }
-  const all = await getCollaborators();
-  const found = all.find((c) => c.resetToken === token.trim());
+  const cleanToken = token.trim();
+
+  // Search Supabase first, then fall back to localStorage
+  let all = await getCollaborators();
+  let found = all.find((c) => c.resetToken === cleanToken);
+
+  // Fallback: if not found in Supabase results, check localStorage directly
+  if (!found) {
+    const COLLABS_KEY = "tlf_admin_collaborators";
+    try {
+      const local: Collaborator[] = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
+      found = local.find((c) => c.resetToken === cleanToken);
+    } catch (_) { /* ignore */ }
+  }
+
   if (!found) {
     return { success: false, error: "Invalid or expired password reset link." };
   }
