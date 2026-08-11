@@ -146,6 +146,55 @@ export async function hashPassword(password: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+// ─── Partner account creation ──────────────────────────────────────────────
+/** Create a new partner (collaborator) with email, name (full brand name) and password.
+ *  The account is created with `active: false` and must be activated by an admin.
+ */
+export async function createPartnerAccount({
+  email,
+  name,
+  password,
+}: {
+  email: string;
+  name: string;
+  password: string;
+}): Promise<{ success: boolean; collaborator?: Collaborator; error?: string }> {
+  try {
+    // Hash password
+    const passwordHash = await hashPassword(password);
+    // Generate a unique partner code
+    const code = `P${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+    const newCollab: Omit<Collaborator, "createdAt"> = {
+      id: generateId(),
+      name,
+      code,
+      email: email.trim().toLowerCase(),
+      active: false,
+      passwordHash,
+      // optional fields left undefined
+    } as any;
+    // Insert into Supabase
+    const { data, error } = await supabase.from("collaborators").insert(newCollab).single();
+    if (error) {
+      // fallback to localStorage
+      const collabs = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
+      collabs.push({ ...newCollab, createdAt: new Date().toISOString() });
+      localStorage.setItem(COLLABS_KEY, JSON.stringify(collabs));
+      return { success: true, collaborator: { ...newCollab, createdAt: new Date().toISOString() } as Collaborator };
+    }
+    // Supabase returned data
+    return { success: true, collaborator: data as Collaborator };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+  const msgBuffer = new TextEncoder().encode(password.trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 // ─── Keys (localStorage fallback) ───────────────────────────────────
 
 const PACKS_KEY = "tlf_admin_packs";

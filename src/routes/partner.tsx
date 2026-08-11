@@ -38,6 +38,7 @@ import {
   type Pack,
   type Booking,
   type BookingStatus,
+  createPartnerAccount,
 } from "@/lib/admin-store";
 import {
   savePartnerSession,
@@ -64,7 +65,7 @@ function PartnerPortal() {
   const [checking, setChecking] = useState(true);
   const [partner, setPartner] = useState<Collaborator | null>(null);
   const [resetToken, setResetToken] = useState<string | null>(null);
-  const [view, setView] = useState<"login" | "forgot" | "reset">("login");
+  const [view, setView] = useState<"login" | "forgot" | "reset" | "signup">("login");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -112,7 +113,17 @@ function PartnerPortal() {
     return <RequestResetScreen onBackToLogin={() => setView("login")} />;
   }
 
-  return <LoginScreen onLogin={setPartner} onForgotPassword={() => setView("forgot")} />;
+  if (view === "signup") {
+    return <SignUpScreen onSuccess={() => setView("login")} onCancel={() => setView("login")} />;
+  }
+
+  return (
+    <LoginScreen
+      onLogin={(c) => setPartner(c)}
+      onForgotPassword={() => setView("forgot")}
+      onSignup={() => setView("signup")}
+    />
+  );
 }
 
 // ─── Login ────────────────────────────────────────────────────────────
@@ -120,9 +131,11 @@ function PartnerPortal() {
 function LoginScreen({
   onLogin,
   onForgotPassword,
+  onSignup,
 }: {
   onLogin: (c: Collaborator) => void;
   onForgotPassword: () => void;
+  onSignup: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -438,6 +451,76 @@ function SetPasswordScreen({
     </div>
   );
 }
+
+function SignUpScreen({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void; }) {
+  const [email, setEmail] = useState("");
+  const [brandName, setBrandName] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    const result = await createPartnerAccount({ email, name: brandName, password });
+    setBusy(false);
+    if (result.success) {
+      setInfo("Account created. Await admin activation.");
+      onSuccess();
+    } else {
+      setError(result.error || "Failed to create account.");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col" style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}>
+      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
+        <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">Partner Sign‑Up</h1>
+        <p className="mt-2 text-slate-300 text-sm">Create your partner account – activation pending.</p>
+      </div>
+      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+            <div className="bg-[#333a45] px-6 py-4 text-center">
+              <h2 className="text-white text-lg font-semibold">Create Partner Account</h2>
+            </div>
+            <form onSubmit={handleSubmit} className="p-8 space-y-5">
+              {error && (
+                <div className="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm text-center font-medium">
+                  {error}
+                </div>
+              )}
+              {info && (
+                <div className="p-3.5 rounded-md bg-green-50 border border-green-200 text-green-700 text-sm text-center font-medium">
+                  {info}
+                </div>
+              )}
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Partner Email" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
+              <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} required placeholder="Full Brand Name" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Password" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
+              <div className="flex items-center justify-end">
+                <button type="button" onClick={onCancel} className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer">Cancel</button>
+              </div>
+              <div>
+                <button type="submit" disabled={busy} className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full">
+                  {busy ? "Creating…" : "Create Account"}
+                </button>
+              </div>
+            </form>
+          </div>
+          <div className="mt-6 text-center">
+            <a href="/partner" className="text-xs text-gray-400 hover:text-gray-600 transition">← Back to Login</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Portal ───────────────────────────────────────────────────────────
 
 // ─── Portal ───────────────────────────────────────────────────────────
 
