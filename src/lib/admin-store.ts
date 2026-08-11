@@ -1445,18 +1445,24 @@ export async function requestPasswordReset(
   const resetToken = Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
   const resetTokenExpires = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
 
-  await updateCollaborator(found.id, { resetToken, resetTokenExpires });
-
-  // Also persist token to localStorage as safety fallback
-  try {
-    const COLLABS_KEY = "tlf_admin_collaborators";
-    const local: Collaborator[] = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
-    const idx = local.findIndex((c) => c.id === found.id);
-    if (idx >= 0) {
-      local[idx] = { ...local[idx], resetToken, resetTokenExpires };
-      localStorage.setItem(COLLABS_KEY, JSON.stringify(local));
+  // Save token directly to Supabase (bypass updateCollaborator to avoid silent failures)
+  let tokenSaved = false;
+  if (useDb()) {
+    try {
+      const { error } = await supabase!
+        .from("collaborators")
+        .update({ reset_token: resetToken, reset_token_expires: resetTokenExpires })
+        .eq("id", found.id);
+      if (!error) tokenSaved = true;
+      else warn("requestPasswordReset: direct update failed", error);
+    } catch (e) {
+      warn("requestPasswordReset: direct update exception", e);
     }
-  } catch (_) { /* ignore in SSR */ }
+  }
+  // Fallback: also try updateCollaborator (handles localStorage fallback)
+  if (!tokenSaved) {
+    await updateCollaborator(found.id, { resetToken, resetTokenExpires });
+  }
 
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const resetUrl = `${origin}/partner?resetToken=${resetToken}`;
@@ -1496,17 +1502,25 @@ export async function resetPartnerPassword(
   }
   const cleanToken = token.trim();
 
-  // Search Supabase first, then fall back to localStorage
-  let all = await getCollaborators();
-  let found = all.find((c) => c.resetToken === cleanToken);
-
-  // Fallback: if not found in Supabase results, check localStorage directly
-  if (!found) {
-    const COLLABS_KEY = "tlf_admin_collaborators";
+  // Try direct Supabase lookup by reset_token first (most reliable)
+  let found: Collaborator | undefined;
+  if (useDb()) {
     try {
-      const local: Collaborator[] = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
-      found = local.find((c) => c.resetToken === cleanToken);
-    } catch (_) { /* ignore */ }
+      const { data, error } = await supabase!
+        .from("collaborators")
+        .select("*")
+        .eq("reset_token", cleanToken)
+        .single();
+      if (!error && data) {
+        found = collabFromRow(data);
+      }
+    } catch (_) { /* fall through to getCollaborators */ }
+  }
+
+  // Fallback: search all collaborators (covers localStorage path)
+  if (!found) {
+    const all = await getCollaborators();
+    found = all.find((c) => c.resetToken === cleanToken);
   }
 
   if (!found) {
@@ -1517,11 +1531,28 @@ export async function resetPartnerPassword(
   }
 
   const pHash = await hashPassword(cleanPass);
-  await updateCollaborator(found.id, {
-    passwordHash: pHash,
-    resetToken: null as any,
-    resetTokenExpires: null as any,
-  });
+
+  // Save password directly to Supabase (bypass updateCollaborator)
+  let saved = false;
+  if (useDb()) {
+    try {
+      const { error } = await supabase!
+        .from("collaborators")
+        .update({ password_hash: pHash, reset_token: null, reset_token_expires: null })
+        .eq("id", found.id);
+      if (!error) saved = true;
+      else warn("resetPartnerPassword: direct update failed", error);
+    } catch (e) {
+      warn("resetPartnerPassword: direct update exception", e);
+    }
+  }
+  if (!saved) {
+    await updateCollaborator(found.id, {
+      passwordHash: pHash,
+      resetToken: null as any,
+      resetTokenExpires: null as any,
+    });
+  }
 
   return { success: true };
 }
