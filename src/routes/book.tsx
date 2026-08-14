@@ -601,9 +601,9 @@ function BookPage() {
         </h1>
         <p className="mt-3 text-sm text-gray-600 max-w-md mx-auto">
           {tr(
-            "Pick the pack that suits you, send your request, and our team confirms within 24 hours.",
-            "Choisissez le pack qui vous convient, envoyez votre demande, et notre équipe confirme sous 24 heures.",
-            "Elige el pack que te convenga, envía tu solicitud y nuestro equipo confirma en 24 horas."
+            "Choose the pack that best suits your needs. Once your booking is completed, you will automatically receive a confirmation email with the status 'Pending'.",
+            "Choisissez le pack le plus adapté à vos besoins. Une fois votre réservation effectuée, vous recevrez automatiquement un e-mail de confirmation avec le statut « En attente ».",
+            "Elige el paquete que mejor se adapte a tus necesidades. Una vez realizada tu reserva, recibirás automáticamente un correo electrónico de confirmación con el estado «Pendiente»."
           )}
         </p>
       </div>

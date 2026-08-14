@@ -982,9 +982,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </h3>
               <p className="mt-1.5 text-sm text-gray-500">
                 {tr(
-                  "Send this to your guests — they choose their pack and fill in their details. The request arrives as Pending, credited to you. Once it's confirmed (after payment), they automatically receive their ticket with their names and QR code.",
-                  "Envoyez ce lien à vos invités — ils choisissent leur pack et remplissent leurs informations. La demande arrive En attente, à votre crédit. Une fois confirmée (après paiement), ils reçoivent automatiquement leur billet avec leurs noms et le QR code.",
-                  "Envía este enlace a tus invitados — eligen su pack y rellenan sus datos. La solicitud llega como Pendiente, a tu crédito. Una vez confirmada (tras el pago), reciben automáticamente su entrada con sus nombres y el código QR."
+                  "Send the link below to your community. This link allows them to choose the pack that best suits their needs. Once their booking is completed, they automatically receive a confirmation email with the status 'Pending'.",
+                  "Envoyez le lien ci-dessous à votre communauté. Ce lien leur permet de choisir le pack le plus adapté à leurs besoins. Une fois leur réservation effectuée, ils reçoivent automatiquement un e-mail de confirmation avec le statut « En attente ».",
+                  "Envía el siguiente enlace a tu comunidad. Este enlace les permite elegir el paquete que mejor se adapte a sus necesidades. Una vez realizada su reserva, reciben automáticamente un correo electrónico de confirmación con el estado «Pendiente»."
                 )}
               </p>
               <div className="mt-3 flex items-center gap-2 flex-wrap">
@@ -1028,11 +1028,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <h3 className="font-display text-sm tracking-wide mb-1">
             {tr("My Bookings", "Mes réservations", "Mis reservas")} ({myBookings.length})
           </h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 mb-4 whitespace-pre-line">
             {tr(
-              "Everyone who booked through your link. Confirming a booking automatically creates and emails their ticket QR.",
-              "Toutes les personnes qui ont réservé via votre lien. Confirmer une réservation crée et envoie automatiquement leur billet QR par email.",
-              "Todas las personas que reservaron con tu enlace. Confirmar una reserva crea y envía automáticamente su entrada QR por correo."
+              "Here you will find everyone who booked through your link.\nNB: Only confirm bookings after receiving payment.",
+              "Vous trouverez ici toutes les personnes ayant réservé via votre lien.\nNB : Confirmez uniquement les réservations après réception du paiement.",
+              "Aquí encontrarás a todas las personas que han reservado a través de tu enlace.\nNota: Confirma únicamente las reservas tras recibir el pago."
             )}
           </p>
           {statusError && (

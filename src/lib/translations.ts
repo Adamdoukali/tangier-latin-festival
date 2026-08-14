@@ -125,7 +125,7 @@ export const translations = {
     getStartedBtn: "Get started now",
     // Pack Booking Form
     packFormTitle: "Book Your Pack",
-    packFormDesc: "Fill in your details and we'll confirm your reservation.",
+    packFormDesc: "Choose the pack that best suits your needs. Once your booking is completed, you will automatically receive a confirmation email with the status 'Pending'.",
     packFormSelectedPack: "Selected Pack",
     packFormFullName: "Full Name",
     packFormEmail: "Email Address",
@@ -471,7 +471,7 @@ export const translations = {
     getStartedBtn: "Commencer maintenant",
     // Pack Booking Form
     packFormTitle: "Réserver votre Pack",
-    packFormDesc: "Remplissez vos informations et nous confirmerons votre réservation.",
+    packFormDesc: "Choisissez le pack le plus adapté à vos besoins. Une fois votre réservation effectuée, vous recevrez automatiquement un e-mail de confirmation avec le statut « En attente ».",
     packFormSelectedPack: "Pack sélectionné",
     packFormFullName: "Nom complet",
     packFormEmail: "Adresse e-mail",
@@ -802,7 +802,7 @@ export const translations = {
     getStartedBtn: "Comenzar ahora",
     // Pack Booking Form
     packFormTitle: "Reserva tu Pack",
-    packFormDesc: "Completa tus datos y confirmaremos tu reserva.",
+    packFormDesc: "Elige el paquete que mejor se adapte a tus necesidades. Una vez realizada tu reserva, recibirás automáticamente un correo electrónico de confirmación con el estado «Pendiente».",
     packFormSelectedPack: "Pack seleccionado",
     packFormFullName: "Nombre completo",
     packFormEmail: "Correo electrónico",
