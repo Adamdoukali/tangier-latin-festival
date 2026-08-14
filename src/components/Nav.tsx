@@ -68,7 +68,7 @@ export function TopBar() {
             </span>
           </span>
           <a
-            href="/partner"
+            href={lang && lang !== "en" ? `/partner?lang=${lang}` : "/partner"}
             className="flex items-center gap-1.5 font-semibold text-amber-400 hover:text-amber-300 transition bg-amber-400/10 hover:bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30"
           >
             <User className="h-3.5 w-3.5" />
@@ -274,7 +274,7 @@ export function Nav() {
             </div>
 
             <a
-              href="/partner"
+              href={lang && lang !== "en" ? `/partner?lang=${lang}` : "/partner"}
               onClick={() => setMobileMenuOpen(false)}
               className="w-full text-center inline-flex items-center justify-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-5 py-2.5 text-xs font-semibold text-amber-400 hover:bg-amber-400/20 active:scale-95 transition duration-300"
             >

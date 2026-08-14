@@ -1431,7 +1431,8 @@ export async function partnerLogin(
 
 /** Request password reset / setup link via email. */
 export async function requestPasswordReset(
-  email: string
+  email: string,
+  userLang?: string
 ): Promise<{ success: boolean; error?: string; resetUrl?: string }> {
   const cleanEmail = email.trim().toLowerCase();
   const all = await getCollaborators();
@@ -1464,28 +1465,49 @@ export async function requestPasswordReset(
     await updateCollaborator(found.id, { resetToken, resetTokenExpires });
   }
 
+  const reqLang = (userLang || found.language || "en").toLowerCase();
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const resetUrl = `${origin}/partner?resetToken=${resetToken}`;
+  const resetUrl = `${origin}/partner?resetToken=${resetToken}&lang=${reqLang}`;
 
   // Dynamically import sendFormNotification to avoid circular dependencies if any
   const { sendFormNotification } = await import("./form-notify");
 
+  const emailSubjects = {
+    en: "Set / Reset Your Partner Portal Password — Tangier Latin Festival",
+    fr: "Créer / Réinitialiser votre mot de passe Partenaire — Tangier Latin Festival",
+    es: "Establecer / Restablecer tu contraseña de Colaborador — Tangier Latin Festival",
+  };
+  const subject = emailSubjects[reqLang as "en" | "fr" | "es"] || emailSubjects.en;
+
+  const trilingualBody =
+    `Hello / Bonjour / Hola ${found.name},\n\n` +
+    `--------------------------------------------------\n` +
+    `🇬🇧 ENGLISH:\n` +
+    `You requested to set or reset your password for the Tangier International Latin Festival Partner Portal.\n` +
+    `Click the link below to create your password:\n${resetUrl}\n\n` +
+    `--------------------------------------------------\n` +
+    `🇫🇷 FRANÇAIS:\n` +
+    `Vous avez demandé à créer ou réinitialiser votre mot de passe pour l'Espace Partenaire.\n` +
+    `Cliquez sur le lien ci-dessous pour créer votre mot de passe :\n${resetUrl}\n\n` +
+    `--------------------------------------------------\n` +
+    `🇪🇸 ESPAÑOL:\n` +
+    `Has solicitado crear o restablecer tu contraseña para el Área de Colaboradores.\n` +
+    `Haz clic en el siguiente enlace para crear tu contraseña:\n${resetUrl}\n\n` +
+    `--------------------------------------------------\n` +
+    `This link is valid for 24 hours / Ce lien est valable 24h / Válido por 24 horas.\n\n` +
+    `— Tangier International Latin Festival Team\n` +
+    `contact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+
   sendFormNotification({
-    subject: "Set / Reset Your Partner Portal Password — Tangier Latin Festival",
+    subject,
     fields: {
       email: found.email!,
       name: found.name,
       resetUrl,
     },
-    autoresponse:
-      `Hello ${found.name},\n\n` +
-      `You requested to set or reset your password for the Tangier International Latin Festival Partner Portal.\n\n` +
-      `Click the following link to create your password:\n${resetUrl}\n\n` +
-      `This link is valid for 24 hours.\n\n` +
-      `If you did not request this, please ignore this email.\n\n` +
-      `— Tangier International Latin Festival Team`,
-    guestSubject: "Set / Reset Your Partner Portal Password",
-    lang: found.language ?? "en",
+    autoresponse: trilingualBody,
+    guestSubject: subject,
+    lang: reqLang,
   }).catch(() => {});
 
   return { success: true, resetUrl };

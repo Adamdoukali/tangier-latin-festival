@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle } from "lucide-react";
+import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle, Calendar } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText } from "@/lib/translations";
@@ -310,6 +310,8 @@ export function PackBookingModal({
                   email: customerEmail,
                   phone,
                   country: String(formData.get("Country") ?? ""),
+                  arrivalDate: String(formData.get("Arrival Date") ?? "") || null,
+                  departureDate: String(formData.get("Departure Date") ?? "") || null,
                   numPeople: isDouble ? 2 : 1,
                   danceLevel: "",
                   notes: String(formData.get("Notes") ?? ""),
@@ -341,6 +343,8 @@ export function PackBookingModal({
                     Pack: `${pack.name} - ${pack.sub} (${pack.price})`,
                     Phone: phone,
                     Country: String(formData.get("Country") ?? ""),
+                    ...(formData.get("Arrival Date") ? { "Arrival Date (Going)": String(formData.get("Arrival Date")) } : {}),
+                    ...(formData.get("Departure Date") ? { "Departure Date (Return)": String(formData.get("Departure Date")) } : {}),
                     Notes: String(formData.get("Notes") ?? ""),
                     ...(created ? { Reservation: created.ticketCode } : {}),
                     ...(collaborator ? { Referral: collaborator.code } : {}),
@@ -471,6 +475,42 @@ export function PackBookingModal({
                   </SelectGroup>
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Travel Dates (Optional) */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Calendar className="h-3 w-3" />
+                  {lang === "fr" ? "Date d'arrivée (Aller)" : lang === "es" ? "Fecha de llegada (Ida)" : "Arrival Date (Going)"}
+                  <span className="text-[10px] text-muted-foreground/60 normal-case">
+                    ({lang === "fr" ? "optionnel" : lang === "es" ? "opcional" : "optional"})
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  name="Arrival Date"
+                  min="2027-01-01"
+                  max="2027-01-31"
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                  <Calendar className="h-3 w-3" />
+                  {lang === "fr" ? "Date de départ (Retour)" : lang === "es" ? "Fecha de salida (Vuelta)" : "Departure Date (Return)"}
+                  <span className="text-[10px] text-muted-foreground/60 normal-case">
+                    ({lang === "fr" ? "optionnel" : lang === "es" ? "opcional" : "optional"})
+                  </span>
+                </label>
+                <input
+                  type="date"
+                  name="Departure Date"
+                  min="2027-01-01"
+                  max="2027-02-15"
+                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground"
+                />
+              </div>
             </div>
 
             {/* Promo / Discount Code */}

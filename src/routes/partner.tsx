@@ -66,11 +66,16 @@ function PartnerPortal() {
   const [partner, setPartner] = useState<Collaborator | null>(null);
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [view, setView] = useState<"login" | "forgot" | "reset" | "signup">("login");
+  const [lang, setLang] = useState<"en" | "fr" | "es">("en");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get("resetToken");
+      const l = urlParams.get("lang")?.toLowerCase();
+      if (l === "fr" || l === "es" || l === "en") {
+        setLang(l);
+      }
       if (token) {
         setResetToken(token);
         setView("reset");
@@ -91,13 +96,15 @@ function PartnerPortal() {
   }
 
   if (partner) {
-    return <Portal partner={partner} onSignOut={() => setPartner(null)} />;
+    return <Portal partner={{ ...partner, language: partner.language ?? lang }} onSignOut={() => setPartner(null)} />;
   }
 
   if (view === "reset" && resetToken) {
     return (
       <SetPasswordScreen
         token={resetToken}
+        lang={lang}
+        setLang={setLang}
         onSuccess={() => {
           if (typeof window !== "undefined") {
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -110,15 +117,17 @@ function PartnerPortal() {
   }
 
   if (view === "forgot") {
-    return <RequestResetScreen onBackToLogin={() => setView("login")} />;
+    return <RequestResetScreen lang={lang} setLang={setLang} onBackToLogin={() => setView("login")} />;
   }
 
   if (view === "signup") {
-    return <SignUpScreen onSuccess={() => setView("login")} onCancel={() => setView("login")} />;
+    return <SignUpScreen lang={lang} setLang={setLang} onSuccess={() => setView("login")} onCancel={() => setView("login")} />;
   }
 
   return (
     <LoginScreen
+      lang={lang}
+      setLang={setLang}
       onLogin={(c) => setPartner(c)}
       onForgotPassword={() => setView("forgot")}
       onSignup={() => setView("signup")}
@@ -128,11 +137,51 @@ function PartnerPortal() {
 
 // ─── Login ────────────────────────────────────────────────────────────
 
+function AuthLangSwitcher({
+  lang,
+  setLang,
+}: {
+  lang: "en" | "fr" | "es";
+  setLang: (l: "en" | "fr" | "es") => void;
+}) {
+  const flags = [
+    { code: "en", label: "EN", flag: "https://flagcdn.com/us.svg" },
+    { code: "fr", label: "FR", flag: "https://flagcdn.com/fr.svg" },
+    { code: "es", label: "ES", flag: "https://flagcdn.com/es.svg" },
+  ] as const;
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-3">
+      {flags.map((f) => (
+        <button
+          key={f.code}
+          type="button"
+          onClick={() => setLang(f.code)}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer border ${
+            lang === f.code
+              ? "bg-amber-400/20 text-amber-300 border-amber-400/50 shadow-sm"
+              : "bg-white/10 text-slate-300 border-transparent hover:bg-white/20"
+          }`}
+        >
+          <img src={f.flag} alt={f.label} className="w-3.5 h-3.5 rounded-full object-cover" />
+          <span>{f.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Login ────────────────────────────────────────────────────────────
+
 function LoginScreen({
+  lang,
+  setLang,
   onLogin,
   onForgotPassword,
   onSignup,
 }: {
+  lang: "en" | "fr" | "es";
+  setLang: (l: "en" | "fr" | "es") => void;
   onLogin: (c: Collaborator) => void;
   onForgotPassword: () => void;
   onSignup: () => void;
@@ -141,6 +190,9 @@ function LoginScreen({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const tr = (en: string, fr: string, es: string) =>
+    lang === "fr" ? fr : lang === "es" ? es : en;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,7 +216,7 @@ function LoginScreen({
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
 
       {/* Banner */}
-      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
+      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-8 px-6 text-center shadow-md">
         <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
           Tangier International
         </p>
@@ -173,21 +225,32 @@ function LoginScreen({
         </h1>
         <p className="mt-2 text-slate-300 text-sm">
           January 07–11, 2027 · Kenzi Solazur Hotel, Tangier —{" "}
-          <span className="text-amber-300 font-semibold">Partner Portal</span>
+          <span className="text-amber-300 font-semibold">
+            {tr("Partner Portal", "Espace Partenaire", "Área Colaboradores")}
+          </span>
         </p>
+
+        {/* Language Switcher */}
+        <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
 
-      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+      <div className="flex-1 flex items-start justify-center px-4 pt-10 pb-10">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             {/* Card header */}
             <div className="bg-[#333a45] px-6 py-4 text-center">
-              <h2 className="text-white text-lg font-semibold">Partner Login</h2>
+              <h2 className="text-white text-lg font-semibold">
+                {tr("Partner Login", "Connexion Partenaire", "Inicio de Sesión Colaborador")}
+              </h2>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               <p className="text-center text-sm font-semibold text-gray-700">
-                Please enter your registered email and password
+                {tr(
+                  "Please enter your registered email and password",
+                  "Veuillez entrer votre e-mail enregistré et votre mot de passe",
+                  "Por favor, introduce tu correo electrónico registrado y contraseña"
+                )}
               </p>
               {error && (
                 <div className="p-3.5 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm text-center font-medium leading-relaxed">
@@ -200,7 +263,7 @@ function LoginScreen({
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
-                placeholder="Partner Email"
+                placeholder={tr("Partner Email", "E-mail Partenaire", "Correo del Colaborador")}
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
               <input
@@ -209,16 +272,23 @@ function LoginScreen({
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                placeholder="Password"
+                placeholder={tr("Password", "Mot de passe", "Contraseña")}
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
-              <div className="flex items-center justify-end">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={onSignup}
+                  className="text-xs font-semibold text-emerald-600 hover:text-emerald-800 transition cursor-pointer"
+                >
+                  + {tr("Create Account", "Créer un compte", "Crear cuenta")}
+                </button>
                 <button
                   type="button"
                   onClick={onForgotPassword}
                   className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
                 >
-                  Forgot / Set Password?
+                  {tr("Forgot Password?", "Mot de passe oublié ?", "¿Olvidaste la contraseña?")}
                 </button>
               </div>
               <div className="pt-2 text-center">
@@ -227,17 +297,24 @@ function LoginScreen({
                   disabled={busy}
                   className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full"
                 >
-                  <Lock className="h-4 w-4" /> {busy ? "Signing in…" : "Partner Login"}
+                  <Lock className="h-4 w-4" />{" "}
+                  {busy
+                    ? tr("Signing in…", "Connexion…", "Iniciando sesión…")
+                    : tr("Partner Login", "Se connecter", "Iniciar Sesión")}
                 </button>
               </div>
               <p className="text-[11px] text-gray-400 text-center">
-                New account? Your account must be activated by an administrator before logging in.
+                {tr(
+                  "New account? Your account must be activated by an administrator before logging in.",
+                  "Nouveau compte ? Votre compte doit être activé par un administrateur avant de pouvoir vous connecter.",
+                  "¿Nueva cuenta? Tu cuenta debe ser activada por un administrador antes de iniciar sesión."
+                )}
               </p>
             </form>
           </div>
           <div className="mt-6 text-center">
-            <Link to="/" className="text-xs text-gray-400 hover:text-gray-600 transition">
-              ← Back to the festival website
+            <Link to={lang && lang !== "en" ? `/?lang=${lang}` : "/"} className="text-xs text-gray-400 hover:text-gray-600 transition">
+              ← {tr("Back to the festival website", "Retour au site du festival", "Volver al sitio web del festival")}
             </Link>
           </div>
         </div>
@@ -248,22 +325,40 @@ function LoginScreen({
 
 // ─── Request Password Reset ───────────────────────────────────────────
 
-function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
+function RequestResetScreen({
+  lang,
+  setLang,
+  onBackToLogin,
+}: {
+  lang: "en" | "fr" | "es";
+  setLang: (l: "en" | "fr" | "es") => void;
+  onBackToLogin: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const tr = (en: string, fr: string, es: string) =>
+    lang === "fr" ? fr : lang === "es" ? es : en;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const res = await requestPasswordReset(email);
+    const res = await requestPasswordReset(email, lang);
     setBusy(false);
     if (res.success) {
       setSent(true);
     } else {
-      setError(res.error || "Failed to send password setup email.");
+      setError(
+        res.error ||
+          tr(
+            "Failed to send password setup email.",
+            "Échec de l'envoi de l'e-mail de réinitialisation.",
+            "Error al enviar el correo de restablecimiento."
+          )
+      );
     }
   };
 
@@ -272,35 +367,50 @@ function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
       className="min-h-screen bg-slate-100 flex flex-col"
       style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
     >
-      <div className="w-full bg-[#13234d] py-10 px-6 text-center shadow-md">
-        <h1 className="text-white text-3xl font-bold tracking-wide">Set / Reset Password</h1>
+      <div className="w-full bg-[#13234d] py-8 px-6 text-center shadow-md">
+        <h1 className="text-white text-3xl font-bold tracking-wide">
+          {tr("Set / Reset Password", "Créer / Réinitialiser le mot de passe", "Establecer / Restablecer Contraseña")}
+        </h1>
+        <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
 
-      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+      <div className="flex-1 flex items-start justify-center px-4 pt-10 pb-10">
         <div className="w-full max-w-md bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
           <div className="bg-[#333a45] px-6 py-4 text-center">
-            <h2 className="text-white text-lg font-semibold">Password Setup</h2>
+            <h2 className="text-white text-lg font-semibold">
+              {tr("Password Setup", "Configuration du mot de passe", "Configuración de contraseña")}
+            </h2>
           </div>
 
           <div className="p-8">
             {sent ? (
               <div className="text-center space-y-4">
                 <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
-                <h3 className="text-lg font-semibold text-gray-800">Email Sent!</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {tr("Email Sent!", "E-mail envoyé !", "¡Correo enviado!")}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  If an account exists for <strong className="text-gray-900">{email}</strong>, we have emailed you a link to create or reset your password.
+                  {tr(
+                    `If an account exists for ${email}, we have emailed you a link to create or reset your password.`,
+                    `Si un compte existe pour ${email}, nous vous avons envoyé par e-mail un lien pour créer ou réinitialiser votre mot de passe.`,
+                    `Si existe una cuenta para ${email}, te hemos enviado un enlace para crear o restablecer tu contraseña.`
+                  )}
                 </p>
                 <button
                   onClick={onBackToLogin}
                   className="mt-4 bg-[#13234d] text-white px-6 py-2.5 rounded-md text-sm font-semibold hover:bg-slate-800 transition cursor-pointer"
                 >
-                  Return to Login
+                  {tr("Return to Login", "Retour à la connexion", "Volver al inicio de sesión")}
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <p className="text-sm text-gray-600 text-center">
-                  Enter your registered partner email to receive a password creation or reset link.
+                  {tr(
+                    "Enter your registered partner email to receive a password creation or reset link.",
+                    "Entrez votre adresse e-mail partenaire enregistrée pour recevoir un lien de création ou de réinitialisation de mot de passe.",
+                    "Introduce tu correo electrónico registrado de colaborador para recibir un enlace de creación o restablecimiento de contraseña."
+                  )}
                 </p>
                 {error && (
                   <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
@@ -312,7 +422,7 @@ function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="Partner Email"
+                  placeholder={tr("Partner Email", "E-mail Partenaire", "Correo del Colaborador")}
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
                 <button
@@ -320,7 +430,9 @@ function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
                   disabled={busy}
                   className="w-full bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {busy ? "Sending link…" : "Send Password Setup Email"}
+                  {busy
+                    ? tr("Sending link…", "Envoi en cours…", "Enviando enlace…")
+                    : tr("Send Password Setup Email", "Envoyer le lien de réinitialisation", "Enviar correo de restablecimiento")}
                 </button>
                 <div className="text-center pt-2">
                   <button
@@ -328,7 +440,7 @@ function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
                     onClick={onBackToLogin}
                     className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer"
                   >
-                    ← Back to Login
+                    ← {tr("Back to Login", "Retour à la connexion", "Volver al inicio de sesión")}
                   </button>
                 </div>
               </form>
@@ -344,10 +456,14 @@ function RequestResetScreen({ onBackToLogin }: { onBackToLogin: () => void }) {
 
 function SetPasswordScreen({
   token,
+  lang,
+  setLang,
   onSuccess,
   onBackToLogin,
 }: {
   token: string;
+  lang: "en" | "fr" | "es";
+  setLang: (l: "en" | "fr" | "es") => void;
   onSuccess: () => void;
   onBackToLogin: () => void;
 }) {
@@ -357,10 +473,13 @@ function SetPasswordScreen({
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const tr = (en: string, fr: string, es: string) =>
+    lang === "fr" ? fr : lang === "es" ? es : en;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(tr("Passwords do not match.", "Les mots de passe ne correspondent pas.", "Las contraseñas no coinciden."));
       return;
     }
     setBusy(true);
@@ -373,7 +492,14 @@ function SetPasswordScreen({
         onSuccess();
       }, 2000);
     } else {
-      setError(res.error || "Could not reset password.");
+      setError(
+        res.error ||
+          tr(
+            "Failed to reset password.",
+            "Échec de la réinitialisation du mot de passe.",
+            "Error al restablecer la contraseña."
+          )
+      );
     }
   };
 
@@ -382,29 +508,44 @@ function SetPasswordScreen({
       className="min-h-screen bg-slate-100 flex flex-col"
       style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
     >
-      <div className="w-full bg-[#13234d] py-10 px-6 text-center shadow-md">
-        <h1 className="text-white text-3xl font-bold tracking-wide">Create Password</h1>
+      <div className="w-full bg-[#13234d] py-8 px-6 text-center shadow-md">
+        <h1 className="text-white text-3xl font-bold tracking-wide">
+          {tr("Create Password", "Créer un mot de passe", "Crear Contraseña")}
+        </h1>
+        <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
 
-      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+      <div className="flex-1 flex items-start justify-center px-4 pt-10 pb-10">
         <div className="w-full max-w-md bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
           <div className="bg-[#333a45] px-6 py-4 text-center">
-            <h2 className="text-white text-lg font-semibold">Set Your Password</h2>
+            <h2 className="text-white text-lg font-semibold">
+              {tr("Set Your Password", "Définissez votre mot de passe", "Establece tu contraseña")}
+            </h2>
           </div>
 
           <div className="p-8">
             {success ? (
               <div className="text-center space-y-4">
                 <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
-                <h3 className="text-lg font-semibold text-gray-800">Password Saved!</h3>
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {tr("Password Updated!", "Mot de passe mis à jour !", "¡Contraseña actualizada!")}
+                </h3>
                 <p className="text-sm text-gray-600">
-                  Your password has been created successfully. Redirecting you to sign in…
+                  {tr(
+                    "Your password has been saved. Redirecting to login…",
+                    "Votre mot de passe a été enregistré. Redirection vers la connexion…",
+                    "Tu contraseña ha sido guardada. Redirigiendo al inicio de sesión…"
+                  )}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <p className="text-sm text-gray-600 text-center">
-                  Please choose a password for your Partner Portal account (min 6 characters).
+                  {tr(
+                    "Please choose a password for your Partner Portal account (min 6 characters).",
+                    "Veuillez choisir un mot de passe pour votre compte Partenaire (min 6 caractères).",
+                    "Por favor, elige una contraseña para tu cuenta de Colaborador (mínimo 6 caracteres)."
+                  )}
                 </p>
                 {error && (
                   <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
@@ -416,7 +557,8 @@ function SetPasswordScreen({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  placeholder="New Password"
+                  minLength={6}
+                  placeholder={tr("New Password", "Nouveau mot de passe", "Nueva contraseña")}
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
                 <input
@@ -424,7 +566,8 @@ function SetPasswordScreen({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  placeholder="Confirm New Password"
+                  minLength={6}
+                  placeholder={tr("Confirm New Password", "Confirmer le mot de passe", "Confirmar nueva contraseña")}
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
                 <button
@@ -432,7 +575,9 @@ function SetPasswordScreen({
                   disabled={busy}
                   className="w-full bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {busy ? "Saving password…" : "Set Password"}
+                  {busy
+                    ? tr("Saving password…", "Enregistrement…", "Guardando contraseña…")
+                    : tr("Set Password", "Enregistrer le mot de passe", "Establecer contraseña")}
                 </button>
                 <div className="text-center pt-2">
                   <button
@@ -440,7 +585,7 @@ function SetPasswordScreen({
                     onClick={onBackToLogin}
                     className="text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer"
                   >
-                    ← Back to Login
+                    ← {tr("Back to Login", "Retour à la connexion", "Volver al inicio de sesión")}
                   </button>
                 </div>
               </form>
@@ -452,13 +597,26 @@ function SetPasswordScreen({
   );
 }
 
-function SignUpScreen({ onSuccess, onCancel }: { onSuccess: () => void; onCancel: () => void; }) {
+function SignUpScreen({
+  lang,
+  setLang,
+  onSuccess,
+  onCancel,
+}: {
+  lang: "en" | "fr" | "es";
+  setLang: (l: "en" | "fr" | "es") => void;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
   const [email, setEmail] = useState("");
   const [brandName, setBrandName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const tr = (en: string, fr: string, es: string) =>
+    lang === "fr" ? fr : lang === "es" ? es : en;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -467,25 +625,47 @@ function SignUpScreen({ onSuccess, onCancel }: { onSuccess: () => void; onCancel
     const result = await createPartnerAccount({ email, name: brandName, password });
     setBusy(false);
     if (result.success) {
-      setInfo("Account created. Await admin activation.");
-      onSuccess();
+      setInfo(
+        tr(
+          "Account created successfully. Please wait for admin activation.",
+          "Compte créé avec succès. En attente d'activation par l'administrateur.",
+          "Cuenta creada con éxito. En espera de activación por el administrador."
+        )
+      );
+      setTimeout(() => {
+        onSuccess();
+      }, 2500);
     } else {
-      setError(result.error || "Failed to create account.");
+      setError(
+        result.error ||
+          tr(
+            "Failed to create account.",
+            "Échec de la création du compte.",
+            "Error al crear la cuenta."
+          )
+      );
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col" style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}>
-      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
+      <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-8 px-6 text-center shadow-md">
         <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
-        <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">Partner Sign‑Up</h1>
-        <p className="mt-2 text-slate-300 text-sm">Create your partner account – activation pending.</p>
+        <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
+          {tr("Partner Sign-Up", "Inscription Partenaire", "Registro de Colaborador")}
+        </h1>
+        <p className="mt-2 text-slate-300 text-sm">
+          {tr("Create your partner account – activation pending.", "Créez votre compte partenaire – en attente d'activation.", "Crea tu cuenta de colaborador – pendiente de activación.")}
+        </p>
+        <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
-      <div className="flex-1 flex items-start justify-center px-4 pt-14 pb-10">
+      <div className="flex-1 flex items-start justify-center px-4 pt-10 pb-10">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             <div className="bg-[#333a45] px-6 py-4 text-center">
-              <h2 className="text-white text-lg font-semibold">Create Partner Account</h2>
+              <h2 className="text-white text-lg font-semibold">
+                {tr("Create Partner Account", "Créer un compte partenaire", "Crear cuenta de colaborador")}
+              </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
               {error && (
@@ -498,21 +678,47 @@ function SignUpScreen({ onSuccess, onCancel }: { onSuccess: () => void; onCancel
                   {info}
                 </div>
               )}
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="Partner Email" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
-              <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} required placeholder="Full Brand Name" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="Password" className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                placeholder={tr("Partner Email", "E-mail Partenaire", "Correo del Colaborador")}
+                className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+              <input
+                type="text"
+                value={brandName}
+                onChange={e => setBrandName(e.target.value)}
+                required
+                placeholder={tr("Full Brand Name", "Nom de la marque / Nom complet", "Nombre de marca / Nombre completo")}
+                className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+                placeholder={tr("Password (min 6 chars)", "Mot de passe (min 6 caract.)", "Contraseña (mínimo 6 caract.)")}
+                className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
               <div className="flex items-center justify-end">
-                <button type="button" onClick={onCancel} className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer">Cancel</button>
+                <button type="button" onClick={onCancel} className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer">
+                  {tr("Cancel", "Annuler", "Cancelar")}
+                </button>
               </div>
               <div>
                 <button type="submit" disabled={busy} className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full">
-                  {busy ? "Creating…" : "Create Account"}
+                  {busy ? tr("Creating…", "Création…", "Creando…") : tr("Create Account", "Créer un compte", "Crear Cuenta")}
                 </button>
               </div>
             </form>
           </div>
           <div className="mt-6 text-center">
-            <a href="/partner" className="text-xs text-gray-400 hover:text-gray-600 transition">← Back to Login</a>
+            <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 transition cursor-pointer">
+              ← {tr("Back to Login", "Retour à la connexion", "Volver al inicio de sesión")}
+            </button>
           </div>
         </div>
       </div>
