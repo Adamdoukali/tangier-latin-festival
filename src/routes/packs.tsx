@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Check, Tag, AlertCircle, X, Sparkles } from "lucide-react";
+import { Check, Tag, AlertCircle, X, Sparkles, Search, Ticket } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel } from "@/lib/translations";
@@ -8,7 +8,9 @@ import {
   getActivePacks,
   validateDiscountCode,
   calculateDiscountAmount,
+  getBookingByTicketCode,
   type DiscountCode,
+  type Booking,
 } from "@/lib/admin-store";
 import { PackBookingModal } from "@/components/PackBookingModal";
 
@@ -38,6 +40,21 @@ function PacksPage() {
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
   const [validatingCode, setValidatingCode] = useState(false);
+
+  // Ticket Tracker State
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [ticketResult, setTicketResult] = useState<Booking | null | undefined>(undefined);
+  const [ticketSearching, setTicketSearching] = useState(false);
+
+  const handleTrackTicket = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!ticketSearch.trim()) return;
+    setTicketSearching(true);
+    setTicketResult(undefined);
+    const booking = await getBookingByTicketCode(ticketSearch.trim());
+    setTicketResult(booking ?? null);
+    setTicketSearching(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -151,7 +168,7 @@ function PacksPage() {
 
       <AnimatedPriceBanner />
 
-      {/* PUBLIC PROMO / DISCOUNT CODE BAR */}
+      {/* TRACK YOUR TICKET */}
       <div className="max-w-4xl mx-auto px-6 pt-12 pb-4">
         <div className="relative rounded-3xl border border-primary/30 bg-gradient-to-br from-card/90 via-card/50 to-primary/10 p-6 md:p-8 backdrop-blur-xl shadow-2xl overflow-hidden">
           {/* Subtle background glow */}
@@ -161,50 +178,50 @@ function PacksPage() {
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-left flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <Tag className="h-4 w-4 text-gold" />
+                <Ticket className="h-4 w-4 text-gold" />
                 <span className="text-xs font-bold tracking-[0.25em] uppercase text-gold">
                   {lang === "fr"
-                    ? "CODE PROMO & RÉDUCTIONS"
+                    ? "SUIVI DE BILLET"
                     : lang === "es"
-                    ? "CÓDIGO PROMOCIONAL Y DESCUENTOS"
-                    : "PROMO CODE & DISCOUNTS"}
+                    ? "SEGUIMIENTO DE BOLETO"
+                    : "TICKET TRACKING"}
                 </span>
               </div>
               <h3 className="font-display text-xl md:text-2xl font-bold text-foreground">
                 {lang === "fr"
-                  ? "Avez-vous un code de réduction ?"
+                  ? "Suivez votre réservation"
                   : lang === "es"
-                  ? "¿Tienes un código de descuento?"
-                  : "Have a discount code?"}
+                  ? "Rastrea tu reserva"
+                  : "Track your ticket"}
               </h3>
               <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 {lang === "fr"
-                  ? "Entrez votre code ci-dessous pour afficher les prix réduits sur tous nos packs."
+                  ? "Entrez votre code de billet pour vérifier le statut de votre réservation."
                   : lang === "es"
-                  ? "Introduce tu código a continuación para ver los precios reducidos en todos los packs."
-                  : "Enter your promo code below to see instant discounted prices on all festival packs."}
+                  ? "Introduce tu código de boleto para verificar el estado de tu reserva."
+                  : "Enter your ticket code to check if your booking is confirmed."}
               </p>
             </div>
 
             <form
-              onSubmit={handleApplyDiscount}
+              onSubmit={handleTrackTicket}
               className="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0"
             >
               <div className="relative flex-1 sm:w-64">
-                <Tag className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
                 <input
                   type="text"
-                  value={discountInput}
-                  onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
+                  value={ticketSearch}
+                  onChange={(e) => setTicketSearch(e.target.value.toUpperCase())}
                   placeholder={
-                    lang === "fr" ? "ex: VIP50" : lang === "es" ? "ej: VIP50" : "e.g. VIP50"
+                    lang === "fr" ? "ex: TLF-A1B2C3" : lang === "es" ? "ej: TLF-A1B2C3" : "e.g. TLF-A1B2C3"
                   }
                   className="w-full rounded-2xl border border-border/80 bg-background/80 pl-10 pr-8 py-3 text-sm font-mono uppercase text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition shadow-inner"
                 />
-                {discountInput && (
+                {ticketSearch && (
                   <button
                     type="button"
-                    onClick={handleClearDiscount}
+                    onClick={() => { setTicketSearch(""); setTicketResult(undefined); }}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -213,19 +230,19 @@ function PacksPage() {
               </div>
               <button
                 type="submit"
-                disabled={validatingCode || !discountInput.trim()}
+                disabled={ticketSearching || !ticketSearch.trim()}
                 className="rounded-2xl bg-gradient-to-r from-primary via-amber-500 to-amber-600 text-primary-foreground font-bold px-6 py-3 text-sm uppercase tracking-wider hover:opacity-95 transition shadow-lg shadow-primary/20 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                {validatingCode ? (
+                {ticketSearching ? (
                   <>
                     <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     <span>...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4" />
+                    <Search className="h-4 w-4" />
                     <span>
-                      {lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply Code"}
+                      {lang === "fr" ? "Rechercher" : lang === "es" ? "Buscar" : "Track"}
                     </span>
                   </>
                 )}
@@ -233,34 +250,48 @@ function PacksPage() {
             </form>
           </div>
 
-          {discountMsg && (
+          {ticketResult !== undefined && (
             <div
-              className={`mt-4 p-3 rounded-2xl text-xs font-semibold flex items-center justify-between gap-3 ${
-                discountMsg.success
+              className={`mt-4 p-4 rounded-2xl text-sm font-semibold flex items-center gap-3 ${
+                ticketResult === null
+                  ? "bg-destructive/10 border border-destructive/30 text-destructive"
+                  : ticketResult.status === "confirmed" || ticketResult.status === "checked-in"
                   ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
-                  : "bg-destructive/10 border border-destructive/30 text-destructive"
+                  : ticketResult.status === "declined"
+                  ? "bg-destructive/10 border border-destructive/30 text-destructive"
+                  : "bg-amber-500/10 border border-amber-500/30 text-amber-400"
               }`}
             >
-              <div className="flex items-center gap-2">
-                {discountMsg.success ? (
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                )}
-                <span>{discountMsg.text}</span>
-              </div>
-              {discountMsg.success && (
-                <button
-                  type="button"
-                  onClick={handleClearDiscount}
-                  className="text-xs text-muted-foreground hover:text-foreground underline shrink-0 cursor-pointer"
-                >
-                  {lang === "fr"
-                    ? "Supprimer le code"
-                    : lang === "es"
-                    ? "Quitar código"
-                    : "Remove code"}
-                </button>
+              {ticketResult === null ? (
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>
+                    {lang === "fr"
+                      ? "Aucune réservation trouvée avec ce code."
+                      : lang === "es"
+                      ? "No se encontró ninguna reserva con este código."
+                      : "No booking found with this ticket code."}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 w-full">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 shrink-0" />
+                    <span className="font-bold">{ticketResult.customerName}</span>
+                    <span className="ml-auto text-xs uppercase px-2 py-0.5 rounded-full border font-bold" style={{
+                      background: ticketResult.status === "confirmed" || ticketResult.status === "checked-in" ? "rgba(16,185,129,0.15)" : ticketResult.status === "declined" ? "rgba(239,68,68,0.15)" : "rgba(245,158,11,0.15)",
+                      borderColor: ticketResult.status === "confirmed" || ticketResult.status === "checked-in" ? "rgba(16,185,129,0.4)" : ticketResult.status === "declined" ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.4)",
+                    }}>
+                      {ticketResult.status === "confirmed" ? (lang === "fr" ? "✅ Confirmé" : lang === "es" ? "✅ Confirmado" : "✅ Confirmed")
+                        : ticketResult.status === "checked-in" ? (lang === "fr" ? "✅ Enregistré" : lang === "es" ? "✅ Registrado" : "✅ Checked In")
+                        : ticketResult.status === "declined" ? (lang === "fr" ? "❌ Refusé" : lang === "es" ? "❌ Rechazado" : "❌ Declined")
+                        : (lang === "fr" ? "⏳ En attente" : lang === "es" ? "⏳ Pendiente" : "⏳ Pending")}
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground font-normal">
+                    {translateDynamic(ticketResult.packName)} · {ticketResult.numPeople} {ticketResult.numPeople > 1 ? (lang === "fr" ? "personnes" : lang === "es" ? "personas" : "people") : (lang === "fr" ? "personne" : lang === "es" ? "persona" : "person")}
+                  </div>
+                </div>
               )}
             </div>
           )}

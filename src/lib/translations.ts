@@ -1388,9 +1388,25 @@ export function translateDynamicText(text: string, lang: Language): string {
       .replace(/chambre\s*double/gi, "Double Room")
       .replace(/chambre\s*single|chambre\s*simple/gi, "Single Room")
       .replace(/(\d+)\s*nuits/gi, "$1 Nights")
-      .replace(/sans\s*hébergement/gi, "WITHOUT ACCOMMODATION")
-      .replace(/petit-déjeuner/gi, "BREAKFAST")
-      .replace(/dîner/gi, "DINNER");
+      .replace(/sans\s*h[ée]bergement/gi, "WITHOUT ACCOMMODATION")
+      .replace(/petit-d[ée]jeuner/gi, "BREAKFAST")
+      .replace(/d[îi]ner/gi, "DINNER")
+      .replace(/\+?\s*50\s*h(?:eures?)?\s*de\s*workshops/gi, "+50 HOURS OF WORKSHOPS")
+      .replace(/heures?\s*de\s*workshops/gi, "HOURS OF WORKSHOPS")
+      .replace(/comp[ée]tition\s*international(?:e)?/gi, "INTERNATIONAL COMPETITION")
+      .replace(/soir[ée]es?\s*sociales?/gi, "SOCIAL PARTIES")
+      .replace(/tous\s*les\s*workshops/gi, "ALL WORKSHOPS")
+      .replace(/shows?\s*&\s*soir[ée]es?/gi, "SHOWS & PARTIES")
+      .replace(/demi[- ]pension/gi, "HALF BOARD")
+      .replace(/par\s*personne/gi, "PER PERSON")
+      .replace(/horas?\s*de\s*talleres/gi, "HOURS OF WORKSHOPS")
+      .replace(/fiestas?\s*sociales?/gi, "SOCIAL PARTIES")
+      .replace(/competici[oó]n\s*internacional/gi, "INTERNATIONAL COMPETITION")
+      .replace(/todos\s*los\s*talleres/gi, "ALL WORKSHOPS")
+      .replace(/media\s*pensi[oó]n/gi, "HALF BOARD")
+      .replace(/por\s*persona/gi, "PER PERSON")
+      .replace(/sin\s*alojamiento/gi, "WITHOUT ACCOMMODATION")
+      .replace(/(\d+)\s*noches/gi, "$1 NIGHTS");
     return out.trim();
   }
 
