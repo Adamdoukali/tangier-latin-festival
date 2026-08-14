@@ -16,6 +16,9 @@ import {
   Eye,
   EyeOff,
   Lock,
+  Users,
+  Copy,
+  Link as LinkIcon,
 } from "lucide-react";
 import {
   getPacks,
@@ -51,6 +54,8 @@ interface PackFormData {
   features: string[];
   popular: boolean;
   active: boolean;
+  numGuests: number;
+  isPrivate: boolean;
 }
 
 const emptyForm: PackFormData = {
@@ -62,6 +67,8 @@ const emptyForm: PackFormData = {
   features: [""],
   popular: false,
   active: true,
+  numGuests: 1,
+  isPrivate: false,
 };
 
 function AdminPacks() {
@@ -164,6 +171,8 @@ function AdminPacks() {
       features: pack.features.length ? [...pack.features] : [""],
       popular: pack.popular,
       active: pack.active,
+      numGuests: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub} ${pack.category}`) ? 2 : 1),
+      isPrivate: !!pack.isPrivate,
     });
     setShowForm(true);
   };
@@ -221,6 +230,17 @@ function AdminPacks() {
     }));
   };
 
+  const [copiedPackId, setCopiedPackId] = useState<string | null>(null);
+
+  const copyPackLink = (packId: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const link = `${origin}/book?packId=${packId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedPackId(packId);
+      setTimeout(() => setCopiedPackId(null), 2000);
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -230,10 +250,8 @@ function AdminPacks() {
             Pack Management
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Create and manage festival packs. Visible packs appear on the website;{" "}
-            <span className="text-violet-600 font-medium">private packs</span> exist only
-            here — perfect for special deals you book yourself (partners and the public
-            never see them).
+            Create and manage festival packs. Configure guest counts (1, 2, 3, 4+ guests) and create{" "}
+            <span className="text-violet-600 font-medium">private link-only packs</span> shareable directly via link.
           </p>
         </div>
         <button
@@ -335,19 +353,27 @@ function AdminPacks() {
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${
                       pack.active
                         ? "bg-emerald-100 text-emerald-600 border-emerald-200"
-                        : "bg-violet-50 text-violet-600 border-violet-200"
+                        : "bg-gray-100 text-gray-500 border-gray-200"
                     }`}
                   >
                     {pack.active ? (
                       <>
-                        <Eye className="h-3 w-3" /> Visible on website
+                        <Eye className="h-3 w-3" /> Active
                       </>
                     ) : (
                       <>
-                        <Lock className="h-3 w-3" /> Private
+                        <EyeOff className="h-3 w-3" /> Disabled
                       </>
                     )}
                   </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                    <Users className="h-3 w-3" /> {pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)} { (pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)) > 1 ? "Guests" : "Guest" }
+                  </span>
+                  {pack.isPrivate && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-semibold bg-violet-100 text-violet-700 border border-violet-200">
+                      <Lock className="h-3 w-3" /> Private Link
+                    </span>
+                  )}
                   <span className="ml-auto flex items-center gap-1">
                     <button
                       onClick={() => movePackInCategory(pack, -1)}
@@ -391,35 +417,39 @@ function AdminPacks() {
                 </ul>
 
                 {/* Actions */}
-                <div className="mt-5 pt-4 border-t border-gray-200 flex items-center gap-2">
+                <div className="mt-5 pt-4 border-t border-gray-200 flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => openEdit(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition cursor-pointer"
                   >
                     <Pencil className="h-3.5 w-3.5" /> Edit
                   </button>
                   <button
+                    onClick={() => copyPackLink(pack.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
+                      copiedPackId === pack.id
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+                        : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+                    }`}
+                    title="Copy direct booking link for this pack"
+                  >
+                    {copiedPackId === pack.id ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-amber-600" />
+                    )}
+                    {copiedPackId === pack.id ? "Link Copied!" : "Copy Direct Link"}
+                  </button>
+                  <button
                     onClick={() => toggleActive(pack)}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
-                    title={
-                      pack.active
-                        ? "Hide from the website — becomes a private admin-only pack"
-                        : "Publish on the website booking pages"
-                    }
                   >
                     {pack.active ? (
                       <EyeOff className="h-3.5 w-3.5" />
                     ) : (
                       <Eye className="h-3.5 w-3.5 text-emerald-600" />
                     )}
-                    {pack.active ? "Hide from website" : "Show on website"}
-                  </button>
-                  <button
-                    onClick={() => togglePopular(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
-                  >
-                    <Star className={`h-3.5 w-3.5 ${pack.popular ? "text-amber-600" : ""}`} />
-                    {pack.popular ? "Unfeature" : "Feature"}
+                    {pack.active ? "Disable" : "Enable"}
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(pack.id)}
@@ -687,37 +717,73 @@ function AdminPacks() {
                 </button>
               </div>
 
-              {/* Toggles */}
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.popular}
-                    onChange={(e) =>
-                      setForm({ ...form, popular: e.target.checked })
-                    }
-                    className="accent-amber-500"
-                  />
-                  <span className="text-sm text-gray-600">Popular</span>
+              {/* Number of Guests */}
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 flex items-center gap-1.5 font-medium">
+                  <Users className="h-3.5 w-3.5 text-amber-600" /> Number of Guests
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={form.active}
-                    onChange={(e) =>
-                      setForm({ ...form, active: e.target.checked })
-                    }
-                    className="accent-amber-500"
-                  />
-                  <span className="text-sm text-gray-600">Visible on website</span>
-                </label>
+                <select
+                  value={form.numGuests}
+                  onChange={(e) => setForm({ ...form, numGuests: parseInt(e.target.value, 10) || 1 })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition font-medium"
+                >
+                  <option value={1}>1 Guest (Single Person)</option>
+                  <option value={2}>2 Guests (Double / Couple — Guest 1 & Guest 2)</option>
+                  <option value={3}>3 Guests (Triple Room — Guest 1, Guest 2 & Guest 3)</option>
+                  <option value={4}>4 Guests (Quad Room — 4 Guests)</option>
+                  <option value={5}>5 Guests (Group — 5 Guests)</option>
+                  <option value={6}>6 Guests (Group — 6 Guests)</option>
+                </select>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  The booking form will automatically require names for each of these guests (e.g. Guest 1, Guest 2, Guest 3).
+                </p>
               </div>
-              <p className="mt-2 text-[11px] text-gray-500">
-                Uncheck "Visible on website" to create a{" "}
-                <span className="text-violet-600 font-medium">private pack</span>: it never
-                appears on the website or partner links — only you can book it, from the
-                Bookings page ("special" packs in the pack list).
-              </p>
+
+              {/* Toggles */}
+              <div className="flex flex-col gap-3 pt-2">
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.popular}
+                      onChange={(e) =>
+                        setForm({ ...form, popular: e.target.checked })
+                      }
+                      className="accent-amber-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Popular (Highlight Badge)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.active}
+                      onChange={(e) =>
+                        setForm({ ...form, active: e.target.checked })
+                      }
+                      className="accent-amber-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Active</span>
+                  </label>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-violet-200 bg-violet-50/60 space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-violet-900 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.isPrivate}
+                      onChange={(e) =>
+                        setForm({ ...form, isPrivate: e.target.checked })
+                      }
+                      className="accent-violet-600 h-4 w-4"
+                    />
+                    <Lock className="h-4 w-4 text-violet-600 shrink-0" />
+                    <span>Private / Link-Only Pack</span>
+                  </label>
+                  <p className="text-[11px] text-violet-700 leading-relaxed pl-6">
+                    Private packs do NOT show up on the public festival packs grid. You can copy its direct link and send it to specific customers or groups!
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Save */}

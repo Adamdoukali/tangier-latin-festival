@@ -15,6 +15,7 @@ import {
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import {
   getActivePacks,
+  getPackById,
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
@@ -75,7 +76,22 @@ function BookPage() {
   });
 
   useEffect(() => {
-    getActivePacks().then(setPacks);
+    getActivePacks().then((loaded) => {
+      setPacks(loaded);
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const packId = params.get("packId");
+        if (packId) {
+          getPackById(packId).then((p) => {
+            if (p) {
+              setSelected(p);
+              const count = p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
+              setForm((f) => ({ ...f, names: Array.from({ length: count }, () => "") }));
+            }
+          });
+        }
+      }
+    });
   }, []);
 
   // Short partner links (tickets.tangierlatinfestival.com/CODE) carry no
@@ -160,11 +176,13 @@ function BookPage() {
     }
   };
 
-  const isTwoPerson = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
+  const getGuestCount = (p: Pack) =>
+    p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
 
   const choosePack = (p: Pack) => {
     setSelected(p);
-    setForm((f) => ({ ...f, names: isTwoPerson(p) ? ["", ""] : [""] }));
+    const count = getGuestCount(p);
+    setForm((f) => ({ ...f, names: Array.from({ length: count }, () => "") }));
     if (appliedDiscount) {
       const baseP = parseInt(p.price, 10) || 0;
       setDiscountAmount(calculateDiscountAmount(appliedDiscount, baseP));
@@ -325,7 +343,7 @@ function BookPage() {
 
   // ── Step 2: registration form ──
   if (selected) {
-    const twoPerson = isTwoPerson(selected);
+    const guestCount = getGuestCount(selected);
     const unit = priceUnitLabel(selected, L);
     return (
       <Shell>
@@ -392,22 +410,22 @@ function BookPage() {
           </p>
 
           <div className="space-y-4">
-            {twoPerson && (
-              <p className="text-xs text-amber-700 -mb-1">
+            {form.names.length > 1 && (
+              <p className="text-xs text-amber-700 -mb-1 font-medium">
                 {tr(
-                  "This pack is for 2 people — please enter both full names.",
-                  "Ce pack est pour 2 personnes — veuillez saisir les deux noms complets.",
-                  "Este pack es para 2 personas — introduce los dos nombres completos."
+                  `This pack is for ${form.names.length} guests — please enter all full names below.`,
+                  `Ce pack est pour ${form.names.length} invités — veuillez saisir tous les noms complets ci-dessous.`,
+                  `Este pack es para ${form.names.length} invitados — introduce todos los nombres completos a continuación.`
                 )}
               </p>
             )}
-            <div className={twoPerson ? "grid sm:grid-cols-2 gap-3" : ""}>
+            <div className={form.names.length > 1 ? "grid sm:grid-cols-2 gap-3" : ""}>
               {form.names.map((name, idx) => (
                 <div key={idx}>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                     {form.names.length === 1
                       ? tr("Full Name", "Nom complet", "Nombre completo")
-                      : `${tr("Person", "Personne", "Persona")} ${idx + 1}`}{" "}
+                      : `${tr("Guest", "Invité", "Invitado")} ${idx + 1}`}{" "}
                     <span className="text-red-600">*</span>
                   </label>
                   <input

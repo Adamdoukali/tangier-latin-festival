@@ -21,6 +21,8 @@ export interface Pack {
   features: string[];
   popular: boolean;
   active: boolean;
+  numGuests?: number;
+  isPrivate?: boolean;
   /** Display position on the website (lower = earlier); null = unordered */
   sortOrder?: number | null;
   createdAt: string;
@@ -321,6 +323,8 @@ const packFromRow = (r: any): Pack => ({
   features: Array.isArray(r.features) ? r.features : [],
   popular: !!r.popular,
   active: !!r.active,
+  numGuests: typeof r.num_guests === "number" ? r.num_guests : (/double|doble|couple/i.test(`${r.name} ${r.sub} ${r.category}`) ? 2 : 1),
+  isPrivate: !!r.is_private,
   sortOrder: r.sort_order ?? null,
   createdAt: r.created_at,
 });
@@ -344,6 +348,8 @@ const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
   if (p.features !== undefined) row.features = p.features;
   if (p.popular !== undefined) row.popular = p.popular;
   if (p.active !== undefined) row.active = p.active;
+  if (p.numGuests !== undefined) row.num_guests = p.numGuests;
+  if (p.isPrivate !== undefined) row.is_private = p.isPrivate;
   if (p.sortOrder !== undefined) row.sort_order = p.sortOrder;
   return row;
 };
@@ -679,7 +685,7 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
 }
 
 export async function getActivePacks(): Promise<Pack[]> {
-  return (await getPacks()).filter((p) => p.active);
+  return (await getPacks()).filter((p) => p.active && !p.isPrivate);
 }
 
 export async function getPackById(id: string): Promise<Pack | undefined> {

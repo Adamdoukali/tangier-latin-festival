@@ -290,12 +290,18 @@ export function PackBookingModal({
                 ? await getCollaboratorByCode(refCode).catch(() => undefined)
                 : undefined;
 
-              const isDouble = /double|doble/.test(pack.name.toLowerCase());
-              const customerName = isDouble
-                ? [formData.get("Person 1 Full Name"), formData.get("Person 2 Full Name")]
-                    .filter(Boolean)
-                    .join(" & ")
-                : String(formData.get("Full Name") ?? "");
+              const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
+              const guestNames: string[] = [];
+              if (numGuests > 1) {
+                for (let i = 1; i <= numGuests; i++) {
+                  const val = String(formData.get(`Guest ${i} Full Name`) || formData.get(`Person ${i} Full Name`) || "").trim();
+                  if (val) guestNames.push(val);
+                }
+              } else {
+                const val = String(formData.get("Full Name") ?? "").trim();
+                if (val) guestNames.push(val);
+              }
+              const customerName = guestNames.join(" & ");
               const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
               const customerEmail = String(formData.get("Email") ?? "");
 
@@ -312,7 +318,7 @@ export function PackBookingModal({
                   country: String(formData.get("Country") ?? ""),
                   arrivalDate: String(formData.get("Arrival Date") ?? "") || null,
                   departureDate: String(formData.get("Departure Date") ?? "") || null,
-                  numPeople: isDouble ? 2 : 1,
+                  numPeople: numGuests,
                   danceLevel: "",
                   notes: String(formData.get("Notes") ?? ""),
                   lang,
@@ -371,35 +377,28 @@ export function PackBookingModal({
             }}
           >
             <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
-            {/* Conditional Names */}
-            {/double|doble/.test(pack.name.toLowerCase()) ? (
+            {/* Guest Full Name Inputs */}
+            {(pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)) > 1 ? (
               <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                    <User className="h-3 w-3" />
-                    Person 1 Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="Person 1 Full Name"
-                    required
-                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                    <User className="h-3 w-3" />
-                    Person 2 Full Name
-                  </label>
-                  <input
-                    type="text"
-                    name="Person 2 Full Name"
-                    required
-                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                    placeholder="Jane Doe"
-                  />
-                </div>
+                {Array.from({ length: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1) }).map((_, i) => (
+                  <div key={i}>
+                    <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                      <User className="h-3 w-3" />
+                      {lang === "fr"
+                        ? `Nom complet de l'invité ${i + 1}`
+                        : lang === "es"
+                          ? `Nombre completo del invitado ${i + 1}`
+                          : `Guest ${i + 1} Full Name`}
+                    </label>
+                    <input
+                      type="text"
+                      name={`Guest ${i + 1} Full Name`}
+                      required
+                      className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                      placeholder={i === 0 ? "John Doe" : i === 1 ? "Jane Doe" : `Guest ${i + 1}`}
+                    />
+                  </div>
+                ))}
               </div>
             ) : (
               <div>
