@@ -176,8 +176,11 @@ function BookPage() {
     }
   };
 
-  const getGuestCount = (p: Pack) =>
-    p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
+  const getGuestCount = (p: Pack) => {
+    if (typeof p.numGuests === "number" && p.numGuests > 1) return p.numGuests;
+    if (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`)) return 2;
+    return p.numGuests ?? 1;
+  };
 
   const choosePack = (p: Pack) => {
     setSelected(p);
@@ -454,13 +457,13 @@ function BookPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                   {tr("Phone", "Téléphone", "Teléfono")}
                 </label>
                 <div className="flex">
-                  <PhoneCountrySelect className="rounded-l-lg border border-gray-300 border-r-0 bg-white px-2 max-w-[110px] text-gray-900 focus:outline-none focus:border-amber-500" />
+                  <PhoneCountrySelect className="rounded-l-lg border border-gray-300 border-r-0 bg-white px-2 max-w-[110px] text-gray-900 focus:outline-none focus:border-amber-500 text-xs sm:text-sm" />
                   <input
                     type="tel"
                     value={form.phone}
@@ -471,7 +474,7 @@ function BookPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                   {tr("Country", "Pays", "País")} <span className="text-red-400">*</span>
                 </label>
                 {/* Required: feeds the Morocco / international split in the admin */}
@@ -486,9 +489,9 @@ function BookPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                   {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}
                   <span className="text-gray-400 text-[10px] ml-1 normal-case">
                     ({tr("optional", "optionnel", "opcional")})
@@ -504,7 +507,7 @@ function BookPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                   {tr("Departure Date", "Date de départ", "Fecha de salida")}
                   <span className="text-gray-400 text-[10px] ml-1 normal-case">
                     ({tr("optional", "optionnel", "opcional")})

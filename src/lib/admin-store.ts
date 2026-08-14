@@ -323,7 +323,12 @@ const packFromRow = (r: any): Pack => ({
   features: Array.isArray(r.features) ? r.features : [],
   popular: !!r.popular,
   active: !!r.active,
-  numGuests: typeof r.num_guests === "number" ? r.num_guests : (/double|doble|couple/i.test(`${r.name} ${r.sub} ${r.category}`) ? 2 : 1),
+  numGuests:
+    typeof r.num_guests === "number" && r.num_guests > 1
+      ? r.num_guests
+      : /double|doble|couple/i.test(`${r.name} ${r.sub} ${r.category}`)
+        ? 2
+        : (r.num_guests ?? 1),
   isPrivate: !!r.is_private,
   sortOrder: r.sort_order ?? null,
   createdAt: r.created_at,
