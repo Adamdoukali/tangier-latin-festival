@@ -903,26 +903,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           <QrCode className="h-4 w-4" />
                         </a>
                       )}
-                      {waDigits && (
-                        <a
-                          href={`https://wa.me/${waDigits}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-green-50 text-[#16a34a] hover:bg-green-100 transition"
-                          title={`WhatsApp ${b.phone}`}
-                        >
-                          <Phone className="h-4 w-4" />
-                        </a>
-                      )}
-                      {b.email && (
-                        <a
-                          href={`mailto:${b.email}`}
-                          className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:text-gray-800 transition"
-                          title={`Email ${b.email}`}
-                        >
-                          <Mail className="h-4 w-4" />
-                        </a>
-                      )}
                       {b.status === "checked-in" ? (
                         <span
                           className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}

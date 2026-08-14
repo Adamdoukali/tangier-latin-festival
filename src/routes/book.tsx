@@ -471,12 +471,13 @@ function BookPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}{" "}
-                  <span className="text-red-600">*</span>
+                  {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}
+                  <span className="text-gray-400 text-[10px] ml-1 normal-case">
+                    ({tr("optional", "optionnel", "opcional")})
+                  </span>
                 </label>
                 <input
                   type="date"
-                  required
                   value={form.arrival}
                   min="2027-01-01"
                   max="2027-01-31"
@@ -486,12 +487,13 @@ function BookPage() {
               </div>
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  {tr("Departure Date", "Date de départ", "Fecha de salida")}{" "}
-                  <span className="text-red-600">*</span>
+                  {tr("Departure Date", "Date de départ", "Fecha de salida")}
+                  <span className="text-gray-400 text-[10px] ml-1 normal-case">
+                    ({tr("optional", "optionnel", "opcional")})
+                  </span>
                 </label>
                 <input
                   type="date"
-                  required
                   value={form.departure}
                   min={form.arrival || "2027-01-01"}
                   max="2027-02-15"
