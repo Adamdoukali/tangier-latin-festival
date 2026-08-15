@@ -202,17 +202,17 @@ export async function generateTicketPdf(
   doc.setFillColor(241, 245, 249);
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.3);
-  doc.roundedRect(15, 175, 180, 40, 3, 3, "FD");
+  doc.roundedRect(15, 175, 180, 32, 3, 3, "FD");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(15, 23, 42);
   const instTitle =
     lang === "fr"
-      ? "📌 Instructions d'accueil & Enregistrement"
+      ? "Instructions d'accueil & Enregistrement"
       : lang === "es"
-      ? "📌 Instrucciones de llegada y Registro"
-      : "📌 Check-in & Event Entry Instructions";
+      ? "Instrucciones de llegada y Registro"
+      : "Check-in & Event Entry Instructions";
   doc.text(instTitle, 22, 183);
 
   doc.setFont("helvetica", "normal");
@@ -221,20 +221,17 @@ export async function generateTicketPdf(
   const instLines =
     lang === "fr"
       ? [
-          "• Présentez ce document PDF ou le QR code sur votre téléphone à l'accueil de l'Hôtel Kenzi Solazur.",
-          "• Un bracelet personnel vous sera remis lors de l'enregistrement pour accéder aux workshops, soirées et pool parties.",
-          "• Conservez ce billet et votre pièce d'identité valide avec vous pendant toute la durée du festival.",
+          "- Présentez ce document PDF ou le QR code sur votre téléphone à l'accueil de l'Hôtel Kenzi Solazur.",
+          "- Un bracelet personnel vous sera remis lors de l'enregistrement pour accéder aux workshops, soirées et spectacles.",
         ]
       : lang === "es"
       ? [
-          "• Presenta este documento PDF o el código QR en tu teléfono en la recepción del Hotel Kenzi Solazur.",
-          "• Se te entregará una pulsera personal en el registro para acceder a los talleres, fiestas y pool parties.",
-          "• Conserva esta entrada y un documento de identidad válido durante todo el festival.",
+          "- Presenta este documento PDF o el código QR en tu teléfono en la recepción del Hotel Kenzi Solazur.",
+          "- Se te entregará una pulsera personal en el registro para acceder a los talleres, fiestas y espectáculos.",
         ]
       : [
-          "• Present this PDF ticket or show the QR code on your phone at the Kenzi Solazur Hotel welcome desk.",
-          "• A personal event bracelet will be issued at check-in for full access to workshops, shows, and parties.",
-          "• Please keep this ticket and a valid ID with you throughout the festival.",
+          "- Present this PDF ticket or show the QR code on your phone at the Kenzi Solazur Hotel welcome desk.",
+          "- A personal event bracelet will be issued at check-in for full access to workshops, shows, and parties.",
         ];
 
   let iy = 191;
@@ -246,18 +243,18 @@ export async function generateTicketPdf(
   // 5. Programme Banner Link
   doc.setFillColor(254, 243, 199);
   doc.setDrawColor(245, 158, 11);
-  doc.roundedRect(15, 222, 180, 20, 3, 3, "FD");
+  doc.roundedRect(15, 214, 180, 20, 3, 3, "FD");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(180, 83, 9);
   const progTitle =
     lang === "fr"
-      ? "📅 Programme Officiel du Festival"
+      ? "Programme Officiel du Festival"
       : lang === "es"
-      ? "📅 Programa Oficial del Festival"
-      : "📅 Official Festival Schedule & Programme";
-  doc.text(progTitle, 22, 230);
+      ? "Programa Oficial del Festival"
+      : "Official Festival Schedule & Programme";
+  doc.text(progTitle, 22, 222);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
@@ -268,7 +265,8 @@ export async function generateTicketPdf(
       : lang === "es"
       ? "Descarga el programa completo en: tangierlatinfestival.com/program"
       : "Download the complete schedule at: tangierlatinfestival.com/program";
-  doc.text(progSub, 22, 237);
+  doc.text(progSub, 22, 229);
+
 
   // 6. Footer
   doc.setFont("helvetica", "normal");
