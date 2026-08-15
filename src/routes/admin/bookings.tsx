@@ -717,19 +717,7 @@ function AdminBookings() {
                 </select>
               </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Notes (optional)
-                </label>
-                <textarea
-                  value={form.notes}
-                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Special requests..."
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
-                />
-              </div>
+
 
               {/* Status */}
               <div>

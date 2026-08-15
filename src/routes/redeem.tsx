@@ -196,18 +196,18 @@ function RedeemPage() {
   // ── Error State ──
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="mx-auto w-16 h-16 rounded-full bg-red-500/15 grid place-items-center mb-6">
-            <AlertCircle className="h-8 w-8 text-red-400" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center bg-white rounded-2xl border border-gray-200 shadow-xl p-8">
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-50 grid place-items-center mb-6 border border-red-100">
+            <AlertCircle className="h-8 w-8 text-red-600" />
           </div>
-          <h1 className="font-display text-2xl text-zinc-100 tracking-wide">
+          <h1 className="font-display text-2xl text-gray-900 tracking-wide font-bold">
             Invite Error
           </h1>
-          <p className="mt-3 text-sm text-zinc-400">{error}</p>
+          <p className="mt-3 text-sm text-gray-600">{error}</p>
           <Link
             to="/"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-zinc-800 px-6 py-3 text-sm text-zinc-300 hover:bg-zinc-700 transition"
+            className="mt-8 inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm text-white font-medium hover:bg-slate-800 transition shadow-md"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Festival
@@ -220,94 +220,94 @@ function RedeemPage() {
   // ── Success State ──
   if (success && booking) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full">
           {/* Success header */}
           <div className="text-center mb-8">
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/15 grid place-items-center mb-5 animate-bounce">
-              <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 grid place-items-center mb-5 animate-bounce border border-emerald-200">
+              <CheckCircle2 className="h-8 w-8 text-emerald-600" />
             </div>
-            <h1 className="font-display text-2xl text-zinc-100 tracking-wide">
+            <h1 className="font-display text-2xl text-gray-900 tracking-wide font-bold">
               Request Received!
             </h1>
-            <p className="mt-2 text-sm text-zinc-400">
+            <p className="mt-2 text-sm text-gray-600">
               Your invite has been registered. The festival team confirms within
               24 hours — you'll automatically receive your ticket by email.
             </p>
           </div>
 
           {/* Ticket card */}
-          <div className="relative rounded-2xl border border-zinc-800/60 bg-zinc-900/80 overflow-hidden">
+          <div className="relative rounded-2xl border border-gray-200 bg-white shadow-xl overflow-hidden">
             {/* Gold accent top */}
             <div className="h-1.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600" />
 
             <div className="p-6">
               {/* Event info */}
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-amber-400" />
-                <span className="text-[10px] tracking-[0.3em] uppercase text-amber-400 font-medium">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                <span className="text-[10px] tracking-[0.3em] uppercase text-amber-700 font-bold">
                   Tangier International Latin Festival
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 flex items-center gap-1.5 mt-1">
-                <Calendar className="h-3 w-3" /> January 07–11, 2027
-                <span className="text-zinc-700 mx-1">·</span>
-                <MapPin className="h-3 w-3" /> Tangier, Morocco
+              <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1 font-medium">
+                <Calendar className="h-3 w-3 text-amber-500" /> January 07–11, 2027
+                <span className="text-gray-300 mx-1">·</span>
+                <MapPin className="h-3 w-3 text-amber-500" /> Tangier, Morocco
               </p>
 
               {/* Divider */}
-              <div className="my-5 border-t border-dashed border-zinc-700/60 relative">
-                <div className="absolute -left-9 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-950" />
-                <div className="absolute -right-9 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-950" />
+              <div className="my-5 border-t border-dashed border-gray-200 relative">
+                <div className="absolute -left-9 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-50 border-r border-gray-200" />
+                <div className="absolute -right-9 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-50 border-l border-gray-200" />
               </div>
 
               {/* Ticket details */}
-              <div className="grid grid-cols-2 gap-4 mb-5">
+              <div className="grid grid-cols-2 gap-4 mb-5 text-sm">
                 <div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-500">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-400 font-semibold">
                     Guest
                   </p>
-                  <p className="mt-0.5 text-sm font-medium text-zinc-200">
+                  <p className="mt-0.5 text-sm font-bold text-gray-900">
                     {booking.customerName}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-500">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-400 font-semibold">
                     Pack
                   </p>
-                  <p className="mt-0.5 text-sm font-medium text-amber-400">
+                  <p className="mt-0.5 text-sm font-bold text-amber-600">
                     {booking.packName}
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-500">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-400 font-semibold">
                     Ticket Code
                   </p>
-                  <code className="mt-0.5 text-sm font-mono font-medium text-zinc-200">
+                  <code className="mt-0.5 inline-block text-xs font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                     {booking.ticketCode}
                   </code>
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-500">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-400 font-semibold">
                     Status
                   </p>
-                  <span className="inline-flex items-center gap-1 mt-0.5 text-sm font-medium text-amber-400">
-                    <Star className="h-3.5 w-3.5" /> Pending
+                  <span className="inline-flex items-center gap-1 mt-0.5 text-xs font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" /> Pending
                   </span>
                 </div>
               </div>
 
               {/* QR Code & PDF Ticket — Only when confirmed */}
               {booking.status !== "pending" && qrDataUrl ? (
-                <div className="flex flex-col items-center gap-3 pt-4 border-t border-zinc-800/60">
-                  <div className="rounded-xl border border-zinc-700/30 bg-zinc-100 p-3 inline-block">
+                <div className="flex flex-col items-center gap-3 pt-4 border-t border-gray-100">
+                  <div className="rounded-xl border border-gray-200 bg-zinc-50 p-3 inline-block">
                     <img
                       src={qrDataUrl}
                       alt="Ticket QR Code"
                       className="w-40 h-40"
                     />
                   </div>
-                  <p className="text-[10px] tracking-widest uppercase text-zinc-600 text-center">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-500 text-center">
                     Save this QR — it becomes your valid ticket
                     <br />
                     automatically once confirmed
@@ -316,7 +316,7 @@ function RedeemPage() {
                     <button
                       type="button"
                       onClick={() => booking && generateTicketPdf(booking, qrDataUrl, "en")}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition cursor-pointer shadow"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition cursor-pointer shadow"
                     >
                       <Download className="h-3.5 w-3.5" /> Download PDF Ticket
                     </button>
@@ -325,7 +325,7 @@ function RedeemPage() {
                       download="Tangier-Latin-Festival-Programme-EN.pdf"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-amber-500/30 bg-zinc-900 text-amber-400 hover:bg-zinc-850 transition cursor-pointer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium bg-slate-900 text-amber-400 hover:bg-slate-800 transition cursor-pointer border border-amber-500/30"
                     >
                       <FileText className="h-3.5 w-3.5" /> Download Programme
                     </a>
@@ -334,21 +334,21 @@ function RedeemPage() {
                   <button
                     type="button"
                     onClick={downloadQr}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-zinc-900 text-zinc-400 hover:text-zinc-200 transition cursor-pointer mt-1"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition cursor-pointer mt-1"
                   >
                     <Sparkles className="h-3 w-3 text-amber-500" /> Save Image (PNG)
                   </button>
                 </div>
               ) : (
-                <div className="pt-4 border-t border-zinc-800/60 flex justify-center">
+                <div className="pt-4 border-t border-gray-100 flex justify-center">
                   <a
                     href="/Program-en.pdf"
                     download="Tangier-Latin-Festival-Programme-EN.pdf"
                     target="_blank"
                     rel="noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-amber-500/30 bg-zinc-900 text-amber-400 hover:bg-zinc-850 transition cursor-pointer shadow"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl text-sm font-semibold border border-amber-500/30 bg-slate-900 text-amber-400 hover:bg-slate-800 transition cursor-pointer shadow-md"
                   >
-                    <FileText className="h-4 w-4" /> Download Festival Programme (PDF)
+                    <FileText className="h-4 w-4 text-amber-400" /> Download Festival Programme (PDF)
                   </a>
                 </div>
               )}
@@ -361,7 +361,7 @@ function RedeemPage() {
           <div className="mt-6 text-center">
             <Link
               to="/"
-              className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition"
+              className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition font-medium"
             >
               <ArrowLeft className="h-4 w-4" />
               Visit the Festival Website
@@ -371,6 +371,7 @@ function RedeemPage() {
       </div>
     );
   }
+
 
   // ── Loading ──
   if (!invite || !pack) {
@@ -602,21 +603,8 @@ function RedeemPage() {
                 />
               </div>
             </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
-                Special Requests (optional)
-              </label>
-              <textarea
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Any dietary requirements, accessibility needs..."
-                rows={2}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
-              />
-            </div>
           </div>
+
 
           {/* Submit */}
           <button
