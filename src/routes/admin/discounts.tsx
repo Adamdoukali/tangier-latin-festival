@@ -17,6 +17,7 @@ import {
   Power,
   Package,
   Layers,
+  Coins,
 } from "lucide-react";
 import {
   getDiscountCodes,
