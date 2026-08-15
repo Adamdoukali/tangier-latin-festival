@@ -49,10 +49,12 @@ function RedeemPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
-    names: [""] as string[],
+    guests: [{ firstName: "", lastName: "" }],
     email: "",
     phone: "",
-    country: "",
+    country: "Morocco",
+    arrival: "",
+    departure: "",
     notes: "",
   });
 
@@ -60,7 +62,6 @@ function RedeemPage() {
   // both client names are required.
   const isTwoPersonPack = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
   const twoPerson = pack ? isTwoPersonPack(pack) : false;
-
 
   // Look up invite on load
   useEffect(() => {
@@ -116,7 +117,9 @@ function RedeemPage() {
     if (
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
       !form.email.trim() ||
-      !form.phone.trim()
+      !form.phone.trim() ||
+      !form.arrival.trim() ||
+      !form.departure.trim()
     )
       return;
 
@@ -133,10 +136,13 @@ function RedeemPage() {
       email: form.email,
       phone: form.phone,
       country: form.country,
+      arrivalDate: form.arrival,
+      departureDate: form.departure,
       numPeople: form.guests.length,
       danceLevel: "",
       notes: form.notes,
     });
+
     if (result.success) {
       setSuccess(true);
       setBooking(result.booking);
@@ -364,63 +370,63 @@ function RedeemPage() {
 
   // ── Registration Form ──
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 text-gray-900">
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-amber-400 mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs tracking-[0.25em] uppercase text-amber-600 mb-4 font-semibold">
             <Ticket className="h-3.5 w-3.5" />
             You've Been Invited
           </div>
-          <h1 className="font-display text-3xl md:text-4xl text-zinc-100 tracking-wide">
+          <h1 className="font-display text-3xl md:text-4xl text-gray-900 tracking-wide font-bold">
             Tangier International
             <br />
-            <span className="text-amber-400">Latin Festival</span>
+            <span className="text-amber-600">Latin Festival</span>
           </h1>
-          <p className="mt-3 text-sm text-zinc-400 flex items-center justify-center gap-2">
-            <Calendar className="h-4 w-4 text-amber-500/60" />
+          <p className="mt-3 text-sm text-gray-500 flex items-center justify-center gap-2 font-medium">
+            <Calendar className="h-4 w-4 text-amber-500" />
             January 07–11, 2027
-            <span className="text-zinc-700">·</span>
-            <MapPin className="h-4 w-4 text-amber-500/60" />
+            <span className="text-gray-300">·</span>
+            <MapPin className="h-4 w-4 text-amber-500" />
             Tangier, Morocco
           </p>
         </div>
 
         {/* Pack info card */}
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 mb-6 shadow-sm">
           <div className="flex items-start gap-4">
-            <div className="h-11 w-11 rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 grid place-items-center shrink-0">
-              <Package className="h-5 w-5 text-white" />
+            <div className="h-11 w-11 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
+              <Package className="h-5 w-5 text-slate-950" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="font-display text-lg text-zinc-100">{pack.name}</h2>
+                <h2 className="font-display text-lg text-gray-900 font-bold">{pack.name}</h2>
                 {pack.popular && (
-                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 text-[9px] tracking-widest uppercase font-medium">
-                    <Star className="h-2.5 w-2.5" /> Popular
+                  <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] tracking-widest uppercase font-bold">
+                    <Star className="h-2.5 w-2.5 fill-current" /> Popular
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-500">{pack.sub}</p>
+              <p className="text-xs text-gray-500">{pack.sub}</p>
               <div className="mt-2">
-                <span className="font-display text-2xl text-amber-400">{pack.price}</span>
-                <span className="text-xs text-zinc-500 ml-1">{pack.currency || "€"}</span>
+                <span className="font-display text-2xl text-amber-600 font-bold">{pack.price}</span>
+                <span className="text-xs text-gray-500 ml-1">{pack.currency || "€"}</span>
               </div>
               <ul className="mt-3 space-y-1">
                 {pack.features.map((f, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-xs text-zinc-400"
+                    className="flex items-start gap-2 text-xs text-gray-600"
                   >
-                    <Check className="h-3 w-3 text-amber-500/60 mt-0.5 shrink-0" />
+                    <Check className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
                     {f}
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-amber-500/10 text-center">
-            <code className="text-xs font-mono text-amber-400/60 bg-amber-500/10 px-2 py-0.5 rounded">
+          <div className="mt-3 pt-3 border-t border-amber-200 text-center">
+            <code className="text-xs font-mono text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md font-bold">
               Invite: {invite.code}
             </code>
           </div>
@@ -429,12 +435,12 @@ function RedeemPage() {
         {/* Registration form */}
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-zinc-800/60 bg-zinc-900/80 p-6"
+          className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-xl"
         >
-          <h3 className="font-display text-lg text-zinc-100 mb-1">
+          <h3 className="font-display text-xl text-gray-900 mb-1 font-bold">
             Complete Your Registration
           </h3>
-          <p className="text-xs text-zinc-500 mb-6">
+          <p className="text-xs text-gray-500 mb-6">
             Fill in your details to confirm your spot at the festival.
           </p>
 
@@ -443,14 +449,14 @@ function RedeemPage() {
             {form.guests.map((g, idx) => (
               <div key={idx} className="space-y-2">
                 {form.guests.length > 1 && (
-                  <p className="text-xs font-semibold tracking-wider uppercase text-amber-400">
+                  <p className="text-xs font-bold tracking-wider uppercase text-amber-600">
                     Guest {idx + 1}
                   </p>
                 )}
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
-                      First Name <span className="text-red-400">*</span>
+                    <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                      First Name <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="text"
@@ -458,12 +464,12 @@ function RedeemPage() {
                       value={g.firstName}
                       onChange={(e) => setGuestField(idx, "firstName", e.target.value)}
                       placeholder={idx === 0 ? "John" : "Jane"}
-                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
-                      Last Name <span className="text-red-400">*</span>
+                    <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                      Last Name <span className="text-red-600">*</span>
                     </label>
                     <input
                       type="text"
@@ -471,7 +477,7 @@ function RedeemPage() {
                       value={g.lastName}
                       onChange={(e) => setGuestField(idx, "lastName", e.target.value)}
                       placeholder="Doe"
-                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                 </div>
@@ -480,8 +486,8 @@ function RedeemPage() {
 
             {/* Email */}
             <div>
-              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
-                Email <span className="text-red-400">*</span>
+              <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                Email <span className="text-red-600">*</span>
               </label>
               <input
                 type="email"
@@ -489,31 +495,31 @@ function RedeemPage() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="your@email.com"
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
               />
             </div>
 
             {/* Phone & Country */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
-                  Phone <span className="text-red-400">*</span>
+                <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                  Phone <span className="text-red-600">*</span>
                 </label>
                 <div className="flex">
-                  <PhoneCountrySelect className="rounded-l-lg border border-zinc-700/60 border-r-0 bg-zinc-800/50 px-2 max-w-[110px] text-zinc-100 focus:outline-none focus:border-amber-500/50" />
+                  <PhoneCountrySelect className="rounded-l-lg border border-gray-300 border-r-0 bg-gray-50 px-2 max-w-[110px] text-gray-900 focus:outline-none focus:border-amber-500" />
                   <input
                     type="tel"
                     required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="Number"
-                    className="w-full rounded-r-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    className="w-full rounded-r-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
-                  Country <span className="text-red-400">*</span>
+                <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                  Country <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"
@@ -521,15 +527,46 @@ function RedeemPage() {
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Morocco"
-                  className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
 
+            {/* Arrival & Departure (Mandatory) */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                  Arrival Date (Going) <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={form.arrival}
+                  min="2027-01-01"
+                  max="2027-01-31"
+                  onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
+                  Departure Date (Return) <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={form.departure}
+                  min={form.arrival || "2027-01-01"}
+                  max="2027-02-15"
+                  onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+            </div>
 
             {/* Notes */}
             <div>
-              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+              <label className="block text-xs tracking-widest uppercase text-gray-700 mb-1.5 font-medium">
                 Special Requests (optional)
               </label>
               <textarea
@@ -537,7 +574,7 @@ function RedeemPage() {
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Any dietary requirements, accessibility needs..."
                 rows={2}
-                className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition resize-none"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
               />
             </div>
           </div>
@@ -545,12 +582,12 @@ function RedeemPage() {
           {/* Submit */}
           <button
             type="submit"
-            disabled={submitting || form.names.some((n) => !n.trim()) || !form.email.trim()}
-            className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-zinc-950 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-amber-500/20"
+            disabled={submitting}
+            className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-4 text-sm font-bold text-slate-950 uppercase tracking-wider hover:bg-amber-400 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md"
           >
             {submitting ? (
               <>
-                <div className="h-4 w-4 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" />
+                <div className="h-4 w-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
                 Processing...
               </>
             ) : (
@@ -566,7 +603,7 @@ function RedeemPage() {
         <div className="mt-6 text-center">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-300 transition"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition"
           >
             <ArrowLeft className="h-4 w-4" />
             Visit the Festival Website

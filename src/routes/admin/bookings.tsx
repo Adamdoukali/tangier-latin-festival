@@ -94,8 +94,9 @@ function AdminBookings() {
   };
 
   const handleCreate = async () => {
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim() || !form.packId) return;
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim() || !form.arrival.trim() || !form.departure.trim() || !form.packId) return;
     const pack = packs.find((p) => p.id === form.packId);
+
     const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     await addBooking({
       ...form,
@@ -667,29 +668,35 @@ function AdminBookings() {
               {/* Arrival & Departure */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Arrival Date
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Arrival Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
+                    required
                     value={form.arrival}
+                    min="2027-01-01"
+                    max="2027-01-31"
                     onChange={(e) => setForm({ ...form, arrival: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Departure Date
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Departure Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
+                    required
                     value={form.departure}
-                    min={form.arrival || undefined}
+                    min={form.arrival || "2027-01-01"}
+                    max="2027-02-15"
                     onChange={(e) => setForm({ ...form, departure: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition [color-scheme:dark]"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
+
 
               {/* Dance Level */}
               <div>

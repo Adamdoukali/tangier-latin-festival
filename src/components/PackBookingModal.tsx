@@ -159,13 +159,13 @@ export function PackBookingModal({
       }}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 backdrop-blur-2xl shadow-gold animate-in fade-in zoom-in-95 duration-300"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-gray-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-300 text-gray-900"
         style={{ animationFillMode: "both" }}
       >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-card/80 border border-border/40 hover:bg-card hover:border-primary/40 transition cursor-pointer text-muted-foreground hover:text-foreground"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 border border-gray-200 hover:bg-gray-200 transition cursor-pointer text-gray-600 hover:text-gray-900"
           aria-label="Close"
         >
           <X className="h-4 w-4" />
@@ -173,34 +173,33 @@ export function PackBookingModal({
 
         {/* Header with golden accent */}
         <div className="relative overflow-hidden px-8 pt-8 pb-6">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gold" />
-          <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
 
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <p className="text-xs tracking-[0.3em] uppercase text-primary font-semibold">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              <p className="text-xs tracking-[0.3em] uppercase text-amber-600 font-semibold">
                 {t("packFormTitle")}
               </p>
             </div>
-            <p className="text-sm text-muted-foreground">{t("packFormDesc")}</p>
+            <p className="text-sm text-gray-500">{t("packFormDesc")}</p>
           </div>
 
           {/* Selected pack badge */}
-          <div className="mt-5 flex items-center gap-4 p-4 rounded-2xl border border-primary/20 bg-primary/5">
-            <div className="h-12 w-12 rounded-xl bg-gold grid place-items-center shrink-0">
-              <span className="text-primary-foreground font-display text-lg font-bold">
+          <div className="mt-5 flex items-center gap-4 p-4 rounded-2xl border border-amber-200 bg-amber-50/70">
+            <div className="h-12 w-12 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
+              <span className="text-slate-950 font-display text-lg font-bold">
                 {pack.name.charAt(0)}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
+              <p className="text-xs tracking-[0.2em] uppercase text-gray-500 font-medium">
                 {t("packFormSelectedPack")}
               </p>
-              <p className="font-display text-xl truncate">
+              <p className="font-display text-xl truncate text-gray-900 font-semibold">
                 {translateDynamicText(pack.name, lang)}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-500 truncate">
                 {translateDynamicText(pack.sub, lang)}
               </p>
             </div>
@@ -210,25 +209,23 @@ export function PackBookingModal({
                   <span className="bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm mb-0.5">
                     -{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`}
                   </span>
-                  <span className="text-xs text-muted-foreground line-through block">
+                  <span className="text-xs text-gray-400 line-through block">
                     {pack.price} {pack.currency || "€"}
                   </span>
-                  <span className="font-display text-2xl text-gold font-bold">
-                    {finalPrice} <span className="text-xs font-normal text-muted-foreground">{pack.currency || "€"}</span>
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                    Save {appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`}
+                  <span className="font-display text-2xl text-amber-600 font-bold">
+                    {finalPrice} <span className="text-xs font-normal text-gray-500">{pack.currency || "€"}</span>
                   </span>
                 </div>
               ) : (
                 <div>
-                  <span className="font-display text-2xl text-gold">{pack.price}</span>
-                  <span className="text-xs text-muted-foreground block">{pack.currency || "€"}</span>
+                  <span className="font-display text-2xl text-amber-600 font-bold">{pack.price}</span>
+                  <span className="text-xs text-gray-500 block">{pack.currency || "€"}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
+
 
         {/* Form or Success */}
         {submitted ? (
@@ -385,33 +382,33 @@ export function PackBookingModal({
               <div className="space-y-4">
                 {Array.from({ length: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1) }).map((_, i) => (
                   <div key={i} className="space-y-2">
-                    <p className="text-xs font-semibold tracking-wider uppercase text-gold">
+                    <p className="text-xs font-bold tracking-wider uppercase text-amber-600">
                       {lang === "fr" ? `Invité ${i + 1}` : lang === "es" ? `Invitado ${i + 1}` : `Guest ${i + 1}`}
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                          <User className="h-3 w-3" />
+                        <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                          <User className="h-3.5 w-3.5 text-gray-400" />
                           {lang === "fr" ? "Prénom *" : lang === "es" ? "Nombre *" : "First Name *"}
                         </label>
                         <input
                           type="text"
                           name={`Guest ${i + 1} First Name`}
                           required
-                          className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                           placeholder={i === 0 ? "John" : "Jane"}
                         />
                       </div>
                       <div>
-                        <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                          <User className="h-3 w-3" />
+                        <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                          <User className="h-3.5 w-3.5 text-gray-400" />
                           {lang === "fr" ? "Nom *" : lang === "es" ? "Apellido *" : "Last Name *"}
                         </label>
                         <input
                           type="text"
                           name={`Guest ${i + 1} Last Name`}
                           required
-                          className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                           placeholder="Doe"
                         />
                       </div>
@@ -422,28 +419,28 @@ export function PackBookingModal({
             ) : (
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                    <User className="h-3 w-3" />
+                  <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                    <User className="h-3.5 w-3.5 text-gray-400" />
                     {lang === "fr" ? "Prénom *" : lang === "es" ? "Nombre *" : "First Name *"}
                   </label>
                   <input
                     type="text"
                     name="First Name"
                     required
-                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                     placeholder="John"
                   />
                 </div>
                 <div>
-                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                    <User className="h-3 w-3" />
+                  <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                    <User className="h-3.5 w-3.5 text-gray-400" />
                     {lang === "fr" ? "Nom *" : lang === "es" ? "Apellido *" : "Last Name *"}
                   </label>
                   <input
                     type="text"
                     name="Last Name"
                     required
-                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                     placeholder="Doe"
                   />
                 </div>
@@ -453,39 +450,46 @@ export function PackBookingModal({
             {/* Email & Phone */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Mail className="h-3 w-3" />
+                <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                  <Mail className="h-3.5 w-3.5 text-gray-400" />
                   {t("packFormEmail")} *
                 </label>
                 <input
                   type="email"
                   name="Email"
                   required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                   placeholder="john@example.com"
                 />
               </div>
               <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Phone className="h-3 w-3" />
+                <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                  <Phone className="h-3.5 w-3.5 text-gray-400" />
                   {t("packFormPhone")} *
                 </label>
                 <div className="flex items-center">
-                  <Select name="Phone Country Code" defaultValue="+212">
-                    <SelectTrigger className="w-[110px] rounded-l-xl rounded-r-none border border-border border-r-0 bg-card/40 px-3 py-3 h-[46px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none">
-                      <SelectValue placeholder="+212" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      <SelectGroup>
-                        {phoneOptions}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    name="Phone Country Code"
+                    defaultValue="+212"
+                    className="w-[110px] rounded-l-xl border border-gray-300 border-r-0 bg-gray-50 px-3 py-3 h-[46px] text-sm text-gray-900 focus:outline-none focus:border-amber-500 cursor-pointer font-medium"
+                  >
+                    <option value="+212">🇲🇦 +212</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+32">🇧🇪 +32</option>
+                    <option value="+41">🇨🇭 +41</option>
+                    <option value="+351">🇵🇹 +351</option>
+                    <option value="+31">🇳🇱 +31</option>
+                  </select>
                   <input
                     type="tel"
                     name="Phone"
                     required
-                    className="w-full rounded-r-xl border border-border bg-card/40 px-4 py-3 h-[46px] text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    className="w-full rounded-r-xl border border-gray-300 bg-white px-4 py-3 h-[46px] text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                     placeholder="6 XX XX XX XX"
                   />
                 </div>
@@ -494,71 +498,69 @@ export function PackBookingModal({
 
             {/* Country */}
             <div>
-              <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                <Globe className="h-3 w-3" />
-                {t("packFormCountry")}
+              <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                <Globe className="h-3.5 w-3.5 text-gray-400" />
+                {t("packFormCountry")} *
               </label>
-              <Select name="Country" defaultValue="Morocco">
-                <SelectTrigger className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 h-[46px] focus:ring-1 focus:ring-primary/20 shadow-none focus:outline-none">
-                  <SelectValue placeholder={t("packFormCountry")} />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  <SelectGroup>
-                    {countryOptions}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <select
+                name="Country"
+                required
+                defaultValue="Morocco"
+                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 h-[46px] text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition cursor-pointer"
+              >
+                {filteredCountries.map((c) => (
+                  <option key={c.code} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {/* Travel Dates (Optional) */}
+            {/* Travel Dates (Mandatory) */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Calendar className="h-3 w-3" />
-                  {lang === "fr" ? "Date d'arrivée (Aller)" : lang === "es" ? "Fecha de llegada (Ida)" : "Arrival Date (Going)"}
-                  <span className="text-[10px] text-muted-foreground/60 normal-case">
-                    ({lang === "fr" ? "optionnel" : lang === "es" ? "opcional" : "optional"})
-                  </span>
+                <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                  <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                  {lang === "fr" ? "Date d'arrivée (Aller) *" : lang === "es" ? "Fecha de llegada (Ida) *" : "Arrival Date (Going) *"}
                 </label>
                 <input
                   type="date"
                   name="Arrival Date"
+                  required
                   min="2027-01-01"
                   max="2027-01-31"
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
               <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <Calendar className="h-3 w-3" />
-                  {lang === "fr" ? "Date de départ (Retour)" : lang === "es" ? "Fecha de salida (Vuelta)" : "Departure Date (Return)"}
-                  <span className="text-[10px] text-muted-foreground/60 normal-case">
-                    ({lang === "fr" ? "optionnel" : lang === "es" ? "opcional" : "optional"})
-                  </span>
+                <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
+                  <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                  {lang === "fr" ? "Date de départ (Retour) *" : lang === "es" ? "Fecha de salida (Vuelta) *" : "Departure Date (Return) *"}
                 </label>
                 <input
                   type="date"
                   name="Departure Date"
+                  required
                   min="2027-01-01"
                   max="2027-02-15"
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition text-foreground"
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
             </div>
 
             {/* Promo / School Code */}
-            <div className="rounded-xl border border-border/80 bg-card/40 p-4 space-y-2.5">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
               <div className="flex items-start gap-2.5">
-                <Tag className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-foreground">
+                  <p className="text-xs font-semibold text-gray-900">
                     {lang === "fr"
                       ? "Vous faites un show avec votre école ?"
                       : lang === "es"
                       ? "¿Actúas en un show con tu escuela?"
                       : "Performing a show with your dance school?"}
                   </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                  <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
                     {lang === "fr"
                       ? "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit."
                       : lang === "es"
@@ -579,13 +581,13 @@ export function PackBookingModal({
                       ? "Código confidencial"
                       : "Confidential code"
                   }
-                  className="flex-1 rounded-xl border border-border bg-card/60 px-3.5 py-2.5 font-mono text-sm uppercase focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  className="flex-1 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 font-mono text-sm uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition placeholder:text-gray-400"
                 />
                 <button
                   type="button"
                   onClick={handleApplyDiscount}
                   disabled={validatingCode || !discountInput.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-gold/90 hover:bg-gold text-primary-foreground font-semibold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
                 >
                   {validatingCode ? "..." : lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply"}
                 </button>
@@ -594,38 +596,38 @@ export function PackBookingModal({
                 <div
                   className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
                     discountMsg.success
-                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
-                      : "bg-destructive/10 border border-destructive/20 text-destructive"
+                      ? "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                      : "bg-red-50 border border-red-200 text-red-700"
                   }`}
                 >
                   {discountMsg.success ? (
-                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                    <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
                   ) : (
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
                   )}
                   <span>{discountMsg.text}</span>
                 </div>
               )}
             </div>
 
-
             {/* Submit */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-xl bg-gold px-4 py-4 text-sm font-bold tracking-widest text-primary-foreground uppercase hover:opacity-90 transition shadow-gold cursor-pointer disabled:opacity-70 flex items-center justify-center"
+              className="w-full rounded-xl bg-amber-500 py-4 font-bold text-slate-950 uppercase tracking-wider text-sm hover:bg-amber-400 transition cursor-pointer shadow-md disabled:opacity-50 mt-2"
             >
-              {isSubmitting ? "Sending..." : t("packFormSubmitBtn")}
+              {isSubmitting
+                ? t("packFormSubmitting")
+                : `${t("packFormSubmit")} (${finalPrice} ${pack.currency || "€"})`}
             </button>
 
             {error && (
-              <p className="text-xs text-destructive text-center font-semibold">
-                Something went wrong. Please try again or contact us at
-                contact@tangierlatinfestival.com
+              <p className="text-center text-xs text-red-600 mt-2 font-medium">
+                {t("packFormError")}
               </p>
             )}
 
-            <p className="text-center text-[10px] text-muted-foreground/60 tracking-wide">
+            <p className="text-center text-[10px] text-gray-400 tracking-wide pt-2">
               contact@tangierlatinfestival.com · +212 6 64 01 02 79
             </p>
           </form>

@@ -208,9 +208,12 @@ function BookPage() {
       !selected ||
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
       !form.email.trim() ||
-      !form.phone.trim()
+      !form.phone.trim() ||
+      !form.arrival.trim() ||
+      !form.departure.trim()
     )
       return;
+
     setSubmitting(true);
     setError("");
 
@@ -514,13 +517,12 @@ function BookPage() {
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}
-                  <span className="text-gray-400 text-[10px] ml-1 normal-case">
-                    ({tr("optional", "optionnel", "opcional")})
-                  </span>
+                  {tr("Arrival Date (Going)", "Date d'arrivée (Aller)", "Fecha de llegada (Ida)")}{" "}
+                  <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="date"
+                  required
                   value={form.arrival}
                   min="2027-01-01"
                   max="2027-01-31"
@@ -530,13 +532,12 @@ function BookPage() {
               </div>
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Departure Date", "Date de départ", "Fecha de salida")}
-                  <span className="text-gray-400 text-[10px] ml-1 normal-case">
-                    ({tr("optional", "optionnel", "opcional")})
-                  </span>
+                  {tr("Departure Date (Return)", "Date de départ (Vuelta)", "Fecha de salida (Vuelta)")}{" "}
+                  <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="date"
+                  required
                   value={form.departure}
                   min={form.arrival || "2027-01-01"}
                   max="2027-02-15"
@@ -545,6 +546,7 @@ function BookPage() {
                 />
               </div>
             </div>
+
 
             {/* Promo / School Code */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
