@@ -704,26 +704,39 @@ function BookPage() {
       </div>
 
       {/* PROMO / DISCOUNT CODE BAR ON STEP 1 */}
-      <div className="max-w-md mx-auto mb-8 rounded-xl border border-amber-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <Tag className="h-4 w-4 text-amber-500" />
-          <span className="text-xs font-bold tracking-widest uppercase text-gray-700">
-            {tr("Have a Discount Code?", "Code Promo / Réduction ?", "¿Tienes un código de descuento?")}
-          </span>
+      <div className="max-w-md mx-auto mb-8 rounded-xl border border-amber-200 bg-white p-4 shadow-sm space-y-2">
+        <div className="flex items-start gap-2.5">
+          <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-bold text-gray-900">
+              {tr(
+                "Performing a show with your dance school?",
+                "Vous faites un show avec votre école ?",
+                "¿Actúas en un show con tu escuela?"
+              )}
+            </p>
+            <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
+              {tr(
+                "Enter your school's confidential code to benefit from the discounted rate.",
+                "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit.",
+                "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
+              )}
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-1">
           <input
             type="text"
             value={discountInput}
             onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
-            placeholder="e.g. VIP50"
-            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition"
+            placeholder={tr("Confidential code", "Code confidentiel", "Código confidencial")}
+            className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition placeholder:text-gray-400"
           />
           <button
             type="button"
             onClick={handleApplyDiscount}
             disabled={validatingCode || !discountInput.trim()}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-xs rounded-lg transition cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition cursor-pointer disabled:opacity-50 uppercase tracking-wider"
           >
             {validatingCode ? "..." : tr("Apply", "Appliquer", "Aplicar")}
           </button>
