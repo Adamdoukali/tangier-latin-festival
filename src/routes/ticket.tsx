@@ -161,7 +161,7 @@ function TicketPage() {
 
             {/* Ticket card */}
             <div className="mt-4 rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
-              {qr && (
+              {booking.status !== "pending" && qr && (
                 <div className="flex justify-center mb-5">
                   <div className="rounded-xl border border-gray-200 bg-zinc-100 p-3">
                     <img src={qr} alt="Ticket QR" className="w-52 h-52" />
@@ -221,27 +221,29 @@ function TicketPage() {
 
             {/* Action Buttons: PDF Ticket Download & Programme Download */}
             <div className="mt-5 space-y-3">
-              {/* PDF Ticket Download */}
-              <button
-                type="button"
-                onClick={() => generateTicketPdf(booking, qr, lang)}
-                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-semibold py-3.5 px-4 shadow-md hover:brightness-110 active:scale-[0.99] transition text-sm"
-              >
-                <Download className="h-4.5 w-4.5" />
-                {tr(
-                  "Download PDF Ticket (QR Code)",
-                  "Télécharger le Billet PDF (Code QR)",
-                  "Descargar Entrada PDF (Código QR)"
-                )}
-              </button>
+              {/* PDF Ticket Download — Only when confirmed */}
+              {booking.status !== "pending" && (
+                <button
+                  type="button"
+                  onClick={() => generateTicketPdf(booking, qr, lang)}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-semibold py-3.5 px-4 shadow-md hover:brightness-110 active:scale-[0.99] transition text-sm"
+                >
+                  <Download className="h-4.5 w-4.5" />
+                  {tr(
+                    "Download PDF Ticket (QR Code)",
+                    "Télécharger le Billet PDF (Code QR)",
+                    "Descargar Entrada PDF (Código QR)"
+                  )}
+                </button>
+              )}
 
-              {/* Festival Programme Download */}
+              {/* Festival Programme Download — Always Available */}
               <a
                 href={`/Program-${lang === "fr" ? "fr" : lang === "es" ? "es" : "en"}.pdf`}
                 download={`Tangier-Latin-Festival-Programme-${lang.toUpperCase()}.pdf`}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-semibold py-3.5 px-4 border border-amber-500/30 shadow-md transition text-sm"
+                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-semibold py-3.5 px-4 border border-amber-500/30 shadow-md transition text-sm cursor-pointer"
               >
                 <FileText className="h-4.5 w-4.5 text-amber-400" />
                 {tr(
@@ -251,12 +253,12 @@ function TicketPage() {
                 )}
               </a>
 
-              {/* Save QR Image Backup */}
-              {qr && (
+              {/* Save QR Image Backup — Only when confirmed */}
+              {booking.status !== "pending" && qr && (
                 <a
                   href={qr}
                   download={`Ticket-${booking.ticketCode}-QR.png`}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-4 transition text-xs"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-4 transition text-xs cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                   {tr(
@@ -267,6 +269,7 @@ function TicketPage() {
                 </a>
               )}
             </div>
+
           </>
         )}
 

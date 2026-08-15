@@ -140,8 +140,9 @@ export const translations = {
     packFormNotes: "Special Requests (optional)",
     packFormSubmitBtn: "Confirm Reservation →",
     packFormSuccess:
-      "Your booking request has been received — your status is now Pending. Our team will respond within 24 hours to confirm your booking and send you the payment details.",
+      "Please check your email box to track your booking. Our team will respond within 48 hours to confirm your booking.",
     packFormClose: "Close",
+
 
     // Testimonials Home Section
     testimonialsSubtitle: "Testimonials",
@@ -486,8 +487,9 @@ export const translations = {
     packFormNotes: "Demandes spéciales (optionnel)",
     packFormSubmitBtn: "Confirmer la réservation →",
     packFormSuccess:
-      "Votre demande de réservation a bien été reçue — votre statut est maintenant En attente. Notre équipe vous répondra sous 24 heures pour confirmer votre réservation et vous envoyer les détails de paiement.",
+      "Veuillez consulter votre boîte e-mail pour suivre votre réservation. Notre équipe vous répondra sous 48 heures pour confirmer votre réservation.",
     packFormClose: "Fermer",
+
 
     // Testimonials Home Section
     testimonialsSubtitle: "Témoignages",
@@ -817,8 +819,9 @@ export const translations = {
     packFormNotes: "Solicitudes especiales (opcional)",
     packFormSubmitBtn: "Confirmar reserva →",
     packFormSuccess:
-      "¡Tu solicitud de reserva ha sido recibida — tu estado ahora es Pendiente. Nuestro equipo te responderá en un plazo de 24 horas para confirmar tu reserva y enviarte los detalles de pago.",
+      "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva.",
     packFormClose: "Cerrar",
+
 
     // Testimonials Home Section
     testimonialsSubtitle: "Testimonios",

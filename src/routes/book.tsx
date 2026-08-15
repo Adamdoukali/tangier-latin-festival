@@ -356,13 +356,14 @@ function BookPage() {
               </a>
             </div>
           )}
-          <p className="mt-5 text-sm text-gray-600 leading-relaxed">
+          <p className="mt-5 text-sm text-gray-600 leading-relaxed font-medium">
             {tr(
-              "Our team will respond within 24 hours to confirm your booking and send you the payment details by email.",
-              "Notre équipe vous répondra sous 24 heures pour confirmer votre réservation et vous envoyer les détails de paiement par email.",
-              "Nuestro equipo te responderá en un plazo de 24 horas para confirmar tu reserva y enviarte los detalles de pago por correo."
+              "Please check your email box to track your booking. Our team will respond within 48 hours to confirm your booking.",
+              "Veuillez consulter votre boîte e-mail pour suivre votre réservation. Notre équipe vous répondra sous 48 heures pour confirmer votre réservation.",
+              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva."
             )}
           </p>
+
           <Link
             to="/"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition"
@@ -679,17 +680,18 @@ function BookPage() {
             ) : (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                {tr("Send Booking Request", "Envoyer la demande", "Enviar solicitud")}
+                {tr("Confirm Reservation", "Confirmer la réservation", "Confirmar reserva")}
               </>
             )}
           </button>
-          <p className="mt-3 text-center text-[11px] text-gray-400">
+          <p className="mt-3 text-center text-[11px] text-gray-500 font-medium">
             {tr(
-              "No payment now — we respond within 24 hours with confirmation and payment details.",
-              "Aucun paiement maintenant — réponse sous 24 heures avec confirmation et détails de paiement.",
-              "Sin pago ahora — respondemos en 24 horas con la confirmación y los detalles de pago."
+              "Please check your email box to track your booking. Our team will respond within 48 hours to confirm your booking.",
+              "Veuillez consulter votre boîte e-mail pour suivre votre réservation. Notre équipe vous répondra sous 48 heures pour confirmer votre réservation.",
+              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva."
             )}
           </p>
+
         </form>
       </Shell>
     );

@@ -659,7 +659,12 @@ export function PackBookingModal({
             >
               {isSubmitting
                 ? t("packFormSubmitting")
-                : `${t("packFormSubmit")} (${finalTotalPrice} ${currency})`}
+                : lang === "fr"
+                ? "CONFIRMER LA RÉSERVATION"
+                : lang === "es"
+                ? "CONFIRMAR RESERVA"
+                : "CONFIRM RESERVATION"}
+
 
             </button>
 

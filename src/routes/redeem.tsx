@@ -297,8 +297,8 @@ function RedeemPage() {
                 </div>
               </div>
 
-              {/* QR Code */}
-              {qrDataUrl && (
+              {/* QR Code & PDF Ticket — Only when confirmed */}
+              {booking.status !== "pending" && qrDataUrl ? (
                 <div className="flex flex-col items-center gap-3 pt-4 border-t border-zinc-800/60">
                   <div className="rounded-xl border border-zinc-700/30 bg-zinc-100 p-3 inline-block">
                     <img
@@ -339,7 +339,20 @@ function RedeemPage() {
                     <Sparkles className="h-3 w-3 text-amber-500" /> Save Image (PNG)
                   </button>
                 </div>
+              ) : (
+                <div className="pt-4 border-t border-zinc-800/60 flex justify-center">
+                  <a
+                    href="/Program-en.pdf"
+                    download="Tangier-Latin-Festival-Programme-EN.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border border-amber-500/30 bg-zinc-900 text-amber-400 hover:bg-zinc-850 transition cursor-pointer shadow"
+                  >
+                    <FileText className="h-4 w-4" /> Download Festival Programme (PDF)
+                  </a>
+                </div>
               )}
+
             </div>
           </div>
 
