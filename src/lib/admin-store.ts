@@ -2301,7 +2301,7 @@ export function formatMoneyPair(m: Money): string {
 /** Rate used only to state a partner's figures in THEIR currency
  *  (a euro partner sees euros, a dirham partner sees dirhams).
  *  Edit this single value if the rate moves. */
-export const EUR_TO_MAD = 11;
+export const EUR_TO_MAD = 10;
 
 /** The one currency a partner is accounted in — the currency of their
  *  commission deal. All their amounts are shown in it. */

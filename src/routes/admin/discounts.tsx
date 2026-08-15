@@ -25,6 +25,7 @@ import {
   updateDiscountCode,
   deleteDiscountCode,
   getPacks,
+  EUR_TO_MAD,
   type DiscountCode,
   type DiscountType,
   type DiscountApplyScope,
@@ -321,8 +322,8 @@ function AdminDiscounts() {
                 </tr>
               ) : (
                 filtered.map((d) => {
-                  const madAmount = Math.round(d.discountAmount * 11);
-                  const madOverride = Math.round((d.overridePrice ?? 0) * 11);
+                  const madAmount = Math.round(d.discountAmount * EUR_TO_MAD);
+                  const madOverride = Math.round((d.overridePrice ?? 0) * EUR_TO_MAD);
                   const scopeLabel =
                     d.applyScope === "fixed_price"
                       ? `Fixed €${d.overridePrice ?? 0} Rate (${madOverride} MAD)`
@@ -559,7 +560,7 @@ function AdminDiscounts() {
                       />
                     </div>
                     <p className="text-[11px] text-gray-600 mt-1 font-medium">
-                      Exact rate: <strong className="text-amber-800">€{form.overridePrice || 0}</strong> = <strong className="text-amber-800">{Math.round(Number(form.overridePrice || 0) * 11)} MAD</strong>
+                      Exact rate: <strong className="text-amber-800">€{form.overridePrice || 0}</strong> = <strong className="text-amber-800">{Math.round(Number(form.overridePrice || 0) * EUR_TO_MAD)} MAD</strong>
                     </p>
                   </div>
                 ) : (
@@ -581,7 +582,7 @@ function AdminDiscounts() {
                       />
                       {form.discountType === "fixed" && (
                         <p className="text-[11px] text-gray-600 mt-1 font-medium">
-                          <strong className="text-amber-800">€{form.discountAmount || 0}</strong> = <strong className="text-amber-800">{Math.round((form.discountAmount || 0) * 11)} MAD</strong>
+                          <strong className="text-amber-800">€{form.discountAmount || 0}</strong> = <strong className="text-amber-800">{Math.round((form.discountAmount || 0) * EUR_TO_MAD)} MAD</strong>
                         </p>
                       )}
                     </div>
