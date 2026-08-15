@@ -111,8 +111,14 @@ async function resendSend(
 export const sendEmailViaResend = createServerFn({ method: "POST" })
   .validator((data: EmailPayload) => data)
   .handler(async ({ data }) => {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) return { sent: false, reason: "not-configured" as const };
+    const apiKey =
+      process.env.RESEND_API_KEY ||
+      process.env.VITE_RESEND_API_KEY ||
+      (typeof import.meta !== "undefined" && import.meta.env?.VITE_RESEND_API_KEY);
+    if (!apiKey) {
+      console.warn("[email-server] RESEND_API_KEY is not configured in server environment variables.");
+      return { sent: false, reason: "not-configured" as const };
+    }
 
     // QR attachment for confirmed tickets
     let attachments: Array<{ filename: string; content: string }> | undefined;
