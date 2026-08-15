@@ -136,22 +136,23 @@ function BookPage() {
   }, [selected]);
 
   const handleApplyDiscount = async () => {
-    if (!discountInput.trim()) return;
+    if (!discountInput.trim() || !selected) return;
     setValidatingCode(true);
     setDiscountMsg(null);
-    const baseP = selected ? parseInt(selected.price, 10) || 0 : 0;
-    const result = await validateDiscountCode(discountInput, baseP);
-    if (result.valid && result.discount) {
+    const count = getGuestCount(selected);
+    const singleP = parseInt(selected.price, 10) || 0;
+    const totalP = singleP * count;
+    const result = await validateDiscountCode(discountInput, totalP);
+    if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
+      setDiscountAmount(result.discountAmount);
+      setDiscountMsg({
+        success: true,
+        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discountAmount}`})!`,
+      });
       if (typeof window !== "undefined") {
         sessionStorage.setItem("tlf_discount_code", result.discount.code);
       }
-      const amt = calculateDiscountAmount(result.discount, baseP);
-      setDiscountAmount(amt);
-      setDiscountMsg({
-        success: true,
-        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discount.discountAmount}`})!`,
-      });
     } else {
       setAppliedDiscount(null);
       setDiscountAmount(0);
@@ -190,11 +191,14 @@ function BookPage() {
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
     }));
     if (appliedDiscount) {
-      const baseP = parseInt(p.price, 10) || 0;
-      setDiscountAmount(calculateDiscountAmount(appliedDiscount, baseP));
+      const singleP = parseInt(p.price, 10) || 0;
+      const totalP = singleP * count;
+      setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP));
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+
 
   const setGuestField = (idx: number, field: "firstName" | "lastName", value: string) =>
     setForm((f) => ({
@@ -364,7 +368,11 @@ function BookPage() {
   // ── Step 2: registration form ──
   if (selected) {
     const guestCount = getGuestCount(selected);
-    const unit = priceUnitLabel(selected, L);
+    const singlePrice = parseInt(selected.price, 10) || 0;
+    const totalBasePrice = singlePrice * guestCount;
+    const currency = selected.currency || "€";
+    const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount);
+
     return (
       <Shell>
         <button
@@ -375,44 +383,60 @@ function BookPage() {
           {tr("Choose another pack", "Choisir un autre pack", "Elegir otro pack")}
         </button>
 
-        {/* Selected pack summary */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 mb-6 max-w-lg mx-auto">
+        {/* Selected pack summary & pricing breakdown */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 mb-6 max-w-lg mx-auto shadow-sm space-y-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-lg text-gray-900">
+              <h2 className="font-display text-lg text-gray-900 font-bold">
                 {translateDynamicText(selected.name, L)}
               </h2>
               <p className="text-xs text-gray-500">{translateDynamicText(selected.sub, L)}</p>
             </div>
             <div className="text-right">
-              {discountAmount > 0 ? (
-                <div>
-                  <span className="text-xs text-gray-400 line-through block">
-                    {selected.price} {selected.currency || "€"}
-                  </span>
-                  <span className="font-display text-2xl text-amber-600 font-bold">
-                    {Math.max(0, (parseInt(selected.price, 10) || 0) - discountAmount)}
-                    <span className="text-xs text-gray-600 ml-1">
-                      {selected.currency || "€"}
-                      {unit ? ` / ${unit}` : ""}
-                    </span>
-                  </span>
-                  <span className="text-[10px] text-emerald-600 font-bold block uppercase tracking-wider">
-                    Discount Applied (-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`})
-                  </span>
-                </div>
-              ) : (
-                <p className="font-display text-2xl text-amber-600 whitespace-nowrap">
-                  {selected.price}
-                  <span className="text-xs text-gray-500 ml-1">
-                    {selected.currency || "€"}
-                    {unit ? ` / ${unit}` : ""}
-                  </span>
-                </p>
-              )}
+              <span className="text-xs font-semibold text-amber-600 block">
+                {singlePrice > 0 ? `${singlePrice} ${currency} / ${L === "fr" ? "pers." : L === "es" ? "pers." : "person"}` : selected.price}
+              </span>
+            </div>
+          </div>
+
+          {/* Detailed Per-Person & Total Breakdown */}
+          <div className="pt-3 border-t border-amber-200/80 space-y-1.5 text-xs text-gray-700 font-medium">
+            <div className="flex justify-between items-center text-gray-600">
+              <span>{L === "fr" ? "Prix par personne :" : L === "es" ? "Precio por persona:" : "Price per person:"}</span>
+              <span className="font-semibold text-gray-900">{singlePrice} {currency}</span>
+            </div>
+
+            {guestCount > 1 && (
+              <div className="space-y-1 py-1">
+                {Array.from({ length: guestCount }).map((_, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
+                    <span>{L === "fr" ? `Invité ${idx + 1}` : L === "es" ? `Invitado ${idx + 1}` : `Guest ${idx + 1}`}</span>
+                    <span>{singlePrice} {currency}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-emerald-700 font-semibold">
+                <span>{L === "fr" ? "Réduction appliquée :" : L === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
+                <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${discountAmount} ${currency}`}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-2 border-t border-amber-300 font-bold text-sm text-gray-900">
+              <span>
+                {guestCount > 1
+                  ? (L === "fr" ? `Montant Total (${guestCount} personnes)` : L === "es" ? `Monto Total (${guestCount} personas)` : `Total Amount (${guestCount} guests)`)
+                  : (L === "fr" ? "Montant Total" : L === "es" ? "Monto Total" : "Total Amount")}
+              </span>
+              <span className="font-extrabold text-lg text-amber-600">
+                {finalTotalPrice} {currency}
+              </span>
             </div>
           </div>
         </div>
+
 
         <form
           onSubmit={handleSubmit}
@@ -627,7 +651,15 @@ function BookPage() {
 
           <button
             type="submit"
-            disabled={submitting || form.names.some((n) => !n.trim()) || !form.email.trim()}
+            disabled={
+              submitting ||
+              form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
+              !form.email.trim() ||
+              !form.phone.trim() ||
+              !form.arrival.trim() ||
+              !form.departure.trim()
+            }
+
             className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-zinc-950 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-amber-200"
           >
             {submitting ? (

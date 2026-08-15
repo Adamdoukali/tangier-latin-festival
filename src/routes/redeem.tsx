@@ -369,7 +369,13 @@ function RedeemPage() {
   }
 
   // ── Registration Form ──
+  const guestCount = form.guests.length;
+  const singlePrice = parseInt(pack.price, 10) || 0;
+  const totalBasePrice = singlePrice * guestCount;
+  const currency = pack.currency || "€";
+
   return (
+
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12 text-gray-900">
       <div className="max-w-lg w-full">
         {/* Header */}
@@ -392,8 +398,8 @@ function RedeemPage() {
           </p>
         </div>
 
-        {/* Pack info card */}
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 mb-6 shadow-sm">
+        {/* Pack info card & pricing breakdown */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 mb-6 shadow-sm space-y-3">
           <div className="flex items-start gap-4">
             <div className="h-11 w-11 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
               <Package className="h-5 w-5 text-slate-950" />
@@ -408,29 +414,49 @@ function RedeemPage() {
                 )}
               </div>
               <p className="text-xs text-gray-500">{pack.sub}</p>
-              <div className="mt-2">
-                <span className="font-display text-2xl text-amber-600 font-bold">{pack.price}</span>
-                <span className="text-xs text-gray-500 ml-1">{pack.currency || "€"}</span>
-              </div>
-              <ul className="mt-3 space-y-1">
-                {pack.features.map((f, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-xs text-gray-600"
-                  >
-                    <Check className="h-3.5 w-3.5 text-amber-500 mt-0.5 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-xs font-semibold text-amber-600 block">
+                {singlePrice > 0 ? `${singlePrice} ${currency} / person` : pack.price}
+              </span>
             </div>
           </div>
+
+          {/* Detailed Breakdown */}
+          <div className="pt-3 border-t border-amber-200/80 space-y-1.5 text-xs text-gray-700 font-medium">
+            <div className="flex justify-between items-center text-gray-600">
+              <span>Price per person:</span>
+              <span className="font-semibold text-gray-900">{singlePrice} {currency}</span>
+            </div>
+
+            {form.guests.length > 1 && (
+              <div className="space-y-1 py-1">
+                {form.guests.map((_, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
+                    <span>Guest {idx + 1}</span>
+                    <span>{singlePrice} {currency}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-2 border-t border-amber-300 font-bold text-sm text-gray-900">
+              <span>
+                {form.guests.length > 1 ? `Total Amount (${form.guests.length} guests)` : "Total Amount"}
+              </span>
+              <span className="font-extrabold text-lg text-amber-600">
+                {totalBasePrice} {currency}
+              </span>
+            </div>
+          </div>
+
           <div className="mt-3 pt-3 border-t border-amber-200 text-center">
             <code className="text-xs font-mono text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md font-bold">
               Invite: {invite.code}
             </code>
           </div>
         </div>
+
 
         {/* Registration form */}
         <form

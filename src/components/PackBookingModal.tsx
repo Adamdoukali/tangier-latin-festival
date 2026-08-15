@@ -51,9 +51,13 @@ export function PackBookingModal({
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(
     initialDiscount || null
   );
-  const basePrice = parseInt(pack.price, 10) || 0;
+  const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
+  const singlePrice = parseInt(pack.price, 10) || 0;
+  const totalBasePrice = singlePrice * numGuests;
+  const currency = pack.currency || "€";
+
   const [discountAmount, setDiscountAmount] = useState(
-    initialDiscount ? calculateDiscountAmount(initialDiscount, basePrice) : 0
+    initialDiscount ? calculateDiscountAmount(initialDiscount, totalBasePrice) : 0
   );
   const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(
     initialDiscount
@@ -62,7 +66,7 @@ export function PackBookingModal({
           text: `Discount code "${initialDiscount.code}" applied (-${
             initialDiscount.discountType === "percent"
               ? `${initialDiscount.discountAmount}%`
-              : `€${calculateDiscountAmount(initialDiscount, basePrice)}`
+              : `€${calculateDiscountAmount(initialDiscount, totalBasePrice)}`
           })!`,
         }
       : null
@@ -71,7 +75,7 @@ export function PackBookingModal({
 
   useEffect(() => {
     if (initialDiscount) {
-      const amt = calculateDiscountAmount(initialDiscount, basePrice);
+      const amt = calculateDiscountAmount(initialDiscount, totalBasePrice);
       setAppliedDiscount(initialDiscount);
       setDiscountAmount(amt);
       setDiscountInput(initialDiscount.code);
@@ -84,7 +88,7 @@ export function PackBookingModal({
         })!`,
       });
     } else if (initialDiscountCode) {
-      validateDiscountCode(initialDiscountCode, basePrice).then((res) => {
+      validateDiscountCode(initialDiscountCode, totalBasePrice).then((res) => {
         if (res.valid && res.discount && res.discountAmount != null) {
           setAppliedDiscount(res.discount);
           setDiscountAmount(res.discountAmount);
@@ -100,15 +104,15 @@ export function PackBookingModal({
         }
       });
     }
-  }, [initialDiscount, initialDiscountCode, basePrice]);
+  }, [initialDiscount, initialDiscountCode, totalBasePrice]);
 
-  const finalPrice = Math.max(0, basePrice - discountAmount);
+  const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount);
 
   const handleApplyDiscount = async () => {
     if (!discountInput.trim()) return;
     setValidatingCode(true);
     setDiscountMsg(null);
-    const result = await validateDiscountCode(discountInput, basePrice);
+    const result = await validateDiscountCode(discountInput, totalBasePrice);
     if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
@@ -185,43 +189,67 @@ export function PackBookingModal({
             <p className="text-sm text-gray-500">{t("packFormDesc")}</p>
           </div>
 
-          {/* Selected pack badge */}
-          <div className="mt-5 flex items-center gap-4 p-4 rounded-2xl border border-amber-200 bg-amber-50/70">
-            <div className="h-12 w-12 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
-              <span className="text-slate-950 font-display text-lg font-bold">
-                {pack.name.charAt(0)}
-              </span>
+          {/* Selected pack badge & pricing breakdown */}
+          <div className="mt-5 p-4 rounded-2xl border border-amber-200 bg-amber-50/70 space-y-3">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
+                <span className="text-slate-950 font-display text-lg font-bold">
+                  {pack.name.charAt(0)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs tracking-[0.2em] uppercase text-gray-500 font-medium">
+                  {t("packFormSelectedPack")}
+                </p>
+                <p className="font-display text-xl truncate text-gray-900 font-semibold">
+                  {translateDynamicText(pack.name, lang)}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {translateDynamicText(pack.sub, lang)}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-xs font-semibold text-amber-600 block">
+                  {singlePrice > 0 ? `${singlePrice} ${currency} / ${lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}` : pack.price}
+                </span>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs tracking-[0.2em] uppercase text-gray-500 font-medium">
-                {t("packFormSelectedPack")}
-              </p>
-              <p className="font-display text-xl truncate text-gray-900 font-semibold">
-                {translateDynamicText(pack.name, lang)}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {translateDynamicText(pack.sub, lang)}
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              {discountAmount > 0 ? (
-                <div className="flex flex-col items-end">
-                  <span className="bg-gradient-to-r from-red-600 to-rose-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm mb-0.5">
-                    -{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `€${discountAmount}`}
-                  </span>
-                  <span className="text-xs text-gray-400 line-through block">
-                    {pack.price} {pack.currency || "€"}
-                  </span>
-                  <span className="font-display text-2xl text-amber-600 font-bold">
-                    {finalPrice} <span className="text-xs font-normal text-gray-500">{pack.currency || "€"}</span>
-                  </span>
-                </div>
-              ) : (
-                <div>
-                  <span className="font-display text-2xl text-amber-600 font-bold">{pack.price}</span>
-                  <span className="text-xs text-gray-500 block">{pack.currency || "€"}</span>
+
+            {/* Detailed Per-Person & Total Breakdown */}
+            <div className="pt-3 border-t border-amber-200/80 space-y-1.5 text-xs text-gray-700 font-medium">
+              <div className="flex justify-between items-center text-gray-600">
+                <span>{lang === "fr" ? "Prix par personne :" : lang === "es" ? "Precio por persona:" : "Price per person:"}</span>
+                <span className="font-semibold text-gray-900">{singlePrice} {currency}</span>
+              </div>
+
+              {numGuests > 1 && (
+                <div className="space-y-1 py-1">
+                  {Array.from({ length: numGuests }).map((_, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
+                      <span>{lang === "fr" ? `Invité ${idx + 1}` : lang === "es" ? `Invitado ${idx + 1}` : `Guest ${idx + 1}`}</span>
+                      <span>{singlePrice} {currency}</span>
+                    </div>
+                  ))}
                 </div>
               )}
+
+              {discountAmount > 0 && (
+                <div className="flex justify-between items-center text-emerald-700 font-semibold">
+                  <span>{lang === "fr" ? "Réduction appliquée :" : lang === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
+                  <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${discountAmount} ${currency}`}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center pt-2 border-t border-amber-300 font-bold text-sm text-gray-900">
+                <span>
+                  {numGuests > 1
+                    ? (lang === "fr" ? `Montant Total (${numGuests} personnes)` : lang === "es" ? `Monto Total (${numGuests} personas)` : `Total Amount (${numGuests} guests)`)
+                    : (lang === "fr" ? "Montant Total" : lang === "es" ? "Monto Total" : "Total Amount")}
+                </span>
+                <span className="font-extrabold text-lg text-amber-600">
+                  {finalTotalPrice} {currency}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -618,7 +646,8 @@ export function PackBookingModal({
             >
               {isSubmitting
                 ? t("packFormSubmitting")
-                : `${t("packFormSubmit")} (${finalPrice} ${pack.currency || "€"})`}
+                : `${t("packFormSubmit")} (${finalTotalPrice} ${currency})`}
+
             </button>
 
             {error && (
