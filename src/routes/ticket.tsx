@@ -9,10 +9,14 @@ import {
   Calendar,
   MapPin,
   Ticket as TicketIcon,
+  Download,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { getBookingByTicketCode, ticketUrl, type Booking } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, type Language } from "@/lib/translations";
+import { generateTicketPdf } from "@/lib/pdf-generator";
 
 export const Route = createFileRoute("/ticket")({
   head: () => ({
@@ -214,6 +218,55 @@ function TicketPage() {
                 })()}
               </dl>
             </div>
+
+            {/* Action Buttons: PDF Ticket Download & Programme Download */}
+            <div className="mt-5 space-y-3">
+              {/* PDF Ticket Download */}
+              <button
+                type="button"
+                onClick={() => generateTicketPdf(booking, qr, lang)}
+                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white font-semibold py-3.5 px-4 shadow-md hover:brightness-110 active:scale-[0.99] transition text-sm"
+              >
+                <Download className="h-4.5 w-4.5" />
+                {tr(
+                  "Download PDF Ticket (QR Code)",
+                  "Télécharger le Billet PDF (Code QR)",
+                  "Descargar Entrada PDF (Código QR)"
+                )}
+              </button>
+
+              {/* Festival Programme Download */}
+              <a
+                href={`/Program-${lang === "fr" ? "fr" : lang === "es" ? "es" : "en"}.pdf`}
+                download={`Tangier-Latin-Festival-Programme-${lang.toUpperCase()}.pdf`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-semibold py-3.5 px-4 border border-amber-500/30 shadow-md transition text-sm"
+              >
+                <FileText className="h-4.5 w-4.5 text-amber-400" />
+                {tr(
+                  "Download Festival Programme (PDF)",
+                  "Télécharger le Programme du Festival (PDF)",
+                  "Descargar el Programa del Festival (PDF)"
+                )}
+              </a>
+
+              {/* Save QR Image Backup */}
+              {qr && (
+                <a
+                  href={qr}
+                  download={`Ticket-${booking.ticketCode}-QR.png`}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-4 transition text-xs"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  {tr(
+                    "Save QR Image (PNG)",
+                    "Enregistrer l'image QR (PNG)",
+                    "Guardar imagen QR (PNG)"
+                  )}
+                </a>
+              )}
+            </div>
           </>
         )}
 
@@ -226,3 +279,4 @@ function TicketPage() {
     </div>
   );
 }
+

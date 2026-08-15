@@ -15,6 +15,7 @@ import {
   Download,
   Sparkles,
   Star,
+  FileText,
 } from "lucide-react";
 import {
   getInviteByCode,
@@ -25,6 +26,7 @@ import {
   type Pack,
   type Booking,
 } from "@/lib/admin-store";
+import { generateTicketPdf } from "@/lib/pdf-generator";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
 
 const redeemSearchSchema = z.object({
@@ -288,16 +290,37 @@ function RedeemPage() {
                     <br />
                     automatically once confirmed
                   </p>
+                  <div className="flex flex-col sm:flex-row gap-2.5 mt-2 w-full">
+                    <button
+                      type="button"
+                      onClick={() => booking && generateTicketPdf(booking, qrDataUrl, "en")}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition cursor-pointer shadow"
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download PDF Ticket
+                    </button>
+                    <a
+                      href="/Program-en.pdf"
+                      download="Tangier-Latin-Festival-Programme-EN.pdf"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-amber-500/30 bg-zinc-900 text-amber-400 hover:bg-zinc-850 transition cursor-pointer"
+                    >
+                      <FileText className="h-3.5 w-3.5" /> Download Programme
+                    </a>
+                  </div>
+
                   <button
+                    type="button"
                     onClick={downloadQr}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-zinc-900 text-zinc-400 hover:text-zinc-200 transition cursor-pointer mt-1"
                   >
-                    <Download className="h-3.5 w-3.5" /> Download QR
+                    <Sparkles className="h-3 w-3 text-amber-500" /> Save Image (PNG)
                   </button>
                 </div>
               )}
             </div>
           </div>
+
 
           {/* Back link */}
           <div className="mt-6 text-center">

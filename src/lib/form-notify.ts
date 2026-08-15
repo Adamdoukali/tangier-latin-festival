@@ -194,7 +194,7 @@ export function ticketConfirmationEmail(opts: {
       departure: "Departure",
       code: "Reservation number",
       ticket: "🎫 Your ticket (QR code attached):",
-      show: "Open the link and show the QR code at check-in. Save this email or take a screenshot.",
+      show: "Open your ticket link above to view your QR code, download your official PDF ticket, and download the full festival programme.",
       bye: "See you on the dance floor!",
     },
     fr: {
@@ -209,7 +209,7 @@ export function ticketConfirmationEmail(opts: {
       departure: "Départ",
       code: "Numéro de réservation",
       ticket: "🎫 Votre billet (QR code en pièce jointe) :",
-      show: "Ouvrez le lien et présentez le QR code à l'entrée. Gardez cet email ou faites une capture d'écran.",
+      show: "Ouvrez votre lien de billet ci-dessus pour afficher votre code QR, télécharger votre billet PDF officiel et télécharger le programme complet du festival.",
       bye: "À très vite sur la piste !",
     },
     es: {
@@ -224,10 +224,11 @@ export function ticketConfirmationEmail(opts: {
       departure: "Salida",
       code: "Número de reserva",
       ticket: "🎫 Tu entrada (código QR adjunto):",
-      show: "Abre el enlace y muestra el código QR en la entrada. Guarda este correo o haz una captura de pantalla.",
+      show: "Abre el enlace de tu entrada arriba para ver tu código QR, descargar tu entrada PDF oficial y descargar el programa completo del festival.",
       bye: "¡Nos vemos en la pista!",
     },
   }[lang];
+
 
   const detailLines = [
     `• ${L.pack}: ${opts.packName}`,
