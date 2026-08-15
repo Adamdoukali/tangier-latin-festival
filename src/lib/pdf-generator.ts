@@ -122,26 +122,36 @@ export async function generateTicketPdf(
       lang === "fr" ? "Pack réservé" : lang === "es" ? "Pack reservado" : "Booked Pack",
       translateDynamicText(booking.packName, lang as Language),
     ],
-    [
-      lang === "fr"
-        ? "Nombre de personnes"
-        : lang === "es"
-        ? "Número de personas"
-        : "Number of Guests",
-      `${booking.numPeople || 1} ${
-        (booking.numPeople || 1) > 1
-          ? lang === "fr"
-            ? "personnes"
-            : lang === "es"
-            ? "personas"
-            : "guests"
-          : lang === "fr"
-          ? "personne"
+    (() => {
+      const effPeople =
+        booking.numPeople && booking.numPeople > 1
+          ? booking.numPeople
+          : booking.customerName.includes(" & ")
+          ? booking.customerName.split(" & ").filter(Boolean).length
+          : /double|doble|couple|pareja/i.test(booking.packName)
+          ? 2
+          : booking.numPeople || 1;
+      return [
+        lang === "fr"
+          ? "Nombre de personnes"
           : lang === "es"
-          ? "persona"
-          : "guest"
-      }`,
-    ],
+          ? "Número de personas"
+          : "Number of Guests",
+        `${effPeople} ${
+          effPeople > 1
+            ? lang === "fr"
+              ? "personnes"
+              : lang === "es"
+              ? "personas"
+              : "guests"
+            : lang === "fr"
+            ? "personne"
+            : lang === "es"
+            ? "persona"
+            : "guest"
+        }`,
+      ];
+    })(),
     [
       lang === "fr" ? "Date d'arrivée" : lang === "es" ? "Fecha de llegada" : "Arrival Date",
       fmtDate(booking.arrivalDate),

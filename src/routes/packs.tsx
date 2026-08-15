@@ -288,9 +288,32 @@ function PacksPage() {
                         : (lang === "fr" ? "⏳ En attente" : lang === "es" ? "⏳ Pendiente" : "⏳ Pending")}
                     </span>
                   </div>
-                  <div className="text-xs text-muted-foreground font-normal">
-                    {translateDynamic(ticketResult.packName)} · {ticketResult.numPeople} {ticketResult.numPeople > 1 ? (lang === "fr" ? "personnes" : lang === "es" ? "personas" : "people") : (lang === "fr" ? "personne" : lang === "es" ? "persona" : "person")}
-                  </div>
+                  {(() => {
+                    const effPeople =
+                      ticketResult.numPeople && ticketResult.numPeople > 1
+                        ? ticketResult.numPeople
+                        : ticketResult.customerName.includes(" & ")
+                        ? ticketResult.customerName.split(" & ").filter(Boolean).length
+                        : /double|doble|couple|pareja/i.test(ticketResult.packName)
+                        ? 2
+                        : ticketResult.numPeople || 1;
+                    return (
+                      <div className="text-xs text-muted-foreground font-normal">
+                        {translateDynamic(ticketResult.packName)} · {effPeople}{" "}
+                        {effPeople > 1
+                          ? lang === "fr"
+                            ? "personnes"
+                            : lang === "es"
+                            ? "personas"
+                            : "people"
+                          : lang === "fr"
+                          ? "personne"
+                          : lang === "es"
+                          ? "persona"
+                          : "person"}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

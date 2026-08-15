@@ -183,13 +183,22 @@ function TicketPage() {
                           { day: "numeric", month: "long", year: "numeric" }
                         )
                       : null;
+                  const effectiveNumPeople =
+                    booking.numPeople && booking.numPeople > 1
+                      ? booking.numPeople
+                      : booking.customerName.includes(" & ")
+                      ? booking.customerName.split(" & ").filter(Boolean).length
+                      : /double|doble|couple|pareja/i.test(booking.packName)
+                      ? 2
+                      : booking.numPeople || 1;
+
                   const rows: Array<[string, string]> = [
                     [tr("Name", "Nom", "Nombre"), booking.customerName],
                     [
                       tr("Pack", "Pack", "Pack"),
                       translateDynamicText(booking.packName, lang as Language),
                     ],
-                    [tr("Guests", "Personnes", "Personas"), String(booking.numPeople || 1)],
+                    [tr("Guests", "Personnes", "Personas"), String(effectiveNumPeople)],
                   ];
                   const arrival = fmt(booking.arrivalDate);
                   const departure = fmt(booking.departureDate);

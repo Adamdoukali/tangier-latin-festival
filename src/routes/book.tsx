@@ -281,7 +281,7 @@ function BookPage() {
         email: form.email,
         phone: form.phone,
         country: form.country,
-        numPeople: form.names.length,
+        numPeople: form.guests.length > 0 ? form.guests.length : (getGuestCount(selected) || 1),
         danceLevel: "",
         notes: form.notes,
         arrivalDate: form.arrival || null,
