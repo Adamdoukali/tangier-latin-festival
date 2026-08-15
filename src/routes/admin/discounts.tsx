@@ -63,14 +63,16 @@ function AdminDiscounts() {
     discountType: "fixed" as DiscountType,
     applyScope: "per_booking" as DiscountApplyScope,
     overridePrice: "" as string | number,
+    maxGuestsDiscounted: "" as string | number,
     allPacks: true,
     applicablePackIds: [] as string[],
-    commissionOverride: "" as string | number,
+    commissionOverride: 10 as string | number,
     commissionType: "fixed" as CommissionType,
     maxUses: "" as string | number,
     active: true,
     notes: "",
   });
+
 
   const openCreateModal = () => {
     setEditing(null);
@@ -80,6 +82,7 @@ function AdminDiscounts() {
       discountType: "fixed",
       applyScope: "per_booking",
       overridePrice: "",
+      maxGuestsDiscounted: "",
       allPacks: true,
       applicablePackIds: [],
       commissionOverride: 10,
@@ -100,6 +103,7 @@ function AdminDiscounts() {
       discountType: d.discountType || "fixed",
       applyScope: d.applyScope || "per_booking",
       overridePrice: d.overridePrice != null ? d.overridePrice : "",
+      maxGuestsDiscounted: d.maxGuestsDiscounted != null ? d.maxGuestsDiscounted : "",
       allPacks: !d.applicablePackIds || d.applicablePackIds.length === 0,
       applicablePackIds: d.applicablePackIds || [],
       commissionOverride: d.commissionOverride != null ? d.commissionOverride : "",
@@ -154,6 +158,11 @@ function AdminDiscounts() {
         ? Number(form.overridePrice)
         : null;
 
+    const maxGuestsVal =
+      form.maxGuestsDiscounted !== "" && !isNaN(Number(form.maxGuestsDiscounted))
+        ? Number(form.maxGuestsDiscounted)
+        : null;
+
     const targetPackIds = form.allPacks ? null : form.applicablePackIds;
 
     try {
@@ -164,6 +173,7 @@ function AdminDiscounts() {
         applyScope: form.applyScope,
         overridePrice: overrideVal,
         applicablePackIds: targetPackIds,
+        maxGuestsDiscounted: maxGuestsVal,
         commissionOverride: commOverride,
         commissionType: form.commissionType,
         maxUses: maxUsesVal,
@@ -178,6 +188,7 @@ function AdminDiscounts() {
       }
       setShowModal(false);
       await reload();
+
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
@@ -309,12 +320,14 @@ function AdminDiscounts() {
                 </tr>
               ) : (
                 filtered.map((d) => {
+                  const madAmount = Math.round(d.discountAmount * 11);
+                  const madOverride = Math.round((d.overridePrice ?? 0) * 11);
                   const scopeLabel =
                     d.applyScope === "fixed_price"
-                      ? `Fixed €${d.overridePrice ?? 0} Rate`
+                      ? `Fixed €${d.overridePrice ?? 0} Rate (${madOverride} MAD)`
                       : d.applyScope === "per_person"
-                      ? `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount}`} / person`
-                      : `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount}`} / booking`;
+                      ? `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / person`
+                      : `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / booking`;
 
                   const packCount = d.applicablePackIds?.length ?? 0;
                   const packBadge =
@@ -469,69 +482,83 @@ function AdminDiscounts() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
+            <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[85vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Discount Code Name *
+                  Discount Code *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. SCHOOL-SHOW-10, VIP-SPECIAL"
+                  placeholder="e.g. SUMMER2027"
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg font-mono font-bold text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-gray-900 font-mono font-bold uppercase focus:outline-none focus:border-blue-500"
                 />
               </div>
 
-              {/* Discount Scope & Mode */}
+              {/* Mode & Scope Selector */}
               <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
-                  <Layers className="h-4 w-4 text-amber-600" />
+                  <Coins className="h-4 w-4 text-amber-600" />
                   <span>Discount Application Mode</span>
                 </div>
 
-                <div>
-                  <label className="block text-xs text-gray-600 mb-1 font-medium">
-                    How should this discount be applied?
-                  </label>
-                  <select
-                    value={form.applyScope}
-                    onChange={(e) =>
-                      setForm({ ...form, applyScope: e.target.value as DiscountApplyScope })
-                    }
-                    className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white font-semibold text-xs focus:outline-none focus:border-amber-500"
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, applyScope: "per_booking" })}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
+                      form.applyScope === "per_booking"
+                        ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
                   >
-                    <option value="per_booking">🏷️ Per Booking (Deduct amount or % off total)</option>
-                    <option value="per_person">👤 Per Person (Deduct amount off EACH guest)</option>
-                    <option value="fixed_price">🎯 Custom Fixed Rate Override (Set direct price in €)</option>
-                  </select>
+                    Per Booking
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, applyScope: "per_person" })}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
+                      form.applyScope === "per_person"
+                        ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    Per Person
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, applyScope: "fixed_price" })}
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
+                      form.applyScope === "fixed_price"
+                        ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"
+                        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    Fixed Rate
+                  </button>
                 </div>
 
                 {form.applyScope === "fixed_price" ? (
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                      Fixed Special Price (€) *
+                      Fixed Special Price (€ / MAD) *
                     </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      required
-                      placeholder="e.g. 250 (Sets pack price directly to €250)"
-                      value={form.overridePrice}
-                      onChange={(e) => setForm({ ...form, overridePrice: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold"
-                    />
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      Anyone using this code pays this exact total amount (or rate per person).
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        required
+                        placeholder="e.g. 250 (Sets price to €250 / 2,750 MAD)"
+                        value={form.overridePrice}
+                        onChange={(e) => setForm({ ...form, overridePrice: e.target.value })}
+                        className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold text-sm"
+                      />
+                    </div>
+                    <p className="text-[11px] text-gray-600 mt-1 font-medium">
+                      Exact rate: <strong className="text-amber-800">€{form.overridePrice || 0}</strong> = <strong className="text-amber-800">{Math.round(Number(form.overridePrice || 0) * 11)} MAD</strong>
                     </p>
                   </div>
                 ) : (
@@ -549,8 +576,13 @@ function AdminDiscounts() {
                         onChange={(e) =>
                           setForm({ ...form, discountAmount: Number(e.target.value) })
                         }
-                        className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold"
+                        className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold text-sm"
                       />
+                      {form.discountType === "fixed" && (
+                        <p className="text-[11px] text-gray-600 mt-1 font-medium">
+                          <strong className="text-amber-800">€{form.discountAmount || 0}</strong> = <strong className="text-amber-800">{Math.round((form.discountAmount || 0) * 11)} MAD</strong>
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
@@ -563,13 +595,46 @@ function AdminDiscounts() {
                         }
                         className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 text-xs font-medium"
                       >
-                        <option value="fixed">Fixed Amount (€)</option>
+                        <option value="fixed">Fixed Amount (€ / MAD)</option>
                         <option value="percent">Percentage (%)</option>
                       </select>
                     </div>
+
+                    {form.applyScope === "per_person" && (
+                      <div className="col-span-2 pt-2 border-t border-amber-200/80">
+                        <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                          Which Guests Receive the Discount?
+                        </label>
+                        <select
+                          value={form.maxGuestsDiscounted}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              maxGuestsDiscounted: e.target.value === "" ? "" : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 text-xs font-bold"
+                        >
+                          <option value="">All Guests in Booking (Default)</option>
+                          <option value="1">1st Guest Only (1 Person)</option>
+                          <option value="2">Up to 2 Guests (2 Persons)</option>
+                          <option value="3">Up to 3 Guests (3 Persons)</option>
+                        </select>
+                        <p className="text-[11px] text-gray-600 mt-1 font-medium">
+                          {form.maxGuestsDiscounted === 1
+                            ? "Only the 1st guest in a multi-guest booking receives the per-person discount."
+                            : form.maxGuestsDiscounted === 2
+                            ? "Only up to 2 guests in a booking receive the per-person discount."
+                            : form.maxGuestsDiscounted === 3
+                            ? "Only up to 3 guests in a booking receive the per-person discount."
+                            : "Every guest in the booking receives the per-person discount."}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
 
               {/* Target Packs Selection */}
               <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">

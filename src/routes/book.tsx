@@ -142,22 +142,26 @@ function BookPage() {
     const count = getGuestCount(selected);
     const singleP = parseInt(selected.price, 10) || 0;
     const totalP = singleP * count;
-    const result = await validateDiscountCode(discountInput, totalP, selected.id, count, singleP);
+    const cur = selected.currency || "€";
+    const result = await validateDiscountCode(discountInput, totalP, selected.id, count, singleP, cur);
     if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
+      const isMad = /mad|dh/i.test(cur);
+      const madAmt = result.discount.discountAmount * EUR_TO_MAD;
       const scopeText =
         result.discount.applyScope === "fixed_price"
-          ? `Special rate: €${result.discount.overridePrice ?? 0}`
+          ? `Special rate: ${isMad ? `${(result.discount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${result.discount.overridePrice ?? 0}`}`
           : result.discount.applyScope === "per_person"
-          ? `-€${result.discount.discountAmount}/person`
+          ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
           : result.discount.discountType === "percent"
-          ? `${result.discount.discountAmount}%`
-          : `€${result.discountAmount}`;
+          ? `-${result.discount.discountAmount}%`
+          : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
       setDiscountMsg({
         success: true,
         text: `Discount code "${result.discount.code}" applied (${scopeText})!`,
       });
+
       if (typeof window !== "undefined") {
         sessionStorage.setItem("tlf_discount_code", result.discount.code);
       }
