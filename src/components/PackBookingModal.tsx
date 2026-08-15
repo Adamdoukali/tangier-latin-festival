@@ -88,23 +88,27 @@ export function PackBookingModal({
         })!`,
       });
     } else if (initialDiscountCode) {
-      validateDiscountCode(initialDiscountCode, totalBasePrice).then((res) => {
+      validateDiscountCode(initialDiscountCode, totalBasePrice, pack.id, numGuests, singlePrice).then((res) => {
         if (res.valid && res.discount && res.discountAmount != null) {
           setAppliedDiscount(res.discount);
           setDiscountAmount(res.discountAmount);
           setDiscountInput(res.discount.code);
+          const scopeText =
+            res.discount.applyScope === "fixed_price"
+              ? `Special rate: €${res.discount.overridePrice ?? 0}`
+              : res.discount.applyScope === "per_person"
+              ? `-€${res.discount.discountAmount}/person`
+              : res.discount.discountType === "percent"
+              ? `${res.discount.discountAmount}%`
+              : `€${res.discountAmount}`;
           setDiscountMsg({
             success: true,
-            text: `Discount code "${res.discount.code}" applied (-${
-              res.discount.discountType === "percent"
-                ? `${res.discount.discountAmount}%`
-                : `€${res.discountAmount}`
-            })!`,
+            text: `Discount code "${res.discount.code}" applied (${scopeText})!`,
           });
         }
       });
     }
-  }, [initialDiscount, initialDiscountCode, totalBasePrice]);
+  }, [initialDiscount, initialDiscountCode, totalBasePrice, pack.id, numGuests, singlePrice]);
 
   const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount);
 
@@ -112,13 +116,21 @@ export function PackBookingModal({
     if (!discountInput.trim()) return;
     setValidatingCode(true);
     setDiscountMsg(null);
-    const result = await validateDiscountCode(discountInput, totalBasePrice);
+    const result = await validateDiscountCode(discountInput, totalBasePrice, pack.id, numGuests, singlePrice);
     if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
+      const scopeText =
+        result.discount.applyScope === "fixed_price"
+          ? `Special rate: €${result.discount.overridePrice ?? 0}`
+          : result.discount.applyScope === "per_person"
+          ? `-€${result.discount.discountAmount}/person`
+          : result.discount.discountType === "percent"
+          ? `${result.discount.discountAmount}%`
+          : `€${result.discountAmount}`;
       setDiscountMsg({
         success: true,
-        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discountAmount}`})!`,
+        text: `Discount code "${result.discount.code}" applied (${scopeText})!`,
       });
     } else {
       setAppliedDiscount(null);
@@ -130,6 +142,7 @@ export function PackBookingModal({
     }
     setValidatingCode(false);
   };
+
 
   // Memoize large country lists to prevent lag when opening the modal
   const phoneOptions = useMemo(() => {

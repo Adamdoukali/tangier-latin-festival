@@ -71,12 +71,19 @@ export interface Booking {
 }
 
 export type DiscountType = "fixed" | "percent";
+export type DiscountApplyScope = "per_booking" | "per_person" | "fixed_price";
 
 export interface DiscountCode {
   id: string;
   code: string;
   discountAmount: number;
   discountType: DiscountType;
+  /** Apply scope: per booking (total), per person (€ off each guest), or fixed price override */
+  applyScope?: DiscountApplyScope;
+  /** Custom override price when applyScope === 'fixed_price' */
+  overridePrice?: number | null;
+  /** Specific pack IDs this discount applies to; null or empty array = all packs */
+  applicablePackIds?: string[] | null;
   /** Optional custom collaborator commission (e.g., €10) when used on referral links */
   commissionOverride?: number | null;
   commissionType?: CommissionType;
@@ -86,6 +93,7 @@ export interface DiscountCode {
   notes?: string;
   createdAt: string;
 }
+
 
 export interface Invite {
   id: string;
@@ -395,6 +403,13 @@ const discountFromRow = (r: any): DiscountCode => ({
   code: r.code,
   discountAmount: Number(r.discount_amount) || 0,
   discountType: (r.discount_type as DiscountType) || "fixed",
+  applyScope: (r.apply_scope as DiscountApplyScope) || "per_booking",
+  overridePrice: r.override_price != null ? Number(r.override_price) : null,
+  applicablePackIds: Array.isArray(r.applicable_pack_ids)
+    ? r.applicable_pack_ids
+    : r.applicable_pack_ids
+    ? JSON.parse(r.applicable_pack_ids)
+    : null,
   commissionOverride: r.commission_override != null ? Number(r.commission_override) : null,
   commissionType: (r.commission_type as CommissionType) || "fixed",
   maxUses: r.max_uses != null ? Number(r.max_uses) : null,
@@ -409,6 +424,9 @@ const discountToRow = (d: Partial<DiscountCode>): Record<string, any> => {
   if (d.code !== undefined) row.code = d.code.trim().toUpperCase();
   if (d.discountAmount !== undefined) row.discount_amount = d.discountAmount;
   if (d.discountType !== undefined) row.discount_type = d.discountType;
+  if (d.applyScope !== undefined) row.apply_scope = d.applyScope;
+  if (d.overridePrice !== undefined) row.override_price = d.overridePrice;
+  if (d.applicablePackIds !== undefined) row.applicable_pack_ids = d.applicablePackIds;
   if (d.commissionOverride !== undefined) row.commission_override = d.commissionOverride;
   if (d.commissionType !== undefined) row.commission_type = d.commissionType;
   if (d.maxUses !== undefined) row.max_uses = d.maxUses;
@@ -417,6 +435,7 @@ const discountToRow = (d: Partial<DiscountCode>): Record<string, any> => {
   if (d.notes !== undefined) row.notes = d.notes;
   return row;
 };
+
 
 const inviteFromRow = (r: any): Invite => ({
   id: r.id,
@@ -984,6 +1003,9 @@ export async function addDiscountCode(
         code: cleanCode,
         discount_amount: discount.discountAmount,
         discount_type: discount.discountType || "fixed",
+        apply_scope: discount.applyScope || "per_booking",
+        override_price: discount.overridePrice ?? null,
+        applicable_pack_ids: discount.applicablePackIds ?? null,
         commission_override: discount.commissionOverride ?? null,
         commission_type: discount.commissionType || "fixed",
         max_uses: discount.maxUses ?? null,
@@ -991,6 +1013,7 @@ export async function addDiscountCode(
         active: discount.active ?? true,
         notes: discount.notes ?? null,
       });
+
       return discountFromRow(data);
     } catch (e) {
       warn("addDiscountCode", e);
@@ -1062,9 +1085,33 @@ export async function incrementDiscountUsage(code: string): Promise<void> {
 
 export function calculateDiscountAmount(
   discount: DiscountCode,
-  basePrice: number
+  basePrice: number,
+  numGuests: number = 1,
+  singlePrice: number = 0
 ): number {
   if (!discount || !discount.active) return 0;
+
+  const scope = discount.applyScope || "per_booking";
+
+  if (scope === "fixed_price") {
+    if (discount.overridePrice != null && discount.overridePrice >= 0) {
+      const customTotal =
+        discount.discountType === "fixed" && numGuests > 1 && singlePrice > 0
+          ? discount.overridePrice * numGuests
+          : discount.overridePrice;
+      return Math.max(0, basePrice - customTotal);
+    }
+  }
+
+  if (scope === "per_person") {
+    if (discount.discountType === "percent") {
+      return Math.round((basePrice * (discount.discountAmount / 100)) * 100) / 100;
+    }
+    const totalDiscount = discount.discountAmount * numGuests;
+    return Math.min(basePrice, totalDiscount);
+  }
+
+  // per_booking (default)
   if (discount.discountType === "percent") {
     return Math.round((basePrice * (discount.discountAmount / 100)) * 100) / 100;
   }
@@ -1073,7 +1120,10 @@ export function calculateDiscountAmount(
 
 export async function validateDiscountCode(
   code: string,
-  basePrice: number = 0
+  basePrice: number = 0,
+  packId?: string,
+  numGuests: number = 1,
+  singlePrice: number = 0
 ): Promise<{ valid: boolean; error?: string; discount?: DiscountCode; discountAmount?: number }> {
   if (!code || !code.trim()) {
     return { valid: false, error: "Empty code" };
@@ -1088,9 +1138,18 @@ export async function validateDiscountCode(
   if (d.maxUses != null && d.maxUses > 0 && d.usedCount >= d.maxUses) {
     return { valid: false, error: "This discount code has reached its maximum uses" };
   }
-  const discountAmount = calculateDiscountAmount(d, basePrice);
+
+  // Pack restriction check
+  if (packId && d.applicablePackIds && d.applicablePackIds.length > 0) {
+    if (!d.applicablePackIds.includes(packId)) {
+      return { valid: false, error: "This discount code is not applicable to the selected pack" };
+    }
+  }
+
+  const discountAmount = calculateDiscountAmount(d, basePrice, numGuests, singlePrice);
   return { valid: true, discount: d, discountAmount };
 }
+
 
 // ─── Invites CRUD ───────────────────────────────────────────────────
 

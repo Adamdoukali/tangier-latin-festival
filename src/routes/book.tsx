@@ -142,13 +142,21 @@ function BookPage() {
     const count = getGuestCount(selected);
     const singleP = parseInt(selected.price, 10) || 0;
     const totalP = singleP * count;
-    const result = await validateDiscountCode(discountInput, totalP);
+    const result = await validateDiscountCode(discountInput, totalP, selected.id, count, singleP);
     if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
+      const scopeText =
+        result.discount.applyScope === "fixed_price"
+          ? `Special rate: €${result.discount.overridePrice ?? 0}`
+          : result.discount.applyScope === "per_person"
+          ? `-€${result.discount.discountAmount}/person`
+          : result.discount.discountType === "percent"
+          ? `${result.discount.discountAmount}%`
+          : `€${result.discountAmount}`;
       setDiscountMsg({
         success: true,
-        text: `Discount code "${result.discount.code}" applied (-${result.discount.discountType === "percent" ? `${result.discount.discountAmount}%` : `€${result.discountAmount}`})!`,
+        text: `Discount code "${result.discount.code}" applied (${scopeText})!`,
       });
       if (typeof window !== "undefined") {
         sessionStorage.setItem("tlf_discount_code", result.discount.code);
@@ -166,6 +174,7 @@ function BookPage() {
     }
     setValidatingCode(false);
   };
+
 
   const clearDiscount = () => {
     setAppliedDiscount(null);

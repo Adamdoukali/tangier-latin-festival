@@ -15,15 +15,20 @@ import {
   Euro,
   Users,
   Power,
+  Package,
+  Layers,
 } from "lucide-react";
 import {
   getDiscountCodes,
   addDiscountCode,
   updateDiscountCode,
   deleteDiscountCode,
+  getPacks,
   type DiscountCode,
   type DiscountType,
+  type DiscountApplyScope,
   type CommissionType,
+  type Pack,
 } from "@/lib/admin-store";
 
 export const Route = createFileRoute("/admin/discounts")({
@@ -32,6 +37,7 @@ export const Route = createFileRoute("/admin/discounts")({
 
 function AdminDiscounts() {
   const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
+  const [packs, setPacks] = useState<Pack[]>([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<DiscountCode | null>(null);
@@ -42,6 +48,8 @@ function AdminDiscounts() {
   const reload = useCallback(async () => {
     const list = await getDiscountCodes();
     setDiscounts(list);
+    const pList = await getPacks();
+    setPacks(pList.filter((p) => p.active));
   }, []);
 
   useEffect(() => {
@@ -53,6 +61,10 @@ function AdminDiscounts() {
     code: "",
     discountAmount: 50,
     discountType: "fixed" as DiscountType,
+    applyScope: "per_booking" as DiscountApplyScope,
+    overridePrice: "" as string | number,
+    allPacks: true,
+    applicablePackIds: [] as string[],
     commissionOverride: "" as string | number,
     commissionType: "fixed" as CommissionType,
     maxUses: "" as string | number,
@@ -66,7 +78,11 @@ function AdminDiscounts() {
       code: "",
       discountAmount: 50,
       discountType: "fixed",
-      commissionOverride: 10, // Default €10 override as requested
+      applyScope: "per_booking",
+      overridePrice: "",
+      allPacks: true,
+      applicablePackIds: [],
+      commissionOverride: 10,
       commissionType: "fixed",
       maxUses: "",
       active: true,
@@ -81,7 +97,11 @@ function AdminDiscounts() {
     setForm({
       code: d.code,
       discountAmount: d.discountAmount,
-      discountType: d.discountType,
+      discountType: d.discountType || "fixed",
+      applyScope: d.applyScope || "per_booking",
+      overridePrice: d.overridePrice != null ? d.overridePrice : "",
+      allPacks: !d.applicablePackIds || d.applicablePackIds.length === 0,
+      applicablePackIds: d.applicablePackIds || [],
       commissionOverride: d.commissionOverride != null ? d.commissionOverride : "",
       commissionType: d.commissionType || "fixed",
       maxUses: d.maxUses != null ? d.maxUses : "",
@@ -90,6 +110,16 @@ function AdminDiscounts() {
     });
     setError("");
     setShowModal(true);
+  };
+
+  const togglePackSelection = (packId: string) => {
+    setForm((f) => {
+      const exists = f.applicablePackIds.includes(packId);
+      const next = exists
+        ? f.applicablePackIds.filter((id) => id !== packId)
+        : [...f.applicablePackIds, packId];
+      return { ...f, applicablePackIds: next };
+    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -119,29 +149,32 @@ function AdminDiscounts() {
         ? Number(form.maxUses)
         : null;
 
+    const overrideVal =
+      form.overridePrice !== "" && !isNaN(Number(form.overridePrice))
+        ? Number(form.overridePrice)
+        : null;
+
+    const targetPackIds = form.allPacks ? null : form.applicablePackIds;
+
     try {
+      const payload = {
+        code: cleanCode,
+        discountAmount: Number(form.discountAmount) || 0,
+        discountType: form.discountType,
+        applyScope: form.applyScope,
+        overridePrice: overrideVal,
+        applicablePackIds: targetPackIds,
+        commissionOverride: commOverride,
+        commissionType: form.commissionType,
+        maxUses: maxUsesVal,
+        active: form.active,
+        notes: form.notes,
+      };
+
       if (editing) {
-        await updateDiscountCode(editing.id, {
-          code: cleanCode,
-          discountAmount: Number(form.discountAmount) || 0,
-          discountType: form.discountType,
-          commissionOverride: commOverride,
-          commissionType: form.commissionType,
-          maxUses: maxUsesVal,
-          active: form.active,
-          notes: form.notes,
-        });
+        await updateDiscountCode(editing.id, payload);
       } else {
-        await addDiscountCode({
-          code: cleanCode,
-          discountAmount: Number(form.discountAmount) || 0,
-          discountType: form.discountType,
-          commissionOverride: commOverride,
-          commissionType: form.commissionType,
-          maxUses: maxUsesVal,
-          active: form.active,
-          notes: form.notes,
-        });
+        await addDiscountCode(payload);
       }
       setShowModal(false);
       await reload();
@@ -149,6 +182,7 @@ function AdminDiscounts() {
       setError(err instanceof Error ? err.message : String(err));
     }
   };
+
 
   const handleToggleActive = async (d: DiscountCode) => {
     await updateDiscountCode(d.id, { active: !d.active });
@@ -257,7 +291,8 @@ function AdminDiscounts() {
             <thead className="bg-slate-50 text-gray-700 font-semibold border-b border-gray-200 uppercase text-xs tracking-wider">
               <tr>
                 <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Discount</th>
+                <th className="px-6 py-4">Discount & Scope</th>
+                <th className="px-6 py-4">Applicable Packs</th>
                 <th className="px-6 py-4">Partner Commission</th>
                 <th className="px-6 py-4">Redemptions</th>
                 <th className="px-6 py-4">Status</th>
@@ -268,82 +303,108 @@ function AdminDiscounts() {
             <tbody className="divide-y divide-gray-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
+                  <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                     No discount codes found.
                   </td>
                 </tr>
               ) : (
-                filtered.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-6 py-4 font-mono font-bold text-gray-900">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                          {d.code}
+                filtered.map((d) => {
+                  const scopeLabel =
+                    d.applyScope === "fixed_price"
+                      ? `Fixed €${d.overridePrice ?? 0} Rate`
+                      : d.applyScope === "per_person"
+                      ? `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount}`} / person`
+                      : `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount}`} / booking`;
+
+                  const packCount = d.applicablePackIds?.length ?? 0;
+                  const packBadge =
+                    !d.applicablePackIds || packCount === 0
+                      ? "All Packs"
+                      : `${packCount} Pack${packCount > 1 ? "s" : ""}`;
+
+                  return (
+                    <tr key={d.id} className="hover:bg-slate-50/80 transition">
+                      <td className="px-6 py-4 font-mono font-bold text-gray-900">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                            {d.code}
+                          </span>
+                          <button
+                            onClick={() => copyToClipboard(d.code)}
+                            className="p-1 text-gray-400 hover:text-gray-600 rounded transition cursor-pointer"
+                            title="Copy code"
+                          >
+                            {copiedCode === d.code ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-amber-100/70 text-amber-800 border border-amber-200">
+                          {scopeLabel}
                         </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                          packBadge === "All Packs"
+                            ? "bg-slate-100 text-slate-700 border-slate-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200 font-bold"
+                        }`}>
+                          <Package className="h-3 w-3" />
+                          {packBadge}
+                        </span>
+                      </td>
+
+                      <td className="px-6 py-4">
+                        {d.commissionOverride != null ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                            {d.commissionType === "percent"
+                              ? `${d.commissionOverride}%`
+                              : `€${d.commissionOverride} / booking`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 text-xs italic">
+                            Standard rate
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4 text-gray-700 font-medium">
+                        {d.usedCount}
+                        {d.maxUses != null ? (
+                          <span className="text-gray-400 font-normal"> / {d.maxUses}</span>
+                        ) : (
+                          <span className="text-gray-400 font-normal"> / ∞</span>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4">
                         <button
-                          onClick={() => copyToClipboard(d.code)}
-                          className="p-1 text-gray-400 hover:text-gray-600 rounded transition cursor-pointer"
-                          title="Copy code"
-                        >
-                          {copiedCode === d.code ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 font-semibold text-gray-900">
-                      {d.discountType === "percent"
-                        ? `-${d.discountAmount}%`
-                        : `-€${d.discountAmount}`}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      {d.commissionOverride != null ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                          {d.commissionType === "percent"
-                            ? `${d.commissionOverride}%`
-                            : `€${d.commissionOverride} / booking`}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs italic">
-                          Standard rate
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4 text-gray-700 font-medium">
-                      {d.usedCount}
-                      {d.maxUses != null ? (
-                        <span className="text-gray-400 font-normal"> / {d.maxUses}</span>
-                      ) : (
-                        <span className="text-gray-400 font-normal"> / ∞</span>
-                      )}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleToggleActive(d)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition ${
-                          d.active
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                            : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            d.active ? "bg-emerald-500" : "bg-gray-400"
+                          onClick={() => handleToggleActive(d)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition ${
+                            d.active
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                              : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
                           }`}
-                        />
-                        {d.active ? "Active" : "Disabled"}
-                      </button>
-                    </td>
+                        >
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              d.active ? "bg-emerald-500" : "bg-gray-400"
+                            }`}
+                          />
+                          {d.active ? "Active" : "Disabled"}
+                        </button>
+                      </td>
 
-                    <td className="px-6 py-4 text-gray-500 text-xs max-w-xs truncate">
-                      {d.notes || "—"}
-                    </td>
+                      <td className="px-6 py-4 text-gray-500 text-xs max-w-xs truncate">
+                        {d.notes || "—"}
+                      </td>
+
 
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -381,8 +442,11 @@ function AdminDiscounts() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })
+            )}
+
+
             </tbody>
           </table>
         </div>
@@ -405,7 +469,7 @@ function AdminDiscounts() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
               {error && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -420,46 +484,160 @@ function AdminDiscounts() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. VIP50, SUMMER20"
+                  placeholder="e.g. SCHOOL-SHOW-10, VIP-SPECIAL"
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                   className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg font-mono font-bold text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Discount Value *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    required
-                    value={form.discountAmount}
-                    onChange={(e) =>
-                      setForm({ ...form, discountAmount: Number(e.target.value) })
-                    }
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
-                  />
+              {/* Discount Scope & Mode */}
+              <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
+                  <Layers className="h-4 w-4 text-amber-600" />
+                  <span>Discount Application Mode</span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Discount Type
+                  <label className="block text-xs text-gray-600 mb-1 font-medium">
+                    How should this discount be applied?
                   </label>
                   <select
-                    value={form.discountType}
+                    value={form.applyScope}
                     onChange={(e) =>
-                      setForm({ ...form, discountType: e.target.value as DiscountType })
+                      setForm({ ...form, applyScope: e.target.value as DiscountApplyScope })
                     }
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500"
+                    className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white font-semibold text-xs focus:outline-none focus:border-amber-500"
                   >
-                    <option value="fixed">Fixed Amount (€)</option>
-                    <option value="percent">Percentage (%)</option>
+                    <option value="per_booking">🏷️ Per Booking (Deduct amount or % off total)</option>
+                    <option value="per_person">👤 Per Person (Deduct amount off EACH guest)</option>
+                    <option value="fixed_price">🎯 Custom Fixed Rate Override (Set direct price in €)</option>
                   </select>
                 </div>
+
+                {form.applyScope === "fixed_price" ? (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                      Fixed Special Price (€) *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      required
+                      placeholder="e.g. 250 (Sets pack price directly to €250)"
+                      value={form.overridePrice}
+                      onChange={(e) => setForm({ ...form, overridePrice: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold"
+                    />
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Anyone using this code pays this exact total amount (or rate per person).
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                        {form.applyScope === "per_person" ? "Amount Off Per Person *" : "Discount Value *"}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        required
+                        value={form.discountAmount}
+                        onChange={(e) =>
+                          setForm({ ...form, discountAmount: Number(e.target.value) })
+                        }
+                        className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                        Type
+                      </label>
+                      <select
+                        value={form.discountType}
+                        onChange={(e) =>
+                          setForm({ ...form, discountType: e.target.value as DiscountType })
+                        }
+                        className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 text-xs font-medium"
+                      >
+                        <option value="fixed">Fixed Amount (€)</option>
+                        <option value="percent">Percentage (%)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Target Packs Selection */}
+              <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
+                <div className="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wider">
+                  <Package className="h-4 w-4 text-blue-600" />
+                  <span>Applicable Packs</span>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="packSelectionMode"
+                      checked={form.allPacks}
+                      onChange={() => setForm({ ...form, allPacks: true, applicablePackIds: [] })}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-bold text-gray-900">
+                      Applies to ALL Festival Packs
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="packSelectionMode"
+                      checked={!form.allPacks}
+                      onChange={() => setForm({ ...form, allPacks: false })}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-bold text-gray-900">
+                      Applies ONLY to Specific Packs
+                    </span>
+                  </label>
+                </div>
+
+                {!form.allPacks && (
+                  <div className="pt-2 border-t border-blue-200/60 space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                    <p className="text-[11px] text-blue-700 font-medium mb-1">
+                      Check the packs allowed for this discount code:
+                    </p>
+                    {packs.map((p) => {
+                      const isSelected = form.applicablePackIds.includes(p.id);
+                      return (
+                        <label
+                          key={p.id}
+                          onClick={() => togglePackSelection(p.id)}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition ${
+                            isSelected
+                              ? "bg-blue-100/80 border-blue-400 text-blue-900 font-bold"
+                              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}} // handled by parent onClick
+                              className="rounded text-blue-600 border-gray-300"
+                            />
+                            <span className="truncate">{p.name} {p.sub ? `(${p.sub})` : ""}</span>
+                          </div>
+                          <span className="font-mono text-gray-500 shrink-0 ml-2">{p.price} {p.currency || "€"}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Collaborator Commission Override */}
@@ -567,6 +745,7 @@ function AdminDiscounts() {
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
