@@ -602,10 +602,7 @@ function BookPage() {
               )}
             </div>
 
-                  <span>{discountMsg.text}</span>
-                </div>
-              )}
-            </div>
+
 
             <div>
               <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
