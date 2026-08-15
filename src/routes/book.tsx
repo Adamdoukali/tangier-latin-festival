@@ -111,6 +111,18 @@ function BookPage() {
       .catch(() => {});
   }, []);
 
+  // Recalculate discount whenever selected pack changes
+  useEffect(() => {
+    if (selected && appliedDiscount) {
+      const count = getGuestCount(selected);
+      const singleP = parseInt(selected.price, 10) || 0;
+      const totalP = singleP * count;
+      const cur = selected.currency || "€";
+      const amt = calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur);
+      setDiscountAmount(amt);
+    }
+  }, [selected, appliedDiscount]);
+
   // Automatically check ?discount= URL param or sessionStorage if present
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -119,34 +131,34 @@ function BookPage() {
     if (discParam) {
       const code = discParam.trim().toUpperCase();
       setDiscountInput(code);
-      const baseP = selected ? parseInt(selected.price, 10) || 0 : 0;
-      validateDiscountCode(code, baseP).then((res) => {
+      validateDiscountCode(code, 0).then((res) => {
         if (res.valid && res.discount) {
           setAppliedDiscount(res.discount);
           sessionStorage.setItem("tlf_discount_code", res.discount.code);
-          const amt = calculateDiscountAmount(res.discount, baseP);
-          setDiscountAmount(amt);
           setDiscountMsg({
             success: true,
-            text: `Discount code "${res.discount.code}" applied (-${res.discount.discountType === "percent" ? `${res.discount.discountAmount}%` : `€${res.discount.discountAmount}`})!`,
+            text: tr(
+              `Discount code "${res.discount.code}" active! Select your pack below.`,
+              `Code promo "${res.discount.code}" actif ! Choisissez votre pack ci-dessous.`,
+              `¡Código "${res.discount.code}" activo! Elige tu paquete a continuación.`
+            ),
           });
         }
       });
     }
-  }, [selected]);
+  }, []);
 
   const handleApplyDiscount = async () => {
-    if (!discountInput.trim() || !selected) return;
+    if (!discountInput.trim()) return;
     setValidatingCode(true);
     setDiscountMsg(null);
-    const count = getGuestCount(selected);
-    const singleP = parseInt(selected.price, 10) || 0;
+    const count = selected ? getGuestCount(selected) : 1;
+    const singleP = selected ? (parseInt(selected.price, 10) || 0) : 0;
     const totalP = singleP * count;
-    const cur = selected.currency || "€";
-    const result = await validateDiscountCode(discountInput, totalP, selected.id, count, singleP, cur);
-    if (result.valid && result.discount && result.discountAmount != null) {
+    const cur = selected?.currency || "€";
+    const result = await validateDiscountCode(discountInput, totalP, selected?.id, count, singleP, cur);
+    if (result.valid && result.discount) {
       setAppliedDiscount(result.discount);
-      setDiscountAmount(result.discountAmount);
       const isMad = /mad|dh/i.test(cur);
       const madAmt = result.discount.discountAmount * EUR_TO_MAD;
       const scopeText =
@@ -157,9 +169,24 @@ function BookPage() {
           : result.discount.discountType === "percent"
           ? `-${result.discount.discountAmount}%`
           : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
+
+      if (selected && result.discountAmount != null) {
+        setDiscountAmount(result.discountAmount);
+      }
+
       setDiscountMsg({
         success: true,
-        text: `Discount code "${result.discount.code}" applied (${scopeText})!`,
+        text: selected
+          ? tr(
+              `Discount code "${result.discount.code}" applied (${scopeText})!`,
+              `Code promo "${result.discount.code}" appliqué (${scopeText}) !`,
+              `¡Código "${result.discount.code}" aplicado (${scopeText})!`
+            )
+          : tr(
+              `Discount code "${result.discount.code}" active! Select your pack below.`,
+              `Code promo "${result.discount.code}" actif ! Choisissez votre pack ci-dessous.`,
+              `¡Código "${result.discount.code}" activo! Elige tu paquete a continuación.`
+            ),
       });
 
       if (typeof window !== "undefined") {
@@ -173,11 +200,12 @@ function BookPage() {
       }
       setDiscountMsg({
         success: false,
-        text: result.error || "Invalid discount code",
+        text: result.error || tr("Invalid discount code", "Code promo invalide", "Código no válido"),
       });
     }
     setValidatingCode(false);
   };
+
 
 
   const clearDiscount = () => {
