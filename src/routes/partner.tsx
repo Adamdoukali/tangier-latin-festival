@@ -881,10 +881,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 icon: Ticket,
               },
               {
-                label: tr("Single Rooms", "Chambres simples", "Habitaciones individuales"),
+                label: tr("Single Rooms", "Chambres single", "Habitaciones individuales"),
                 value: live.filter((b) => catOf(b) === "single").length,
                 icon: Ticket,
               },
+
               {
                 label: tr("Full Pass", "Full Pass", "Full Pass"),
                 value: live.filter((b) => catOf(b) === "fullpass").length,

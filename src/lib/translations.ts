@@ -1336,7 +1336,8 @@ const dynamicPackDict: Record<string, { en: string; fr: string; es: string }> = 
   "hotel chambre double": { en: "Double Room", fr: "Chambre Double", es: "Habitación Doble" },
   "hotel chambre single": { en: "Single Room", fr: "Chambre Single", es: "Habitación Individual" },
   "chambres doubles": { en: "Double Rooms", fr: "Chambres Doubles", es: "Habitaciones Dobles" },
-  "chambres simples": { en: "Single Rooms", fr: "Chambres Simples", es: "Habitaciones Individuales" },
+  "chambres simples": { en: "Single Rooms", fr: "Chambres Single", es: "Habitaciones Individuales" },
+
   "full pass": { en: "Full Pass", fr: "Full Pass", es: "Full Pass" },
   "basic ticket": { en: "Basic Ticket", fr: "Billet Basique", es: "Entrada Básica" },
   "couple pass": { en: "Couple Pass", fr: "Pass Couple", es: "Pase Pareja" },
