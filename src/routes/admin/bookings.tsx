@@ -63,7 +63,8 @@ function AdminBookings() {
   // Form state
   const [form, setForm] = useState({
     packId: "",
-    customerName: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     country: "",
@@ -78,7 +79,8 @@ function AdminBookings() {
   const resetForm = () => {
     setForm({
       packId: packs[0]?.id ?? "",
-      customerName: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       country: "",
@@ -92,10 +94,12 @@ function AdminBookings() {
   };
 
   const handleCreate = async () => {
-    if (!form.customerName.trim() || !form.packId) return;
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim() || !form.packId) return;
     const pack = packs.find((p) => p.id === form.packId);
+    const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     await addBooking({
       ...form,
+      customerName,
       packName: packLabel(pack),
       arrivalDate: form.arrival || null,
       departureDate: form.departure || null,
@@ -104,6 +108,7 @@ function AdminBookings() {
     setShowForm(false);
     await reload();
   };
+
 
   const handleStatusChange = async (id: string, status: BookingStatus) => {
     setStatusError("");
@@ -562,29 +567,49 @@ function AdminBookings() {
               </div>
 
               {/* Name */}
-              <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  value={form.customerName}
-                  onChange={(e) =>
-                    setForm({ ...form, customerName: e.target.value })
-                  }
-                  placeholder="Full name"
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
-                />
+              {/* First Name & Last Name */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={form.firstName}
+                    onChange={(e) =>
+                      setForm({ ...form, firstName: e.target.value })
+                    }
+                    placeholder="First name"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={form.lastName}
+                    onChange={(e) =>
+                      setForm({ ...form, lastName: e.target.value })
+                    }
+                    placeholder="Last name"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
               </div>
 
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Email
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
+                    required
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="email@example.com"
@@ -592,18 +617,20 @@ function AdminBookings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Phone
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Phone <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
+                    required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+212..."
+                    placeholder="+212 6 XX XX XX XX"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
               </div>
+
 
               {/* Country & People */}
               <div className="grid grid-cols-2 gap-3">

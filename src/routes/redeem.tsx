@@ -61,11 +61,6 @@ function RedeemPage() {
   const isTwoPersonPack = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
   const twoPerson = pack ? isTwoPersonPack(pack) : false;
 
-  const setName = (idx: number, value: string) =>
-    setForm((f) => ({
-      ...f,
-      names: f.names.map((n, i) => (i === idx ? value : n)),
-    }));
 
   // Look up invite on load
   useEffect(() => {
@@ -95,7 +90,13 @@ function RedeemPage() {
       setPack(foundPack);
       // Two-person packs (double room / couple pass) need both names.
       if (isTwoPersonPack(foundPack)) {
-        setForm((f) => ({ ...f, names: ["", ""] }));
+        setForm((f) => ({
+          ...f,
+          guests: [
+            { firstName: "", lastName: "" },
+            { firstName: "", lastName: "" },
+          ],
+        }));
       }
     })();
     return () => {
@@ -103,21 +104,36 @@ function RedeemPage() {
     };
   }, [code]);
 
+  const setGuestField = (idx: number, field: "firstName" | "lastName", value: string) =>
+    setForm((f) => ({
+      ...f,
+      guests: f.guests.map((g, i) => (i === idx ? { ...g, [field]: value } : g)),
+    }));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !invite) return;
-    if (form.names.some((n) => !n.trim()) || !form.email.trim()) return;
+    if (
+      form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
+      !form.email.trim() ||
+      !form.phone.trim()
+    )
+      return;
 
     setSubmitting(true);
     // Small delay for UX
     await new Promise((r) => setTimeout(r, 600));
 
+    const customerName = form.guests
+      .map((g) => `${g.firstName.trim()} ${g.lastName.trim()}`)
+      .join(" & ");
+
     const result = await redeemInvite(code, {
-      customerName: form.names.map((n) => n.trim()).join(" & "),
+      customerName,
       email: form.email,
       phone: form.phone,
       country: form.country,
-      numPeople: form.names.length,
+      numPeople: form.guests.length,
       danceLevel: "",
       notes: form.notes,
     });
@@ -423,34 +439,48 @@ function RedeemPage() {
           </p>
 
           <div className="space-y-4">
-            {/* Names — like the booking form: one field per client */}
-            {twoPerson && (
-              <p className="text-xs text-amber-400/90 -mb-1">
-                This pack is for 2 people — please enter both full names.
-              </p>
-            )}
-            <div className={twoPerson ? "grid sm:grid-cols-2 gap-3" : ""}>
-              {form.names.map((name, idx) => (
-                <div key={idx}>
-                  <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                    {form.names.length === 1 ? "Full Name" : `Person ${idx + 1} Full Name`}{" "}
-                    <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(idx, e.target.value)}
-                    placeholder={form.names.length === 1 ? "Your full name" : idx === 0 ? "John Doe" : "Jane Doe"}
-                    className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
-                  />
+            {/* First Name & Last Name */}
+            {form.guests.map((g, idx) => (
+              <div key={idx} className="space-y-2">
+                {form.guests.length > 1 && (
+                  <p className="text-xs font-semibold tracking-wider uppercase text-amber-400">
+                    Guest {idx + 1}
+                  </p>
+                )}
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
+                      First Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={g.firstName}
+                      onChange={(e) => setGuestField(idx, "firstName", e.target.value)}
+                      placeholder={idx === 0 ? "John" : "Jane"}
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
+                      Last Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={g.lastName}
+                      onChange={(e) => setGuestField(idx, "lastName", e.target.value)}
+                      placeholder="Doe"
+                      className="w-full rounded-lg border border-zinc-700/60 bg-zinc-800/50 px-3 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/50 transition"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
 
             {/* Email */}
             <div>
-              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
+              <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
                 Email <span className="text-red-400">*</span>
               </label>
               <input
@@ -466,13 +496,14 @@ function RedeemPage() {
             {/* Phone & Country */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                  Phone
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
+                  Phone <span className="text-red-400">*</span>
                 </label>
                 <div className="flex">
                   <PhoneCountrySelect className="rounded-l-lg border border-zinc-700/60 border-r-0 bg-zinc-800/50 px-2 max-w-[110px] text-zinc-100 focus:outline-none focus:border-amber-500/50" />
                   <input
                     type="tel"
+                    required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="Number"
@@ -481,11 +512,12 @@ function RedeemPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5">
-                  Country
+                <label className="block text-xs tracking-widest uppercase text-zinc-500 mb-1.5 font-medium">
+                  Country <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
+                  required
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
                   placeholder="Morocco"
@@ -493,6 +525,7 @@ function RedeemPage() {
                 />
               </div>
             </div>
+
 
             {/* Notes */}
             <div>

@@ -294,16 +294,19 @@ export function PackBookingModal({
               const guestNames: string[] = [];
               if (numGuests > 1) {
                 for (let i = 1; i <= numGuests; i++) {
-                  const val = String(formData.get(`Guest ${i} Full Name`) || formData.get(`Person ${i} Full Name`) || "").trim();
-                  if (val) guestNames.push(val);
+                  const fn = String(formData.get(`Guest ${i} First Name`) || "").trim();
+                  const ln = String(formData.get(`Guest ${i} Last Name`) || "").trim();
+                  if (fn || ln) guestNames.push(`${fn} ${ln}`.trim());
                 }
               } else {
-                const val = String(formData.get("Full Name") ?? "").trim();
-                if (val) guestNames.push(val);
+                const fn = String(formData.get("First Name") || "").trim();
+                const ln = String(formData.get("Last Name") || "").trim();
+                if (fn || ln) guestNames.push(`${fn} ${ln}`.trim());
               }
               const customerName = guestNames.join(" & ");
               const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
               const customerEmail = String(formData.get("Email") ?? "");
+
 
               // Record the booking FIRST so the guest gets their reservation
               // number on screen and in the auto-reply email.
@@ -377,42 +380,73 @@ export function PackBookingModal({
             }}
           >
             <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
-            {/* Guest Full Name Inputs */}
+            {/* Guest First & Last Name Inputs */}
             {(pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)) > 1 ? (
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 {Array.from({ length: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1) }).map((_, i) => (
-                  <div key={i}>
-                    <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                      <User className="h-3 w-3" />
-                      {lang === "fr"
-                        ? `Nom complet de l'invité ${i + 1}`
-                        : lang === "es"
-                          ? `Nombre completo del invitado ${i + 1}`
-                          : `Guest ${i + 1} Full Name`}
-                    </label>
-                    <input
-                      type="text"
-                      name={`Guest ${i + 1} Full Name`}
-                      required
-                      className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                      placeholder={i === 0 ? "John Doe" : i === 1 ? "Jane Doe" : `Guest ${i + 1}`}
-                    />
+                  <div key={i} className="space-y-2">
+                    <p className="text-xs font-semibold tracking-wider uppercase text-gold">
+                      {lang === "fr" ? `Invité ${i + 1}` : lang === "es" ? `Invitado ${i + 1}` : `Guest ${i + 1}`}
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                          <User className="h-3 w-3" />
+                          {lang === "fr" ? "Prénom *" : lang === "es" ? "Nombre *" : "First Name *"}
+                        </label>
+                        <input
+                          type="text"
+                          name={`Guest ${i + 1} First Name`}
+                          required
+                          className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                          placeholder={i === 0 ? "John" : "Jane"}
+                        />
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                          <User className="h-3 w-3" />
+                          {lang === "fr" ? "Nom *" : lang === "es" ? "Apellido *" : "Last Name *"}
+                        </label>
+                        <input
+                          type="text"
+                          name={`Guest ${i + 1} Last Name`}
+                          required
+                          className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                          placeholder="Doe"
+                        />
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div>
-                <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                  <User className="h-3 w-3" />
-                  {t("packFormFullName")}
-                </label>
-                <input
-                  type="text"
-                  name="Full Name"
-                  required
-                  className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
-                  placeholder="John Doe"
-                />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                    <User className="h-3 w-3" />
+                    {lang === "fr" ? "Prénom *" : lang === "es" ? "Nombre *" : "First Name *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="First Name"
+                    required
+                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
+                    <User className="h-3 w-3" />
+                    {lang === "fr" ? "Nom *" : lang === "es" ? "Apellido *" : "Last Name *"}
+                  </label>
+                  <input
+                    type="text"
+                    name="Last Name"
+                    required
+                    className="w-full rounded-xl border border-border bg-card/40 px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                    placeholder="Doe"
+                  />
+                </div>
               </div>
             )}
 
@@ -421,7 +455,7 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <Mail className="h-3 w-3" />
-                  {t("packFormEmail")}
+                  {t("packFormEmail")} *
                 </label>
                 <input
                   type="email"
@@ -434,7 +468,7 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
                   <Phone className="h-3 w-3" />
-                  {t("packFormPhone")}
+                  {t("packFormPhone")} *
                 </label>
                 <div className="flex items-center">
                   <Select name="Phone Country Code" defaultValue="+212">
@@ -512,32 +546,53 @@ export function PackBookingModal({
               </div>
             </div>
 
-            {/* Promo / Discount Code */}
-            <div>
-              <label className="flex items-center gap-1.5 text-xs tracking-[0.15em] uppercase text-muted-foreground mb-1.5 font-medium">
-                <Tag className="h-3 w-3 text-gold" />
-                {lang === "fr" ? "Code promo / Réduction" : lang === "es" ? "Código promocional / Descuento" : "Discount Code / Promo Code"}
-              </label>
-              <div className="flex gap-2">
+            {/* Promo / School Code */}
+            <div className="rounded-xl border border-border/80 bg-card/40 p-4 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <Tag className="h-4 w-4 text-gold mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-foreground">
+                    {lang === "fr"
+                      ? "Vous faites un show avec votre école ?"
+                      : lang === "es"
+                      ? "¿Actúas en un show con tu escuela?"
+                      : "Performing a show with your dance school?"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    {lang === "fr"
+                      ? "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit."
+                      : lang === "es"
+                      ? "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
+                      : "Enter your school's confidential code to benefit from the discounted rate."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   value={discountInput}
                   onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. VIP50"
-                  className="flex-1 rounded-xl border border-border bg-card/40 px-4 py-2.5 font-mono text-sm uppercase focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
+                  placeholder={
+                    lang === "fr"
+                      ? "Code confidentiel"
+                      : lang === "es"
+                      ? "Código confidencial"
+                      : "Confidential code"
+                  }
+                  className="flex-1 rounded-xl border border-border bg-card/60 px-3.5 py-2.5 font-mono text-sm uppercase focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition placeholder:text-muted-foreground/50"
                 />
                 <button
                   type="button"
                   onClick={handleApplyDiscount}
                   disabled={validatingCode || !discountInput.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-gold/90 hover:bg-gold text-primary-foreground font-semibold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl bg-gold/90 hover:bg-gold text-primary-foreground font-semibold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
                 >
                   {validatingCode ? "..." : lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply"}
                 </button>
               </div>
               {discountMsg && (
                 <div
-                  className={`mt-2 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                  className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
                     discountMsg.success
                       ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
                       : "bg-destructive/10 border border-destructive/20 text-destructive"
@@ -552,6 +607,7 @@ export function PackBookingModal({
                 </div>
               )}
             </div>
+
 
             {/* Submit */}
             <button

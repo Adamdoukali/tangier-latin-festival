@@ -166,7 +166,7 @@ function BookPage() {
     setValidatingCode(false);
   };
 
-  const handleClearDiscount = () => {
+  const clearDiscount = () => {
     setAppliedDiscount(null);
     setDiscountInput("");
     setDiscountAmount(0);
@@ -185,7 +185,10 @@ function BookPage() {
   const choosePack = (p: Pack) => {
     setSelected(p);
     const count = getGuestCount(p);
-    setForm((f) => ({ ...f, names: Array.from({ length: count }, () => "") }));
+    setForm((f) => ({
+      ...f,
+      guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
+    }));
     if (appliedDiscount) {
       const baseP = parseInt(p.price, 10) || 0;
       setDiscountAmount(calculateDiscountAmount(appliedDiscount, baseP));
@@ -193,12 +196,21 @@ function BookPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const setName = (idx: number, value: string) =>
-    setForm((f) => ({ ...f, names: f.names.map((n, i) => (i === idx ? value : n)) }));
+  const setGuestField = (idx: number, field: "firstName" | "lastName", value: string) =>
+    setForm((f) => ({
+      ...f,
+      guests: f.guests.map((g, i) => (i === idx ? { ...g, [field]: value } : g)),
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected || form.names.some((n) => !n.trim()) || !form.email.trim()) return;
+    if (
+      !selected ||
+      form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
+      !form.email.trim() ||
+      !form.phone.trim()
+    )
+      return;
     setSubmitting(true);
     setError("");
 
@@ -206,7 +218,9 @@ function BookPage() {
     const collaborator = refCode
       ? await getCollaboratorByCode(refCode).catch(() => undefined)
       : undefined;
-    const customerName = form.names.map((n) => n.trim()).join(" & ");
+    const customerName = form.guests
+      .map((g) => `${g.firstName.trim()} ${g.lastName.trim()}`)
+      .join(" & ");
 
     // Record the pending booking FIRST so the guest gets a reservation
     // number on the success screen and in the auto-reply email.
@@ -413,38 +427,46 @@ function BookPage() {
           </p>
 
           <div className="space-y-4">
-            {form.names.length > 1 && (
-              <p className="text-xs text-amber-700 -mb-1 font-medium">
-                {tr(
-                  `This pack is for ${form.names.length} guests — please enter all full names below.`,
-                  `Ce pack est pour ${form.names.length} invités — veuillez saisir tous les noms complets ci-dessous.`,
-                  `Este pack es para ${form.names.length} invitados — introduce todos los nombres completos a continuación.`
+            {form.guests.map((g, idx) => (
+              <div key={idx} className="space-y-2">
+                {form.guests.length > 1 && (
+                  <p className="text-xs font-semibold tracking-wider uppercase text-amber-600">
+                    {tr("Guest", "Invité", "Invitado")} {idx + 1}
+                  </p>
                 )}
-              </p>
-            )}
-            <div className={form.names.length > 1 ? "grid sm:grid-cols-2 gap-3" : ""}>
-              {form.names.map((name, idx) => (
-                <div key={idx}>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    {form.names.length === 1
-                      ? tr("Full Name", "Nom complet", "Nombre completo")
-                      : `${tr("Guest", "Invité", "Invitado")} ${idx + 1}`}{" "}
-                    <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(idx, e.target.value)}
-                    placeholder={idx === 0 ? "John Doe" : "Jane Doe"}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
-                  />
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                      {tr("First Name", "Prénom", "Nombre")} <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={g.firstName}
+                      onChange={(e) => setGuestField(idx, "firstName", e.target.value)}
+                      placeholder={idx === 0 ? "John" : "Jane"}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                      {tr("Last Name", "Nom", "Apellido")} <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={g.lastName}
+                      onChange={(e) => setGuestField(idx, "lastName", e.target.value)}
+                      placeholder="Doe"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
 
             <div>
-              <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+              <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                 Email <span className="text-red-600">*</span>
               </label>
               <input
@@ -460,12 +482,13 @@ function BookPage() {
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Phone", "Téléphone", "Teléfono")}
+                  {tr("Phone", "Téléphone", "Teléfono")} <span className="text-red-600">*</span>
                 </label>
                 <div className="flex">
                   <PhoneCountrySelect className="rounded-l-lg border border-gray-300 border-r-0 bg-white px-2 max-w-[110px] text-gray-900 focus:outline-none focus:border-amber-500 text-xs sm:text-sm" />
                   <input
                     type="tel"
+                    required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder={tr("Number", "Numéro", "Número")}
@@ -475,9 +498,8 @@ function BookPage() {
               </div>
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Country", "Pays", "País")} <span className="text-red-400">*</span>
+                  {tr("Country", "Pays", "País")} <span className="text-red-600">*</span>
                 </label>
-                {/* Required: feeds the Morocco / international split in the admin */}
                 <input
                   type="text"
                   required
@@ -524,19 +546,34 @@ function BookPage() {
               </div>
             </div>
 
-            {/* Discount Code */}
-            <div>
-              <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5 text-amber-500" />
-                {tr("Discount Code", "Code promo / Réduction", "Código de descuento")}
-              </label>
-              <div className="flex gap-2">
+            {/* Promo / School Code */}
+            <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-900">
+                    {tr(
+                      "Performing a show with your dance school?",
+                      "Vous faites un show avec votre école ?",
+                      "¿Actúas en un show con tu escuela?"
+                    )}
+                  </p>
+                  <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
+                    {tr(
+                      "Enter your school's confidential code to benefit from the discounted rate.",
+                      "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit.",
+                      "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
+                    )}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
                 <input
                   type="text"
                   value={discountInput}
                   onChange={(e) => setDiscountInput(e.target.value.toUpperCase())}
-                  placeholder="e.g. VIP50"
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  placeholder={tr("Confidential code", "Code confidentiel", "Código confidencial")}
+                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-mono uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition placeholder:text-gray-400"
                 />
                 <button
                   type="button"
@@ -549,7 +586,7 @@ function BookPage() {
               </div>
               {discountMsg && (
                 <div
-                  className={`mt-2 p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+                  className={`p-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
                     discountMsg.success
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : "bg-red-50 text-red-700 border border-red-200"
@@ -560,6 +597,11 @@ function BookPage() {
                   ) : (
                     <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
                   )}
+                  <span>{discountMsg.text}</span>
+                </div>
+              )}
+            </div>
+
                   <span>{discountMsg.text}</span>
                 </div>
               )}
