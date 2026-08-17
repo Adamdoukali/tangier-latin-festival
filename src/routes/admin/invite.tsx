@@ -13,6 +13,7 @@ import {
   Zap,
   Link2,
   User,
+  Users,
 } from "lucide-react";
 import {
   getInvites,
@@ -22,6 +23,7 @@ import {
   getPacks,
   getCollaborators,
   packLabel,
+  packGuestCount,
   type Invite,
   type Pack,
   type Collaborator,
@@ -225,11 +227,17 @@ function AdminInvite() {
             >
               <option value="">Select a pack</option>
               {packs.map((p) => {
+                const guests = packGuestCount(p);
+                const guestLabel =
+                  guests === 1
+                    ? "1 Guest"
+                    : guests === 2
+                    ? "2 Guests (Double)"
+                    : `${guests} Guests (Special Pack)`;
                 const nights = p.features.find((f) => /night|nuit|noche/i.test(f));
                 return (
                   <option key={p.id} value={p.id}>
-                    {p.name}
-                    {nights ? ` · ${nights}` : ` · ${p.sub}`} — {p.price} {p.currency || "€"}
+                    {p.name} · [{guestLabel}]{nights ? ` · ${nights}` : ` · ${p.sub}`} — {p.price} {p.currency || "€"}
                     {p.active ? "" : "  · PRIVATE (admin only)"}
                   </option>
                 );
@@ -328,7 +336,18 @@ function AdminInvite() {
                 <code className="text-xs font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
                   {inv.code}
                 </code>
-                <p className="text-xs text-gray-500 mt-1">{inv.packName}</p>
+                <p className="text-xs text-gray-800 font-semibold mt-1">{inv.packName}</p>
+                {(() => {
+                  const p = packs.find((x) => x.id === inv.packId);
+                  const guests = p ? packGuestCount(p) : (/double|doble|couple/i.test(inv.packName) ? 2 : 1);
+                  return (
+                    <div className="mt-1">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                        <Users className="h-3 w-3" /> {guests} {guests > 1 ? "Guests" : "Guest"}
+                      </span>
+                    </div>
+                  );
+                })()}
                 {inv.assignee && (
                   <p className="text-[10px] font-semibold text-gray-700 mt-1.5 uppercase tracking-widest border border-gray-300/50 rounded bg-gray-50 px-2 py-0.5 inline-block">
                     For: {inv.assignee}

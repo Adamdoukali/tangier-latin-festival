@@ -21,6 +21,7 @@ import {
   getInviteByCode,
   getPackById,
   redeemInvite,
+  packGuestCount,
   ticketUrl,
   type Invite,
   type Pack,
@@ -58,11 +59,6 @@ function RedeemPage() {
     notes: "",
   });
 
-  // Double rooms and couple passes include exactly two people —
-  // both client names are required.
-  const isTwoPersonPack = (p: Pack) => /double|doble|couple|pareja/i.test(p.name);
-  const twoPerson = pack ? isTwoPersonPack(pack) : false;
-
   // Look up invite on load
   useEffect(() => {
     let cancelled = false;
@@ -89,16 +85,14 @@ function RedeemPage() {
       }
       setInvite(found);
       setPack(foundPack);
-      // Two-person packs (double room / couple pass) need both names.
-      if (isTwoPersonPack(foundPack)) {
-        setForm((f) => ({
-          ...f,
-          guests: [
-            { firstName: "", lastName: "" },
-            { firstName: "", lastName: "" },
-          ],
-        }));
-      }
+      const count = packGuestCount(foundPack);
+      setForm((f) => ({
+        ...f,
+        guests: Array.from({ length: count }, () => ({
+          firstName: "",
+          lastName: "",
+        })),
+      }));
     })();
     return () => {
       cancelled = true;

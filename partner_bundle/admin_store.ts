@@ -1876,6 +1876,17 @@ export function guestOrigin(booking: Booking): GuestOrigin {
 
 export type PackRoomCategory = "single" | "double" | "special" | "fullpass";
 
+/** Calculate the expected number of guests for a pack (1, 2, 3, 4, etc.) */
+export function packGuestCount(p?: Pack | null): number {
+  if (!p) return 1;
+  if (typeof p.numGuests === "number" && p.numGuests > 0) return p.numGuests;
+  const combined = `${p.name} ${p.sub} ${p.category || ""}`.toLowerCase();
+  if (/triple|3\s*pers|3\s*guests|3\s*personnes|3\s*people/.test(combined)) return 3;
+  if (/quad|4\s*pers|4\s*guests|4\s*personnes|4\s*people/.test(combined)) return 4;
+  if (/double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/.test(combined)) return 2;
+  return 1;
+}
+
 /** Classify a pack by its name, category, subtitle, or guest count:
  *  - 2 people / "Double Room" / "Chambre Double" / "Couple" -> "double"
  *  - 1 person with hotel/room / "Single Room" / "Chambre Single" -> "single"

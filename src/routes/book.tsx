@@ -21,6 +21,7 @@ import {
   getRememberedReferral,
   validateDiscountCode,
   calculateDiscountAmount,
+  packGuestCount,
   packLabel,
   ticketUrl,
   type Pack,
@@ -66,7 +67,7 @@ function BookPage() {
   const [validatingCode, setValidatingCode] = useState(false);
 
   const [form, setForm] = useState({
-    names: [""] as string[],
+    guests: [{ firstName: "", lastName: "" }],
     email: "",
     phone: "",
     country: "",
@@ -85,8 +86,11 @@ function BookPage() {
           getPackById(packId).then((p) => {
             if (p) {
               setSelected(p);
-              const count = p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
-              setForm((f) => ({ ...f, names: Array.from({ length: count }, () => "") }));
+              const count = packGuestCount(p);
+              setForm((f) => ({
+                ...f,
+                guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
+              }));
             }
           });
         }
@@ -219,15 +223,11 @@ function BookPage() {
     }
   };
 
-  const getGuestCount = (p: Pack) => {
-    if (typeof p.numGuests === "number" && p.numGuests > 1) return p.numGuests;
-    if (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`)) return 2;
-    return p.numGuests ?? 1;
-  };
+  const getGuestCount = (p: Pack) => packGuestCount(p);
 
   const choosePack = (p: Pack) => {
     setSelected(p);
-    const count = getGuestCount(p);
+    const count = packGuestCount(p);
     setForm((f) => ({
       ...f,
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
@@ -235,7 +235,8 @@ function BookPage() {
     if (appliedDiscount) {
       const singleP = parseInt(p.price, 10) || 0;
       const totalP = singleP * count;
-      setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP));
+      const cur = p.currency || "€";
+      setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur));
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
