@@ -38,8 +38,10 @@ export const Route = createFileRoute("/admin/packs")({
 
 function formatCategoryTitle(cat: string): string {
   const c = (cat || "").trim();
-  if (/hotel\s*packs?\s*\(single\)|chambre\s*single|single\s*run/i.test(c)) return "Single Room";
-  if (/hotel\s*packs?\s*\(double\)|chambre\s*double/i.test(c)) return "Double Room";
+  if (/hotel\s*packs?\s*\(single\)|chambre\s*single|single\s*room|single\s*pass/i.test(c)) return "Single Room";
+  if (/hotel\s*packs?\s*\(double\)|chambre\s*double|double\s*room/i.test(c)) return "Double Room";
+  if (/special\s*pack|pack\s*spécial|triple|quad/i.test(c)) return "Special Pack";
+  if (/full\s*pass/i.test(c)) return "Full Pass";
   if (c === "Hotel Packs (Single)") return "Single Room";
   if (c === "Hotel Packs (Double)") return "Double Room";
   return c;
@@ -61,13 +63,13 @@ interface PackFormData {
 const emptyForm: PackFormData = {
   name: "",
   sub: "",
-  category: "",
+  category: "Double Room",
   price: "",
   currency: "€",
   features: [""],
   popular: false,
   active: true,
-  numGuests: 1,
+  numGuests: 2,
   isPrivate: false,
 };
 
@@ -181,9 +183,16 @@ function AdminPacks() {
     const cleanFeatures = form.features.filter((f) => f.trim() !== "");
     if (!form.name.trim() || !form.price.trim() || cleanFeatures.length === 0) return;
 
+    const defaultCat =
+      form.numGuests === 2
+        ? "Double Room"
+        : form.numGuests >= 3
+        ? "Special Pack"
+        : "Single Room";
+
     const clean = {
       ...form,
-      category: form.category.trim() || "Other",
+      category: form.category.trim() || defaultCat,
       features: cleanFeatures,
     };
     if (editingId) {
@@ -622,12 +631,12 @@ function AdminPacks() {
                 <datalist id="pack-category-options">
                   {Array.from(
                     new Set([
-                      ...packs.map((p) => p.category || "Other"),
                       "Double Room",
                       "Single Room",
+                      "Special Pack",
                       "Full Pass",
                       "VIP",
-                      "Other",
+                      ...packs.map((p) => p.category || "Other"),
                     ])
                   ).map((c) => (
                     <option key={c} value={c} />
@@ -724,15 +733,31 @@ function AdminPacks() {
                 </label>
                 <select
                   value={form.numGuests}
-                  onChange={(e) => setForm({ ...form, numGuests: parseInt(e.target.value, 10) || 1 })}
+                  onChange={(e) => {
+                    const g = parseInt(e.target.value, 10) || 1;
+                    setForm((prev) => {
+                      let autoCat = prev.category;
+                      if (
+                        !prev.category ||
+                        prev.category === "Double Room" ||
+                        prev.category === "Single Room" ||
+                        prev.category === "Special Pack" ||
+                        prev.category === "Full Pass" ||
+                        prev.category === "Other"
+                      ) {
+                        autoCat = g === 2 ? "Double Room" : g >= 3 ? "Special Pack" : "Single Room";
+                      }
+                      return { ...prev, numGuests: g, category: autoCat };
+                    });
+                  }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition font-medium"
                 >
-                  <option value={1}>1 Guest (Single Person)</option>
-                  <option value={2}>2 Guests (Double / Couple — Guest 1 & Guest 2)</option>
-                  <option value={3}>3 Guests (Triple Room — Guest 1, Guest 2 & Guest 3)</option>
-                  <option value={4}>4 Guests (Quad Room — 4 Guests)</option>
-                  <option value={5}>5 Guests (Group — 5 Guests)</option>
-                  <option value={6}>6 Guests (Group — 6 Guests)</option>
+                  <option value={1}>1 Guest (Single Room / Single Pass)</option>
+                  <option value={2}>2 Guests (Chambre Double — 2 People)</option>
+                  <option value={3}>3 Guests (Special Pack — 3 Guests)</option>
+                  <option value={4}>4 Guests (Special Pack — 4 Guests)</option>
+                  <option value={5}>5 Guests (Special Pack — 5 Guests)</option>
+                  <option value={6}>6 Guests (Special Pack — 6 Guests)</option>
                 </select>
                 <p className="mt-1 text-[11px] text-gray-500">
                   The booking form will automatically require names for each of these guests (e.g. Guest 1, Guest 2, Guest 3).

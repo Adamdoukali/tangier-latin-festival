@@ -70,7 +70,7 @@ function guestHtml(p: EmailPayload): string {
       ${ticketBlock}
     </div>
     <p style="text-align:center;font-size:11px;color:#a1a1aa;margin:16px 0 0">
-      ${TEAM_EMAIL} · +212 6 64 01 02 79 · tangierlatinfestival.com
+      ${TEAM_EMAIL} · +212 6 64 01 02 79 / +212 6 64 63 06 32 · tangierlatinfestival.com
     </p>
   </div>
 </body></html>`;

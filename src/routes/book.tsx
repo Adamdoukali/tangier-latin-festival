@@ -70,8 +70,8 @@ function BookPage() {
     email: "",
     phone: "",
     country: "",
-    arrival: "",
-    departure: "",
+    arrival: "2027-01-07",
+    departure: "2027-01-11",
     notes: "",
   });
 
@@ -103,9 +103,10 @@ function BookPage() {
     if (!ref) return;
     getCollaboratorByCode(ref)
       .then((c) => {
-        if (c?.language && c.language !== "en") {
+        if (c?.language) {
+          localStorage.setItem("tlf_lang", c.language);
           params.set("lang", c.language);
-          window.location.replace(`${window.location.pathname}?${params}`);
+          window.location.replace(`${window.location.pathname}?${params.toString()}`);
         }
       })
       .catch(() => {});
@@ -591,7 +592,10 @@ function BookPage() {
                   required
                   value={form.arrival}
                   min="2027-01-01"
-                  max="2027-01-31"
+                  max="2027-01-30"
+                  onFocus={() => {
+                    if (!form.arrival) setForm((f) => ({ ...f, arrival: "2027-01-01" }));
+                  }}
                   onChange={(e) => setForm({ ...form, arrival: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
@@ -606,7 +610,10 @@ function BookPage() {
                   required
                   value={form.departure}
                   min={form.arrival || "2027-01-01"}
-                  max="2027-02-15"
+                  max="2027-01-30"
+                  onFocus={() => {
+                    if (!form.departure) setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                  }}
                   onChange={(e) => setForm({ ...form, departure: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />

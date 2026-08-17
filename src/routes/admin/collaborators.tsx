@@ -116,8 +116,8 @@ function suggestCode(name: string): string {
 
 // The partner link: short subdomain form on the live site
 // (tickets.tangierlatinfestival.com/CODE), /book?ref locally.
-function referralUrl(code: string, _lang?: PartnerLanguage): string {
-  return partnerShareLink(code);
+function referralUrl(code: string, lang?: PartnerLanguage): string {
+  return partnerShareLink(code, lang);
 }
 
 function AdminCollaborators() {

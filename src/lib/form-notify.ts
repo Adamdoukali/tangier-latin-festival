@@ -119,7 +119,7 @@ export function bookingAutoResponse(
       "Nous sommes impatients de vous accueillir à Tanger et de vous faire vivre une expérience unique, placée sous le signe de la danse, du partage et de la convivialité.\n\n" +
       "Toute l'équipe du Tangier International Latin Festival vous remercie pour votre confiance et vous souhaite un séjour exceptionnel ainsi que des souvenirs inoubliables.\n\n" +
       "À très bientôt au Tangier International Latin Festival !\n\n" +
-      "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+      "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
     );
   }
   if (lang === "es") {
@@ -135,7 +135,7 @@ export function bookingAutoResponse(
       "Estamos deseando recibirte en Tánger y hacerte vivir una experiencia única, bajo el signo del baile, el intercambio y la convivencia.\n\n" +
       "Todo el equipo del Tangier International Latin Festival te agradece tu confianza y te desea una estancia excepcional y recuerdos inolvidables.\n\n" +
       "¡Hasta muy pronto en el Tangier International Latin Festival!\n\n" +
-      "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+      "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
     );
   }
   const refBlock = reservation
@@ -150,7 +150,7 @@ export function bookingAutoResponse(
     "We look forward to welcoming you to Tangier for a unique experience of dance, sharing and conviviality.\n\n" +
     "The whole Tangier International Latin Festival team thanks you for your trust and wishes you an exceptional stay and unforgettable memories.\n\n" +
     "See you very soon at the Tangier International Latin Festival!\n\n" +
-    "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+    "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
   );
 }
 
@@ -248,7 +248,7 @@ export function ticketConfirmationEmail(opts: {
       `${L.show}\n\n` +
       `${L.bye}\n` +
       `— Tangier International Latin Festival\n` +
-      `contact@tangierlatinfestival.com · +212 6 64 01 02 79`,
+      `contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`,
   };
 }
 
@@ -259,7 +259,7 @@ export function contactAutoResponse(lang: string): string {
       "Bonjour,\n\n" +
       "Merci de nous avoir contactés — nous avons bien reçu votre message et nous vous répondrons très prochainement.\n\n" +
       "— L'équipe du Tangier International Latin Festival\n" +
-      "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+      "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
     );
   }
   if (lang === "es") {
@@ -267,13 +267,13 @@ export function contactAutoResponse(lang: string): string {
       "Hola,\n\n" +
       "Gracias por contactarnos — hemos recibido tu mensaje y te responderemos muy pronto.\n\n" +
       "— El equipo del Tangier International Latin Festival\n" +
-      "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+      "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
     );
   }
   return (
     "Hello,\n\n" +
     "Thank you for reaching out — we received your message and will get back to you shortly.\n\n" +
     "— The Tangier International Latin Festival team\n" +
-    "contact@tangierlatinfestival.com · +212 6 64 01 02 79"
+    "contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32"
   );
 }

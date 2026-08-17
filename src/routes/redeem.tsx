@@ -53,8 +53,8 @@ function RedeemPage() {
     email: "",
     phone: "",
     country: "Morocco",
-    arrival: "",
-    departure: "",
+    arrival: "2027-01-07",
+    departure: "2027-01-11",
     notes: "",
   });
 
@@ -183,14 +183,6 @@ function RedeemPage() {
       setError(result.error);
     }
     setSubmitting(false);
-  };
-
-  const downloadQr = () => {
-    if (!qrDataUrl || !booking) return;
-    const a = document.createElement("a");
-    a.href = qrDataUrl;
-    a.download = `ticket-${booking.ticketCode}.png`;
-    a.click();
   };
 
   // ── Error State ──
@@ -330,14 +322,6 @@ function RedeemPage() {
                       <FileText className="h-3.5 w-3.5" /> Download Programme
                     </a>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={downloadQr}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition cursor-pointer mt-1"
-                  >
-                    <Sparkles className="h-3 w-3 text-amber-500" /> Save Image (PNG)
-                  </button>
                 </div>
               ) : (
                 <div className="pt-4 border-t border-gray-100 flex justify-center">
@@ -583,7 +567,10 @@ function RedeemPage() {
                   required
                   value={form.arrival}
                   min="2027-01-01"
-                  max="2027-01-31"
+                  max="2027-01-30"
+                  onFocus={() => {
+                    if (!form.arrival) setForm((f) => ({ ...f, arrival: "2027-01-01" }));
+                  }}
                   onChange={(e) => setForm({ ...form, arrival: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
@@ -597,7 +584,10 @@ function RedeemPage() {
                   required
                   value={form.departure}
                   min={form.arrival || "2027-01-01"}
-                  max="2027-02-15"
+                  max="2027-01-30"
+                  onFocus={() => {
+                    if (!form.departure) setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                  }}
                   onChange={(e) => setForm({ ...form, departure: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />

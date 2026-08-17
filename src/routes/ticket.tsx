@@ -261,22 +261,6 @@ function TicketPage() {
                   "Descargar el Programa del Festival (PDF)"
                 )}
               </a>
-
-              {/* Save QR Image Backup — Only when confirmed */}
-              {booking.status !== "pending" && qr && (
-                <a
-                  href={qr}
-                  download={`Ticket-${booking.ticketCode}-QR.png`}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-2.5 px-4 transition text-xs cursor-pointer"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  {tr(
-                    "Save QR Image (PNG)",
-                    "Enregistrer l'image QR (PNG)",
-                    "Guardar imagen QR (PNG)"
-                  )}
-                </a>
-              )}
             </div>
 
           </>

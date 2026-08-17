@@ -235,14 +235,14 @@ function AdminBookings() {
         `Thank you for your booking request for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027).\n\n` +
         `We are reviewing it and will respond within 24 hours to confirm your booking and send you the payment details.\n\n` +
         `Your reference: ${b.ticketCode}\n\n` +
-        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     } else if (b.status === "declined") {
       subject = `About your Tangier Latin Festival booking request (${b.ticketCode})`;
       body =
         `Hello ${firstName},\n\n` +
         `Thank you for your interest in the Tangier International Latin Festival. Unfortunately we were not able to confirm your booking request for the "${b.packName}" pack.\n\n` +
         `If you believe this is a mistake or would like to book a different pack, just reply to this email or contact us on WhatsApp and we'll be happy to help.\n\n` +
-        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     } else {
       subject = `Your Tangier Latin Festival booking is confirmed! (${b.ticketCode})`;
       body =
@@ -252,7 +252,7 @@ function AdminBookings() {
         `Ticket code: ${b.ticketCode}\n` +
         `Guests: ${b.customerName} (${b.numPeople} ${b.numPeople > 1 ? "people" : "person"})\n\n` +
         `Open the link and show the QR code at check-in.\n\n` +
-        `See you on the dance floor!\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+        `See you on the dance floor!\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     }
     window.location.href = `mailto:${encodeURIComponent(b.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
@@ -406,10 +406,18 @@ function AdminBookings() {
                       {(() => {
                         const pack = packs.find((p) => p.id === b.packId);
                         const name = pack?.name ?? b.packName;
+                        const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+                        const cur = pack?.currency || "€";
+                        const count = b.numPeople || 1;
+                        const gross = unitPrice * count;
+                        const priceInfo = pack
+                          ? count > 1
+                            ? `${count} people (${unitPrice} ${cur}/p → ${gross} ${cur})`
+                            : `${unitPrice} ${cur}`
+                          : null;
                         const detail = [
                           pack?.sub,
-                          pack ? `${pack.price} ${pack.currency || "€"}` : null,
-                          b.numPeople > 1 ? `${b.numPeople} people` : null,
+                          priceInfo,
                           b.arrivalDate
                             ? `${new Date(b.arrivalDate).toLocaleDateString()} → ${
                                 b.departureDate
@@ -424,7 +432,7 @@ function AdminBookings() {
                           <>
                             <p className="text-gray-700 font-medium">{name}</p>
                             {detail && (
-                              <p className="text-[11px] text-gray-500 mt-0.5 max-w-[220px] truncate" title={detail}>
+                              <p className="text-[11px] text-gray-500 mt-0.5 max-w-[240px] truncate" title={detail}>
                                 {detail}
                               </p>
                             )}
@@ -676,7 +684,7 @@ function AdminBookings() {
                     required
                     value={form.arrival}
                     min="2027-01-01"
-                    max="2027-01-31"
+                    max="2027-01-30"
                     onChange={(e) => setForm({ ...form, arrival: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
@@ -690,7 +698,7 @@ function AdminBookings() {
                     required
                     value={form.departure}
                     min={form.arrival || "2027-01-01"}
-                    max="2027-02-15"
+                    max="2027-01-30"
                     onChange={(e) => setForm({ ...form, departure: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />

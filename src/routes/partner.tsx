@@ -57,8 +57,8 @@ export const Route = createFileRoute("/partner")({
 
 // Short shareable link (tickets.tangierlatinfestival.com/CODE); the /book
 // page applies the partner's language automatically.
-function getBookingUrl(code: string, _lang?: string): string {
-  return partnerShareLink(code);
+function getBookingUrl(code: string, lang?: string): string {
+  return partnerShareLink(code, lang);
 }
 
 function PartnerPortal() {
@@ -872,7 +872,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             const live = myBookings.filter((b) => b.status !== "declined");
             const catOf = (b: Booking) => {
               const p = allPacks.find((x) => x.id === b.packId);
-              return packRoomCategory(p?.name ?? b.packName);
+              return packRoomCategory(p || b.packName, b.numPeople);
             };
             return [
               {
@@ -1054,29 +1054,50 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               {myBookings.map((b) => {
                 const waDigits = (b.phone || "").replace(/\D/g, "");
                 const hasTicket = b.status === "confirmed" || b.status === "checked-in";
+                const pack = allPacks.find((p) => p.id === b.packId);
+                const label = translateDynamicText(
+                  pack ? packLabel(pack) : b.packName,
+                  L as Language
+                );
+                const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+                const currency = pack?.currency || "€";
+                const numPeople = b.numPeople || 1;
+                const grossTotal = unitPrice * numPeople;
+                const discount = b.discountAmount || 0;
+                const netTotal = Math.max(0, grossTotal - discount);
+
                 return (
                   <div
                     key={b.id}
                     className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">
-                        {b.customerName}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {(() => {
-                          const pack = allPacks.find((p) => p.id === b.packId);
-                          const label = translateDynamicText(
-                            pack ? packLabel(pack) : b.packName,
-                            L as Language
-                          );
-                          return pack
-                            ? `${label} · ${pack.price} ${pack.currency || "€"}`
-                            : label;
-                        })()}
-                        {b.numPeople > 1
-                          ? ` · ${b.numPeople} ${tr("people", "personnes", "personas")}`
-                          : ""}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {b.customerName}
+                        </p>
+                        {pack && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                            {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-medium text-gray-700">{label}</span>
+                        {pack && (
+                          numPeople > 1 ? (
+                            <span>
+                              {" · "}
+                              <strong className="text-gray-800">
+                                {numPeople} {tr("people", "personnes", "personas")}
+                              </strong>
+                              {" "}
+                              ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
+                            </span>
+                          ) : (
+                            <span>{" · "}{unitPrice} {currency}</span>
+                          )
+                        )}
                         {b.arrivalDate
                           ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
                               b.departureDate

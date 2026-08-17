@@ -40,7 +40,7 @@ export const Route = createFileRoute("/admin/hotel")({
 interface Room {
   booking: Booking;
   pack: Pack | undefined;
-  category: "single" | "double";
+  category: "single" | "double" | "special";
   guests: string[];
   partner: Collaborator | undefined;
 }
@@ -138,7 +138,7 @@ function AdminHotel() {
     })
     .map((b) => {
       const pack = packs.find((p) => p.id === b.packId);
-      const category = packRoomCategory(pack?.name ?? b.packName);
+      const category = packRoomCategory(pack || b.packName, b.numPeople);
       return {
         booking: b,
         pack,

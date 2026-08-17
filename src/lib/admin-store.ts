@@ -241,13 +241,13 @@ export function ticketUrl(code: string): string {
  *  subdomain form (tickets.tangierlatinfestival.com/CODE → /book?ref=CODE
  *  via a host redirect); locally it falls back to the direct path. The
  *  /book page applies the partner's language automatically. */
-export function partnerShareLink(code: string): string {
+export function partnerShareLink(code: string, lang?: string): string {
   const host = typeof window !== "undefined" ? window.location.host : "";
   if (host.endsWith("tangierlatinfestival.com")) {
     return `https://tickets.tangierlatinfestival.com/${code}`;
   }
   const base = typeof window !== "undefined" ? window.location.origin : "";
-  return `${base}/book?ref=${code}`;
+  return `${base}/book?ref=${code}${lang ? `&lang=${lang}` : ""}`;
 }
 
 export function generateTicketCode(): string {
@@ -1591,7 +1591,7 @@ export async function requestPasswordReset(
     `--------------------------------------------------\n` +
     `This link is valid for 24 hours / Ce lien est valable 24h / Válido por 24 horas.\n\n` +
     `— Tangier International Latin Festival Team\n` +
-    `contact@tangierlatinfestival.com · +212 6 64 01 02 79`;
+    `contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
 
   sendFormNotification({
     subject,
@@ -1874,24 +1874,87 @@ export function guestOrigin(booking: Booking): GuestOrigin {
   return "morocco";
 }
 
-export type PackRoomCategory = "single" | "double" | "fullpass";
+export type PackRoomCategory = "single" | "double" | "special" | "fullpass";
 
-/** Classify a pack by its name: single room / double room / full pass. */
-export function packRoomCategory(packName: string): PackRoomCategory {
-  const n = packName.toLowerCase();
-  if (/single|simple|individual/.test(n)) return "single";
-  if (/double|doble/.test(n)) return "double";
+/** Classify a pack by its name, category, subtitle, or guest count:
+ *  - 2 people / "Double Room" / "Chambre Double" / "Couple" -> "double"
+ *  - 1 person with hotel/room / "Single Room" / "Chambre Single" -> "single"
+ *  - 3+ people / "Special Pack" / "Triple" / "Quad" -> "special"
+ *  - Full Pass / Party Pass without hotel room -> "fullpass"
+ */
+export function packRoomCategory(
+  packOrName?: string | Pack | null,
+  numGuests?: number
+): PackRoomCategory {
+  if (!packOrName) {
+    if (numGuests === 2) return "double";
+    if (numGuests && numGuests >= 3) return "special";
+    if (numGuests === 1) return "single";
+    return "fullpass";
+  }
+
+  let name = "";
+  let sub = "";
+  let category = "";
+  let guests = numGuests;
+
+  if (typeof packOrName === "object") {
+    name = packOrName.name || "";
+    sub = packOrName.sub || "";
+    category = packOrName.category || "";
+    if (guests == null && packOrName.numGuests != null) {
+      guests = packOrName.numGuests;
+    }
+  } else {
+    name = packOrName;
+  }
+
+  const combined = `${name} ${sub} ${category}`.toLowerCase();
+
+  // 1. 3+ guests or triple/quad/special
+  if (
+    (guests && guests >= 3) ||
+    /triple|quadruple|quad|special|spécial|3\s*pers|4\s*pers|5\s*pers|6\s*pers/i.test(combined) ||
+    /special\s*pack|pack\s*spécial/i.test(category)
+  ) {
+    return "special";
+  }
+
+  // 2. 2 guests or double room / couple / chambre double
+  if (
+    guests === 2 ||
+    /double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/i.test(combined) ||
+    /double\s*room|chambre\s*double/i.test(category)
+  ) {
+    return "double";
+  }
+
+  // 3. 1 guest or single room
+  if (
+    /single|simple|individual|chambre\s*single|1\s*pers|1\s*person/i.test(combined) ||
+    /single\s*room|chambre\s*single/i.test(category)
+  ) {
+    return "single";
+  }
+
+  // 4. If name/sub/category mentions hotel or room
+  if (/hotel|room|chambre|nuit|night|hébergement|alojamiento/i.test(combined)) {
+    return guests === 2 ? "double" : guests && guests >= 3 ? "special" : "single";
+  }
+
   return "fullpass";
 }
 
 /** Calculate total people for a booking based on numPeople, customerName splits (&), and room category (double room = 2 people min). */
 export function bookingPeopleCount(booking: Booking, packs?: Pack[]): number {
   const pack = packs?.find((p) => p.id === booking.packId);
-  const cat = packRoomCategory(pack?.name ?? booking.packName);
+  const cat = packRoomCategory(pack || booking.packName, booking.numPeople);
   const guestCount = booking.customerName.split(/\s*&\s*/).filter(Boolean).length;
   let count = Math.max(booking.numPeople || 1, guestCount);
   if (cat === "double") {
     count = Math.max(2, count);
+  } else if (cat === "special" && (booking.numPeople || 1) < 3) {
+    count = Math.max(3, count);
   }
   return count;
 }
@@ -1907,7 +1970,7 @@ export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategor
   const count = Math.max(1, booking.numPeople || 1);
   const pack = packs.find((p) => p.id === booking.packId);
   const def: BraceletCategory =
-    packRoomCategory(pack?.name ?? booking.packName) === "fullpass" ? "fullpass" : "hotel";
+    packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass" ? "fullpass" : "hotel";
 
   let overrides: Array<BraceletCategory | null> = [];
   if (booking.bracelet) {
@@ -2329,7 +2392,9 @@ export function perPersonRate(c: Collaborator, cat: PackRoomCategory): number {
       ? c.commissionDouble
       : cat === "single"
         ? c.commissionSingle
-        : c.commissionFullpass;
+        : cat === "special"
+          ? (c.commissionDouble ?? c.commissionSingle ?? c.commissionFullpass)
+          : c.commissionFullpass;
   return v ?? c.commission ?? 0;
 }
 
@@ -2363,27 +2428,32 @@ export function collaboratorCommission(
   packs: Pack[],
   discountCodes: DiscountCode[] = []
 ): Money {
-  let mine = bookings
+  const mine = bookings
     .filter(
       (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
     )
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const goal = c.missionGoal ?? 0;
-  if (goal > 0) {
-    let counted = 0;
-    mine = mine.filter((b) => {
-      if (counted < goal) {
-        counted += b.numPeople || 1;
-        return false; // consumed by the mission
-      }
-      return true;
-    });
-  }
-
+  let missionPeopleConsumed = 0;
   const cur = c.commissionCurrency ?? "EUR";
 
   return mine.reduce((acc, b) => {
+    const totalPeopleInBooking = b.numPeople || 1;
+
+    // Determine how many people from this booking go to the mission vs earn commission
+    let commissionablePeople = totalPeopleInBooking;
+    if (goal > 0 && missionPeopleConsumed < goal) {
+      const neededForMission = goal - missionPeopleConsumed;
+      const consumedFromThisBooking = Math.min(totalPeopleInBooking, neededForMission);
+      missionPeopleConsumed += consumedFromThisBooking;
+      commissionablePeople = totalPeopleInBooking - consumedFromThisBooking;
+    }
+
+    if (commissionablePeople <= 0) {
+      return acc; // All people in this booking were consumed by the mission
+    }
+
     // Find discount code if used on this booking
     const disc = b.discountCode
       ? discountCodes.find(
@@ -2400,15 +2470,16 @@ export function collaboratorCommission(
       if (type === "percent") {
         const pack = packs.find((x) => x.id === b.packId);
         const { amount, currency } = packPrice(pack);
-        const netPackPrice = Math.max(0, amount - (b.discountAmount || 0));
-        const saleValue = netPackPrice * (b.numPeople || 1);
+        const perPersonDiscount = (b.discountAmount || 0) / totalPeopleInBooking;
+        const netPerPerson = Math.max(0, amount - perPersonDiscount);
+        const saleValue = netPerPerson * commissionablePeople;
         const commValue = Math.round(saleValue * (overrideVal / 100) * 100) / 100;
         return currency === "MAD"
           ? { ...acc, mad: acc.mad + commValue }
           : { ...acc, eur: acc.eur + commValue };
       } else {
         // Fixed amount override (e.g., €10 per person)
-        const commValue = Math.round(overrideVal * (b.numPeople || 1) * 100) / 100;
+        const commValue = Math.round(overrideVal * commissionablePeople * 100) / 100;
         return cur === "MAD"
           ? { ...acc, mad: acc.mad + commValue }
           : { ...acc, eur: acc.eur + commValue };
@@ -2420,7 +2491,7 @@ export function collaboratorCommission(
       const pack = packs.find((x) => x.id === b.packId);
       const cat = packRoomCategory(pack?.name ?? b.packName);
       const rate = perPersonRate(c, cat);
-      const amount = Math.round(rate * (b.numPeople || 1) * 100) / 100;
+      const amount = Math.round(rate * commissionablePeople * 100) / 100;
       return cur === "MAD"
         ? { ...acc, mad: acc.mad + amount }
         : { ...acc, eur: acc.eur + amount };
@@ -2428,8 +2499,9 @@ export function collaboratorCommission(
       const pct = (c.commission ?? 0) / 100;
       const pack = packs.find((x) => x.id === b.packId);
       const { amount, currency } = packPrice(pack);
-      const netPackPrice = Math.max(0, amount - (b.discountAmount || 0));
-      const value = netPackPrice * (b.numPeople || 1);
+      const perPersonDiscount = (b.discountAmount || 0) / totalPeopleInBooking;
+      const netPerPerson = Math.max(0, amount - perPersonDiscount);
+      const value = netPerPerson * commissionablePeople;
       const commValue = Math.round(value * pct * 100) / 100;
       return currency === "MAD"
         ? { ...acc, mad: acc.mad + commValue }
@@ -2442,8 +2514,8 @@ export function collaboratorCommission(
 function salesOf(bookings: Booking[], packs: Pack[]): Money {
   return bookings.reduce((acc, b) => {
     const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
-    const netAmount = Math.max(0, amount - (b.discountAmount || 0));
-    const value = netAmount * (b.numPeople || 1);
+    const grossValue = amount * (b.numPeople || 1);
+    const value = Math.max(0, grossValue - (b.discountAmount || 0));
     return currency === "MAD"
       ? { ...acc, mad: acc.mad + value }
       : { ...acc, eur: acc.eur + value };

@@ -71,7 +71,7 @@ function AdminDashboard() {
       // Non-declined bookings split by pack type
       const catOf = (b: Booking) => {
         const p = packs.find((x) => x.id === b.packId);
-        return packRoomCategory(p?.name ?? b.packName);
+        return packRoomCategory(p || b.packName, b.numPeople);
       };
       const live = bookings.filter((b) => b.status !== "declined");
       setLiveBookings(live);
@@ -199,8 +199,8 @@ function AdminDashboard() {
       {/* Guests by origin — Morocco vs international, per pack type */}
       {(() => {
         const catOfClient = (c: ClientGuest) => {
-          const p = allPacks.find((x) => x.id === c.packName);
-          return packRoomCategory(p?.name ?? c.packName);
+          const p = allPacks.find((x) => x.id === c.packName || x.name === c.packName);
+          return packRoomCategory(p || c.packName, c.totalGuests);
         };
         const rowsData = [
           {

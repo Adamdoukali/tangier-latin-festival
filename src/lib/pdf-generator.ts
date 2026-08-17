@@ -283,7 +283,7 @@ export async function generateTicketPdf(
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   doc.text(
-    "Tangier International Latin Festival  ·  contact@tangierlatinfestival.com  ·  +212 6 64 01 02 79",
+    "Tangier International Latin Festival  ·  contact@tangierlatinfestival.com  ·  +212 6 64 01 02 79 / +212 6 64 63 06 32",
     105,
     275,
     { align: "center" }

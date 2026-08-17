@@ -573,8 +573,9 @@ export function PackBookingModal({
                   type="date"
                   name="Arrival Date"
                   required
+                  defaultValue="2027-01-07"
                   min="2027-01-01"
-                  max="2027-01-31"
+                  max="2027-01-30"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
@@ -587,8 +588,9 @@ export function PackBookingModal({
                   type="date"
                   name="Departure Date"
                   required
+                  defaultValue="2027-01-11"
                   min="2027-01-01"
-                  max="2027-02-15"
+                  max="2027-01-30"
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
@@ -680,7 +682,7 @@ export function PackBookingModal({
             )}
 
             <p className="text-center text-[10px] text-gray-400 tracking-wide pt-2">
-              contact@tangierlatinfestival.com · +212 6 64 01 02 79
+              contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32
             </p>
           </form>
         )}
