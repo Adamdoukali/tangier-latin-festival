@@ -17,6 +17,11 @@ import {
   Compass,
   MapPin,
   ExternalLink,
+  Bus,
+  Plane,
+  Ship,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -733,7 +738,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const tr = (en: string, fr: string, es: string) =>
     L === "fr" ? fr : L === "es" ? es : en;
 
-  const [activeSection, setActiveSection] = useState<"festival" | "tourism">("festival");
+  const [activeSection, setActiveSection] = useState<"festival" | "tourism" | "shuttle">("festival");
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [allFestivalBookings, setAllFestivalBookings] = useState<Booking[]>([]);
@@ -852,6 +857,33 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const tourismSales = collaboratorTourismRevenue(partner.id, myBookings);
   const tourismCommissions = collaboratorTourismCommission(partner.id, myBookings);
 
+  // Tourism Destination Breakdown
+  const tangierTourGuests = activeTourism
+    .filter((b) => (b.packId?.includes("tangier") || b.packName?.toLowerCase().includes("tangier")))
+    .reduce((sum, b) => sum + (b.numPeople || 1), 0);
+
+  const asilahTourGuests = activeTourism
+    .filter((b) => (b.packId?.includes("asilah") || b.packName?.toLowerCase().includes("asilah") || b.packName?.toLowerCase().includes("asella")))
+    .reduce((sum, b) => sum + (b.numPeople || 1), 0);
+
+  const chefchaouenTourGuests = activeTourism
+    .filter((b) => (b.packId?.includes("chefchaouen") || b.packName?.toLowerCase().includes("chefchaouen") || b.packName?.toLowerCase().includes("chawan") || b.packName?.toLowerCase().includes("chaouen")))
+    .reduce((sum, b) => sum + (b.numPeople || 1), 0);
+
+  // Shuttle Transfer Calculations
+  const shuttleBookings = myBookings.filter(
+    (b) => b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0)
+  );
+  const activeShuttle = shuttleBookings.filter((b) => b.status !== "declined");
+  const shuttlePassengers = activeShuttle.reduce((sum, b) => sum + (b.numPeople || 1), 0);
+  const shuttleRevenue = activeShuttle.reduce((sum, b) => sum + (b.transferCost || 0), 0);
+  const portShuttleGuests = activeShuttle
+    .filter((b) => b.transferType === "port")
+    .reduce((sum, b) => sum + (b.numPeople || 1), 0);
+  const airportShuttleGuests = activeShuttle
+    .filter((b) => b.transferType === "airport")
+    .reduce((sum, b) => sum + (b.numPeople || 1), 0);
+
   return (
     <div
       className="min-h-screen bg-slate-100 text-gray-900 notranslate"
@@ -887,8 +919,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       </header>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
-        {/* Navigation Tabs between Festival Packs & Tourism */}
-        <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
+        {/* Navigation Tabs between Festival Packs, Tourism & Shuttle */}
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-3 flex-wrap">
           <button
             onClick={() => setActiveSection("festival")}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
@@ -920,6 +952,23 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               activeSection === "tourism" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-800"
             }`}>
               {tourismBookings.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveSection("shuttle")}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
+              activeSection === "shuttle"
+                ? "bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-md shadow-sky-900/30"
+                : "bg-white text-gray-600 hover:bg-sky-50 border border-gray-200"
+            }`}
+          >
+            <Bus className="h-4 w-4 text-sky-300" />
+            <span>{tr("Shuttle Bus & Transfers", "Navettes & Transferts", "Shuttle y Traslados")}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeSection === "shuttle" ? "bg-white/20 text-white" : "bg-sky-100 text-sky-800"
+            }`}>
+              {shuttleBookings.length}
             </span>
           </button>
         </div>
@@ -1525,6 +1574,209 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               </option>
                             </select>
                           )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SECTION 3: SHUTTLE BUS & TRANSFERS                             */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeSection === "shuttle" && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Shuttle Transfer Stats Banner */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-sky-800 font-bold">
+                    {tr("Shuttle Bus Passengers", "Passagers Navette", "Pasajeros Shuttle")}
+                  </p>
+                  <Bus className="h-4 w-4 text-sky-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-slate-900">{shuttlePassengers}</p>
+                <span className="text-[10px] text-gray-400 font-medium">
+                  {tr("Total shuttle clients", "Clients navette", "Clientes de shuttle")}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-emerald-900 font-bold">
+                    {tr("Transfer Money", "Montant Transferts", "Dinero de Traslados")}
+                  </p>
+                  <Euro className="h-4 w-4 text-emerald-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-emerald-700">{shuttleRevenue} €</p>
+                <span className="text-[10px] text-emerald-600 font-semibold">
+                  {tr("Total transfer volume", "Volume transferts", "Volumen traslados")}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-blue-900 font-bold">
+                    {tr("Port of Tangier", "Port de Tanger", "Puerto de Tánger")}
+                  </p>
+                  <Ship className="h-4 w-4 text-blue-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-blue-900">{portShuttleGuests}</p>
+                <span className="text-[10px] text-blue-700 font-semibold">
+                  {tr("Port transfers", "Navettes port", "Traslados puerto")}
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-indigo-900 font-bold">
+                    {tr("Airport Transfers", "Navettes Aéroports", "Traslados Aeropuertos")}
+                  </p>
+                  <Plane className="h-4 w-4 text-indigo-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-indigo-900">{airportShuttleGuests}</p>
+                <span className="text-[10px] text-indigo-700 font-semibold">
+                  {tr("TNG & TTU airports", "Aéroports TNG & TTU", "Aeropuertos TNG y TTU")}
+                </span>
+              </div>
+            </div>
+
+            {/* Shuttle Summary Information Banner */}
+            <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 p-6 flex flex-col sm:flex-row items-start gap-4">
+              <div className="h-10 w-10 rounded-2xl bg-sky-600 text-white grid place-items-center shrink-0 shadow-sm">
+                <Bus className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <h3 className="font-display text-base font-bold text-slate-900">
+                  {tr("Official Airport & Port Shuttle Transfers", "Navettes Officielles Port & Aéroports", "Traslados Oficiales Puerto y Aeropuertos")}
+                </h3>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  {tr(
+                    "All transfers between Tangier Port, Tangier Ibn Battouta Airport (TNG), Tetouan Airport (TTU), and Hotel Kenzi Solazur. Flight and ferry details entered by your clients are tracked below.",
+                    "Tous les transferts entre le Port de Tanger, l'Aéroport Tanger Ibn Battouta (TNG), l'Aéroport de Tétouan (TTU) et l'Hôtel Kenzi Solazur avec les horaires d'arrivée et de départ.",
+                    "Todos los traslados entre Puerto de Tánger, Aeropuerto Tánger Ibn Battouta (TNG), Aeropuerto de Tetuán (TTU) y Hotel Kenzi Solazur con horarios de llegada y salida."
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Shuttle Passenger Manifest List */}
+            <div>
+              <h3 className="font-display text-sm tracking-wide mb-1">
+                {tr("Shuttle Bookings", "Réservations de Navette", "Reservas de Shuttle")} ({shuttleBookings.length})
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {tr(
+                  "Detailed list of all clients who booked a shuttle with arrival and departure schedules.",
+                  "Liste détaillée des clients ayant réservé une navette avec leurs horaires d'arrivée et départ.",
+                  "Lista detallada de clientes que han reservado shuttle con sus horarios de llegada y salida."
+                )}
+              </p>
+
+              {shuttleBookings.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
+                  {tr(
+                    "No shuttle requests from your clients yet.",
+                    "Aucune demande de navette pour l'instant.",
+                    "Aún no hay solicitudes de shuttle de tus clientes."
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {shuttleBookings.map((b) => {
+                    const isPort = b.transferType === "port";
+                    const hubName = b.transferLocation || (isPort ? "Port of Tangier (Tanger Ville)" : "Tangier Airport (TNG)");
+                    const optLabel =
+                      b.transferOption === "one_way_arrival"
+                        ? tr("One Way (Arrival)", "Aller simple (Arrivée)", "Solo ida (Llegada)")
+                        : b.transferOption === "one_way_departure"
+                        ? tr("One Way (Departure)", "Aller simple (Départ)", "Solo ida (Salida)")
+                        : tr("Round Trip (A/R)", "Aller-Retour (A/R)", "Ida y Vuelta (I/V)");
+
+                    return (
+                      <div
+                        key={b.id}
+                        className="rounded-xl border border-sky-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-gray-900 truncate">
+                              {b.customerName}
+                            </p>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                              isPort ? "bg-blue-50 text-blue-800 border border-blue-200" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
+                            }`}>
+                              {isPort ? <Ship className="h-3 w-3" /> : <Plane className="h-3 w-3" />}
+                              <span>{hubName}</span>
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">
+                              {optLabel}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              {b.transferCost || 0} € {tr("Transfer", "Transfert", "Traslado")}
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-gray-500 mt-1.5 space-y-1">
+                            <p className="flex items-center gap-2 flex-wrap">
+                              <strong className="text-gray-800">{b.numPeople || 1} {tr("passengers", "passagers", "pasajeros")}</strong>
+                              {b.arrivalDate && (
+                                <span className="flex items-center gap-1 text-slate-700">
+                                  <Calendar className="h-3 w-3 text-sky-600" />
+                                  <span>{tr("Arrival:", "Arrivée :", "Llegada:")} {new Date(b.arrivalDate).toLocaleDateString()}</span>
+                                </span>
+                              )}
+                              {b.departureDate && (
+                                <span className="flex items-center gap-1 text-slate-700">
+                                  <Calendar className="h-3 w-3 text-sky-600" />
+                                  <span>{tr("Departure:", "Départ :", "Salida:")} {new Date(b.departureDate).toLocaleDateString()}</span>
+                                </span>
+                              )}
+                              {b.roomNumber && (
+                                <span className="text-slate-700 font-semibold">
+                                  · {tr("Room", "Chambre", "Hab.")} {b.roomNumber}
+                                </span>
+                              )}
+                            </p>
+
+                            {b.transferDetails && (
+                              <p className="text-[11px] text-sky-900 bg-sky-50 px-2 py-1 rounded border border-sky-200/80">
+                                <strong>{tr("Flight / Ferry Info:", "Info Vol / Ferry :", "Info Vuelo / Ferry:")}</strong> {b.transferDetails}
+                              </p>
+                            )}
+
+                            <p className="text-[11px] text-gray-500 flex items-center gap-2">
+                              <span>{b.email}</span>
+                              <span>·</span>
+                              <span className="flex items-center gap-1">
+                                <Phone className="h-3 w-3 text-gray-400" />
+                                <span>{b.phone}</span>
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <select
+                            value={b.status}
+                            onChange={(e) =>
+                              changeBookingStatus(b.id, e.target.value as BookingStatus)
+                            }
+                            className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                          >
+                            <option value="pending">
+                              {tr("Pending", "En attente", "Pendiente")}
+                            </option>
+                            <option value="confirmed">
+                              {tr("Confirmed", "Confirmé", "Confirmada")}
+                            </option>
+                            <option value="declined">
+                              {tr("Declined", "Refusé", "Rechazada")}
+                            </option>
+                          </select>
                         </div>
                       </div>
                     );
