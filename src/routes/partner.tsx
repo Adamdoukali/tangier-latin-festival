@@ -22,6 +22,12 @@ import {
   Ship,
   Calendar,
   Clock,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  Bed,
+  Moon,
+  Eye,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -731,8 +737,50 @@ function SignUpScreen({
   );
 }
 
-// ─── Portal ───────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────
 
+function extractGuests(b: Booking): { guest1: string; guest2: string | null; allGuests: string[] } {
+  let names: string[] = [];
+  if (b.guestDetails) {
+    try {
+      const parsed = JSON.parse(b.guestDetails);
+      if (Array.isArray(parsed)) {
+        names = parsed
+          .map((g: any) => `${g.firstName || ""} ${g.lastName || ""}`.trim())
+          .filter(Boolean);
+      }
+    } catch {}
+  }
+  if (names.length === 0 && b.customerName) {
+    names = b.customerName
+      .split(/\s*&\s*|\s*,\s*|\s*\+\s*/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  const guest1 = names[0] || b.customerName || "Guest";
+  const guest2 = names[1] || null;
+  return { guest1, guest2, allGuests: names.length > 0 ? names : [guest1] };
+}
+
+function getNights(b: Booking, pack?: Pack): number | null {
+  if (pack?.sub) {
+    const match = pack.sub.match(/(\d+)\s*NIGHT/i);
+    if (match) return parseInt(match[1], 10);
+  }
+  if (pack?.name) {
+    const match = pack.name.match(/(\d+)\s*NIGHT/i);
+    if (match) return parseInt(match[1], 10);
+  }
+  if (b.arrivalDate && b.departureDate) {
+    const diff = Math.round(
+      (new Date(b.departureDate).getTime() - new Date(b.arrivalDate).getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (diff > 0 && diff < 30) return diff;
+  }
+  return null;
+}
+
+// ─── Portal ───────────────────────────────────────────────────────────
 
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const L = partner.language ?? "en";
@@ -740,6 +788,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     L === "fr" ? fr : L === "es" ? es : en;
 
   const [activeSection, setActiveSection] = useState<"festival" | "tourism" | "shuttle">("festival");
+  const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
+  const toggleExpand = (id: string) => setExpandedBookings((prev) => ({ ...prev, [id]: !prev[id] }));
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [allFestivalBookings, setAllFestivalBookings] = useState<Booking[]>([]);
@@ -1318,97 +1368,246 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 const discount = b.discountAmount || 0;
                 const netTotal = Math.max(0, grossTotal - discount);
 
+                const { guest1, guest2, allGuests } = extractGuests(b);
+                const nights = getNights(b, pack);
+                const isExpanded = !!expandedBookings[b.id];
+                const hasTransfer = b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0);
+                const transferOptLabel =
+                  b.transferOption === "one_way_arrival"
+                    ? tr("Arrival", "Arrivée", "Llegada")
+                    : b.transferOption === "one_way_departure"
+                    ? tr("Departure", "Départ", "Salida")
+                    : tr("Round Trip", "A/R", "I/V");
+
                 return (
                   <div
                     key={b.id}
-                    className="rounded-xl border border-gray-200 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-gray-300 transition"
+                    className="rounded-2xl border border-gray-200 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-gray-300"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {b.customerName}
-                        </p>
-                        {pack && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                    {/* Compact Summary Header Row */}
+                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* 1. First Guest & 2. Second Guest */}
+                        <div className="flex items-center gap-2 flex-wrap text-sm">
+                          <span className="font-bold text-gray-950 flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span>{guest1}</span>
+                          </span>
+                          {guest2 ? (
+                            <span className="text-gray-600 font-medium">
+                              · {tr("Guest 2:", "2ème participant :", "2º participante:")}{" "}
+                              <strong className="text-gray-900 font-bold">{guest2}</strong>
+                            </span>
+                          ) : numPeople > 1 ? (
+                            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-xs font-semibold">
+                              +{numPeople - 1} {tr("guest", "personne", "persona")}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* 3. Total Price & 4. Transfer */}
+                        <div className="mt-2 flex items-center gap-2 flex-wrap text-xs">
+                          {/* Total Price */}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-amber-50 text-amber-900 border border-amber-200">
                             {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
                           </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-semibold text-gray-800">{label}</span>
-                        {pack && (
-                          numPeople > 1 ? (
-                            <span>
-                              {" · "}
-                              <strong className="text-gray-800">
-                                {numPeople} {tr("people", "personnes", "personas")}
-                              </strong>
-                              {" "}
-                              ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
+
+                          {/* Transfer */}
+                          {hasTransfer ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-sky-50 text-sky-800 border border-sky-200">
+                              <Bus className="h-3.5 w-3.5 text-sky-600" />
+                              <span>
+                                {tr("Transfer:", "Transfert :", "Traslado:")} {b.transferCost || 0} € ({b.transferLocation || (b.transferType === "port" ? "Port" : "Airport")})
+                              </span>
                             </span>
                           ) : (
-                            <span>{" · "}{unitPrice} {currency}</span>
-                          )
-                        )}
-                        {b.arrivalDate
-                          ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
-                              b.departureDate
-                                ? new Date(b.departureDate).toLocaleDateString()
-                                : "?"
-                            }`
-                          : ""}{" "}
-                        · {new Date(b.createdAt).toLocaleDateString()}
-                      </p>
-                      {b.discountCode && (
-                        <p className="mt-1">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
-                            Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {hasTicket && (
-                        <a
-                          href={ticketUrl(b.ticketCode)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
-                          title={tr(
-                            `Open ticket ${b.ticketCode}`,
-                            `Ouvrir le billet ${b.ticketCode}`,
-                            `Abrir entrada ${b.ticketCode}`
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-gray-400 bg-gray-50 border border-gray-200/60 font-medium">
+                              {tr("No Transfer", "Sans transfert", "Sin traslado")}
+                            </span>
                           )}
+                        </div>
+                      </div>
+
+                      {/* Right side actions: View Details + Ticket + Status */}
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(b.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            isExpanded
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                          }`}
                         >
-                          <QrCode className="h-4 w-4" />
-                        </a>
-                      )}
-                      {b.status === "checked-in" ? (
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
-                        >
-                          {tr("Checked In", "Enregistré", "Registrado")}
-                        </span>
-                      ) : (
-                        <select
-                          value={b.status}
-                          onChange={(e) =>
-                            changeBookingStatus(b.id, e.target.value as BookingStatus)
-                          }
-                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                        >
-                          <option value="pending">
-                            {tr("Pending", "En attente", "Pendiente")}
-                          </option>
-                          <option value="confirmed">
-                            {tr("Confirmed", "Confirmé", "Confirmada")}
-                          </option>
-                          <option value="declined">
-                            {tr("Declined", "Refusé", "Rechazada")}
-                          </option>
-                        </select>
-                      )}
+                          <Info className="h-3.5 w-3.5" />
+                          <span>{isExpanded ? tr("Hide details", "Masquer détails", "Ocultar detalles") : tr("View details", "Voir détails", "Ver detalles")}</span>
+                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+
+                        {hasTicket && (
+                          <a
+                            href={ticketUrl(b.ticketCode)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-xl bg-amber-100 text-amber-700 hover:bg-amber-200 transition shadow-2xs"
+                            title={tr(
+                              `Open ticket ${b.ticketCode}`,
+                              `Ouvrir le billet ${b.ticketCode}`,
+                              `Abrir entrada ${b.ticketCode}`
+                            )}
+                          >
+                            <QrCode className="h-4 w-4" />
+                          </a>
+                        )}
+
+                        {b.status === "checked-in" ? (
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
+                          >
+                            {tr("Checked In", "Enregistré", "Registrado")}
+                          </span>
+                        ) : (
+                          <select
+                            value={b.status}
+                            onChange={(e) =>
+                              changeBookingStatus(b.id, e.target.value as BookingStatus)
+                            }
+                            className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                          >
+                            <option value="pending">
+                              {tr("Pending", "En attente", "Pendiente")}
+                            </option>
+                            <option value="confirmed">
+                              {tr("Confirmed", "Confirmé", "Confirmada")}
+                            </option>
+                            <option value="declined">
+                              {tr("Declined", "Refusé", "Rechazada")}
+                            </option>
+                          </select>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Expandable Details Container */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-100 bg-slate-50/80 p-4 sm:p-5 text-xs text-gray-700 space-y-3.5">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {/* Room / Pack Info */}
+                          <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                              {tr("Pack & Room Type", "Pack & Type de Chambre", "Pack y Tipo de Habitación")}
+                            </span>
+                            <p className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                              <Bed className="h-4 w-4 text-amber-600 shrink-0" />
+                              <span>{label}</span>
+                            </p>
+                            <p className="text-gray-500 mt-1">
+                              {numPeople} {numPeople > 1 ? tr("guests", "personnes", "personas") : tr("guest", "personne", "persona")} · {unitPrice} {currency}/pers
+                            </p>
+                            {b.roomNumber && (
+                              <p className="mt-1.5 font-bold text-amber-900 inline-block bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
+                                {tr("Room #:", "Chambre N° :", "Habitación N°:")} {b.roomNumber}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Stay Duration / Nights */}
+                          <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                              {tr("Duration & Dates", "Durée & Dates", "Duración y Fechas")}
+                            </span>
+                            <p className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                              <Moon className="h-4 w-4 text-indigo-600 shrink-0" />
+                              <span>{nights ? `${nights} ${tr("Nights Stay", "Nuits sur place", "Noches de estancia")}` : tr("Pass Duration", "Durée Pass", "Duración Pase")}</span>
+                            </p>
+                            <p className="text-gray-500 mt-1">
+                              {b.arrivalDate && b.departureDate
+                                ? `${new Date(b.arrivalDate).toLocaleDateString()} → ${new Date(b.departureDate).toLocaleDateString()}`
+                                : tr("Festival: Jan 07–11, 2027", "Festival : 07–11 Janv 2027", "Festival: 07–11 Enero 2027")}
+                            </p>
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              {tr("Booked on:", "Réservé le :", "Reservado el:")} {new Date(b.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          {/* Transfer Full Details */}
+                          <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
+                              {tr("Shuttle Transfer Details", "Détails Navette", "Detalles Traslado")}
+                            </span>
+                            {hasTransfer ? (
+                              <>
+                                <p className="font-bold text-sky-950 flex items-center gap-1.5">
+                                  <Bus className="h-4 w-4 text-sky-600 shrink-0" />
+                                  <span>{b.transferLocation || (b.transferType === "port" ? "Port of Tangier" : "Tangier Airport")}</span>
+                                </p>
+                                <p className="text-sky-800 font-semibold mt-1">
+                                  {transferOptLabel} · {b.transferCost || 0} €
+                                </p>
+                                {b.transferDetails && (
+                                  <p className="mt-1 text-[11px] text-sky-900 bg-sky-50 p-1.5 rounded border border-sky-200 font-mono">
+                                    {b.transferDetails}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-gray-400 italic mt-2">
+                                {tr("No transfer booked", "Aucun transfert sélectionné", "Sin traslado seleccionado")}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* All Participants & Contacts */}
+                        <div className="bg-white p-3 rounded-xl border border-gray-200/80 shadow-2xs space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                              {tr("Full Guest List & Contacts", "Liste des participants & Contacts", "Lista de participantes y Contactos")}
+                            </span>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              {b.email && (
+                                <span className="flex items-center gap-1">
+                                  <Mail className="h-3.5 w-3.5 text-gray-400" />
+                                  <span>{b.email}</span>
+                                </span>
+                              )}
+                              {b.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                  <span>{b.phone}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {allGuests.map((gName, gIdx) => (
+                              <span
+                                key={gIdx}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-800 font-semibold text-xs border border-gray-200"
+                              >
+                                <Users className="h-3 w-3 text-gray-500" />
+                                <span>{gName}</span>
+                              </span>
+                            ))}
+                          </div>
+                          {b.notes && (
+                            <div className="pt-2 border-t border-gray-100">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">
+                                {tr("Notes & Remarks:", "Notes & Remarques :", "Notas y Observaciones:")}
+                              </span>
+                              <p className="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                {b.notes}
+                              </p>
+                            </div>
+                          )}
+                          {b.discountCode && (
+                            <p className="pt-1 text-[11px] font-semibold text-amber-800">
+                              Promo: <code className="bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">{b.discountCode}</code> (-{b.discountAmount || 0} €)
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1456,18 +1655,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 const grossTotal = unitPrice * numPeople;
                 const commissionAmt = numPeople * 5;
 
-                let guestList: string[] = [];
-                if (b.guestDetails) {
-                  try {
-                    const parsed = JSON.parse(b.guestDetails);
-                    if (Array.isArray(parsed)) {
-                      guestList = parsed.map((g) => `${g.firstName || ""} ${g.lastName || ""}`.trim()).filter(Boolean);
-                    }
-                  } catch {}
-                }
-                if (guestList.length === 0 && b.customerName) {
-                  guestList = b.customerName.split(/\s*&\s*/).map((s) => s.trim()).filter(Boolean);
-                }
+                const { guest1, guest2, allGuests } = extractGuests(b);
+                const isExpanded = !!expandedBookings[b.id];
 
                 // Look for matched festival booking
                 const matchedFest = allFestivalBookings.find((fb) => {
@@ -1482,88 +1671,206 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 return (
                   <div
                     key={b.id}
-                    className="rounded-xl border border-blue-200/90 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-blue-300 transition"
+                    className="rounded-2xl border border-blue-200/90 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-blue-300"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {b.customerName}
-                        </p>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-900 border border-blue-200">
-                          {b.packName}
-                        </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          +{commissionAmt} € {tr("Commission", "Commission", "Comisión")}
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                        <p>
-                          <strong className="text-gray-800">{numPeople} {numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")}</strong>
-                          {" "}
-                          ({unitPrice} €/pers → <strong className="text-blue-900 font-semibold">{grossTotal} €</strong>)
-                          {b.roomNumber ? ` · ${tr("Hotel Room:", "Chambre :", "Habitación:")} ${b.roomNumber}` : ""}
-                          {" · "}{new Date(b.createdAt).toLocaleDateString()}
-                        </p>
-                        {guestList.length > 0 && (
-                          <p className="text-[11px] text-gray-600">
-                            <span className="font-semibold">{tr("Guests:", "Participants :", "Participantes:")}</span>{" "}
-                            {guestList.join(", ")}
-                          </p>
-                        )}
-                        {matchedFest && (
-                          <p className="mt-1">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                              <span>{tr("Linked Festival Pass:", "Pass Festival lié :", "Pase Festival vinculado:")} #{matchedFest.ticketCode} ({matchedFest.packName})</span>
+                    {/* Compact Header Summary Row */}
+                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* 1. First Guest & 2. Second Guest */}
+                        <div className="flex items-center gap-2 flex-wrap text-sm">
+                          <span className="font-bold text-gray-950 flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span>{guest1}</span>
+                          </span>
+                          {guest2 ? (
+                            <span className="text-gray-600 font-medium">
+                              · {tr("Guest 2:", "2ème participant :", "2º participante:")}{" "}
+                              <strong className="text-gray-900 font-bold">{guest2}</strong>
                             </span>
-                          </p>
+                          ) : numPeople > 1 ? (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 text-xs font-semibold">
+                              +{numPeople - 1} {tr("guest", "personne", "persona")}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* 3. Destination & 4. Total Price & Commission */}
+                        <div className="mt-2 flex items-center gap-2 flex-wrap text-xs">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-900 border border-blue-200">
+                            <Compass className="h-3.5 w-3.5 text-blue-600 mr-1" />
+                            <span>{b.packName}</span>
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-extrabold bg-amber-50 text-amber-900 border border-amber-200">
+                            {grossTotal} €
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            +{commissionAmt} € {tr("Commission", "Commission", "Comisión")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right side actions: View Details + Ticket + Status */}
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(b.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            isExpanded
+                              ? "bg-blue-600 text-white shadow-sm"
+                              : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                          }`}
+                        >
+                          <Info className="h-3.5 w-3.5" />
+                          <span>{isExpanded ? tr("Hide details", "Masquer détails", "Ocultar detalles") : tr("View details", "Voir détails", "Ver detalles")}</span>
+                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+
+                        {hasTicket && (
+                          <a
+                            href={ticketUrl(b.ticketCode)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-xl bg-blue-100 text-blue-700 hover:bg-blue-200 transition shadow-2xs"
+                            title={tr(
+                              `Open ticket ${b.ticketCode}`,
+                              `Ouvrir le billet ${b.ticketCode}`,
+                              `Abrir entrada ${b.ticketCode}`
+                            )}
+                          >
+                            <QrCode className="h-4 w-4" />
+                          </a>
+                        )}
+
+                        {b.status === "checked-in" ? (
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
+                          >
+                            {tr("Checked In", "Enregistré", "Registrado")}
+                          </span>
+                        ) : (
+                          <select
+                            value={b.status}
+                            onChange={(e) =>
+                              changeBookingStatus(b.id, e.target.value as BookingStatus)
+                            }
+                            className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                          >
+                            <option value="pending">
+                              {tr("Pending", "En attente", "Pendiente")}
+                            </option>
+                            <option value="confirmed">
+                              {tr("Confirmed", "Confirmé", "Confirmada")}
+                            </option>
+                            <option value="declined">
+                              {tr("Declined", "Refusé", "Rechazada")}
+                            </option>
+                          </select>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      {hasTicket && (
-                        <a
-                          href={ticketUrl(b.ticketCode)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                          title={tr(
-                            `Open ticket ${b.ticketCode}`,
-                            `Ouvrir le billet ${b.ticketCode}`,
-                            `Abrir entrada ${b.ticketCode}`
+                    {/* Expandable Details Container */}
+                    {isExpanded && (
+                      <div className="border-t border-blue-100 bg-blue-50/40 p-4 sm:p-5 text-xs text-gray-700 space-y-3.5">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {/* Excursion & Rate */}
+                          <div className="bg-white p-3 rounded-xl border border-blue-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500 block mb-1">
+                              {tr("Excursion & Rate", "Excursion & Tarif", "Excursión y Tarifa")}
+                            </span>
+                            <p className="font-bold text-gray-900 text-sm">{b.packName}</p>
+                            <p className="text-gray-500 mt-1">
+                              {numPeople} {numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")} · {unitPrice} €/pers
+                            </p>
+                            <p className="text-emerald-700 font-bold mt-1 text-[11px]">
+                              {tr("Partner Commission:", "Commission Partenaire :", "Comisión Colaborador:")} {commissionAmt} € (5 € / pers)
+                            </p>
+                          </div>
+
+                          {/* Pickup & Location */}
+                          <div className="bg-white p-3 rounded-xl border border-blue-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500 block mb-1">
+                              {tr("Pickup Location", "Lieu de départ", "Lugar de salida")}
+                            </span>
+                            <p className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                              <MapPin className="h-4 w-4 text-blue-600 shrink-0" />
+                              <span>Hotel Kenzi Solazur Lobby</span>
+                            </p>
+                            {b.roomNumber && (
+                              <p className="mt-1.5 text-blue-900 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-[11px]">
+                                {tr("Hotel Room:", "Chambre :", "Habitación:")} #{b.roomNumber}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Linked Festival Pass */}
+                          <div className="bg-white p-3 rounded-xl border border-blue-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-500 block mb-1">
+                              {tr("Linked Pass", "Pass Lié", "Pase Vinculado")}
+                            </span>
+                            {matchedFest ? (
+                              <>
+                                <p className="font-bold text-emerald-900 flex items-center gap-1.5">
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                                  <span>#{matchedFest.ticketCode}</span>
+                                </p>
+                                <p className="text-gray-600 text-[11px] mt-1 truncate">
+                                  {matchedFest.packName}
+                                </p>
+                              </>
+                            ) : (
+                              <p className="text-gray-400 italic mt-2">
+                                {tr("Direct booking", "Réservation directe", "Reserva directa")}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Guest List & Contacts */}
+                        <div className="bg-white p-3 rounded-xl border border-blue-200/80 shadow-2xs space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                              {tr("Full Guest List & Contacts", "Liste des participants & Contacts", "Lista de participantes y Contactos")}
+                            </span>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              {b.email && (
+                                <span className="flex items-center gap-1">
+                                  <Mail className="h-3.5 w-3.5 text-gray-400" />
+                                  <span>{b.email}</span>
+                                </span>
+                              )}
+                              {b.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                  <span>{b.phone}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {allGuests.map((gName, gIdx) => (
+                              <span
+                                key={gIdx}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 font-semibold text-xs border border-blue-200"
+                              >
+                                <Users className="h-3 w-3 text-blue-500" />
+                                <span>{gName}</span>
+                              </span>
+                            ))}
+                          </div>
+                          {b.notes && (
+                            <div className="pt-2 border-t border-gray-100">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">
+                                {tr("Notes & Remarks:", "Notes & Remarques :", "Notas y Observaciones:")}
+                              </span>
+                              <p className="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                {b.notes}
+                              </p>
+                            </div>
                           )}
-                        >
-                          <QrCode className="h-4 w-4" />
-                        </a>
-                      )}
-                      {b.status === "checked-in" ? (
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
-                        >
-                          {tr("Checked In", "Enregistré", "Registrado")}
-                        </span>
-                      ) : (
-                        <select
-                          value={b.status}
-                          onChange={(e) =>
-                            changeBookingStatus(b.id, e.target.value as BookingStatus)
-                          }
-                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                        >
-                          <option value="pending">
-                            {tr("Pending", "En attente", "Pendiente")}
-                          </option>
-                          <option value="confirmed">
-                            {tr("Confirmed", "Confirmé", "Confirmada")}
-                          </option>
-                          <option value="declined">
-                            {tr("Declined", "Refusé", "Rechazada")}
-                          </option>
-                        </select>
-                      )}
-                    </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1614,88 +1921,162 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     ? tr("One Way (Departure)", "Aller simple (Départ)", "Solo ida (Salida)")
                     : tr("Round Trip (A/R)", "Aller-Retour (A/R)", "Ida y Vuelta (I/V)");
 
+                const { guest1, guest2, allGuests } = extractGuests(b);
+                const isExpanded = !!expandedBookings[b.id];
+
                 return (
                   <div
                     key={b.id}
-                    className="rounded-xl border border-sky-200 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-sky-300 transition"
+                    className="rounded-2xl border border-sky-200 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-sky-300"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-bold text-gray-900 truncate">
-                          {b.customerName}
-                        </p>
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
-                          isPort ? "bg-blue-50 text-blue-800 border border-blue-200" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
-                        }`}>
-                          {isPort ? <Ship className="h-3 w-3" /> : <Plane className="h-3 w-3" />}
-                          <span>{hubName}</span>
-                        </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">
-                          {optLabel}
-                        </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          {b.transferCost || 0} € {tr("Transfer", "Transfert", "Traslado")}
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-gray-500 mt-1.5 space-y-1">
-                        <p className="flex items-center gap-2 flex-wrap">
-                          <strong className="text-gray-800">{b.numPeople || 1} {tr("passengers", "passagers", "pasajeros")}</strong>
-                          {b.arrivalDate && (
-                            <span className="flex items-center gap-1 text-slate-700 font-medium">
-                              <Calendar className="h-3 w-3 text-sky-600" />
-                              <span>{tr("Arrival:", "Arrivée :", "Llegada:")} {new Date(b.arrivalDate).toLocaleDateString()}</span>
-                            </span>
-                          )}
-                          {b.departureDate && (
-                            <span className="flex items-center gap-1 text-slate-700 font-medium">
-                              <Calendar className="h-3 w-3 text-sky-600" />
-                              <span>{tr("Departure:", "Départ :", "Salida:")} {new Date(b.departureDate).toLocaleDateString()}</span>
-                            </span>
-                          )}
-                          {b.roomNumber && (
-                            <span className="text-slate-700 font-semibold">
-                              · {tr("Room", "Chambre", "Hab.")} {b.roomNumber}
-                            </span>
-                          )}
-                        </p>
-
-                        {b.transferDetails && (
-                          <p className="text-[11px] text-sky-900 bg-sky-50 px-2 py-1 rounded border border-sky-200/80 font-mono">
-                            <strong>{tr("Flight/Ferry Info:", "Info Vol/Ferry :", "Info Vuelo/Ferry:")}</strong> {b.transferDetails}
-                          </p>
-                        )}
-
-                        <p className="text-[11px] text-gray-500 flex items-center gap-2">
-                          <span>{b.email}</span>
-                          <span>·</span>
-                          <span className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-gray-400" />
-                            <span>{b.phone}</span>
+                    {/* Compact Header Summary Row */}
+                    <div className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        {/* 1. First Guest & 2. Second Guest */}
+                        <div className="flex items-center gap-2 flex-wrap text-sm">
+                          <span className="font-bold text-gray-950 flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-gray-500 shrink-0" />
+                            <span>{guest1}</span>
                           </span>
-                        </p>
+                          {guest2 ? (
+                            <span className="text-gray-600 font-medium">
+                              · {tr("Guest 2:", "2ème participant :", "2º participante:")}{" "}
+                              <strong className="text-gray-900 font-bold">{guest2}</strong>
+                            </span>
+                          ) : (b.numPeople || 1) > 1 ? (
+                            <span className="px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 text-xs font-semibold">
+                              +{(b.numPeople || 1) - 1} {tr("guest", "personne", "persona")}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {/* 3. Transfer & 4. Total Price */}
+                        <div className="mt-2 flex items-center gap-2 flex-wrap text-xs">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold ${
+                            isPort ? "bg-blue-50 text-blue-800 border border-blue-200" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
+                          }`}>
+                            {isPort ? <Ship className="h-3.5 w-3.5" /> : <Plane className="h-3.5 w-3.5" />}
+                            <span>{hubName}</span>
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-bold bg-slate-100 text-slate-800">
+                            {optLabel}
+                          </span>
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            {b.transferCost || 0} € {tr("Transfer", "Transfert", "Traslado")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right side actions: View Details + Status */}
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpand(b.id)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                            isExpanded
+                              ? "bg-sky-600 text-white shadow-sm"
+                              : "bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200"
+                          }`}
+                        >
+                          <Info className="h-3.5 w-3.5" />
+                          <span>{isExpanded ? tr("Hide details", "Masquer détails", "Ocultar detalles") : tr("View details", "Voir détails", "Ver detalles")}</span>
+                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                        </button>
+
+                        <select
+                          value={b.status}
+                          onChange={(e) =>
+                            changeBookingStatus(b.id, e.target.value as BookingStatus)
+                          }
+                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                        >
+                          <option value="pending">
+                            {tr("Pending", "En attente", "Pendiente")}
+                          </option>
+                          <option value="confirmed">
+                            {tr("Confirmed", "Confirmé", "Confirmada")}
+                          </option>
+                          <option value="declined">
+                            {tr("Declined", "Refusé", "Rechazada")}
+                          </option>
+                        </select>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <select
-                        value={b.status}
-                        onChange={(e) =>
-                          changeBookingStatus(b.id, e.target.value as BookingStatus)
-                        }
-                        className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                      >
-                        <option value="pending">
-                          {tr("Pending", "En attente", "Pendiente")}
-                        </option>
-                        <option value="confirmed">
-                          {tr("Confirmed", "Confirmé", "Confirmada")}
-                        </option>
-                        <option value="declined">
-                          {tr("Declined", "Refusé", "Rechazada")}
-                        </option>
-                      </select>
-                    </div>
+                    {/* Expandable Details Container */}
+                    {isExpanded && (
+                      <div className="border-t border-sky-100 bg-sky-50/40 p-4 sm:p-5 text-xs text-gray-700 space-y-3.5">
+                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {/* Flight / Ferry info */}
+                          <div className="bg-white p-3 rounded-xl border border-sky-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-500 block mb-1">
+                              {tr("Flight / Ferry Details", "Détails Vol / Ferry", "Detalles Vuelo / Ferry")}
+                            </span>
+                            <p className="font-mono text-xs text-sky-950 font-semibold bg-sky-50 p-2 rounded-lg border border-sky-200">
+                              {b.transferDetails || tr("No flight/ferry details entered", "Aucune information de vol/ferry saisie", "Sin detalles de vuelo/ferry ingresados")}
+                            </p>
+                          </div>
+
+                          {/* Travel Dates */}
+                          <div className="bg-white p-3 rounded-xl border border-sky-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-500 block mb-1">
+                              {tr("Travel Dates", "Dates de voyage", "Fechas de viaje")}
+                            </span>
+                            <p className="text-gray-800 font-semibold flex items-center gap-1.5">
+                              <Calendar className="h-4 w-4 text-sky-600 shrink-0" />
+                              <span>
+                                {b.arrivalDate ? new Date(b.arrivalDate).toLocaleDateString() : "?"} → {b.departureDate ? new Date(b.departureDate).toLocaleDateString() : "?"}
+                              </span>
+                            </p>
+                            {b.roomNumber && (
+                              <p className="mt-1 text-sky-900 font-bold bg-sky-50 px-2 py-0.5 rounded border border-sky-200 text-[11px] inline-block">
+                                {tr("Hotel Room:", "Chambre :", "Habitación:")} #{b.roomNumber}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Passengers & Total */}
+                          <div className="bg-white p-3 rounded-xl border border-sky-200/80 shadow-2xs">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-500 block mb-1">
+                              {tr("Transfer Fee", "Frais de transfert", "Tarifa de traslado")}
+                            </span>
+                            <p className="font-bold text-gray-900 text-sm">{b.transferCost || 0} €</p>
+                            <p className="text-gray-500 mt-0.5">
+                              {b.numPeople || 1} {tr("passengers", "passagers", "pasajeros")} · {optLabel}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Contact Details */}
+                        <div className="bg-white p-3 rounded-xl border border-sky-200/80 shadow-2xs flex items-center justify-between gap-3 flex-wrap">
+                          <div className="flex flex-wrap gap-2">
+                            {allGuests.map((gName, gIdx) => (
+                              <span
+                                key={gIdx}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-50 text-sky-900 font-semibold text-xs border border-sky-200"
+                              >
+                                <Users className="h-3 w-3 text-sky-500" />
+                                <span>{gName}</span>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            {b.email && (
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3.5 w-3.5 text-gray-400" />
+                                <span>{b.email}</span>
+                              </span>
+                            )}
+                            {b.phone && (
+                              <span className="flex items-center gap-1">
+                                <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                <span>{b.phone}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
