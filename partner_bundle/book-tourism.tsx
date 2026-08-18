@@ -1036,16 +1036,6 @@ function BookTourismPage() {
                     {selectedTour.price * numGuests} {selectedTour.currency}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 pt-1">
-                  <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>
-                    {tr(
-                      "Free cancellation up to 48 hours before departure. Official festival guides.",
-                      "Annulation sans frais jusqu'à 48h avant le départ. Guides officiels agréés.",
-                      "Cancelación gratuita hasta 48h antes de la salida. Guías oficiales certificados."
-                    )}
-                  </span>
-                </div>
               </div>
 
               {error && (

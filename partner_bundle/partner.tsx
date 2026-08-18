@@ -891,15 +891,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+
       {/* Header — classic navy bar */}
-      <header className="bg-[#13234d] shadow-md">
+      <header className="bg-[#13234d] shadow-md sticky top-0 z-30">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="h-10 w-10 rounded-xl bg-amber-500 grid place-items-center shrink-0">
+            <div className="h-10 w-10 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
               <Users className="h-5 w-5 text-[#13234d]" />
             </div>
             <div className="min-w-0">
-              <p className="font-display text-sm tracking-wide truncate text-white">
+              <p className="font-display text-sm tracking-wide truncate text-white font-bold">
                 {partner.name}
               </p>
               <p className="text-[11px] text-slate-300 font-mono">{partner.code}</p>
@@ -910,7 +911,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               clearPartnerSession();
               onSignOut();
             }}
-            className="inline-flex items-center gap-2 text-xs text-slate-300 hover:text-red-300 transition cursor-pointer shrink-0"
+            className="inline-flex items-center gap-2 text-xs text-slate-300 hover:text-red-300 transition cursor-pointer shrink-0 px-3 py-1.5 rounded-lg hover:bg-white/10"
           >
             <LogOut className="h-4 w-4" />
             {tr("Sign Out", "Déconnexion", "Cerrar sesión")}
@@ -918,874 +919,769 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
-        {/* Navigation Tabs between Festival Packs, Tourism & Shuttle */}
-        <div className="flex items-center gap-2 border-b border-gray-200 pb-3 flex-wrap">
-          <button
-            onClick={() => setActiveSection("festival")}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
-              activeSection === "festival"
-                ? "bg-[#13234d] text-white shadow-md shadow-slate-900/20"
-                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
-            }`}
-          >
-            <Ticket className="h-4 w-4 text-amber-400" />
-            <span>{tr("Festival Packs & Rooms", "Packs & Chambres Festival", "Packs y Hotel Festival")}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-              activeSection === "festival" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
-            }`}>
-              {festivalBookings.length}
-            </span>
-          </button>
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-9">
 
-          <button
-            onClick={() => setActiveSection("tourism")}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
-              activeSection === "tourism"
-                ? "bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md shadow-blue-900/30"
-                : "bg-white text-gray-600 hover:bg-blue-50 border border-gray-200"
-            }`}
-          >
-            <Compass className="h-4 w-4 text-cyan-300" />
-            <span>{tr("Cultural Tourism & Tours", "Tourisme & Excursions", "Turismo y Excursiones")}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-              activeSection === "tourism" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-800"
-            }`}>
-              {tourismBookings.length}
-            </span>
-          </button>
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 1. ALL-IN-ONE PERFORMANCE KPI CARDS                             */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="space-y-4">
+          {/* Main Festival Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {(() => {
+              const live = festivalBookings.filter((b) => b.status !== "declined");
+              const catOf = (b: Booking) => {
+                const p = allPacks.find((x) => x.id === b.packId);
+                return packRoomCategory(p || b.packName, b.numPeople);
+              };
+              return [
+                {
+                  label: tr("Double Rooms", "Chambres doubles", "Habitaciones dobles"),
+                  value: live.filter((b) => catOf(b) === "double").length,
+                  icon: Ticket,
+                  color: "text-amber-600",
+                },
+                {
+                  label: tr("Single Rooms", "Chambres single", "Habitaciones individuales"),
+                  value: live.filter((b) => catOf(b) === "single").length,
+                  icon: Ticket,
+                  color: "text-amber-600",
+                },
+                {
+                  label: tr("Full Pass", "Full Pass", "Full Pass"),
+                  value: live.filter((b) => catOf(b) === "fullpass").length,
+                  icon: CheckCircle2,
+                  color: "text-emerald-600",
+                },
+                {
+                  label: tr("Festival Sales", "Ventes Festival", "Ventas Festival"),
+                  value: formatForPartner(sales, partner),
+                  icon: Euro,
+                  color: "text-blue-600",
+                },
+                {
+                  label: `Commission (${commissionLabel(partner)})`,
+                  value: formatForPartner(earned, partner),
+                  icon: Euro,
+                  color: "text-amber-600",
+                },
+              ];
+            })().map((s) => (
+              <div
+                key={s.label}
+                className="rounded-xl border border-gray-200 bg-white shadow-xs p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-gray-500 font-bold">{s.label}</p>
+                  <s.icon className={`h-4 w-4 ${s.color}`} />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-slate-900">{s.value}</p>
+              </div>
+            ))}
+          </div>
 
-          <button
-            onClick={() => setActiveSection("shuttle")}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
-              activeSection === "shuttle"
-                ? "bg-gradient-to-r from-sky-600 to-blue-700 text-white shadow-md shadow-sky-900/30"
-                : "bg-white text-gray-600 hover:bg-sky-50 border border-gray-200"
-            }`}
-          >
-            <Bus className="h-4 w-4 text-sky-300" />
-            <span>{tr("Shuttle Bus & Transfers", "Navettes & Transferts", "Shuttle y Traslados")}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-              activeSection === "shuttle" ? "bg-white/20 text-white" : "bg-sky-100 text-sky-800"
-            }`}>
-              {shuttleBookings.length}
-            </span>
-          </button>
+          {/* Excursions & Shuttle KPI Breakdown Banner */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-cyan-800">
+                <p className="text-[10px] font-bold uppercase tracking-wider">Asilah Tour</p>
+                <MapPin className="h-3.5 w-3.5 text-cyan-600" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-cyan-900">{asilahTourGuests}</p>
+              <span className="text-[10px] text-cyan-700 font-medium">25 € / {tr("pers.", "pers.", "pers.")}</span>
+            </div>
+
+            <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-blue-800">
+                <p className="text-[10px] font-bold uppercase tracking-wider">Tangier Tour</p>
+                <MapPin className="h-3.5 w-3.5 text-blue-600" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-blue-900">{tangierTourGuests}</p>
+              <span className="text-[10px] text-blue-700 font-medium">15 € / {tr("pers.", "pers.", "pers.")}</span>
+            </div>
+
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-indigo-800">
+                <p className="text-[10px] font-bold uppercase tracking-wider">Chefchaouen</p>
+                <MapPin className="h-3.5 w-3.5 text-indigo-600" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-indigo-900">{chefchaouenTourGuests}</p>
+              <span className="text-[10px] text-indigo-700 font-medium">30 € / {tr("pers.", "pers.", "pers.")}</span>
+            </div>
+
+            <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-emerald-900">
+                <p className="text-[10px] font-bold uppercase tracking-wider">{tr("Excursion Comm.", "Com. Tourisme", "Com. Turismo")}</p>
+                <Euro className="h-3.5 w-3.5 text-emerald-600" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-emerald-800">+{tourismCommissions} €</p>
+              <span className="text-[10px] text-emerald-600 font-semibold">5 € / {tr("guest", "passager", "pasajero")}</span>
+            </div>
+
+            <div className="rounded-xl border border-sky-200 bg-sky-50/60 p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-sky-900">
+                <p className="text-[10px] font-bold uppercase tracking-wider">{tr("Shuttle Bus", "Navette Bus", "Bus Shuttle")}</p>
+                <Bus className="h-3.5 w-3.5 text-sky-600" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-sky-900">{shuttlePassengers}</p>
+              <span className="text-[10px] text-sky-700 font-medium">{portShuttleGuests} Port · {airportShuttleGuests} Air</span>
+            </div>
+
+            <div className="rounded-xl border border-sky-300 bg-gradient-to-br from-sky-500 to-blue-600 text-white p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-sky-100">
+                <p className="text-[10px] font-black uppercase tracking-wider">{tr("Transfer Money", "Total Transfert", "Total Traslado")}</p>
+                <Euro className="h-3.5 w-3.5 text-white" />
+              </div>
+              <p className="mt-1 font-display text-xl font-black text-white">{shuttleRevenue} €</p>
+              <span className="text-[10px] text-sky-100 font-bold">{shuttleBookings.length} {tr("bookings", "réservations", "reservas")}</span>
+            </div>
+          </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SECTION 1: FESTIVAL PACKS                                       */}
+        {/* 2. BONUS MISSION                                                */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {activeSection === "festival" && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {(() => {
-                const live = festivalBookings.filter((b) => b.status !== "declined");
-                const catOf = (b: Booking) => {
-                  const p = allPacks.find((x) => x.id === b.packId);
-                  return packRoomCategory(p || b.packName, b.numPeople);
-                };
-                return [
-                  {
-                    label: tr("Double Rooms", "Chambres doubles", "Habitaciones dobles"),
-                    value: live.filter((b) => catOf(b) === "double").length,
-                    icon: Ticket,
-                  },
-                  {
-                    label: tr("Single Rooms", "Chambres single", "Habitaciones individuales"),
-                    value: live.filter((b) => catOf(b) === "single").length,
-                    icon: Ticket,
-                  },
-                  {
-                    label: tr("Full Pass", "Full Pass", "Full Pass"),
-                    value: live.filter((b) => catOf(b) === "fullpass").length,
-                    icon: CheckCircle2,
-                  },
-                  {
-                    label: tr("Festival Sales", "Ventes Festival", "Ventas Festival"),
-                    value: formatForPartner(sales, partner),
-                    icon: Euro,
-                  },
-                  {
-                    label: `Commission (${commissionLabel(partner)})`,
-                    value: formatForPartner(earned, partner),
-                    icon: Euro,
-                  },
-                ];
-              })().map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-xl border border-gray-200 bg-white shadow-sm p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] tracking-widest uppercase text-gray-500">{s.label}</p>
-                    <s.icon className="h-4 w-4 text-amber-600" />
-                  </div>
-                  <p className="mt-1.5 font-display text-2xl">{s.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Mission — bonus goal set by the festival team */}
-            {(partner.missionGoal ?? 0) > 0 &&
-              (() => {
-                const goal = partner.missionGoal!;
-                const progress = Math.min(ticketsSold, goal);
-                const achieved = ticketsSold >= goal;
-                const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
-                return (
-                  <div
-                    className={`rounded-xl border p-5 ${
-                      achieved
-                        ? "border-emerald-300 bg-emerald-50"
-                        : "border-amber-200 bg-amber-50"
+        {(partner.missionGoal ?? 0) > 0 &&
+          (() => {
+            const goal = partner.missionGoal!;
+            const progress = Math.min(ticketsSold, goal);
+            const achieved = ticketsSold >= goal;
+            const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
+            return (
+              <div
+                className={`rounded-xl border p-5 ${
+                  achieved
+                    ? "border-emerald-300 bg-emerald-50"
+                    : "border-amber-200 bg-amber-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
+                    <Trophy
+                      className={`h-4 w-4 ${achieved ? "text-emerald-600" : "text-amber-600"}`}
+                    />
+                    {achieved
+                      ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
+                      : tr("Your Mission", "Votre mission", "Tu misión")}
+                  </h3>
+                  <span
+                    className={`text-xs font-semibold ${
+                      achieved ? "text-emerald-700" : "text-amber-700"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-3 flex-wrap">
-                      <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
-                        <Trophy
-                          className={`h-4 w-4 ${achieved ? "text-emerald-600" : "text-amber-600"}`}
-                        />
-                        {achieved
-                          ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
-                          : tr("Your Mission", "Votre mission", "Tu misión")}
-                      </h3>
-                      <span
-                        className={`text-xs font-semibold ${
-                          achieved ? "text-emerald-700" : "text-amber-700"
-                        }`}
-                      >
-                        {progress}/{goal}
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-sm text-gray-600">
-                      {achieved
-                        ? tr(
-                            `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
-                            `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
-                            `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
+                    {progress}/{goal}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-sm text-gray-600">
+                  {achieved
+                    ? tr(
+                        `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
+                        `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
+                        `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
+                      )
+                    : tr(
+                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
+                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
+                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
+                      )}
+                </p>
+                <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      achieved ? "bg-emerald-500" : "bg-amber-500"
+                    }`}
+                    style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 3. SELLING REFERRAL LINKS                                       */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="space-y-4">
+          {/* Main Packs Booking Link */}
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row gap-6 items-start">
+            <div className="flex-1 space-y-3">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
+                  <Ticket className="h-3.5 w-3.5 text-amber-600" />
+                  {tr("Festival Packs Link", "Lien Packs Festival", "Enlace Packs Festival")}
+                </span>
+                <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                  {tr(
+                    "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive their reservation confirmation.",
+                    "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass.",
+                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass."
+                  )}
+                </p>
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
+                    {getBookingUrl(partner.code, L)}
+                  </code>
+                  <button
+                    onClick={() => copy("book", getBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      copiedId === "book"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-gray-100 text-gray-700 hover:bg-amber-500 hover:text-slate-950"
+                    }`}
+                  >
+                    {copiedId === "book" ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copiedId === "book"
+                      ? tr("Copied", "Copié", "Copiado")
+                      : tr("Copy Link", "Copier le lien", "Copiar enlace")}
+                  </button>
+                  <a
+                    href={getBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+            {refQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0">
+                <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs inline-block">
+                  <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
+                </div>
+                <p className="mt-1 text-[10px] text-gray-400 font-medium">
+                  {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Tourism & Excursions Link (Special "Blue and Blue" Design) */}
+          <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex-1 space-y-3 relative z-10">
+              <div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
+                    <Compass className="h-3.5 w-3.5 text-blue-300" />
+                    {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
+                    {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
+                  </span>
+                </div>
+
+                <h3 className="font-display text-lg font-extrabold text-white flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-300" />
+                  {tr("Your Dedicated Tourism Link (/book-tourism)", "Votre lien de réservation Excursions (/book-tourism)", "Tu enlace de reserva de Turismo (/book-tourism)")}
+                </h3>
+                <p className="mt-1 text-xs text-blue-100 leading-relaxed max-w-xl">
+                  {tr(
+                    "Share this link with your clients for guided tours to Tangier (15 €), Asilah (25 €), and Chefchaouen (30 €). You automatically receive 5 € commission for every booked passenger.",
+                    "Partagez ce lien avec vos clients pour les visites de Tanger (15 €), Asilah (25 €) et Chefchaouen (30 €). Vous touchez 5 € de commission par passager.",
+                    "Comparte este enlace con tus clientes para tours a Tánger (15 €), Asilah (25 €) y Chefchaouen (30 €). Recibes 5 € de comisión por cada pasajero."
+                  )}
+                </p>
+
+                <div className="mt-3 flex items-center gap-2.5 flex-wrap">
+                  <div className="flex-1 min-w-[240px] rounded-xl bg-blue-950/70 border border-blue-400/40 px-3.5 py-2.5 text-xs font-mono text-blue-200 select-all break-all shadow-inner">
+                    {getTourismBookingUrl(partner.code, L)}
+                  </div>
+
+                  <button
+                    onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
+                      copiedId === "tourism"
+                        ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                        : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
+                    }`}
+                  >
+                    {copiedId === "tourism" ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={getTourismBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("View Page", "Voir la page", "Ver página")}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {tourismQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
+                <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
+                  <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
+                </div>
+                <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
+                  {tr("Tourism QR", "QR Excursions", "QR Turismo")}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 4. FESTIVAL RESERVATIONS LIST                                   */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="pt-2">
+          <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
+            <div>
+              <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-amber-600" />
+                <span>{tr("Festival Reservations", "Réservations Festival", "Reservas de Festival")}</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-gray-200 text-gray-800 font-bold">
+                  {festivalBookings.length}
+                </span>
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {tr(
+                  "Here you will find hotel and pass reservations made through your link.",
+                  "Vous trouverez ici les réservations d'hôtels et pass réalisées via votre lien.",
+                  "Aquí encontrarás las reservas de hotel y pases realizadas a través de tu enlace."
+                )}
+              </p>
+            </div>
+          </div>
+
+          {statusError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-3">
+              <p className="text-sm text-red-700">{statusError}</p>
+            </div>
+          )}
+
+          {festivalBookings.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-xs px-5 py-8 text-center text-xs text-gray-400">
+              {tr(
+                "No festival bookings yet — share your booking link to get started.",
+                "Pas encore de réservations — partagez votre lien pour commencer.",
+                "Aún no hay reservas — comparte tu enlace para empezar."
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {festivalBookings.map((b) => {
+                const hasTicket = b.status === "confirmed" || b.status === "checked-in";
+                const pack = allPacks.find((p) => p.id === b.packId);
+                const label = translateDynamicText(
+                  pack ? packLabel(pack) : b.packName,
+                  L as Language
+                );
+                const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+                const currency = pack?.currency || "€";
+                const numPeople = b.numPeople || 1;
+                const grossTotal = unitPrice * numPeople;
+                const discount = b.discountAmount || 0;
+                const netTotal = Math.max(0, grossTotal - discount);
+
+                return (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-gray-200 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-gray-300 transition"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {b.customerName}
+                        </p>
+                        {pack && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                            {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        <span className="font-semibold text-gray-800">{label}</span>
+                        {pack && (
+                          numPeople > 1 ? (
+                            <span>
+                              {" · "}
+                              <strong className="text-gray-800">
+                                {numPeople} {tr("people", "personnes", "personas")}
+                              </strong>
+                              {" "}
+                              ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
+                            </span>
+                          ) : (
+                            <span>{" · "}{unitPrice} {currency}</span>
                           )
-                        : tr(
-                            `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
-                            `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
-                            `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
+                        )}
+                        {b.arrivalDate
+                          ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
+                              b.departureDate
+                                ? new Date(b.departureDate).toLocaleDateString()
+                                : "?"
+                            }`
+                          : ""}{" "}
+                        · {new Date(b.createdAt).toLocaleDateString()}
+                      </p>
+                      {b.discountCode && (
+                        <p className="mt-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
+                            Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {hasTicket && (
+                        <a
+                          href={ticketUrl(b.ticketCode)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition"
+                          title={tr(
+                            `Open ticket ${b.ticketCode}`,
+                            `Ouvrir le billet ${b.ticketCode}`,
+                            `Abrir entrada ${b.ticketCode}`
                           )}
-                    </p>
-                    <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          achieved ? "bg-emerald-500" : "bg-amber-500"
-                        }`}
-                        style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
-                      />
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </a>
+                      )}
+                      {b.status === "checked-in" ? (
+                        <span
+                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
+                        >
+                          {tr("Checked In", "Enregistré", "Registrado")}
+                        </span>
+                      ) : (
+                        <select
+                          value={b.status}
+                          onChange={(e) =>
+                            changeBookingStatus(b.id, e.target.value as BookingStatus)
+                          }
+                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                        >
+                          <option value="pending">
+                            {tr("Pending", "En attente", "Pendiente")}
+                          </option>
+                          <option value="confirmed">
+                            {tr("Confirmed", "Confirmé", "Confirmada")}
+                          </option>
+                          <option value="declined">
+                            {tr("Declined", "Refusé", "Rechazada")}
+                          </option>
+                        </select>
+                      )}
                     </div>
                   </div>
                 );
-              })()}
-
-            {/* Main Packs Booking Link */}
-            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row gap-6 items-start">
-              <div className="flex-1 space-y-4">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
-                    <Ticket className="h-3.5 w-3.5 text-amber-600" />
-                    {tr("Festival Packs Link", "Lien Packs Festival", "Enlace Packs Festival")}
-                  </span>
-                  <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-amber-600" />
-                    {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                    {tr(
-                      "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive a pending reservation email.",
-                      "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass. Ils reçoivent un email de confirmation en attente.",
-                      "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass. Recibirán un email de confirmación pendiente."
-                    )}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
-                      {getBookingUrl(partner.code, L)}
-                    </code>
-                    <button
-                      onClick={() => copy("book", getBookingUrl(partner.code, L))}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                        copiedId === "book"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : "bg-gray-100 text-gray-700 hover:bg-amber-500 hover:text-slate-950"
-                      }`}
-                    >
-                      {copiedId === "book" ? (
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5" />
-                      )}
-                      {copiedId === "book"
-                        ? tr("Copied", "Copié", "Copiado")
-                        : tr("Copy Link", "Copier le lien", "Copiar enlace")}
-                    </button>
-                    <a
-                      href={getBookingUrl(partner.code, L)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-              {refQr && (
-                <div className="shrink-0 text-center mx-auto sm:mx-0">
-                  <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs inline-block">
-                    <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
-                  </div>
-                  <p className="mt-1 text-[10px] text-gray-400 font-medium">
-                    {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
-                  </p>
-                </div>
-              )}
+              })}
             </div>
+          )}
+        </div>
 
-            {/* Festival Bookings List */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 5. CULTURAL TOURISM & EXCURSIONS LIST                           */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
             <div>
-              <h3 className="font-display text-sm tracking-wide mb-1">
-                {tr("Festival Reservations", "Réservations Festival", "Reservas de Festival")} ({festivalBookings.length})
+              <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                <Compass className="h-4 w-4 text-blue-600" />
+                <span>{tr("Cultural Excursions & Tours", "Excursions Touristiques", "Excursiones Turísticas")}</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-blue-100 text-blue-900 font-bold">
+                  {tourismBookings.length}
+                </span>
               </h3>
-              <p className="text-sm text-gray-500 mb-4 whitespace-pre-line">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {tr(
-                  "Here you will find hotel and pass reservations made through your code.\nNB: Only confirm bookings after receiving payment.",
-                  "Vous trouverez ici les réservations d'hôtels et pass réalisées via votre code.\nNB : Confirmez uniquement les réservations après réception du paiement.",
-                  "Aquí encontrarás las reservas de hotel y pases realizadas a través de tu código.\nNota: Confirma únicamente las reservas tras recibir el pago."
+                  "Guided tour bookings (Asilah, Tangier, Chefchaouen) with commission breakdown (5 € / passenger).",
+                  "Réservations de visites guidées (Asilah, Tanger, Chefchaouen) avec commission de 5 € / passager.",
+                  "Reservas de tours guiados (Asilah, Tánger, Chefchaouen) con comisión de 5 € / pasajero."
                 )}
               </p>
-              {statusError && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-3">
-                  <p className="text-sm text-red-700">{statusError}</p>
-                </div>
-              )}
-              {festivalBookings.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
-                  {tr(
-                    "No festival bookings yet — share your booking link to get started.",
-                    "Pas encore de réservations — partagez votre lien pour commencer.",
-                    "Aún no hay reservas — comparte tu enlace para empezar."
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {festivalBookings.map((b) => {
-                    const hasTicket = b.status === "confirmed" || b.status === "checked-in";
-                    const pack = allPacks.find((p) => p.id === b.packId);
-                    const label = translateDynamicText(
-                      pack ? packLabel(pack) : b.packName,
-                      L as Language
-                    );
-                    const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
-                    const currency = pack?.currency || "€";
-                    const numPeople = b.numPeople || 1;
-                    const grossTotal = unitPrice * numPeople;
-                    const discount = b.discountAmount || 0;
-                    const netTotal = Math.max(0, grossTotal - discount);
-
-                    return (
-                      <div
-                        key={b.id}
-                        className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {b.customerName}
-                            </p>
-                            {pack && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                                {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1">
-                            <span className="font-medium text-gray-700">{label}</span>
-                            {pack && (
-                              numPeople > 1 ? (
-                                <span>
-                                  {" · "}
-                                  <strong className="text-gray-800">
-                                    {numPeople} {tr("people", "personnes", "personas")}
-                                  </strong>
-                                  {" "}
-                                  ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
-                                </span>
-                              ) : (
-                                <span>{" · "}{unitPrice} {currency}</span>
-                              )
-                            )}
-                            {b.arrivalDate
-                              ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
-                                  b.departureDate
-                                    ? new Date(b.departureDate).toLocaleDateString()
-                                    : "?"
-                                }`
-                              : ""}{" "}
-                            · {new Date(b.createdAt).toLocaleDateString()}
-                          </p>
-                          {b.discountCode && (
-                            <p className="mt-1">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
-                                Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {hasTicket && (
-                            <a
-                              href={ticketUrl(b.ticketCode)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-100 transition"
-                              title={tr(
-                                `Open ticket ${b.ticketCode}`,
-                                `Ouvrir le billet ${b.ticketCode}`,
-                                `Abrir entrada ${b.ticketCode}`
-                              )}
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </a>
-                          )}
-                          {b.status === "checked-in" ? (
-                            <span
-                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
-                            >
-                              {tr("Checked In", "Enregistré", "Registrado")}
-                            </span>
-                          ) : (
-                            <select
-                              value={b.status}
-                              onChange={(e) =>
-                                changeBookingStatus(b.id, e.target.value as BookingStatus)
-                              }
-                              className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                            >
-                              <option value="pending">
-                                {tr("Pending", "En attente", "Pendiente")}
-                              </option>
-                              <option value="confirmed">
-                                {tr("Confirmed", "Confirmé", "Confirmada")}
-                              </option>
-                              <option value="declined">
-                                {tr("Declined", "Refusé", "Rechazada")}
-                              </option>
-                            </select>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
-        )}
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SECTION 2: CULTURAL TOURISM & EXCURSIONS                        */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {activeSection === "tourism" && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Tourism Stats Banner */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <div className="rounded-xl border border-blue-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-blue-700 font-bold">
-                    {tr("Total Excursion Guests", "Total Passagers", "Total Pasajeros")}
-                  </p>
-                  <Users className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-slate-900">{tourismGuests}</p>
-                <span className="text-[10px] text-gray-400">{tr("Passengers", "Passagers", "Pasajeros")}</span>
-              </div>
-
-              <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-blue-800 font-bold">Tangier Tour</p>
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-blue-900">
-                  {tourismBookings
-                    .filter((b) => (b.packId?.includes("tangier") || b.packName?.toLowerCase().includes("tangier")) && b.status !== "declined")
-                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
-                </p>
-                <span className="text-[10px] text-blue-700 font-semibold">15 € / {tr("pers.", "pers.", "pers.")}</span>
-              </div>
-
-              <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-cyan-800 font-bold">Asilah Tour</p>
-                  <MapPin className="h-4 w-4 text-cyan-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-cyan-900">
-                  {tourismBookings
-                    .filter((b) => (b.packId?.includes("asilah") || b.packName?.toLowerCase().includes("asilah")) && b.status !== "declined")
-                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
-                </p>
-                <span className="text-[10px] text-cyan-700 font-semibold">25 € / {tr("pers.", "pers.", "pers.")}</span>
-              </div>
-
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-indigo-800 font-bold">Chefchaouen</p>
-                  <MapPin className="h-4 w-4 text-indigo-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-indigo-900">
-                  {tourismBookings
-                    .filter((b) => (b.packId?.includes("chefchaouen") || b.packName?.toLowerCase().includes("chefchaouen") || b.packName?.toLowerCase().includes("chawan")) && b.status !== "declined")
-                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
-                </p>
-                <span className="text-[10px] text-indigo-700 font-semibold">30 € / {tr("pers.", "pers.", "pers.")}</span>
-              </div>
-
-              <div className="rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 shadow-md col-span-2 sm:col-span-1">
-                <div className="flex items-center justify-between text-emerald-100">
-                  <p className="text-[10px] tracking-widest uppercase font-black">
-                    {tr("Tourism Commission", "Commission Tourisme", "Comisión Turismo")}
-                  </p>
-                  <Euro className="h-4 w-4 text-white" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-white">{tourismCommissions} €</p>
-                <span className="text-[10px] text-emerald-100 font-bold">5 € / {tr("guest", "passager", "pasajero")}</span>
-              </div>
+          {tourismBookings.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-xs px-5 py-8 text-center text-xs text-gray-400">
+              {tr(
+                "No excursion bookings yet — share your tourism link to start earning €5 per passenger.",
+                "Pas encore d'excursions réservées — partagez votre lien pour commencer à gagner 5 € par passager.",
+                "Aún no hay excursiones reservadas — comparte tu enlace para ganar 5 € por pasajero."
+              )}
             </div>
+          ) : (
+            <div className="space-y-3">
+              {tourismBookings.map((b) => {
+                const hasTicket = b.status === "confirmed" || b.status === "checked-in";
+                const numPeople = b.numPeople || 1;
+                const unitPrice = getTourismPrice(b.packId || b.packName);
+                const grossTotal = unitPrice * numPeople;
+                const commissionAmt = numPeople * 5;
 
-            {/* Blue-on-Blue Tourism Share Link Card */}
-            <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
-              <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+                let guestList: string[] = [];
+                if (b.guestDetails) {
+                  try {
+                    const parsed = JSON.parse(b.guestDetails);
+                    if (Array.isArray(parsed)) {
+                      guestList = parsed.map((g) => `${g.firstName || ""} ${g.lastName || ""}`.trim()).filter(Boolean);
+                    }
+                  } catch {}
+                }
+                if (guestList.length === 0 && b.customerName) {
+                  guestList = b.customerName.split(/\s*&\s*/).map((s) => s.trim()).filter(Boolean);
+                }
 
-              <div className="flex-1 space-y-4 relative z-10">
-                <div>
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
-                      <Compass className="h-3.5 w-3.5 text-blue-300" />
-                      {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
-                      {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
-                    </span>
-                  </div>
+                // Look for matched festival booking
+                const matchedFest = allFestivalBookings.find((fb) => {
+                  if (b.notes?.includes(fb.ticketCode)) return true;
+                  const fbPhone = (fb.phone || "").replace(/\D/g, "");
+                  const bPhone = (b.phone || "").replace(/\D/g, "");
+                  if (fbPhone.length >= 6 && bPhone.length >= 6 && (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))) return true;
+                  if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase()) return true;
+                  return false;
+                });
 
-                  <h3 className="font-display text-lg font-extrabold text-white flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-blue-300" />
-                    {tr("Your Dedicated Tourism Link (/book-tourism)", "Votre lien de réservation Excursions (/book-tourism)", "Tu enlace de reserva de Turismo (/book-tourism)")}
-                  </h3>
-                  <p className="mt-1 text-xs text-blue-100 leading-relaxed max-w-xl">
-                    {tr(
-                      "Share this link with your clients for guided tours to Tangier (15 €), Asilah (25 €), and Chefchaouen (30 €). You automatically receive 5 € commission for every booked passenger.",
-                      "Partagez ce lien avec vos clients pour les visites de Tanger (15 €), Asilah (25 €) et Chefchaouen (30 €). Vous touchez 5 € de commission pour chaque passager inscrit.",
-                      "Comparte este enlace con tus clientes para tours a Tánger (15 €), Asilah (25 €) y Chefchaouen (30 €). Recibes 5 € de comisión por cada pasajero registrado."
-                    )}
-                  </p>
+                return (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-blue-200/90 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-blue-300 transition"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {b.customerName}
+                        </p>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-900 border border-blue-200">
+                          {b.packName}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          +{commissionAmt} € {tr("Commission", "Commission", "Comisión")}
+                        </span>
+                      </div>
 
-                  <div className="mt-4 flex items-center gap-2.5 flex-wrap">
-                    <div className="flex-1 min-w-[240px] rounded-xl bg-blue-950/70 border border-blue-400/40 px-3.5 py-2.5 text-xs font-mono text-blue-200 select-all break-all shadow-inner">
-                      {getTourismBookingUrl(partner.code, L)}
+                      <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                        <p>
+                          <strong className="text-gray-800">{numPeople} {numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")}</strong>
+                          {" "}
+                          ({unitPrice} €/pers → <strong className="text-blue-900 font-semibold">{grossTotal} €</strong>)
+                          {b.roomNumber ? ` · ${tr("Hotel Room:", "Chambre :", "Habitación:")} ${b.roomNumber}` : ""}
+                          {" · "}{new Date(b.createdAt).toLocaleDateString()}
+                        </p>
+                        {guestList.length > 0 && (
+                          <p className="text-[11px] text-gray-600">
+                            <span className="font-semibold">{tr("Guests:", "Participants :", "Participantes:")}</span>{" "}
+                            {guestList.join(", ")}
+                          </p>
+                        )}
+                        {matchedFest && (
+                          <p className="mt-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                              <span>{tr("Linked Festival Pass:", "Pass Festival lié :", "Pase Festival vinculado:")} #{matchedFest.ticketCode} ({matchedFest.packName})</span>
+                            </span>
+                          </p>
+                        )}
+                      </div>
                     </div>
 
-                    <button
-                      onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
-                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
-                        copiedId === "tourism"
-                          ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                          : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
-                      }`}
-                    >
-                      {copiedId === "tourism" ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4" />
-                          <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4" />
-                          <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
-                        </>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {hasTicket && (
+                        <a
+                          href={ticketUrl(b.ticketCode)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                          title={tr(
+                            `Open ticket ${b.ticketCode}`,
+                            `Ouvrir le billet ${b.ticketCode}`,
+                            `Abrir entrada ${b.ticketCode}`
+                          )}
+                        >
+                          <QrCode className="h-4 w-4" />
+                        </a>
                       )}
-                    </button>
-
-                    <a
-                      href={getTourismBookingUrl(partner.code, L)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      <span>{tr("View Page", "Voir la page", "Ver página")}</span>
-                    </a>
+                      {b.status === "checked-in" ? (
+                        <span
+                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
+                        >
+                          {tr("Checked In", "Enregistré", "Registrado")}
+                        </span>
+                      ) : (
+                        <select
+                          value={b.status}
+                          onChange={(e) =>
+                            changeBookingStatus(b.id, e.target.value as BookingStatus)
+                          }
+                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                        >
+                          <option value="pending">
+                            {tr("Pending", "En attente", "Pendiente")}
+                          </option>
+                          <option value="confirmed">
+                            {tr("Confirmed", "Confirmé", "Confirmada")}
+                          </option>
+                          <option value="declined">
+                            {tr("Declined", "Refusé", "Rechazada")}
+                          </option>
+                        </select>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              {tourismQr && (
-                <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
-                  <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
-                    <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
-                  </div>
-                  <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
-                    {tr("Tourism QR", "QR Excursions", "QR Turismo")}
-                  </p>
-                </div>
-              )}
+                );
+              })}
             </div>
+          )}
+        </div>
 
-            {/* Tourism Bookings List */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 6. SHUTTLE BUS & AIRPORT / PORT TRANSFERS LIST                  */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="pt-4 border-t border-gray-200">
+          <div className="flex items-center justify-between gap-4 mb-3 flex-wrap">
             <div>
-              <h3 className="font-display text-sm tracking-wide mb-1">
-                {tr("Excursion Bookings", "Réservations Excursions", "Reservas de Excursiones")} ({tourismBookings.length})
+              <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                <Bus className="h-4 w-4 text-sky-600" />
+                <span>{tr("Shuttle Bus & Transfers", "Navettes Bus & Transferts", "Shuttle Bus y Traslados")}</span>
+                <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-sky-100 text-sky-900 font-bold">
+                  {shuttleBookings.length}
+                </span>
               </h3>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {tr(
-                  "All guided tour bookings made through your link with guest lists, hotel room numbers, and commission breakdown.",
-                  "Toutes les réservations d'excursions avec les noms des passagers, numéros de chambre et calcul des commissions.",
-                  "Todas las reservas de excursiones con lista de pasajeros, número de habitación y cálculo de comisiones."
+                  "Airport & Port shuttle pickups with arrival/departure flight schedules.",
+                  "Navettes aéroport et port avec les horaires de vol et de bateau.",
+                  "Traslados de aeropuerto y puerto con horarios de vuelo y barco."
                 )}
               </p>
+            </div>
+          </div>
 
-              {tourismBookings.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
-                  {tr(
-                    "No excursion bookings yet — share your tourism link to start earning €5 per passenger.",
-                    "Pas encore d'excursions réservées — partagez votre lien pour commencer à gagner 5 € par passager.",
-                    "Aún no hay excursiones reservadas — comparte tu enlace para ganar 5 € por pasajero."
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {tourismBookings.map((b) => {
-                    const hasTicket = b.status === "confirmed" || b.status === "checked-in";
-                    const numPeople = b.numPeople || 1;
-                    const unitPrice = getTourismPrice(b.packId || b.packName);
-                    const grossTotal = unitPrice * numPeople;
-                    const commissionAmt = numPeople * 5;
+          {shuttleBookings.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-white shadow-xs px-5 py-8 text-center text-xs text-gray-400">
+              {tr(
+                "No shuttle requests from your clients yet.",
+                "Aucune demande de navette pour l'instant.",
+                "Aún no hay solicitudes de shuttle de tus clientes."
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {shuttleBookings.map((b) => {
+                const isPort = b.transferType === "port";
+                const hubName = b.transferLocation || (isPort ? "Port of Tangier (Tanger Ville)" : "Tangier Airport (TNG)");
+                const optLabel =
+                  b.transferOption === "one_way_arrival"
+                    ? tr("One Way (Arrival)", "Aller simple (Arrivée)", "Solo ida (Llegada)")
+                    : b.transferOption === "one_way_departure"
+                    ? tr("One Way (Departure)", "Aller simple (Départ)", "Solo ida (Salida)")
+                    : tr("Round Trip (A/R)", "Aller-Retour (A/R)", "Ida y Vuelta (I/V)");
 
-                    let guestList: string[] = [];
-                    if (b.guestDetails) {
-                      try {
-                        const parsed = JSON.parse(b.guestDetails);
-                        if (Array.isArray(parsed)) {
-                          guestList = parsed.map((g) => `${g.firstName || ""} ${g.lastName || ""}`.trim()).filter(Boolean);
+                return (
+                  <div
+                    key={b.id}
+                    className="rounded-xl border border-sky-200 bg-white shadow-xs p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:border-sky-300 transition"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          {b.customerName}
+                        </p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+                          isPort ? "bg-blue-50 text-blue-800 border border-blue-200" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
+                        }`}>
+                          {isPort ? <Ship className="h-3 w-3" /> : <Plane className="h-3 w-3" />}
+                          <span>{hubName}</span>
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">
+                          {optLabel}
+                        </span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {b.transferCost || 0} € {tr("Transfer", "Transfert", "Traslado")}
+                        </span>
+                      </div>
+
+                      <div className="text-xs text-gray-500 mt-1.5 space-y-1">
+                        <p className="flex items-center gap-2 flex-wrap">
+                          <strong className="text-gray-800">{b.numPeople || 1} {tr("passengers", "passagers", "pasajeros")}</strong>
+                          {b.arrivalDate && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <Calendar className="h-3 w-3 text-sky-600" />
+                              <span>{tr("Arrival:", "Arrivée :", "Llegada:")} {new Date(b.arrivalDate).toLocaleDateString()}</span>
+                            </span>
+                          )}
+                          {b.departureDate && (
+                            <span className="flex items-center gap-1 text-slate-700 font-medium">
+                              <Calendar className="h-3 w-3 text-sky-600" />
+                              <span>{tr("Departure:", "Départ :", "Salida:")} {new Date(b.departureDate).toLocaleDateString()}</span>
+                            </span>
+                          )}
+                          {b.roomNumber && (
+                            <span className="text-slate-700 font-semibold">
+                              · {tr("Room", "Chambre", "Hab.")} {b.roomNumber}
+                            </span>
+                          )}
+                        </p>
+
+                        {b.transferDetails && (
+                          <p className="text-[11px] text-sky-900 bg-sky-50 px-2 py-1 rounded border border-sky-200/80 font-mono">
+                            <strong>{tr("Flight/Ferry Info:", "Info Vol/Ferry :", "Info Vuelo/Ferry:")}</strong> {b.transferDetails}
+                          </p>
+                        )}
+
+                        <p className="text-[11px] text-gray-500 flex items-center gap-2">
+                          <span>{b.email}</span>
+                          <span>·</span>
+                          <span className="flex items-center gap-1">
+                            <Phone className="h-3 w-3 text-gray-400" />
+                            <span>{b.phone}</span>
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <select
+                        value={b.status}
+                        onChange={(e) =>
+                          changeBookingStatus(b.id, e.target.value as BookingStatus)
                         }
-                      } catch {}
-                    }
-                    if (guestList.length === 0 && b.customerName) {
-                      guestList = b.customerName.split(/\s*&\s*/).map((s) => s.trim()).filter(Boolean);
-                    }
-
-                    // Look for matched festival booking
-                    const matchedFest = allFestivalBookings.find((fb) => {
-                      if (b.notes?.includes(fb.ticketCode)) return true;
-                      const fbPhone = (fb.phone || "").replace(/\D/g, "");
-                      const bPhone = (b.phone || "").replace(/\D/g, "");
-                      if (fbPhone.length >= 6 && bPhone.length >= 6 && (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))) return true;
-                      if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase()) return true;
-                      return false;
-                    });
-
-                    return (
-                      <div
-                        key={b.id}
-                        className="rounded-xl border border-blue-200/80 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                        className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
                       >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-bold text-gray-900 truncate">
-                              {b.customerName}
-                            </p>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-900 border border-blue-200">
-                              {b.packName}
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              +{commissionAmt} € {tr("Commission", "Commission", "Comisión")}
-                            </span>
-                          </div>
-
-                          <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                            <p>
-                              <strong className="text-gray-800">{numPeople} {numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")}</strong>
-                              {" "}
-                              ({unitPrice} €/pers → <strong className="text-blue-900 font-semibold">{grossTotal} €</strong>)
-                              {b.roomNumber ? ` · ${tr("Hotel Room:", "Chambre :", "Habitación:")} ${b.roomNumber}` : ""}
-                              {" · "}{new Date(b.createdAt).toLocaleDateString()}
-                            </p>
-                            {guestList.length > 0 && (
-                              <p className="text-[11px] text-gray-600">
-                                <span className="font-semibold">{tr("Guests:", "Participants :", "Participantes:")}</span>{" "}
-                                {guestList.join(", ")}
-                              </p>
-                            )}
-                            {matchedFest && (
-                              <p className="mt-1">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
-                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                  <span>{tr("Linked Festival Reservation:", "Réservation Festival liée :", "Reserva Festival vinculada:")} #{matchedFest.ticketCode} ({matchedFest.packName})</span>
-                                </span>
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {hasTicket && (
-                            <a
-                              href={ticketUrl(b.ticketCode)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
-                              title={tr(
-                                `Open ticket ${b.ticketCode}`,
-                                `Ouvrir le billet ${b.ticketCode}`,
-                                `Abrir entrada ${b.ticketCode}`
-                              )}
-                            >
-                              <QrCode className="h-4 w-4" />
-                            </a>
-                          )}
-                          {b.status === "checked-in" ? (
-                            <span
-                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
-                            >
-                              {tr("Checked In", "Enregistré", "Registrado")}
-                            </span>
-                          ) : (
-                            <select
-                              value={b.status}
-                              onChange={(e) =>
-                                changeBookingStatus(b.id, e.target.value as BookingStatus)
-                              }
-                              className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                            >
-                              <option value="pending">
-                                {tr("Pending", "En attente", "Pendiente")}
-                              </option>
-                              <option value="confirmed">
-                                {tr("Confirmed", "Confirmé", "Confirmada")}
-                              </option>
-                              <option value="declined">
-                                {tr("Declined", "Refusé", "Rechazada")}
-                              </option>
-                            </select>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                        <option value="pending">
+                          {tr("Pending", "En attente", "Pendiente")}
+                        </option>
+                        <option value="confirmed">
+                          {tr("Confirmed", "Confirmé", "Confirmada")}
+                        </option>
+                        <option value="declined">
+                          {tr("Declined", "Refusé", "Rechazada")}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* SECTION 3: SHUTTLE BUS & TRANSFERS                             */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {activeSection === "shuttle" && (
-          <div className="space-y-8 animate-fadeIn">
-            {/* Shuttle Transfer Stats Banner */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="rounded-xl border border-sky-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-sky-800 font-bold">
-                    {tr("Shuttle Bus Passengers", "Passagers Navette", "Pasajeros Shuttle")}
-                  </p>
-                  <Bus className="h-4 w-4 text-sky-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-slate-900">{shuttlePassengers}</p>
-                <span className="text-[10px] text-gray-400 font-medium">
-                  {tr("Total shuttle clients", "Clients navette", "Clientes de shuttle")}
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-emerald-300 bg-emerald-50/70 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-emerald-900 font-bold">
-                    {tr("Transfer Money", "Montant Transferts", "Dinero de Traslados")}
-                  </p>
-                  <Euro className="h-4 w-4 text-emerald-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-emerald-700">{shuttleRevenue} €</p>
-                <span className="text-[10px] text-emerald-600 font-semibold">
-                  {tr("Total transfer volume", "Volume transferts", "Volumen traslados")}
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-blue-900 font-bold">
-                    {tr("Port of Tangier", "Port de Tanger", "Puerto de Tánger")}
-                  </p>
-                  <Ship className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-blue-900">{portShuttleGuests}</p>
-                <span className="text-[10px] text-blue-700 font-semibold">
-                  {tr("Port transfers", "Navettes port", "Traslados puerto")}
-                </span>
-              </div>
-
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] tracking-widest uppercase text-indigo-900 font-bold">
-                    {tr("Airport Transfers", "Navettes Aéroports", "Traslados Aeropuertos")}
-                  </p>
-                  <Plane className="h-4 w-4 text-indigo-600" />
-                </div>
-                <p className="mt-1.5 font-display text-2xl font-black text-indigo-900">{airportShuttleGuests}</p>
-                <span className="text-[10px] text-indigo-700 font-semibold">
-                  {tr("TNG & TTU airports", "Aéroports TNG & TTU", "Aeropuertos TNG y TTU")}
-                </span>
-              </div>
-            </div>
-
-            {/* Shuttle Summary Information Banner */}
-            <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-blue-50 to-indigo-50 p-6 flex flex-col sm:flex-row items-start gap-4">
-              <div className="h-10 w-10 rounded-2xl bg-sky-600 text-white grid place-items-center shrink-0 shadow-sm">
-                <Bus className="h-5 w-5" />
-              </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <h3 className="font-display text-base font-bold text-slate-900">
-                  {tr("Official Airport & Port Shuttle Transfers", "Navettes Officielles Port & Aéroports", "Traslados Oficiales Puerto y Aeropuertos")}
-                </h3>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  {tr(
-                    "All transfers between Tangier Port, Tangier Ibn Battouta Airport (TNG), Tetouan Airport (TTU), and Hotel Kenzi Solazur. Flight and ferry details entered by your clients are tracked below.",
-                    "Tous les transferts entre le Port de Tanger, l'Aéroport Tanger Ibn Battouta (TNG), l'Aéroport de Tétouan (TTU) et l'Hôtel Kenzi Solazur avec les horaires d'arrivée et de départ.",
-                    "Todos los traslados entre Puerto de Tánger, Aeropuerto Tánger Ibn Battouta (TNG), Aeropuerto de Tetuán (TTU) y Hotel Kenzi Solazur con horarios de llegada y salida."
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Shuttle Passenger Manifest List */}
-            <div>
-              <h3 className="font-display text-sm tracking-wide mb-1">
-                {tr("Shuttle Bookings", "Réservations de Navette", "Reservas de Shuttle")} ({shuttleBookings.length})
-              </h3>
-              <p className="text-sm text-gray-500 mb-4">
-                {tr(
-                  "Detailed list of all clients who booked a shuttle with arrival and departure schedules.",
-                  "Liste détaillée des clients ayant réservé une navette avec leurs horaires d'arrivée et départ.",
-                  "Lista detallada de clientes que han reservado shuttle con sus horarios de llegada y salida."
-                )}
-              </p>
-
-              {shuttleBookings.length === 0 ? (
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
-                  {tr(
-                    "No shuttle requests from your clients yet.",
-                    "Aucune demande de navette pour l'instant.",
-                    "Aún no hay solicitudes de shuttle de tus clientes."
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {shuttleBookings.map((b) => {
-                    const isPort = b.transferType === "port";
-                    const hubName = b.transferLocation || (isPort ? "Port of Tangier (Tanger Ville)" : "Tangier Airport (TNG)");
-                    const optLabel =
-                      b.transferOption === "one_way_arrival"
-                        ? tr("One Way (Arrival)", "Aller simple (Arrivée)", "Solo ida (Llegada)")
-                        : b.transferOption === "one_way_departure"
-                        ? tr("One Way (Departure)", "Aller simple (Départ)", "Solo ida (Salida)")
-                        : tr("Round Trip (A/R)", "Aller-Retour (A/R)", "Ida y Vuelta (I/V)");
-
-                    return (
-                      <div
-                        key={b.id}
-                        className="rounded-xl border border-sky-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-bold text-gray-900 truncate">
-                              {b.customerName}
-                            </p>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
-                              isPort ? "bg-blue-50 text-blue-800 border border-blue-200" : "bg-indigo-50 text-indigo-800 border border-indigo-200"
-                            }`}>
-                              {isPort ? <Ship className="h-3 w-3" /> : <Plane className="h-3 w-3" />}
-                              <span>{hubName}</span>
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-800">
-                              {optLabel}
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
-                              {b.transferCost || 0} € {tr("Transfer", "Transfert", "Traslado")}
-                            </span>
-                          </div>
-
-                          <div className="text-xs text-gray-500 mt-1.5 space-y-1">
-                            <p className="flex items-center gap-2 flex-wrap">
-                              <strong className="text-gray-800">{b.numPeople || 1} {tr("passengers", "passagers", "pasajeros")}</strong>
-                              {b.arrivalDate && (
-                                <span className="flex items-center gap-1 text-slate-700">
-                                  <Calendar className="h-3 w-3 text-sky-600" />
-                                  <span>{tr("Arrival:", "Arrivée :", "Llegada:")} {new Date(b.arrivalDate).toLocaleDateString()}</span>
-                                </span>
-                              )}
-                              {b.departureDate && (
-                                <span className="flex items-center gap-1 text-slate-700">
-                                  <Calendar className="h-3 w-3 text-sky-600" />
-                                  <span>{tr("Departure:", "Départ :", "Salida:")} {new Date(b.departureDate).toLocaleDateString()}</span>
-                                </span>
-                              )}
-                              {b.roomNumber && (
-                                <span className="text-slate-700 font-semibold">
-                                  · {tr("Room", "Chambre", "Hab.")} {b.roomNumber}
-                                </span>
-                              )}
-                            </p>
-
-                            {b.transferDetails && (
-                              <p className="text-[11px] text-sky-900 bg-sky-50 px-2 py-1 rounded border border-sky-200/80">
-                                <strong>{tr("Flight / Ferry Info:", "Info Vol / Ferry :", "Info Vuelo / Ferry:")}</strong> {b.transferDetails}
-                              </p>
-                            )}
-
-                            <p className="text-[11px] text-gray-500 flex items-center gap-2">
-                              <span>{b.email}</span>
-                              <span>·</span>
-                              <span className="flex items-center gap-1">
-                                <Phone className="h-3 w-3 text-gray-400" />
-                                <span>{b.phone}</span>
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          <select
-                            value={b.status}
-                            onChange={(e) =>
-                              changeBookingStatus(b.id, e.target.value as BookingStatus)
-                            }
-                            className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                          >
-                            <option value="pending">
-                              {tr("Pending", "En attente", "Pendiente")}
-                            </option>
-                            <option value="confirmed">
-                              {tr("Confirmed", "Confirmé", "Confirmada")}
-                            </option>
-                            <option value="declined">
-                              {tr("Declined", "Refusé", "Rechazada")}
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
