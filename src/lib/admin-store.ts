@@ -31,6 +31,58 @@ export interface Pack {
 export type BookingStatus = "pending" | "confirmed" | "checked-in" | "declined";
 export type BookingSource = "manual" | "website" | "invite" | "referral";
 
+export type TransferType = "port" | "airport";
+export type TransferOption = "one_way_arrival" | "one_way_departure" | "round_trip";
+
+export const SHUTTLE_PRICES = {
+  port: {
+    one_way_arrival: 5,
+    one_way_departure: 5,
+    round_trip: 10,
+  },
+  airport: {
+    one_way_arrival: 20,
+    one_way_departure: 20,
+    round_trip: 40,
+  },
+} as const;
+
+export function calculateTransferCost(
+  type: TransferType | null | undefined,
+  option: TransferOption | null | undefined,
+  numGuests: number = 1
+): number {
+  if (!type || !option) return 0;
+  const unitPrice = SHUTTLE_PRICES[type]?.[option] ?? 0;
+  return unitPrice * Math.max(1, numGuests);
+}
+
+export function formatTransferOptionLabel(
+  option: TransferOption | null | undefined,
+  lang: string = "en"
+): string {
+  if (!option) return "";
+  if (option === "one_way_arrival") {
+    return lang === "fr"
+      ? "Aller simple (Arrivée)"
+      : lang === "es"
+      ? "Solo ida (Llegada)"
+      : "One-Way (Arrival)";
+  }
+  if (option === "one_way_departure") {
+    return lang === "fr"
+      ? "Retour simple (Départ)"
+      : lang === "es"
+      ? "Solo vuelta (Salida)"
+      : "One-Way (Return / Departure)";
+  }
+  return lang === "fr"
+    ? "Aller-Retour"
+    : lang === "es"
+    ? "Ida y vuelta"
+    : "Round Trip (Arrival & Return)";
+}
+
 export interface Booking {
   id: string;
   ticketCode: string;
@@ -67,6 +119,18 @@ export interface Booking {
   discountCode?: string | null;
   discountAmount?: number | null;
   discountCodeId?: string | null;
+  /** Shuttle transfer option */
+  needsTransfer?: boolean;
+  /** Transfer location type: 'port' | 'airport' */
+  transferType?: TransferType | null;
+  /** Transfer option: 'one_way_arrival' | 'one_way_departure' | 'round_trip' */
+  transferOption?: TransferOption | null;
+  /** Transfer specific location name, e.g. 'Tanger Ville Port', 'Tangier Airport (TNG)' */
+  transferLocation?: string | null;
+  /** Flight or boat number / timing info if provided by client */
+  transferDetails?: string | null;
+  /** Total cost for the transfer in EUR */
+  transferCost?: number | null;
   createdAt: string;
 }
 
@@ -112,7 +176,7 @@ export interface Invite {
   createdAt: string;
 }
 
-export type CommissionType = "percent" | "per_person";
+export type CommissionType = "percent" | "per_person" | "fixed";
 export type CommissionCurrency = "EUR" | "MAD";
 export type PartnerLanguage = "en" | "fr" | "es";
 
@@ -187,16 +251,18 @@ export async function createPartnerAccount({
       // optional fields left undefined
     } as any;
     // Insert into Supabase
-    const { data, error } = await supabase.from("collaborators").insert(newCollab).single();
-    if (error) {
-      // fallback to localStorage
-      const collabs = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
-      collabs.push({ ...newCollab, createdAt: new Date().toISOString() });
-      localStorage.setItem(COLLABS_KEY, JSON.stringify(collabs));
-      return { success: true, collaborator: { ...newCollab, createdAt: new Date().toISOString() } as Collaborator };
+    if (useDb() && supabase) {
+      const { data, error } = await supabase.from("collaborators").insert(newCollab).single();
+      if (!error && data) {
+        return { success: true, collaborator: data as Collaborator };
+      }
     }
-    // Supabase returned data
-    return { success: true, collaborator: data as Collaborator };
+    // fallback to localStorage
+    const collabs = JSON.parse(localStorage.getItem(COLLABS_KEY) ?? "[]");
+    const fallbackCollab = { ...newCollab, createdAt: new Date().toISOString() } as Collaborator;
+    collabs.push(fallbackCollab);
+    localStorage.setItem(COLLABS_KEY, JSON.stringify(collabs));
+    return { success: true, collaborator: fallbackCollab };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }
@@ -248,6 +314,16 @@ export function partnerShareLink(code: string, lang?: string): string {
   }
   const base = typeof window !== "undefined" ? window.location.origin : "";
   return `${base}/book?ref=${code}${lang ? `&lang=${lang}` : ""}`;
+}
+
+/** The partner's shareable Tourism booking link (/book-tourism?ref=CODE). */
+export function partnerTourismShareLink(code: string, lang?: string): string {
+  const host = typeof window !== "undefined" ? window.location.host : "";
+  if (host.endsWith("tangierlatinfestival.com")) {
+    return `https://www.tangierlatinfestival.com/book-tourism?ref=${code}${lang ? `&lang=${lang}` : ""}`;
+  }
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/book-tourism?ref=${code}${lang ? `&lang=${lang}` : ""}`;
 }
 
 export function generateTicketCode(): string {
@@ -398,6 +474,12 @@ const bookingFromRow = (r: any): Booking => ({
   discountCode: r.discount_code ?? null,
   discountAmount: r.discount_amount != null ? Number(r.discount_amount) : 0,
   discountCodeId: r.discount_code_id ?? null,
+  needsTransfer: !!r.needs_transfer,
+  transferType: (r.transfer_type as TransferType) ?? null,
+  transferOption: (r.transfer_option as TransferOption) ?? null,
+  transferLocation: r.transfer_location ?? null,
+  transferDetails: r.transfer_details ?? null,
+  transferCost: r.transfer_cost != null ? Number(r.transfer_cost) : 0,
   createdAt: r.created_at,
 });
 
@@ -881,6 +963,12 @@ export async function addBooking(
           discount_code: booking.discountCode ?? null,
           discount_amount: booking.discountAmount ?? 0,
           discount_code_id: booking.discountCodeId ?? null,
+          needs_transfer: !!booking.needsTransfer,
+          transfer_type: booking.transferType ?? null,
+          transfer_option: booking.transferOption ?? null,
+          transfer_location: booking.transferLocation ?? null,
+          transfer_details: booking.transferDetails ?? null,
+          transfer_cost: booking.transferCost ?? 0,
         },
         [
           "source",
@@ -891,6 +979,12 @@ export async function addBooking(
           "discount_code",
           "discount_amount",
           "discount_code_id",
+          "needs_transfer",
+          "transfer_type",
+          "transfer_option",
+          "transfer_location",
+          "transfer_details",
+          "transfer_cost",
         ]
       );
       return bookingFromRow(data);
@@ -908,6 +1002,88 @@ export async function addBooking(
   bookings.push(newBooking);
   writeStore(BOOKINGS_KEY, bookings);
   return newBooking;
+}
+
+export async function updateBookingTransfer(
+  id: string,
+  transfer: {
+    needsTransfer?: boolean;
+    transferType?: TransferType | null;
+    transferOption?: TransferOption | null;
+    transferLocation?: string | null;
+    transferDetails?: string | null;
+    transferCost?: number | null;
+  }
+): Promise<Booking | null> {
+  if (useDb() && !isLocalId(id)) {
+    try {
+      const updates: Record<string, any> = {};
+      if (transfer.needsTransfer !== undefined) updates.needs_transfer = transfer.needsTransfer;
+      if (transfer.transferType !== undefined) updates.transfer_type = transfer.transferType;
+      if (transfer.transferOption !== undefined) updates.transfer_option = transfer.transferOption;
+      if (transfer.transferLocation !== undefined) updates.transfer_location = transfer.transferLocation;
+      if (transfer.transferDetails !== undefined) updates.transfer_details = transfer.transferDetails;
+      if (transfer.transferCost !== undefined) updates.transfer_cost = transfer.transferCost;
+
+      const { data, error } = await supabase!
+        .from("bookings")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return bookingFromRow(data);
+    } catch (e) {
+      warn("updateBookingTransfer", e);
+    }
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx === -1) return null;
+  bookings[idx] = { ...bookings[idx], ...transfer };
+  writeStore(BOOKINGS_KEY, bookings);
+  return bookings[idx];
+}
+
+export async function updateBooking(
+  id: string,
+  updates: Partial<Booking>
+): Promise<Booking | null> {
+  if (useDb() && !isLocalId(id)) {
+    try {
+      const rowUpdates: Record<string, any> = {};
+      if (updates.customerName !== undefined) rowUpdates.customer_name = updates.customerName;
+      if (updates.packId !== undefined) rowUpdates.pack_id = updates.packId;
+      if (updates.packName !== undefined) rowUpdates.pack_name = updates.packName;
+      if (updates.numPeople !== undefined) rowUpdates.num_people = updates.numPeople;
+      if (updates.email !== undefined) rowUpdates.email = updates.email;
+      if (updates.phone !== undefined) rowUpdates.phone = updates.phone;
+      if (updates.country !== undefined) rowUpdates.country = updates.country;
+      if (updates.roomNumber !== undefined) rowUpdates.room_number = updates.roomNumber;
+      if (updates.notes !== undefined) rowUpdates.notes = updates.notes;
+      if (updates.status !== undefined) rowUpdates.status = updates.status;
+      if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
+      if (updates.departureDate !== undefined) rowUpdates.departure_date = updates.departureDate;
+      if (updates.guestDetails !== undefined) rowUpdates.guest_details = updates.guestDetails;
+
+      const { data, error } = await supabase!
+        .from("bookings")
+        .update(rowUpdates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return bookingFromRow(data);
+    } catch (e) {
+      warn("updateBooking", e);
+    }
+  }
+  const bookings = readStore<Booking>(BOOKINGS_KEY);
+  const idx = bookings.findIndex((b) => b.id === id);
+  if (idx === -1) return null;
+  bookings[idx] = { ...bookings[idx], ...updates };
+  writeStore(BOOKINGS_KEY, bookings);
+  return bookings[idx];
 }
 
 export async function updateBookingStatus(
@@ -1090,14 +1266,34 @@ export async function incrementDiscountUsage(code: string): Promise<void> {
   await updateDiscountCode(d.id, { usedCount: newCount });
 }
 
+export function isDiscountApplicableToPack(
+  discount: DiscountCode | null | undefined,
+  packId?: string | null
+): boolean {
+  if (!discount || !discount.active) return false;
+  if (!discount.applicablePackIds || discount.applicablePackIds.length === 0) {
+    return true; // applies to all packs
+  }
+  if (!packId) return false;
+  return discount.applicablePackIds.includes(packId);
+}
+
 export function calculateDiscountAmount(
   discount: DiscountCode,
   basePrice: number,
   numGuests: number = 1,
   singlePrice: number = 0,
-  currency: string = "EUR"
+  currency: string = "EUR",
+  packId?: string
 ): number {
   if (!discount || !discount.active) return 0;
+
+  // Check pack eligibility if restricted
+  if (discount.applicablePackIds && discount.applicablePackIds.length > 0) {
+    if (!packId || !discount.applicablePackIds.includes(packId)) {
+      return 0;
+    }
+  }
 
   const isMad = /mad|dh/i.test(currency);
   const rateMultiplier = isMad ? EUR_TO_MAD : 1;
@@ -1131,7 +1327,6 @@ export function calculateDiscountAmount(
     const totalDiscount = discountInPackCurrency * applicableGuests;
     return Math.min(basePrice, totalDiscount);
   }
-
 
   // per_booking (default)
   if (discount.discountType === "percent") {
@@ -1170,7 +1365,7 @@ export async function validateDiscountCode(
     }
   }
 
-  const discountAmount = calculateDiscountAmount(d, basePrice, numGuests, singlePrice, currency);
+  const discountAmount = calculateDiscountAmount(d, basePrice, numGuests, singlePrice, currency, packId);
   return { valid: true, discount: d, discountAmount };
 }
 

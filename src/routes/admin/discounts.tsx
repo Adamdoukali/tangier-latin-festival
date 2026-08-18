@@ -681,10 +681,18 @@ function AdminDiscounts() {
                     {packs.map((p) => {
                       const isSelected = form.applicablePackIds.includes(p.id);
                       return (
-                        <label
+                        <div
                           key={p.id}
+                          role="button"
+                          tabIndex={0}
                           onClick={() => togglePackSelection(p.id)}
-                          className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition ${
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              togglePackSelection(p.id);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer select-none transition ${
                             isSelected
                               ? "bg-blue-100/80 border-blue-400 text-blue-900 font-bold"
                               : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -694,13 +702,14 @@ function AdminDiscounts() {
                             <input
                               type="checkbox"
                               checked={isSelected}
-                              onChange={() => {}} // handled by parent onClick
-                              className="rounded text-blue-600 border-gray-300"
+                              readOnly
+                              tabIndex={-1}
+                              className="rounded text-blue-600 border-gray-300 pointer-events-none"
                             />
                             <span className="truncate">{p.name} {p.sub ? `(${p.sub})` : ""}</span>
                           </div>
                           <span className="font-mono text-gray-500 shrink-0 ml-2">{p.price} {p.currency || "€"}</span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>

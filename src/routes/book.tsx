@@ -11,6 +11,9 @@ import {
   MapPin,
   Tag,
   AlertCircle,
+  Bus,
+  Plane,
+  Ship,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import {
@@ -21,12 +24,17 @@ import {
   getRememberedReferral,
   validateDiscountCode,
   calculateDiscountAmount,
+  isDiscountApplicableToPack,
+  calculateTransferCost,
+  formatTransferOptionLabel,
   packGuestCount,
   packLabel,
   ticketUrl,
   type Pack,
   type Booking,
   type DiscountCode,
+  type TransferType,
+  type TransferOption,
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel, type Language } from "@/lib/translations";
@@ -46,6 +54,8 @@ export const Route = createFileRoute("/book")({
   component: BookPage,
 });
 
+const EUR_TO_MAD = 11;
+
 function BookPage() {
   const { lang } = useLanguage();
   const L = lang as Language;
@@ -58,6 +68,13 @@ function BookPage() {
   const [done, setDone] = useState(false);
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
+
+  // Shuttle Transfer State
+  const [needsTransfer, setNeedsTransfer] = useState(false);
+  const [transferType, setTransferType] = useState<TransferType>("port");
+  const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
+  const [transferLocation, setTransferLocation] = useState<string>("Tanger Ville Port");
+  const [transferDetails, setTransferDetails] = useState("");
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState("");
@@ -119,12 +136,16 @@ function BookPage() {
   // Recalculate discount whenever selected pack changes
   useEffect(() => {
     if (selected && appliedDiscount) {
-      const count = getGuestCount(selected);
-      const singleP = parseInt(selected.price, 10) || 0;
-      const totalP = singleP * count;
-      const cur = selected.currency || "€";
-      const amt = calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur);
-      setDiscountAmount(amt);
+      if (!isDiscountApplicableToPack(appliedDiscount, selected.id)) {
+        setDiscountAmount(0);
+      } else {
+        const count = getGuestCount(selected);
+        const singleP = parseInt(selected.price, 10) || 0;
+        const totalP = singleP * count;
+        const cur = selected.currency || "€";
+        const amt = calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur, selected.id);
+        setDiscountAmount(amt);
+      }
     }
   }, [selected, appliedDiscount]);
 
@@ -233,10 +254,14 @@ function BookPage() {
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
     }));
     if (appliedDiscount) {
-      const singleP = parseInt(p.price, 10) || 0;
-      const totalP = singleP * count;
-      const cur = p.currency || "€";
-      setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur));
+      if (!isDiscountApplicableToPack(appliedDiscount, p.id)) {
+        setDiscountAmount(0);
+      } else {
+        const singleP = parseInt(p.price, 10) || 0;
+        const totalP = singleP * count;
+        const cur = p.currency || "€";
+        setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur, p.id));
+      }
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -275,6 +300,13 @@ function BookPage() {
     // Record the pending booking FIRST so the guest gets a reservation
     // number on the success screen and in the auto-reply email.
     let created: Booking | null = null;
+    const isApplicable = isDiscountApplicableToPack(appliedDiscount, selected.id);
+    const finalDiscount = isApplicable ? appliedDiscount : null;
+    const finalDiscountAmt = isApplicable ? discountAmount : 0;
+    const transferCost = needsTransfer
+      ? calculateTransferCost(transferType, transferOption, getGuestCount(selected))
+      : 0;
+
     try {
       created = await addBooking({
         packId: selected.id,
@@ -292,15 +324,25 @@ function BookPage() {
         status: "pending",
         source: collaborator ? "referral" : "website",
         collaboratorId: collaborator?.id ?? null,
-        discountCode: appliedDiscount?.code ?? null,
-        discountAmount: discountAmount,
-        discountCodeId: appliedDiscount?.id ?? null,
+        discountCode: finalDiscount?.code ?? null,
+        discountAmount: finalDiscountAmt,
+        discountCodeId: finalDiscount?.id ?? null,
+        needsTransfer,
+        transferType: needsTransfer ? transferType : null,
+        transferOption: needsTransfer ? transferOption : null,
+        transferLocation: needsTransfer ? transferLocation : null,
+        transferDetails: needsTransfer ? transferDetails : null,
+        transferCost: needsTransfer ? transferCost : 0,
       });
     } catch (dbErr) {
       console.warn("Could not record booking:", dbErr);
     }
 
     try {
+      const transferSummary = needsTransfer
+        ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
+        : "No transfer";
+
       // Notify the festival team + automatic reply to the customer
       const sent = await sendFormNotification({
         subject: `New Booking Request: ${selected.name} (${selected.sub})`,
@@ -318,6 +360,8 @@ function BookPage() {
           Country: form.country,
           Arrival: form.arrival,
           Departure: form.departure,
+          shuttleTransfer: transferSummary,
+          ticketCode: created?.ticketCode ?? "",
           Notes: form.notes,
           ...(created ? { Reservation: created.ticketCode } : {}),
           ...(collaborator ? { Referral: collaborator.code } : {}),
@@ -415,7 +459,10 @@ function BookPage() {
     const singlePrice = parseInt(selected.price, 10) || 0;
     const totalBasePrice = singlePrice * guestCount;
     const currency = selected.currency || "€";
-    const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount);
+    const transferCost = needsTransfer
+      ? calculateTransferCost(transferType, transferOption, guestCount)
+      : 0;
+    const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
 
     return (
       <Shell>
@@ -465,6 +512,19 @@ function BookPage() {
               <div className="flex justify-between items-center text-emerald-700 font-semibold">
                 <span>{L === "fr" ? "Réduction appliquée :" : L === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
                 <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${discountAmount} ${currency}`}</span>
+              </div>
+            )}
+
+            {needsTransfer && transferCost > 0 && (
+              <div className="flex justify-between items-center text-blue-700 font-semibold">
+                <span>
+                  {L === "fr"
+                    ? `Navette (${transferType === "port" ? "Port" : "Aéroport"} · ${formatTransferOptionLabel(transferOption, L)}) :`
+                    : L === "es"
+                    ? `Traslado (${transferType === "port" ? "Puerto" : "Aeropuerto"} · ${formatTransferOptionLabel(transferOption, L)}):`
+                    : `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, L)}):`}
+                </span>
+                <span>+{transferCost} {currency}</span>
               </div>
             )}
 
@@ -619,6 +679,189 @@ function BookPage() {
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
+            </div>
+
+            {/* Shuttle Transfer Section */}
+            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-blue-600 text-white grid place-items-center shadow-xs">
+                    <Bus className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-blue-950">
+                      {tr("Shuttle Transfer", "Navette & Transfert", "Traslado y Transporte")}
+                    </p>
+                    <p className="text-[11px] text-blue-700 font-medium">
+                      {tr(
+                        "Transfer to/from port or airport to hotel",
+                        "Transfert depuis/vers le port ou l'aéroport",
+                        "Traslado desde/hacia el puerto o aeropuerto"
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Yes / No Toggle buttons */}
+                <div className="flex items-center bg-white border border-blue-200 p-0.5 rounded-xl shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setNeedsTransfer(false)}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                      !needsTransfer
+                        ? "bg-gray-100 text-gray-800"
+                        : "text-gray-500 hover:text-gray-900"
+                    }`}
+                  >
+                    {tr("No", "Non", "No")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNeedsTransfer(true)}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                      needsTransfer
+                        ? "bg-blue-600 text-white shadow-xs"
+                        : "text-blue-700 hover:text-blue-950"
+                    }`}
+                  >
+                    {tr("Yes", "Oui", "Sí")}
+                  </button>
+                </div>
+              </div>
+
+              {needsTransfer && (
+                <div className="space-y-3 pt-2 border-t border-blue-200/60 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {/* Step 1: Transfer Type (Port vs Airport) */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {/* Port Option */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferType("port");
+                        setTransferLocation("Tanger Ville Port");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                        transferType === "port"
+                          ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
+                          : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Ship className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`} />
+                        <span className="text-xs font-bold text-gray-900">
+                          {tr("Port", "Port", "Puerto")}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
+                        {tr("€5 1-way · €10 round", "€5 aller · €10 A/R", "€5 ida · €10 I/V")}
+                        <span className="block text-[10px] text-gray-500 font-normal">/ {tr("person", "pers.", "pers.")}</span>
+                      </div>
+                    </button>
+
+                    {/* Airport Option */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTransferType("airport");
+                        setTransferLocation("Tangier Ibn Battouta Airport (TNG)");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                        transferType === "airport"
+                          ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
+                          : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Plane className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`} />
+                        <span className="text-xs font-bold text-gray-900">
+                          {tr("Airport", "Aéroport", "Aeropuerto")}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
+                        {tr("€20 1-way · €40 round", "€20 aller · €40 A/R", "€20 ida · €40 I/V")}
+                        <span className="block text-[10px] text-gray-500 font-normal">/ {tr("person", "pers.", "pers.")}</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Step 2: Specific Location & Direction */}
+                  <div className="grid sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700 block mb-1">
+                        {tr("Pickup/Dropoff Hub", "Lieu précis", "Ubicación")}
+                      </label>
+                      <select
+                        value={transferLocation}
+                        onChange={(e) => setTransferLocation(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        {transferType === "port" ? (
+                          <>
+                            <option value="Tanger Ville Port">Tanger Ville Port (Port de Tanger)</option>
+                            <option value="Tanger Med Port">Tanger Med Port</option>
+                          </>
+                        ) : (
+                          <option value="Tangier Ibn Battouta Airport (TNG)">Aéroport Tanger Ibn Battouta (TNG)</option>
+                        )}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700 block mb-1">
+                        {tr("Transfer Direction", "Formule de trajet", "Tipo de trayecto")}
+                      </label>
+                      <select
+                        value={transferOption}
+                        onChange={(e) => setTransferOption(e.target.value as TransferOption)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        <option value="round_trip">
+                          {tr("Round Trip (Arrival & Return)", "Aller-Retour (A/R)", "Ida y Vuelta")}
+                        </option>
+                        <option value="one_way_arrival">
+                          {tr("One-Way (Arrival only)", "Aller simple (Arrivée)", "Solo ida (Llegada)")}
+                        </option>
+                        <option value="one_way_departure">
+                          {tr("One-Way (Return only)", "Retour simple (Départ)", "Solo vuelta (Salida)")}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Flight/Boat Details Input */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-gray-700 block mb-1">
+                      {tr(
+                        "Flight / Ferry # and estimated time (Optional)",
+                        "N° de vol / ferry et heure estimée (Optionnel)",
+                        "N° de vuelo / ferry y hora estimada (Opcional)"
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      value={transferDetails}
+                      onChange={(e) => setTransferDetails(e.target.value)}
+                      placeholder={
+                        transferType === "airport"
+                          ? tr("Ex: Flight AT123 at 14:30", "Ex: Vol AT123 à 14:30", "Ej: Vuelo AT123 a las 14:30")
+                          : tr("Ex: Ferry Balearia at 11:00", "Ex: Ferry Balearia à 11:00", "Ej: Ferry Balearia a las 11:00")
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Calculated Shuttle Subtotal */}
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-100/70 text-xs font-bold text-blue-900">
+                    <span>
+                      {tr("Shuttle Transfer Total:", "Total transfert navette :", "Total traslado:")}
+                      {guestCount > 1 && <span className="font-normal text-blue-800 ml-1">({guestCount} {tr("guests", "pers.", "pers.")})</span>}
+                    </span>
+                    <span className="text-sm font-extrabold text-blue-700">
+                      +{transferCost} {currency}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
 
@@ -796,7 +1039,7 @@ function BookPage() {
             {discountMsg.success && (
               <button
                 type="button"
-                onClick={handleClearDiscount}
+                onClick={clearDiscount}
                 className="text-[11px] text-gray-500 hover:text-gray-700 underline shrink-0 cursor-pointer"
               >
                 {tr("Remove", "Effacer", "Quitar")}
@@ -813,11 +1056,12 @@ function BookPage() {
           {packs.map((p) => {
             const unit = priceUnitLabel(p, L);
             const baseP = parseInt(p.price, 10) || 0;
-            const discAmt = appliedDiscount
-              ? calculateDiscountAmount(appliedDiscount, baseP)
+            const isApplicable = isDiscountApplicableToPack(appliedDiscount, p.id);
+            const discAmt = isApplicable && appliedDiscount
+              ? calculateDiscountAmount(appliedDiscount, baseP, packGuestCount(p), baseP, p.currency || "€", p.id)
               : 0;
             const finalP = Math.max(0, baseP - discAmt);
-            const hasDiscount = discAmt > 0;
+            const hasDiscount = isApplicable && discAmt > 0;
 
             return (
               <button

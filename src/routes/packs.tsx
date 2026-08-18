@@ -8,6 +8,7 @@ import {
   getActivePacks,
   validateDiscountCode,
   calculateDiscountAmount,
+  isDiscountApplicableToPack,
   getBookingByTicketCode,
   type DiscountCode,
   type Booking,
@@ -33,6 +34,7 @@ function PacksPage() {
     sub: string;
     price: string;
     currency?: string;
+    numGuests?: number;
   } | null>(null);
 
   // Discount Code State
@@ -81,14 +83,20 @@ function PacksPage() {
         if (res.valid && res.discount) {
           setAppliedDiscount(res.discount);
           sessionStorage.setItem("tlf_discount_code", res.discount.code);
+          const isAll = !res.discount.applicablePackIds || res.discount.applicablePackIds.length === 0;
           setDiscountMsg({
             success: true,
-            text:
-              lang === "fr"
-                ? `Code promo "${res.discount.code}" appliqué sur tous les packs !`
-                : lang === "es"
-                ? `¡Código promocional "${res.discount.code}" aplicado en todos los packs!`
-                : `Discount code "${res.discount.code}" applied on all packs!`,
+            text: isAll
+              ? (lang === "fr"
+                  ? `Code promo "${res.discount.code}" appliqué sur tous les packs !`
+                  : lang === "es"
+                  ? `¡Código promocional "${res.discount.code}" aplicado en todos los packs!`
+                  : `Discount code "${res.discount.code}" applied on all packs!`)
+              : (lang === "fr"
+                  ? `Code promo "${res.discount.code}" appliqué sur les packs sélectionnés !`
+                  : lang === "es"
+                  ? `¡Código promocional "${res.discount.code}" aplicado a los packs seleccionados!`
+                  : `Discount code "${res.discount.code}" applied to selected packs!`),
           });
         }
         setValidatingCode(false);
@@ -107,14 +115,20 @@ function PacksPage() {
       if (typeof window !== "undefined") {
         sessionStorage.setItem("tlf_discount_code", result.discount.code);
       }
+      const isAll = !result.discount.applicablePackIds || result.discount.applicablePackIds.length === 0;
       setDiscountMsg({
         success: true,
-        text:
-          lang === "fr"
-            ? `Code promo "${result.discount.code}" appliqué sur tous les packs !`
-            : lang === "es"
-            ? `¡Código promocional "${result.discount.code}" aplicado en todos los packs!`
-            : `Discount code "${result.discount.code}" applied on all packs!`,
+        text: isAll
+          ? (lang === "fr"
+              ? `Code promo "${result.discount.code}" appliqué sur tous les packs !`
+              : lang === "es"
+              ? `¡Código promocional "${result.discount.code}" aplicado en todos los packs!`
+              : `Discount code "${result.discount.code}" applied on all packs!`)
+          : (lang === "fr"
+              ? `Code promo "${result.discount.code}" appliqué sur les packs sélectionnés !`
+              : lang === "es"
+              ? `¡Código promocional "${result.discount.code}" aplicado a los packs seleccionados!`
+              : `Discount code "${result.discount.code}" applied to selected packs!`),
       });
     } else {
       setAppliedDiscount(null);
@@ -343,11 +357,13 @@ function PacksPage() {
                 {catPacks.map((p) => {
                   const isPopular = p.popular;
                   const basePriceNum = parseInt(p.price, 10) || 0;
-                  const discAmt = appliedDiscount
-                    ? calculateDiscountAmount(appliedDiscount, basePriceNum)
+                  const guestCount = p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
+                  const isApplicable = isDiscountApplicableToPack(appliedDiscount, p.id);
+                  const discAmt = isApplicable && appliedDiscount
+                    ? calculateDiscountAmount(appliedDiscount, basePriceNum, guestCount, basePriceNum, p.currency || "€", p.id)
                     : 0;
                   const finalPriceNum = Math.max(0, basePriceNum - discAmt);
-                  const hasDiscount = discAmt > 0;
+                  const hasDiscount = isApplicable && discAmt > 0;
 
                   return (
                     <div
@@ -453,6 +469,7 @@ function PacksPage() {
                               sub: translateDynamic(p.sub),
                               price: p.price,
                               currency: p.currency,
+                              numGuests: p.numGuests,
                             })
                           }
                           className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${

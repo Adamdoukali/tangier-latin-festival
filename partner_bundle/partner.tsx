@@ -14,6 +14,9 @@ import {
   Phone,
   Euro,
   Trophy,
+  Compass,
+  MapPin,
+  ExternalLink,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -33,6 +36,7 @@ import {
   packLabel,
   ticketUrl,
   partnerShareLink,
+  partnerTourismShareLink,
   packRoomCategory,
   type Collaborator,
   type Pack,
@@ -59,6 +63,10 @@ export const Route = createFileRoute("/partner")({
 // page applies the partner's language automatically.
 function getBookingUrl(code: string, lang?: string): string {
   return partnerShareLink(code, lang);
+}
+
+function getTourismBookingUrl(code: string, lang?: string): string {
+  return partnerTourismShareLink(code, lang);
 }
 
 function PartnerPortal() {
@@ -728,6 +736,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [statusError, setStatusError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [refQr, setRefQr] = useState("");
+  const [tourismQr, setTourismQr] = useState("");
 
   const reload = useCallback(async () => {
     const [packs, allBookings, discounts] = await Promise.all([getPacks(), getBookings(), getDiscountCodes()]);
@@ -802,6 +811,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     })
       .then(setRefQr)
       .catch(() => setRefQr(""));
+
+    QRCode.toDataURL(getTourismBookingUrl(partner.code, L), {
+      width: 240,
+      margin: 1,
+      color: { dark: "#1e3a8a", light: "#eff6ff" },
+    })
+      .then(setTourismQr)
+      .catch(() => setTourismQr(""));
   }, [partner.code, L]);
 
   const copy = (id: string, text: string) => {
@@ -959,55 +976,153 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             );
           })()}
 
-        {/* Selling links */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 flex flex-col sm:flex-row gap-5 items-start">
-          <div className="flex-1 space-y-5">
-            <div>
-              <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-600" />
-                {tr("Your Booking Link", "Votre lien de réservation", "Tu enlace de reserva")}
-              </h3>
-              <p className="mt-1.5 text-sm text-gray-500">
-                {tr(
-                  "Send the link below to your community. This link allows them to choose the pack that best suits their needs. Once their booking is completed, they automatically receive a confirmation email with the status 'Pending'.",
-                  "Envoyez le lien ci-dessous à votre communauté. Ce lien leur permet de choisir le pack le plus adapté à leurs besoins. Une fois leur réservation effectuée, ils reçoivent automatiquement un e-mail de confirmation avec le statut « En attente ».",
-                  "Envía el siguiente enlace a tu comunidad. Este enlace les permite elegir el paquete que mejor se adapte a sus necesidades. Una vez realizada su reserva, reciben automáticamente un correo electrónico de confirmación con el estado «Pendiente»."
-                )}
-              </p>
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <code className="text-xs font-mono text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-lg break-all">
-                  {getBookingUrl(partner.code, L)}
-                </code>
-                <button
-                  onClick={() => copy("book", getBookingUrl(partner.code, L))}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                    copiedId === "book"
-                      ? "bg-emerald-100 text-emerald-600"
-                      : "bg-gray-100 text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {copiedId === "book" ? (
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
+        {/* Selling links: Packs Link & Blue Tourism Link */}
+        <div className="space-y-4">
+          {/* 1. Main Packs Booking Link */}
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row gap-6 items-start">
+            <div className="flex-1 space-y-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
+                  <Ticket className="h-3.5 w-3.5 text-amber-600" />
+                  {tr("Festival Packs", "Packs Festival", "Packs Festival")}
+                </span>
+                <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                  {tr(
+                    "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive a pending reservation email.",
+                    "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass. Ils reçoivent un email de confirmation en attente.",
+                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass. Recibirán un email de confirmación pendiente."
                   )}
-                  {copiedId === "book"
-                    ? tr("Copied", "Copié", "Copiado")
-                    : tr("Copy", "Copier", "Copiar")}
-                </button>
+                </p>
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
+                    {getBookingUrl(partner.code, L)}
+                  </code>
+                  <button
+                    onClick={() => copy("book", getBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      copiedId === "book"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-gray-100 text-gray-700 hover:bg-amber-500 hover:text-slate-950"
+                    }`}
+                  >
+                    {copiedId === "book" ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copiedId === "book"
+                      ? tr("Copied", "Copié", "Copiado")
+                      : tr("Copy Link", "Copier le lien", "Copiar enlace")}
+                  </button>
+                  <a
+                    href={getBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
+                  </a>
+                </div>
               </div>
             </div>
+            {refQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0">
+                <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs inline-block">
+                  <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
+                </div>
+                <p className="mt-1 text-[10px] text-gray-400 font-medium">
+                  {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
+                </p>
+              </div>
+            )}
           </div>
-          {refQr && (
-            <div className="shrink-0 text-center">
-              <div className="rounded-lg border border-gray-200 bg-zinc-100 p-2 inline-block">
-                <img src={refQr} alt="Booking link QR" className="w-28 h-28" />
+
+          {/* 2. Tourism / Excursions Link (Special "Blue and Blue" Design) */}
+          <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
+            {/* Background glowing flair */}
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex-1 space-y-4 relative z-10">
+              <div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
+                    <Compass className="h-3.5 w-3.5 text-blue-300" />
+                    {tr("Tourism & Excursions", "Tourisme & Excursions", "Turismo y Excursiones")}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider">
+                    {tr("Tangier · Asilah · Chefchaouen ($100 / 100 €)", "Tanger · Asilah · Chefchaouen (100 €)", "Tánger · Asilah · Chefchaouen (100 €)")}
+                  </span>
+                </div>
+
+                <h3 className="font-display text-lg font-extrabold text-white flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-blue-300" />
+                  {tr("Your Tourism Booking Link (/book-tourism)", "Votre lien de réservation Excursions (/book-tourism)", "Tu enlace de reserva de Turismo (/book-tourism)")}
+                </h3>
+                <p className="mt-1 text-xs text-blue-100 leading-relaxed max-w-xl">
+                  {tr(
+                    "Share this dedicated link with your clients to offer guided tours to Tangier, Asilah, and Chefchaouen with full date schedules, tour descriptions, and seamless booking.",
+                    "Partagez ce lien dédié avec vos clients pour leur proposer les excursions guidées à Tanger, Asilah et Chefchaouen avec les dates, horaires et réservation en ligne.",
+                    "Comparte este enlace exclusivo con tus clientes para ofrecer excursiones guiadas a Tánger, Asilah y Chefchaouen con fechas, horarios y reserva en línea."
+                  )}
+                </p>
+
+                {/* Blue-on-blue Styled Copy Container */}
+                <div className="mt-4 flex items-center gap-2.5 flex-wrap">
+                  <div className="flex-1 min-w-[240px] rounded-xl bg-blue-950/70 border border-blue-400/40 px-3.5 py-2.5 text-xs font-mono text-blue-200 select-all break-all shadow-inner">
+                    {getTourismBookingUrl(partner.code, L)}
+                  </div>
+
+                  <button
+                    onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
+                      copiedId === "tourism"
+                        ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                        : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
+                    }`}
+                  >
+                    {copiedId === "tourism" ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={getTourismBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("View Page", "Voir la page", "Ver página")}</span>
+                  </a>
+                </div>
               </div>
-              <p className="mt-1.5 text-[10px] text-gray-400">
-                {tr("Booking link QR", "QR du lien de réservation", "QR del enlace de reserva")}
-              </p>
             </div>
-          )}
+
+            {/* Tourism QR Code */}
+            {tourismQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
+                <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
+                  <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
+                </div>
+                <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
+                  {tr("Tourism QR", "QR Excursions", "QR Turismo")}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* My bookings — guests who booked through this partner's link */}

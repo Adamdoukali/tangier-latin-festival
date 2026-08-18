@@ -8,6 +8,8 @@ import {
   Building2,
   Watch,
   Tag,
+  Bus,
+  Compass,
   ArrowLeft,
   Menu,
   X,
@@ -23,6 +25,8 @@ export const Route = createFileRoute("/admin")({
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/clients", label: "Clients", icon: Users, exact: false },
+  { to: "/admin/shuttle", label: "Transfer Shuttle", icon: Bus, exact: false },
+  { to: "/admin/tourism", label: "Tourism", icon: Compass, exact: false },
   { to: "/admin/packs", label: "Packs", icon: Package, exact: false },
   { to: "/admin/bookings", label: "Bookings", icon: Ticket, exact: false },
   { to: "/admin/discounts", label: "Discounts", icon: Tag, exact: false },

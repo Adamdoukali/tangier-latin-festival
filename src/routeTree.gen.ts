@@ -21,11 +21,14 @@ import { Route as PacksRouteImport } from './routes/packs'
 import { Route as HotelRouteImport } from './routes/hotel'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CompetitionRouteImport } from './routes/competition'
+import { Route as BookTourismRouteImport } from './routes/book-tourism'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as ArtistsRouteImport } from './routes/artists'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminTourismRouteImport } from './routes/admin/tourism'
+import { Route as AdminShuttleRouteImport } from './routes/admin/shuttle'
 import { Route as AdminPacksRouteImport } from './routes/admin/packs'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminInviteRouteImport } from './routes/admin/invite'
@@ -96,6 +99,11 @@ const CompetitionRoute = CompetitionRouteImport.update({
   path: '/competition',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookTourismRoute = BookTourismRouteImport.update({
+  id: '/book-tourism',
+  path: '/book-tourism',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BookRoute = BookRouteImport.update({
   id: '/book',
   path: '/book',
@@ -119,6 +127,16 @@ const IndexRoute = IndexRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTourismRoute = AdminTourismRouteImport.update({
+  id: '/tourism',
+  path: '/tourism',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShuttleRoute = AdminShuttleRouteImport.update({
+  id: '/shuttle',
+  path: '/shuttle',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminPacksRoute = AdminPacksRouteImport.update({
@@ -172,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
+  '/book-tourism': typeof BookTourismRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -193,12 +212,15 @@ export interface FileRoutesByFullPath {
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/shuttle': typeof AdminShuttleRoute
+  '/admin/tourism': typeof AdminTourismRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
+  '/book-tourism': typeof BookTourismRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -220,6 +242,8 @@ export interface FileRoutesByTo {
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/shuttle': typeof AdminShuttleRoute
+  '/admin/tourism': typeof AdminTourismRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -228,6 +252,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
+  '/book-tourism': typeof BookTourismRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -249,6 +274,8 @@ export interface FileRoutesById {
   '/admin/invite': typeof AdminInviteRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/shuttle': typeof AdminShuttleRoute
+  '/admin/tourism': typeof AdminTourismRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -258,6 +285,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/artists'
     | '/book'
+    | '/book-tourism'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -279,12 +307,15 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
+    | '/admin/shuttle'
+    | '/admin/tourism'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/artists'
     | '/book'
+    | '/book-tourism'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -306,6 +337,8 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
+    | '/admin/shuttle'
+    | '/admin/tourism'
     | '/admin'
   id:
     | '__root__'
@@ -313,6 +346,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/artists'
     | '/book'
+    | '/book-tourism'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -334,6 +368,8 @@ export interface FileRouteTypes {
     | '/admin/invite'
     | '/admin/login'
     | '/admin/packs'
+    | '/admin/shuttle'
+    | '/admin/tourism'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -342,6 +378,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ArtistsRoute: typeof ArtistsRoute
   BookRoute: typeof BookRoute
+  BookTourismRoute: typeof BookTourismRoute
   CompetitionRoute: typeof CompetitionRoute
   GalleryRoute: typeof GalleryRoute
   HotelRoute: typeof HotelRoute
@@ -442,6 +479,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompetitionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book-tourism': {
+      id: '/book-tourism'
+      path: '/book-tourism'
+      fullPath: '/book-tourism'
+      preLoaderRoute: typeof BookTourismRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/book': {
       id: '/book'
       path: '/book'
@@ -475,6 +519,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tourism': {
+      id: '/admin/tourism'
+      path: '/tourism'
+      fullPath: '/admin/tourism'
+      preLoaderRoute: typeof AdminTourismRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shuttle': {
+      id: '/admin/shuttle'
+      path: '/shuttle'
+      fullPath: '/admin/shuttle'
+      preLoaderRoute: typeof AdminShuttleRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/packs': {
@@ -553,6 +611,8 @@ interface AdminRouteChildren {
   AdminInviteRoute: typeof AdminInviteRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPacksRoute: typeof AdminPacksRoute
+  AdminShuttleRoute: typeof AdminShuttleRoute
+  AdminTourismRoute: typeof AdminTourismRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -566,6 +626,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminInviteRoute: AdminInviteRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPacksRoute: AdminPacksRoute,
+  AdminShuttleRoute: AdminShuttleRoute,
+  AdminTourismRoute: AdminTourismRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -576,6 +638,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ArtistsRoute: ArtistsRoute,
   BookRoute: BookRoute,
+  BookTourismRoute: BookTourismRoute,
   CompetitionRoute: CompetitionRoute,
   GalleryRoute: GalleryRoute,
   HotelRoute: HotelRoute,
