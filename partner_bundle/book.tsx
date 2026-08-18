@@ -73,7 +73,7 @@ function BookPage() {
   const [needsTransfer, setNeedsTransfer] = useState(false);
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
-  const [transferLocation, setTransferLocation] = useState<string>("Tanger Ville Port");
+  const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
   const [transferDetails, setTransferDetails] = useState("");
 
   // Discount code state
@@ -304,7 +304,7 @@ function BookPage() {
     const finalDiscount = isApplicable ? appliedDiscount : null;
     const finalDiscountAmt = isApplicable ? discountAmount : 0;
     const transferCost = needsTransfer
-      ? calculateTransferCost(transferType, transferOption, getGuestCount(selected))
+      ? calculateTransferCost(transferType, transferOption, getGuestCount(selected), transferLocation)
       : 0;
 
     try {
@@ -457,8 +457,10 @@ function BookPage() {
   if (selected) {
     const guestCount = getGuestCount(selected);
     const singlePrice = parseInt(selected.price, 10) || 0;
+    const totalBasePrice = singlePrice * guestCount;
+    const currency = selected.currency || "€";
     const transferCost = needsTransfer
-      ? calculateTransferCost(transferType, transferOption, guestCount)
+      ? calculateTransferCost(transferType, transferOption, guestCount, transferLocation)
       : 0;
     const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
 
@@ -776,7 +778,7 @@ function BookPage() {
                         </span>
                       </div>
                       <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {tr("€20 1-way · €40 round", "€20 aller · €40 A/R", "€20 ida · €40 I/V")}
+                        {tr("€10–€15 1-way · €20–€30 round", "€10–€15 aller · €20–€30 A/R", "€10–€15 ida · €20–€30 I/V")}
                         <span className="block text-[10px] text-gray-500 font-normal">/ {tr("person", "pers.", "pers.")}</span>
                       </div>
                     </button>
@@ -794,12 +796,18 @@ function BookPage() {
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         {transferType === "port" ? (
-                          <>
-                            <option value="Tanger Ville Port">Tanger Ville Port (Port de Tanger)</option>
-                            <option value="Tanger Med Port">Tanger Med Port</option>
-                          </>
+                          <option value="Port of Tangier (Tanger Ville)">
+                            {tr("Port of Tangier (Tanger Ville) — €5 / €10 R/T", "Port de Tanger Ville — 5 € / 10 € A/R", "Puerto de Tánger Ciudad — 5 € / 10 € I/V")}
+                          </option>
                         ) : (
-                          <option value="Tangier Ibn Battouta Airport (TNG)">Aéroport Tanger Ibn Battouta (TNG)</option>
+                          <>
+                            <option value="Tangier Ibn Battouta Airport (TNG)">
+                              {tr("Tangier Ibn Battouta Airport (TNG) — €10 / €20 R/T", "Aéroport Tanger Ibn Battouta (TNG) — 10 € / 20 € A/R", "Aeropuerto Tánger Ibn Battouta (TNG) — 10 € / 20 € I/V")}
+                            </option>
+                            <option value="Tetouan Sania Ramel Airport (TTU)">
+                              {tr("Tetouan Sania Ramel Airport (TTU) — €15 / €30 R/T", "Aéroport Tétouan Sania Ramel (TTU) — 15 € / 30 € A/R", "Aeropuerto Tetuán Sania Ramel (TTU) — 15 € / 30 € I/V")}
+                            </option>
+                          </>
                         )}
                       </select>
                     </div>
@@ -1037,7 +1045,7 @@ function BookPage() {
             {discountMsg.success && (
               <button
                 type="button"
-                onClick={handleClearDiscount}
+                onClick={clearDiscount}
                 className="text-[11px] text-gray-500 hover:text-gray-700 underline shrink-0 cursor-pointer"
               >
                 {tr("Remove", "Effacer", "Quitar")}

@@ -40,20 +40,40 @@ export const SHUTTLE_PRICES = {
     one_way_departure: 5,
     round_trip: 10,
   },
-  airport: {
-    one_way_arrival: 20,
-    one_way_departure: 20,
-    round_trip: 40,
+  airport_tangier: {
+    one_way_arrival: 10,
+    one_way_departure: 10,
+    round_trip: 20,
+  },
+  airport_tetouan: {
+    one_way_arrival: 15,
+    one_way_departure: 15,
+    round_trip: 30,
   },
 } as const;
 
 export function calculateTransferCost(
   type: TransferType | null | undefined,
   option: TransferOption | null | undefined,
-  numGuests: number = 1
+  numGuests: number = 1,
+  location?: string | null | undefined
 ): number {
   if (!type || !option) return 0;
-  const unitPrice = SHUTTLE_PRICES[type]?.[option] ?? 0;
+  const locLower = (location || "").toLowerCase();
+
+  let roundTripPrice = 10;
+  if (type === "airport") {
+    if (locLower.includes("tetouan") || locLower.includes("tétouan") || locLower.includes("ttu")) {
+      roundTripPrice = 30;
+    } else {
+      roundTripPrice = 20;
+    }
+  } else {
+    // Port of Tangier
+    roundTripPrice = 10;
+  }
+
+  const unitPrice = option === "round_trip" ? roundTripPrice : roundTripPrice / 2;
   return unitPrice * Math.max(1, numGuests);
 }
 

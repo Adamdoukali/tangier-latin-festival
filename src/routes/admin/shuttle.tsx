@@ -57,7 +57,7 @@ function AdminShuttlePage() {
     needsTransfer: true,
     transferType: "port" as TransferType,
     transferOption: "round_trip" as TransferOption,
-    transferLocation: "Tanger Ville Port",
+    transferLocation: "Port of Tangier (Tanger Ville)",
     transferDetails: "",
     transferCost: 10,
   });
@@ -244,14 +244,15 @@ function AdminShuttlePage() {
   };
 
   const handleOpenEdit = (b: Booking) => {
+    const defaultLoc = b.transferType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Port of Tangier (Tanger Ville)";
     setEditingBooking(b);
     setEditForm({
       needsTransfer: b.needsTransfer ?? true,
       transferType: b.transferType ?? "port",
       transferOption: b.transferOption ?? "round_trip",
-      transferLocation: b.transferLocation ?? (b.transferType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Tanger Ville Port"),
+      transferLocation: b.transferLocation ?? defaultLoc,
       transferDetails: b.transferDetails ?? "",
-      transferCost: b.transferCost ?? (b.transferType === "airport" ? 40 : 10),
+      transferCost: b.transferCost ?? calculateTransferCost(b.transferType, b.transferOption, b.numPeople || 1, b.transferLocation),
     });
   };
 
@@ -857,10 +858,14 @@ function AdminShuttlePage() {
                         value={editForm.transferType}
                         onChange={(e) => {
                           const val = e.target.value as TransferType;
+                          const nextType = val;
+                          const nextLoc = nextType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Port of Tangier (Tanger Ville)";
+                          const nextCost = calculateTransferCost(nextType, editForm.transferOption, editingBooking?.numPeople || 1, nextLoc);
                           setEditForm({
                             ...editForm,
-                            transferType: val,
-                            transferLocation: val === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Tanger Ville Port",
+                            transferType: nextType,
+                            transferLocation: nextLoc,
+                            transferCost: nextCost,
                           });
                         }}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
@@ -876,7 +881,11 @@ function AdminShuttlePage() {
                       </label>
                       <select
                         value={editForm.transferOption}
-                        onChange={(e) => setEditForm({ ...editForm, transferOption: e.target.value as TransferOption })}
+                        onChange={(e) => {
+                          const nextOpt = e.target.value as TransferOption;
+                          const nextCost = calculateTransferCost(editForm.transferType, nextOpt, editingBooking?.numPeople || 1, editForm.transferLocation);
+                          setEditForm({ ...editForm, transferOption: nextOpt, transferCost: nextCost });
+                        }}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="round_trip">Round Trip (Aller-Retour)</option>
@@ -890,12 +899,30 @@ function AdminShuttlePage() {
                     <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
                       Location / Hub
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={editForm.transferLocation}
-                      onChange={(e) => setEditForm({ ...editForm, transferLocation: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
-                    />
+                      onChange={(e) => {
+                        const nextLoc = e.target.value;
+                        const nextCost = calculateTransferCost(editForm.transferType, editForm.transferOption, editingBooking?.numPeople || 1, nextLoc);
+                        setEditForm({ ...editForm, transferLocation: nextLoc, transferCost: nextCost });
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-medium"
+                    >
+                      {editForm.transferType === "port" ? (
+                        <option value="Port of Tangier (Tanger Ville)">
+                          Port of Tangier (Port de Tanger Ville)
+                        </option>
+                      ) : (
+                        <>
+                          <option value="Tangier Ibn Battouta Airport (TNG)">
+                            Tangier Ibn Battouta Airport (TNG) — €10 / €20 A/R
+                          </option>
+                          <option value="Tetouan Sania Ramel Airport (TTU)">
+                            Tetouan Sania Ramel Airport (TTU) — €15 / €30 A/R
+                          </option>
+                        </>
+                      )}
+                    </select>
                   </div>
 
                   <div>

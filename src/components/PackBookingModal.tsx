@@ -59,11 +59,11 @@ export function PackBookingModal({
   const [needsTransfer, setNeedsTransfer] = useState(false);
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
-  const [transferLocation, setTransferLocation] = useState<string>("Tanger Ville Port");
+  const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
   const [transferDetails, setTransferDetails] = useState("");
 
   const transferCost = needsTransfer
-    ? calculateTransferCost(transferType, transferOption, numGuests)
+    ? calculateTransferCost(transferType, transferOption, numGuests, transferLocation)
     : 0;
 
   const isInitialApplicable = isDiscountApplicableToPack(initialDiscount, pack.id);
@@ -775,7 +775,7 @@ export function PackBookingModal({
                         </span>
                       </div>
                       <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {lang === "fr" ? "€20 aller · €40 A/R" : lang === "es" ? "€20 ida · €40 I/V" : "€20 1-way · €40 round"}
+                        {lang === "fr" ? "€10–€15 aller · €20–€30 A/R" : lang === "es" ? "€10–€15 ida · €20–€30 I/V" : "€10–€15 1-way · €20–€30 round"}
                         <span className="block text-[10px] text-gray-500 font-normal">/ {lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}</span>
                       </div>
                     </button>
@@ -793,12 +793,18 @@ export function PackBookingModal({
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         {transferType === "port" ? (
-                          <>
-                            <option value="Tanger Ville Port">Tanger Ville Port (Port de Tanger)</option>
-                            <option value="Tanger Med Port">Tanger Med Port</option>
-                          </>
+                          <option value="Port of Tangier (Tanger Ville)">
+                            {lang === "fr" ? "Port de Tanger Ville — 5 € / 10 € A/R" : lang === "es" ? "Puerto de Tánger Ciudad — 5 € / 10 € I/V" : "Port of Tangier (Tanger Ville) — €5 / €10 R/T"}
+                          </option>
                         ) : (
-                          <option value="Tangier Ibn Battouta Airport (TNG)">Aéroport Tanger Ibn Battouta (TNG)</option>
+                          <>
+                            <option value="Tangier Ibn Battouta Airport (TNG)">
+                              {lang === "fr" ? "Aéroport Tanger Ibn Battouta (TNG) — 10 € / 20 € A/R" : lang === "es" ? "Aeropuerto Tánger Ibn Battouta (TNG) — 10 € / 20 € I/V" : "Tangier Ibn Battouta Airport (TNG) — €10 / €20 R/T"}
+                            </option>
+                            <option value="Tetouan Sania Ramel Airport (TTU)">
+                              {lang === "fr" ? "Aéroport Tétouan Sania Ramel (TTU) — 15 € / 30 € A/R" : lang === "es" ? "Aeropuerto Tetuán Sania Ramel (TTU) — 15 € / 30 € I/V" : "Tetouan Sania Ramel Airport (TTU) — €15 / €30 R/T"}
+                            </option>
+                          </>
                         )}
                       </select>
                     </div>
