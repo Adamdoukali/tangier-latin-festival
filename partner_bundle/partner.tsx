@@ -53,6 +53,7 @@ import {
   type Booking,
   type BookingStatus,
   createPartnerAccount,
+  normalizePhone,
 } from "@/lib/admin-store";
 import {
   savePartnerSession,
@@ -753,9 +754,29 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const reload = useCallback(async () => {
     const [packs, allBookings, discounts] = await Promise.all([getPacks(), getBookings(), getDiscountCodes()]);
     setAllPacks(packs);
-    setAllFestivalBookings(allBookings.filter((b) => !isTourismBooking(b)));
+    const festBookings = allBookings.filter((b) => !isTourismBooking(b));
+    setAllFestivalBookings(festBookings);
+
     const mine = allBookings
-      .filter((b) => b.collaboratorId === partner.id)
+      .filter((b) => {
+        if (b.collaboratorId === partner.id) return true;
+        // Auto-match unassigned tourism bookings from this partner's festival clients
+        if (isTourismBooking(b) && !b.collaboratorId) {
+          const matchedFestival = festBookings.find((fb) => {
+            if (fb.collaboratorId !== partner.id) return false;
+            const fbPhone = normalizePhone(fb.phone);
+            const bPhone = normalizePhone(b.phone);
+            if (fbPhone.length >= 6 && bPhone.length >= 6 && (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))) return true;
+            if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase()) return true;
+            const fbName = fb.customerName.toLowerCase().trim();
+            const bName = b.customerName.toLowerCase().trim();
+            if (fbName && bName && (fbName === bName || fbName.includes(bName) || bName.includes(fbName))) return true;
+            return false;
+          });
+          if (matchedFestival) return true;
+        }
+        return false;
+      })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setMyBookings(mine);
 
@@ -854,8 +875,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const activeTourism = tourismBookings.filter((b) => b.status !== "declined");
   const tourismGuests = activeTourism.reduce((sum, b) => sum + (b.numPeople || 1), 0);
-  const tourismSales = collaboratorTourismRevenue(partner.id, myBookings);
-  const tourismCommissions = collaboratorTourismCommission(partner.id, myBookings);
+  const tourismSales = activeTourism.reduce((sum, b) => sum + getTourismPrice(b.packId || b.packName) * (b.numPeople || 1), 0);
+  const tourismCommissions = activeTourism.reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
 
   // Tourism Destination Breakdown
   const tangierTourGuests = activeTourism

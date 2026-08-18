@@ -24,7 +24,9 @@ import {
   ticketUrl,
   findMatchingFestivalBooking,
   type Booking,
+  type Collaborator,
 } from "@/lib/admin-store";
+import { restorePartnerSession } from "@/lib/partner-auth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { type Language } from "@/lib/translations";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
@@ -418,13 +420,39 @@ function BookTourismPage() {
     setSubmitting(true);
     setError("");
 
-    const refCode = partnerCode || getRememberedReferral();
-    const explicitCollaborator = refCode
-      ? await getCollaboratorByCode(refCode).catch(() => undefined)
-      : undefined;
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    const urlRef = params?.get("ref");
+    const rememberedRef = getRememberedReferral();
+    const refCode = urlRef || partnerCode || rememberedRef;
 
-    // Use explicit URL referral or fallback to the collaborator from their matched festival booking
-    const finalCollaboratorId = explicitCollaborator?.id ?? matchedFestivalBooking?.collaboratorId ?? null;
+    let explicitCollaborator: Collaborator | undefined = undefined;
+    if (refCode) {
+      explicitCollaborator = await getCollaboratorByCode(refCode).catch(() => undefined);
+    }
+
+    // Check if partner is logged in on this browser (e.g. testing their own link)
+    let partnerSessionCollab: Collaborator | null = null;
+    try {
+      partnerSessionCollab = await restorePartnerSession();
+    } catch {}
+
+    // Match with existing festival booking by phone, email, or lead guest name
+    let matchedCollabId = matchedFestivalBooking?.collaboratorId;
+    if (!matchedCollabId && (form.phone || form.email || form.guests[0]?.firstName)) {
+      const match = await findMatchingFestivalBooking({
+        phone: form.phone,
+        email: form.email,
+        name: `${form.guests[0]?.firstName || ""} ${form.guests[0]?.lastName || ""}`.trim(),
+      });
+      if (match?.collaboratorId) {
+        matchedCollabId = match.collaboratorId;
+      }
+    }
+
+    const finalCollaboratorId =
+      explicitCollaborator?.id ??
+      matchedCollabId ??
+      (partnerSessionCollab?.id ?? null);
 
     const customerName = form.guests
       .map((g) => `${g.firstName.trim()} ${g.lastName.trim()}`)

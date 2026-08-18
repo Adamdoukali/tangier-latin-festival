@@ -978,6 +978,9 @@ export async function addBooking(
           status: booking.status,
           source: booking.source ?? "manual",
           collaborator_id: booking.collaboratorId ?? null,
+          room_number: booking.roomNumber ?? null,
+          room_type: booking.roomType ?? null,
+          guest_details: booking.guestDetails ?? null,
           invite_id: booking.inviteId ?? null,
           invite_code: booking.inviteCode ?? null,
           discount_code: booking.discountCode ?? null,
@@ -993,6 +996,9 @@ export async function addBooking(
         [
           "source",
           "collaborator_id",
+          "room_number",
+          "room_type",
+          "guest_details",
           "arrival_date",
           "departure_date",
           "lang",
@@ -1678,8 +1684,15 @@ export async function getCollaborators(): Promise<Collaborator[]> {
 }
 
 export async function getCollaboratorByCode(code: string): Promise<Collaborator | undefined> {
+  if (!code) return undefined;
   const wanted = code.trim().toUpperCase();
-  return (await getCollaborators()).find((c) => c.code.toUpperCase() === wanted && c.active);
+  const all = await getCollaborators();
+  return all.find(
+    (c) =>
+      c.code?.toUpperCase() === wanted ||
+      c.name?.toUpperCase() === wanted ||
+      c.id === code
+  );
 }
 
 export async function getCollaboratorById(id: string): Promise<Collaborator | undefined> {
