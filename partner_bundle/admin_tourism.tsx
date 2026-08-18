@@ -64,7 +64,7 @@ const TOURS: TourDefinition[] = [
     time: "09:00 – 14:00",
     location: "Tangier (Kasbah, Cap Spartel, Caves of Hercules)",
     pickup: "Hotel Kenzi Solazur Lobby",
-    pricePerPerson: 100,
+    pricePerPerson: 15,
     currency: "€",
     color: "blue",
   },
@@ -76,7 +76,7 @@ const TOURS: TourDefinition[] = [
     time: "09:30 – 15:30",
     location: "Asilah (White Medina, Ramparts, Oceanfront)",
     pickup: "Hotel Kenzi Solazur Lobby",
-    pricePerPerson: 100,
+    pricePerPerson: 25,
     currency: "€",
     color: "cyan",
   },
@@ -88,7 +88,7 @@ const TOURS: TourDefinition[] = [
     time: "08:30 – 17:30",
     location: "Chefchaouen & Rif Mountains",
     pickup: "Hotel Kenzi Solazur Lobby",
-    pricePerPerson: 100,
+    pricePerPerson: 30,
     currency: "€",
     color: "indigo",
   },
@@ -182,6 +182,11 @@ function AdminTourismPage() {
     return bookings.filter(isTourismBooking);
   }, [bookings]);
 
+  // Master non-tourism festival bookings for cross-linking display
+  const festivalBookings = useMemo(() => {
+    return bookings.filter((b) => !isTourismBooking(b));
+  }, [bookings]);
+
   // KPIs
   const stats = useMemo(() => {
     const totalBookings = tourismBookings.length;
@@ -200,7 +205,10 @@ function AdminTourismPage() {
       .filter((b) => getTourId(b) === "tour-chefchaouen")
       .reduce((sum, b) => sum + (b.numPeople || 1), 0);
 
-    const totalRevenue = totalGuests * 100;
+    const totalRevenue = tangierGuests * 15 + asilahGuests * 25 + chefchaouenGuests * 30;
+    const partnerCommissions = active
+      .filter((b) => !!b.collaboratorId)
+      .reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
 
     return {
       totalBookings,
@@ -209,6 +217,7 @@ function AdminTourismPage() {
       asilahGuests,
       chefchaouenGuests,
       totalRevenue,
+      partnerCommissions,
     };
   }, [tourismBookings]);
 
@@ -535,16 +544,25 @@ function AdminTourismPage() {
             <MapPin className="h-4 w-4 text-indigo-600" />
           </div>
           <p className="mt-2 font-display text-2xl font-black text-indigo-800">{stats.chefchaouenGuests}</p>
-          <span className="text-[10px] text-indigo-600 font-medium">Sun Jan 10 (Full Day)</span>
+          <span className="text-[10px] text-indigo-600 font-medium">Sun Jan 10 · 30 €</span>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-xs">
+          <div className="flex items-center justify-between text-emerald-800">
+            <span className="text-[10px] font-bold uppercase tracking-wider">Partner Commissions</span>
+            <Users className="h-4 w-4 text-emerald-600" />
+          </div>
+          <p className="mt-2 font-display text-2xl font-black text-emerald-800">{stats.partnerCommissions} €</p>
+          <span className="text-[10px] text-emerald-600 font-medium">5 € / guest</span>
         </div>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 shadow-xs">
           <div className="flex items-center justify-between text-amber-800">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Revenue</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Total Revenue</span>
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </div>
           <p className="mt-2 font-display text-2xl font-black text-amber-800">{stats.totalRevenue} €</p>
-          <span className="text-[10px] text-amber-600 font-medium">100 € / pax</span>
+          <span className="text-[10px] text-amber-600 font-medium">Tourism Sales</span>
         </div>
       </div>
 
@@ -706,6 +724,16 @@ function AdminTourismPage() {
                   const collab = collaborators.find((c) => c.id === b.collaboratorId);
                   const cost = (b.numPeople || 1) * tour.pricePerPerson;
 
+                  // Find linked festival booking
+                  const linkedFest = festivalBookings.find((fb) => {
+                    if (b.notes?.includes(fb.ticketCode)) return true;
+                    const fbPhone = (fb.phone || "").replace(/\D/g, "");
+                    const bPhone = (b.phone || "").replace(/\D/g, "");
+                    if (fbPhone.length >= 6 && bPhone.length >= 6 && (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))) return true;
+                    if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase()) return true;
+                    return false;
+                  });
+
                   return (
                     <tr key={b.id} className="hover:bg-blue-50/30 transition">
                       {/* Ticket Code & Lead */}
@@ -724,6 +752,17 @@ function AdminTourismPage() {
                         <span className="text-[10px] text-gray-400">
                           {new Date(b.createdAt).toLocaleDateString()}
                         </span>
+                        {linkedFest && (
+                          <div className="mt-1">
+                            <span
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold"
+                              title={`Linked to Festival Reservation: ${linkedFest.customerName} (${linkedFest.packName})`}
+                            >
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span>Pass #{linkedFest.ticketCode}</span>
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Excursion & Date */}

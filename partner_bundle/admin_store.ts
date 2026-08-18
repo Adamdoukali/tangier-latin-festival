@@ -2648,6 +2648,91 @@ export function commissionLabel(c: Collaborator): string {
  *  sales only fill the mission — no commission on them. Commission
  *  starts on the bookings that come after the goal is reached. A
  *  booking that crosses the goal line is consumed by the mission. */
+export function isTourismBooking(b: Booking): boolean {
+  if (b.packId?.startsWith("tour-")) return true;
+  if (b.packName?.toLowerCase().includes("tourism")) return true;
+  if (b.packName?.toLowerCase().includes("excursion")) return true;
+  return false;
+}
+
+export function getTourismPrice(tourIdOrName: string | null | undefined): number {
+  if (!tourIdOrName) return 15;
+  const s = tourIdOrName.toLowerCase();
+  if (s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen")) {
+    return 30;
+  }
+  if (s.includes("asilah") || s.includes("asella")) {
+    return 25;
+  }
+  return 15; // Tangier
+}
+
+export function normalizePhone(phone: string | null | undefined): string {
+  if (!phone) return "";
+  return phone.replace(/\D/g, "");
+}
+
+/** Auto-link database query to find a matching master festival pack booking */
+export async function findMatchingFestivalBooking(query: {
+  phone?: string | null;
+  email?: string | null;
+  name?: string | null;
+}): Promise<Booking | undefined> {
+  const bookings = await getBookings();
+  const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && b.status !== "declined");
+
+  const cleanPhone = normalizePhone(query.phone);
+  const cleanEmail = (query.email || "").trim().toLowerCase();
+  const cleanName = (query.name || "").trim().toLowerCase();
+
+  // 1. Match by phone (last 8 digits)
+  if (cleanPhone.length >= 6) {
+    const last8 = cleanPhone.slice(-8);
+    const byPhone = festivalBookings.find((b) => {
+      const bPhone = normalizePhone(b.phone);
+      if (bPhone.length < 6) return false;
+      return bPhone.endsWith(last8) || last8.endsWith(bPhone.slice(-8));
+    });
+    if (byPhone) return byPhone;
+  }
+
+  // 2. Match by email
+  if (cleanEmail && cleanEmail.includes("@")) {
+    const byEmail = festivalBookings.find(
+      (b) => (b.email || "").trim().toLowerCase() === cleanEmail
+    );
+    if (byEmail) return byEmail;
+  }
+
+  // 3. Match by name
+  if (cleanName && cleanName.length >= 4) {
+    const byName = festivalBookings.find((b) => {
+      const bName = (b.customerName || "").trim().toLowerCase();
+      if (bName === cleanName) return true;
+      if (bName.includes(cleanName) || cleanName.includes(bName)) return true;
+      if (b.guestDetails) {
+        try {
+          const guests = JSON.parse(b.guestDetails);
+          if (Array.isArray(guests)) {
+            return guests.some((g) => {
+              const fullName = `${g.firstName || ""} ${g.lastName || ""}`.trim().toLowerCase();
+              return fullName === cleanName || fullName.includes(cleanName);
+            });
+          }
+        } catch {}
+      }
+      return false;
+    });
+    if (byName) return byName;
+  }
+
+  return undefined;
+}
+
+/** Commission earned by a collaborator over the given bookings.
+ *  - Tourism bookings earn a fixed €5 per person/ticket.
+ *  - Festival Pack bookings earn their configured rate (% or per person).
+ */
 export function collaboratorCommission(
   c: Collaborator,
   bookings: Booking[],
@@ -2666,6 +2751,12 @@ export function collaboratorCommission(
 
   return mine.reduce((acc, b) => {
     const totalPeopleInBooking = b.numPeople || 1;
+
+    // Special rule for Tourism Excursions: fixed €5 per person commission
+    if (isTourismBooking(b)) {
+      const commValue = 5 * totalPeopleInBooking;
+      return { ...acc, eur: acc.eur + commValue };
+    }
 
     // Determine how many people from this booking go to the mission vs earn commission
     let commissionablePeople = totalPeopleInBooking;
@@ -2736,9 +2827,58 @@ export function collaboratorCommission(
   }, emptyMoney());
 }
 
+/** Separate Tourism commission (€5/person in EUR) */
+export function collaboratorTourismCommission(
+  collaboratorId: string,
+  bookings: Booking[]
+): number {
+  return bookings
+    .filter(
+      (b) =>
+        b.collaboratorId === collaboratorId &&
+        b.status !== "declined" &&
+        isTourismBooking(b)
+    )
+    .reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
+}
+
+/** Separate Tourism revenue in EUR */
+export function collaboratorTourismRevenue(
+  collaboratorId: string,
+  bookings: Booking[]
+): number {
+  return bookings
+    .filter(
+      (b) =>
+        b.collaboratorId === collaboratorId &&
+        b.status !== "declined" &&
+        isTourismBooking(b)
+    )
+    .reduce((sum, b) => {
+      const unitPrice = getTourismPrice(b.packId || b.packName);
+      return sum + unitPrice * (b.numPeople || 1);
+    }, 0);
+}
+
+/** Separate Festival Pack commission */
+export function collaboratorFestivalCommission(
+  c: Collaborator,
+  bookings: Booking[],
+  packs: Pack[],
+  discountCodes: DiscountCode[] = []
+): Money {
+  const festivalBookings = bookings.filter((b) => !isTourismBooking(b));
+  return collaboratorCommission(c, festivalBookings, packs, discountCodes);
+}
+
 /** Sum bookings by the currency their pack is actually priced in. */
 function salesOf(bookings: Booking[], packs: Pack[]): Money {
   return bookings.reduce((acc, b) => {
+    if (isTourismBooking(b)) {
+      const unitPrice = getTourismPrice(b.packId || b.packName);
+      const value = unitPrice * (b.numPeople || 1);
+      return { ...acc, eur: acc.eur + value };
+    }
     const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
     const grossValue = amount * (b.numPeople || 1);
     const value = Math.max(0, grossValue - (b.discountAmount || 0));

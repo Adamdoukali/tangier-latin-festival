@@ -22,6 +22,7 @@ import {
   getCollaboratorByCode,
   getRememberedReferral,
   ticketUrl,
+  findMatchingFestivalBooking,
   type Booking,
 } from "@/lib/admin-store";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -49,7 +50,7 @@ export interface TourPackage {
   date: { en: string; fr: string; es: string };
   time: string;
   duration: { en: string; fr: string; es: string };
-  price: number; // 100 EUR placeholder
+  price: number;
   currency: string;
   image: string;
   desc: { en: string; fr: string; es: string };
@@ -78,7 +79,7 @@ const TOURS_DATA: TourPackage[] = [
       fr: "5 Heures (Demi-journée)",
       es: "5 Horas (Medio día)",
     },
-    price: 100,
+    price: 15,
     currency: "€",
     image: tangierImg,
     badge: {
@@ -151,7 +152,7 @@ const TOURS_DATA: TourPackage[] = [
       fr: "6 Heures (Excursion journée)",
       es: "6 Horas (Excursión de día)",
     },
-    price: 100,
+    price: 25,
     currency: "€",
     image: asilahImg,
     badge: {
@@ -224,7 +225,7 @@ const TOURS_DATA: TourPackage[] = [
       fr: "9 Heures (Journée Complète)",
       es: "9 Horas (Día Completo)",
     },
-    price: 100,
+    price: 30,
     currency: "€",
     image: chefchaouenImg,
     badge: {
@@ -296,6 +297,7 @@ function BookTourismPage() {
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
+  const [matchedFestivalBooking, setMatchedFestivalBooking] = useState<Booking | null>(null);
 
   const [form, setForm] = useState({
     guests: [{ firstName: "", lastName: "" }],
@@ -305,6 +307,39 @@ function BookTourismPage() {
     roomNumber: "",
     notes: "",
   });
+
+  // Cross-booking auto-linking lookup: search database as user enters phone, email or name
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const leadName = form.guests[0]?.firstName
+        ? `${form.guests[0].firstName} ${form.guests[0].lastName}`.trim()
+        : undefined;
+
+      if (!form.phone && !form.email && !leadName) {
+        setMatchedFestivalBooking(null);
+        return;
+      }
+
+      const match = await findMatchingFestivalBooking({
+        phone: form.phone,
+        email: form.email,
+        name: leadName,
+      });
+
+      if (match) {
+        setMatchedFestivalBooking(match);
+        // Pre-fill hotel room if available and not manually entered
+        if (match.roomNumber) {
+          setForm((f) => ({ ...f, roomNumber: f.roomNumber || match.roomNumber! }));
+        }
+        if (match.country) {
+          setForm((f) => ({ ...f, country: f.country || match.country }));
+        }
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [form.phone, form.email, form.guests]);
 
   // Check ?ref= partner code and automatically sync language if needed
   useEffect(() => {
@@ -384,15 +419,29 @@ function BookTourismPage() {
     setError("");
 
     const refCode = partnerCode || getRememberedReferral();
-    const collaborator = refCode
+    const explicitCollaborator = refCode
       ? await getCollaboratorByCode(refCode).catch(() => undefined)
       : undefined;
+
+    // Use explicit URL referral or fallback to the collaborator from their matched festival booking
+    const finalCollaboratorId = explicitCollaborator?.id ?? matchedFestivalBooking?.collaboratorId ?? null;
 
     const customerName = form.guests
       .map((g) => `${g.firstName.trim()} ${g.lastName.trim()}`)
       .join(" & ");
 
     const totalCost = selectedTour.price * numGuests;
+
+    const linkedNote = matchedFestivalBooking
+      ? `[Linked Festival Ticket #${matchedFestivalBooking.ticketCode}]`
+      : "";
+    const fullNotes = [
+      form.roomNumber ? `Hotel Room: ${form.roomNumber}` : "",
+      form.notes ? `Notes: ${form.notes}` : "",
+      linkedNote,
+    ]
+      .filter(Boolean)
+      .join(" | ");
 
     let created: Booking | null = null;
     try {
@@ -405,15 +454,15 @@ function BookTourismPage() {
         country: form.country || "Morocco",
         numPeople: numGuests,
         danceLevel: "",
-        notes: `${form.roomNumber ? `Hotel Room: ${form.roomNumber} | ` : ""}${form.notes ? `Notes: ${form.notes}` : ""}`.trim(),
+        notes: fullNotes,
         arrivalDate: "2027-01-09",
         departureDate: "2027-01-11",
-        roomNumber: form.roomNumber || null,
+        roomNumber: form.roomNumber || matchedFestivalBooking?.roomNumber || null,
         guestDetails: JSON.stringify(form.guests),
         lang: L,
         status: "pending",
-        source: collaborator ? "referral" : "website",
-        collaboratorId: collaborator?.id ?? null,
+        source: finalCollaboratorId ? "referral" : "website",
+        collaboratorId: finalCollaboratorId,
       });
     } catch (dbErr) {
       console.warn("Could not record tourism booking:", dbErr);
@@ -876,6 +925,26 @@ function BookTourismPage() {
 
               {/* Contact Information */}
               <div className="space-y-3">
+                {matchedFestivalBooking && (
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 flex items-start gap-3 shadow-xs">
+                    <div className="h-7 w-7 rounded-xl bg-emerald-600 text-white grid place-items-center shrink-0 mt-0.5">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-emerald-900 flex items-center gap-1.5 flex-wrap">
+                        <span>{tr("Festival Pass Linked!", "Réservation Festival Associée !", "¡Pase de Festival Vinculado!")}</span>
+                        <span className="font-mono text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
+                          #{matchedFestivalBooking.ticketCode}
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
+                        {matchedFestivalBooking.customerName} · {matchedFestivalBooking.packName}
+                        {matchedFestivalBooking.roomNumber ? ` · ${tr("Room", "Chambre", "Habitación")} ${matchedFestivalBooking.roomNumber}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-700">
                   {tr("Contact & Pickup Details", "Contact & Prise en charge", "Contacto y recogida")}
                 </p>

@@ -738,24 +738,23 @@ function BookPage() {
                       type="button"
                       onClick={() => {
                         setTransferType("port");
-                        setTransferLocation("Tanger Ville Port");
+                        setTransferLocation("Port of Tangier (Tanger Ville)");
                       }}
-                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                         transferType === "port"
                           ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
                           : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <Ship className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`} />
                         <span className="text-xs font-bold text-gray-900">
-                          {tr("Port", "Port", "Puerto")}
+                          {tr("Tangier Port", "Port de Tanger", "Puerto de Tánger")}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {tr("€5 1-way · €10 round", "€5 aller · €10 A/R", "€5 ida · €10 I/V")}
-                        <span className="block text-[10px] text-gray-500 font-normal">/ {tr("person", "pers.", "pers.")}</span>
-                      </div>
+                      {transferType === "port" && (
+                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                      )}
                     </button>
 
                     {/* Airport Option */}
@@ -765,22 +764,21 @@ function BookPage() {
                         setTransferType("airport");
                         setTransferLocation("Tangier Ibn Battouta Airport (TNG)");
                       }}
-                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                         transferType === "airport"
                           ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
                           : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <Plane className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`} />
                         <span className="text-xs font-bold text-gray-900">
                           {tr("Airport", "Aéroport", "Aeropuerto")}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {tr("€10–€15 1-way · €20–€30 round", "€10–€15 aller · €20–€30 A/R", "€10–€15 ida · €20–€30 I/V")}
-                        <span className="block text-[10px] text-gray-500 font-normal">/ {tr("person", "pers.", "pers.")}</span>
-                      </div>
+                      {transferType === "airport" && (
+                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                      )}
                     </button>
                   </div>
 
@@ -797,15 +795,15 @@ function BookPage() {
                       >
                         {transferType === "port" ? (
                           <option value="Port of Tangier (Tanger Ville)">
-                            {tr("Port of Tangier (Tanger Ville) — €5 / €10 R/T", "Port de Tanger Ville — 5 € / 10 € A/R", "Puerto de Tánger Ciudad — 5 € / 10 € I/V")}
+                            {tr("Port of Tangier (Tanger Ville)", "Port de Tanger Ville", "Puerto de Tánger Ciudad")}
                           </option>
                         ) : (
                           <>
                             <option value="Tangier Ibn Battouta Airport (TNG)">
-                              {tr("Tangier Ibn Battouta Airport (TNG) — €10 / €20 R/T", "Aéroport Tanger Ibn Battouta (TNG) — 10 € / 20 € A/R", "Aeropuerto Tánger Ibn Battouta (TNG) — 10 € / 20 € I/V")}
+                              {tr("Tangier Ibn Battouta Airport (TNG)", "Aéroport Tanger Ibn Battouta (TNG)", "Aeropuerto Tánger Ibn Battouta (TNG)")}
                             </option>
                             <option value="Tetouan Sania Ramel Airport (TTU)">
-                              {tr("Tetouan Sania Ramel Airport (TTU) — €15 / €30 R/T", "Aéroport Tétouan Sania Ramel (TTU) — 15 € / 30 € A/R", "Aeropuerto Tetuán Sania Ramel (TTU) — 15 € / 30 € I/V")}
+                              {tr("Tetouan Sania Ramel Airport (TTU)", "Aéroport Tétouan Sania Ramel (TTU)", "Aeropuerto Tetuán Sania Ramel (TTU)")}
                             </option>
                           </>
                         )}

@@ -28,6 +28,11 @@ import {
   updateBookingStatus,
   collaboratorRevenue,
   collaboratorCommission,
+  collaboratorTourismCommission,
+  collaboratorFestivalCommission,
+  collaboratorTourismRevenue,
+  isTourismBooking,
+  getTourismPrice,
   commissionLabel,
   formatMoney,
   formatForPartner,
@@ -728,8 +733,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const tr = (en: string, fr: string, es: string) =>
     L === "fr" ? fr : L === "es" ? es : en;
 
+  const [activeSection, setActiveSection] = useState<"festival" | "tourism">("festival");
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
+  const [allFestivalBookings, setAllFestivalBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
   const [sales, setSales] = useState<Money>(emptyMoney());
   const [earned, setEarned] = useState<Money>(emptyMoney());
@@ -741,12 +748,15 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const reload = useCallback(async () => {
     const [packs, allBookings, discounts] = await Promise.all([getPacks(), getBookings(), getDiscountCodes()]);
     setAllPacks(packs);
+    setAllFestivalBookings(allBookings.filter((b) => !isTourismBooking(b)));
     const mine = allBookings
       .filter((b) => b.collaboratorId === partner.id)
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setMyBookings(mine);
+
+    const festivalOnly = mine.filter((b) => !isTourismBooking(b));
     setTicketsSold(
-      mine
+      festivalOnly
         .filter((b) => b.status !== "declined")
         .reduce((s, b) => s + (b.numPeople || 1), 0)
     );
@@ -834,6 +844,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     declined: "bg-red-100 text-red-600 border-red-200",
   };
 
+  const festivalBookings = myBookings.filter((b) => !isTourismBooking(b));
+  const tourismBookings = myBookings.filter((b) => isTourismBooking(b));
+
+  const activeTourism = tourismBookings.filter((b) => b.status !== "declined");
+  const tourismGuests = activeTourism.reduce((sum, b) => sum + (b.numPeople || 1), 0);
+  const tourismSales = collaboratorTourismRevenue(partner.id, myBookings);
+  const tourismCommissions = collaboratorTourismCommission(partner.id, myBookings);
+
   return (
     <div
       className="min-h-screen bg-slate-100 text-gray-900 notranslate"
@@ -869,401 +887,653 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       </header>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {(() => {
-            const live = myBookings.filter((b) => b.status !== "declined");
-            const catOf = (b: Booking) => {
-              const p = allPacks.find((x) => x.id === b.packId);
-              return packRoomCategory(p || b.packName, b.numPeople);
-            };
-            return [
-              {
-                label: tr("Double Rooms", "Chambres doubles", "Habitaciones dobles"),
-                value: live.filter((b) => catOf(b) === "double").length,
-                icon: Ticket,
-              },
-              {
-                label: tr("Single Rooms", "Chambres single", "Habitaciones individuales"),
-                value: live.filter((b) => catOf(b) === "single").length,
-                icon: Ticket,
-              },
+        {/* Navigation Tabs between Festival Packs & Tourism */}
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-3">
+          <button
+            onClick={() => setActiveSection("festival")}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
+              activeSection === "festival"
+                ? "bg-[#13234d] text-white shadow-md shadow-slate-900/20"
+                : "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200"
+            }`}
+          >
+            <Ticket className="h-4 w-4 text-amber-400" />
+            <span>{tr("Festival Packs & Rooms", "Packs & Chambres Festival", "Packs y Hotel Festival")}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeSection === "festival" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+            }`}>
+              {festivalBookings.length}
+            </span>
+          </button>
 
-              {
-                label: tr("Full Pass", "Full Pass", "Full Pass"),
-                value: live.filter((b) => catOf(b) === "fullpass").length,
-                icon: CheckCircle2,
-              },
-              {
-                label: tr("Sales", "Ventes", "Ventas"),
-                value: formatForPartner(sales, partner),
-                icon: Euro,
-              },
-              {
-                label: `Commission (${commissionLabel(partner)})`,
-                value: formatForPartner(earned, partner),
-                icon: Euro,
-              },
-            ];
-          })().map((s) => (
-            <div
-              key={s.label}
-              className="rounded-xl border border-gray-200 bg-white shadow-sm p-4"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] tracking-widest uppercase text-gray-500">{s.label}</p>
-                <s.icon className="h-4 w-4 text-amber-600" />
-              </div>
-              <p className="mt-1.5 font-display text-2xl">{s.value}</p>
-            </div>
-          ))}
+          <button
+            onClick={() => setActiveSection("tourism")}
+            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
+              activeSection === "tourism"
+                ? "bg-gradient-to-r from-blue-700 to-indigo-700 text-white shadow-md shadow-blue-900/30"
+                : "bg-white text-gray-600 hover:bg-blue-50 border border-gray-200"
+            }`}
+          >
+            <Compass className="h-4 w-4 text-cyan-300" />
+            <span>{tr("Cultural Tourism & Tours", "Tourisme & Excursions", "Turismo y Excursiones")}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+              activeSection === "tourism" ? "bg-white/20 text-white" : "bg-blue-100 text-blue-800"
+            }`}>
+              {tourismBookings.length}
+            </span>
+          </button>
         </div>
 
-        {/* Mission — bonus goal set by the festival team */}
-        {(partner.missionGoal ?? 0) > 0 &&
-          (() => {
-            const goal = partner.missionGoal!;
-            const progress = Math.min(ticketsSold, goal);
-            const achieved = ticketsSold >= goal;
-            const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
-            return (
-              <div
-                className={`rounded-xl border p-5 ${
-                  achieved
-                    ? "border-emerald-300 bg-emerald-50"
-                    : "border-amber-200 bg-amber-50"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
-                    <Trophy
-                      className={`h-4 w-4 ${achieved ? "text-emerald-600" : "text-amber-600"}`}
-                    />
-                    {achieved
-                      ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
-                      : tr("Your Mission", "Votre mission", "Tu misión")}
-                  </h3>
-                  <span
-                    className={`text-xs font-semibold ${
-                      achieved ? "text-emerald-700" : "text-amber-700"
-                    }`}
-                  >
-                    {progress}/{goal}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-sm text-gray-600">
-                  {achieved
-                    ? tr(
-                        `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
-                        `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
-                        `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
-                      )
-                    : tr(
-                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
-                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
-                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
-                      )}
-                </p>
-                <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      achieved ? "bg-emerald-500" : "bg-amber-500"
-                    }`}
-                    style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })()}
-
-        {/* Selling links: Packs Link & Blue Tourism Link */}
-        <div className="space-y-4">
-          {/* 1. Main Packs Booking Link */}
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row gap-6 items-start">
-            <div className="flex-1 space-y-4">
-              <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
-                  <Ticket className="h-3.5 w-3.5 text-amber-600" />
-                  {tr("Festival Packs", "Packs Festival", "Packs Festival")}
-                </span>
-                <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-600" />
-                  {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
-                </h3>
-                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
-                  {tr(
-                    "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive a pending reservation email.",
-                    "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass. Ils reçoivent un email de confirmation en attente.",
-                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass. Recibirán un email de confirmación pendiente."
-                  )}
-                </p>
-                <div className="mt-3 flex items-center gap-2 flex-wrap">
-                  <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
-                    {getBookingUrl(partner.code, L)}
-                  </code>
-                  <button
-                    onClick={() => copy("book", getBookingUrl(partner.code, L))}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                      copiedId === "book"
-                        ? "bg-emerald-600 text-white shadow-xs"
-                        : "bg-gray-100 text-gray-700 hover:bg-amber-500 hover:text-slate-950"
-                    }`}
-                  >
-                    {copiedId === "book" ? (
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    {copiedId === "book"
-                      ? tr("Copied", "Copié", "Copiado")
-                      : tr("Copy Link", "Copier le lien", "Copiar enlace")}
-                  </button>
-                  <a
-                    href={getBookingUrl(partner.code, L)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-            {refQr && (
-              <div className="shrink-0 text-center mx-auto sm:mx-0">
-                <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs inline-block">
-                  <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
-                </div>
-                <p className="mt-1 text-[10px] text-gray-400 font-medium">
-                  {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* 2. Tourism / Excursions Link (Special "Blue and Blue" Design) */}
-          <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
-            {/* Background glowing flair */}
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex-1 space-y-4 relative z-10">
-              <div>
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
-                    <Compass className="h-3.5 w-3.5 text-blue-300" />
-                    {tr("Tourism & Excursions", "Tourisme & Excursions", "Turismo y Excursiones")}
-                  </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider">
-                    {tr("Tangier · Asilah · Chefchaouen ($100 / 100 €)", "Tanger · Asilah · Chefchaouen (100 €)", "Tánger · Asilah · Chefchaouen (100 €)")}
-                  </span>
-                </div>
-
-                <h3 className="font-display text-lg font-extrabold text-white flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-blue-300" />
-                  {tr("Your Tourism Booking Link (/book-tourism)", "Votre lien de réservation Excursions (/book-tourism)", "Tu enlace de reserva de Turismo (/book-tourism)")}
-                </h3>
-                <p className="mt-1 text-xs text-blue-100 leading-relaxed max-w-xl">
-                  {tr(
-                    "Share this dedicated link with your clients to offer guided tours to Tangier, Asilah, and Chefchaouen with full date schedules, tour descriptions, and seamless booking.",
-                    "Partagez ce lien dédié avec vos clients pour leur proposer les excursions guidées à Tanger, Asilah et Chefchaouen avec les dates, horaires et réservation en ligne.",
-                    "Comparte este enlace exclusivo con tus clientes para ofrecer excursiones guiadas a Tánger, Asilah y Chefchaouen con fechas, horarios y reserva en línea."
-                  )}
-                </p>
-
-                {/* Blue-on-blue Styled Copy Container */}
-                <div className="mt-4 flex items-center gap-2.5 flex-wrap">
-                  <div className="flex-1 min-w-[240px] rounded-xl bg-blue-950/70 border border-blue-400/40 px-3.5 py-2.5 text-xs font-mono text-blue-200 select-all break-all shadow-inner">
-                    {getTourismBookingUrl(partner.code, L)}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SECTION 1: FESTIVAL PACKS                                       */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeSection === "festival" && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {(() => {
+                const live = festivalBookings.filter((b) => b.status !== "declined");
+                const catOf = (b: Booking) => {
+                  const p = allPacks.find((x) => x.id === b.packId);
+                  return packRoomCategory(p || b.packName, b.numPeople);
+                };
+                return [
+                  {
+                    label: tr("Double Rooms", "Chambres doubles", "Habitaciones dobles"),
+                    value: live.filter((b) => catOf(b) === "double").length,
+                    icon: Ticket,
+                  },
+                  {
+                    label: tr("Single Rooms", "Chambres single", "Habitaciones individuales"),
+                    value: live.filter((b) => catOf(b) === "single").length,
+                    icon: Ticket,
+                  },
+                  {
+                    label: tr("Full Pass", "Full Pass", "Full Pass"),
+                    value: live.filter((b) => catOf(b) === "fullpass").length,
+                    icon: CheckCircle2,
+                  },
+                  {
+                    label: tr("Festival Sales", "Ventes Festival", "Ventas Festival"),
+                    value: formatForPartner(sales, partner),
+                    icon: Euro,
+                  },
+                  {
+                    label: `Commission (${commissionLabel(partner)})`,
+                    value: formatForPartner(earned, partner),
+                    icon: Euro,
+                  },
+                ];
+              })().map((s) => (
+                <div
+                  key={s.label}
+                  className="rounded-xl border border-gray-200 bg-white shadow-sm p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] tracking-widest uppercase text-gray-500">{s.label}</p>
+                    <s.icon className="h-4 w-4 text-amber-600" />
                   </div>
-
-                  <button
-                    onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
-                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
-                      copiedId === "tourism"
-                        ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                        : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
-                    }`}
-                  >
-                    {copiedId === "tourism" ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
-                      </>
-                    )}
-                  </button>
-
-                  <a
-                    href={getTourismBookingUrl(partner.code, L)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>{tr("View Page", "Voir la page", "Ver página")}</span>
-                  </a>
+                  <p className="mt-1.5 font-display text-2xl">{s.value}</p>
                 </div>
-              </div>
+              ))}
             </div>
 
-            {/* Tourism QR Code */}
-            {tourismQr && (
-              <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
-                <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
-                  <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
-                </div>
-                <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
-                  {tr("Tourism QR", "QR Excursions", "QR Turismo")}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* My bookings — guests who booked through this partner's link */}
-        <div>
-          <h3 className="font-display text-sm tracking-wide mb-1">
-            {tr("My Bookings", "Mes réservations", "Mis reservas")} ({myBookings.length})
-          </h3>
-          <p className="text-sm text-gray-500 mb-4 whitespace-pre-line">
-            {tr(
-              "Here you will find everyone who booked through your link.\nNB: Only confirm bookings after receiving payment.",
-              "Vous trouverez ici toutes les personnes ayant réservé via votre lien.\nNB : Confirmez uniquement les réservations après réception du paiement.",
-              "Aquí encontrarás a todas las personas que han reservado a través de tu enlace.\nNota: Confirma únicamente las reservas tras recibir el pago."
-            )}
-          </p>
-          {statusError && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-3">
-              <p className="text-sm text-red-700">{statusError}</p>
-            </div>
-          )}
-          {myBookings.length === 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
-              {tr(
-                "No bookings yet — share your booking link to get started.",
-                "Pas encore de réservations — partagez votre lien pour commencer.",
-                "Aún no hay reservas — comparte tu enlace para empezar."
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {myBookings.map((b) => {
-                const waDigits = (b.phone || "").replace(/\D/g, "");
-                const hasTicket = b.status === "confirmed" || b.status === "checked-in";
-                const pack = allPacks.find((p) => p.id === b.packId);
-                const label = translateDynamicText(
-                  pack ? packLabel(pack) : b.packName,
-                  L as Language
-                );
-                const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
-                const currency = pack?.currency || "€";
-                const numPeople = b.numPeople || 1;
-                const grossTotal = unitPrice * numPeople;
-                const discount = b.discountAmount || 0;
-                const netTotal = Math.max(0, grossTotal - discount);
-
+            {/* Mission — bonus goal set by the festival team */}
+            {(partner.missionGoal ?? 0) > 0 &&
+              (() => {
+                const goal = partner.missionGoal!;
+                const progress = Math.min(ticketsSold, goal);
+                const achieved = ticketsSold >= goal;
+                const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
                 return (
                   <div
-                    key={b.id}
-                    className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                    className={`rounded-xl border p-5 ${
+                      achieved
+                        ? "border-emerald-300 bg-emerald-50"
+                        : "border-amber-200 bg-amber-50"
+                    }`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {b.customerName}
-                        </p>
-                        {pack && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
-                            {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        <span className="font-medium text-gray-700">{label}</span>
-                        {pack && (
-                          numPeople > 1 ? (
-                            <span>
-                              {" · "}
-                              <strong className="text-gray-800">
-                                {numPeople} {tr("people", "personnes", "personas")}
-                              </strong>
-                              {" "}
-                              ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
-                            </span>
-                          ) : (
-                            <span>{" · "}{unitPrice} {currency}</span>
-                          )
-                        )}
-                        {b.arrivalDate
-                          ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
-                              b.departureDate
-                                ? new Date(b.departureDate).toLocaleDateString()
-                                : "?"
-                            }`
-                          : ""}{" "}
-                        · {new Date(b.createdAt).toLocaleDateString()}
-                      </p>
-                      {b.discountCode && (
-                        <p className="mt-1">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
-                            Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
-                          </span>
-                        </p>
-                      )}
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
+                        <Trophy
+                          className={`h-4 w-4 ${achieved ? "text-emerald-600" : "text-amber-600"}`}
+                        />
+                        {achieved
+                          ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
+                          : tr("Your Mission", "Votre mission", "Tu misión")}
+                      </h3>
+                      <span
+                        className={`text-xs font-semibold ${
+                          achieved ? "text-emerald-700" : "text-amber-700"
+                        }`}
+                      >
+                        {progress}/{goal}
+                      </span>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {hasTicket && (
-                        <a
-                          href={ticketUrl(b.ticketCode)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-100 transition"
-                          title={tr(
-                            `Open ticket ${b.ticketCode}`,
-                            `Ouvrir le billet ${b.ticketCode}`,
-                            `Abrir entrada ${b.ticketCode}`
+                    <p className="mt-1.5 text-sm text-gray-600">
+                      {achieved
+                        ? tr(
+                            `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
+                            `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
+                            `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
+                          )
+                        : tr(
+                            `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
+                            `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
+                            `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
                           )}
-                        >
-                          <QrCode className="h-4 w-4" />
-                        </a>
-                      )}
-                      {b.status === "checked-in" ? (
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
-                        >
-                          {tr("Checked In", "Enregistré", "Registrado")}
-                        </span>
-                      ) : (
-                        <select
-                          value={b.status}
-                          onChange={(e) =>
-                            changeBookingStatus(b.id, e.target.value as BookingStatus)
-                          }
-                          className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
-                        >
-                          <option value="pending">
-                            {tr("Pending", "En attente", "Pendiente")}
-                          </option>
-                          <option value="confirmed">
-                            {tr("Confirmed", "Confirmé", "Confirmada")}
-                          </option>
-                          <option value="declined">
-                            {tr("Declined", "Refusé", "Rechazada")}
-                          </option>
-                        </select>
-                      )}
+                    </p>
+                    <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          achieved ? "bg-emerald-500" : "bg-amber-500"
+                        }`}
+                        style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
+                      />
                     </div>
                   </div>
                 );
-              })}
+              })()}
+
+            {/* Main Packs Booking Link */}
+            <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6 flex flex-col sm:flex-row gap-6 items-start">
+              <div className="flex-1 space-y-4">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
+                    <Ticket className="h-3.5 w-3.5 text-amber-600" />
+                    {tr("Festival Packs Link", "Lien Packs Festival", "Enlace Packs Festival")}
+                  </span>
+                  <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-600" />
+                    {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                    {tr(
+                      "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive a pending reservation email.",
+                      "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass. Ils reçoivent un email de confirmation en attente.",
+                      "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass. Recibirán un email de confirmación pendiente."
+                    )}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
+                      {getBookingUrl(partner.code, L)}
+                    </code>
+                    <button
+                      onClick={() => copy("book", getBookingUrl(partner.code, L))}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        copiedId === "book"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "bg-gray-100 text-gray-700 hover:bg-amber-500 hover:text-slate-950"
+                      }`}
+                    >
+                      {copiedId === "book" ? (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      {copiedId === "book"
+                        ? tr("Copied", "Copié", "Copiado")
+                        : tr("Copy Link", "Copier le lien", "Copiar enlace")}
+                    </button>
+                    <a
+                      href={getBookingUrl(partner.code, L)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {refQr && (
+                <div className="shrink-0 text-center mx-auto sm:mx-0">
+                  <div className="rounded-xl border border-gray-200 bg-white p-2.5 shadow-xs inline-block">
+                    <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
+                  </div>
+                  <p className="mt-1 text-[10px] text-gray-400 font-medium">
+                    {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Festival Bookings List */}
+            <div>
+              <h3 className="font-display text-sm tracking-wide mb-1">
+                {tr("Festival Reservations", "Réservations Festival", "Reservas de Festival")} ({festivalBookings.length})
+              </h3>
+              <p className="text-sm text-gray-500 mb-4 whitespace-pre-line">
+                {tr(
+                  "Here you will find hotel and pass reservations made through your code.\nNB: Only confirm bookings after receiving payment.",
+                  "Vous trouverez ici les réservations d'hôtels et pass réalisées via votre code.\nNB : Confirmez uniquement les réservations après réception du paiement.",
+                  "Aquí encontrarás las reservas de hotel y pases realizadas a través de tu código.\nNota: Confirma únicamente las reservas tras recibir el pago."
+                )}
+              </p>
+              {statusError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-3">
+                  <p className="text-sm text-red-700">{statusError}</p>
+                </div>
+              )}
+              {festivalBookings.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
+                  {tr(
+                    "No festival bookings yet — share your booking link to get started.",
+                    "Pas encore de réservations — partagez votre lien pour commencer.",
+                    "Aún no hay reservas — comparte tu enlace para empezar."
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {festivalBookings.map((b) => {
+                    const hasTicket = b.status === "confirmed" || b.status === "checked-in";
+                    const pack = allPacks.find((p) => p.id === b.packId);
+                    const label = translateDynamicText(
+                      pack ? packLabel(pack) : b.packName,
+                      L as Language
+                    );
+                    const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+                    const currency = pack?.currency || "€";
+                    const numPeople = b.numPeople || 1;
+                    const grossTotal = unitPrice * numPeople;
+                    const discount = b.discountAmount || 0;
+                    const netTotal = Math.max(0, grossTotal - discount);
+
+                    return (
+                      <div
+                        key={b.id}
+                        className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {b.customerName}
+                            </p>
+                            {pack && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                {tr("Total:", "Total :", "Total:")} {netTotal} {currency}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            <span className="font-medium text-gray-700">{label}</span>
+                            {pack && (
+                              numPeople > 1 ? (
+                                <span>
+                                  {" · "}
+                                  <strong className="text-gray-800">
+                                    {numPeople} {tr("people", "personnes", "personas")}
+                                  </strong>
+                                  {" "}
+                                  ({unitPrice} {currency}/pers → <strong className="text-amber-800 font-semibold">{grossTotal} {currency}</strong>)
+                                </span>
+                              ) : (
+                                <span>{" · "}{unitPrice} {currency}</span>
+                              )
+                            )}
+                            {b.arrivalDate
+                              ? ` · ${new Date(b.arrivalDate).toLocaleDateString()} → ${
+                                  b.departureDate
+                                    ? new Date(b.departureDate).toLocaleDateString()
+                                    : "?"
+                                }`
+                              : ""}{" "}
+                            · {new Date(b.createdAt).toLocaleDateString()}
+                          </p>
+                          {b.discountCode && (
+                            <p className="mt-1">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-mono font-semibold">
+                                Promo: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
+                              </span>
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {hasTicket && (
+                            <a
+                              href={ticketUrl(b.ticketCode)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-amber-100 text-amber-600 hover:bg-amber-100 transition"
+                              title={tr(
+                                `Open ticket ${b.ticketCode}`,
+                                `Ouvrir le billet ${b.ticketCode}`,
+                                `Abrir entrada ${b.ticketCode}`
+                              )}
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </a>
+                          )}
+                          {b.status === "checked-in" ? (
+                            <span
+                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
+                            >
+                              {tr("Checked In", "Enregistré", "Registrado")}
+                            </span>
+                          ) : (
+                            <select
+                              value={b.status}
+                              onChange={(e) =>
+                                changeBookingStatus(b.id, e.target.value as BookingStatus)
+                              }
+                              className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                            >
+                              <option value="pending">
+                                {tr("Pending", "En attente", "Pendiente")}
+                              </option>
+                              <option value="confirmed">
+                                {tr("Confirmed", "Confirmé", "Confirmada")}
+                              </option>
+                              <option value="declined">
+                                {tr("Declined", "Refusé", "Rechazada")}
+                              </option>
+                            </select>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SECTION 2: CULTURAL TOURISM & EXCURSIONS                        */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {activeSection === "tourism" && (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Tourism Stats Banner */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="rounded-xl border border-blue-200 bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-blue-700 font-bold">
+                    {tr("Total Excursion Guests", "Total Passagers", "Total Pasajeros")}
+                  </p>
+                  <Users className="h-4 w-4 text-blue-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-slate-900">{tourismGuests}</p>
+                <span className="text-[10px] text-gray-400">{tr("Passengers", "Passagers", "Pasajeros")}</span>
+              </div>
+
+              <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-blue-800 font-bold">Tangier Tour</p>
+                  <MapPin className="h-4 w-4 text-blue-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-blue-900">
+                  {tourismBookings
+                    .filter((b) => (b.packId?.includes("tangier") || b.packName?.toLowerCase().includes("tangier")) && b.status !== "declined")
+                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
+                </p>
+                <span className="text-[10px] text-blue-700 font-semibold">15 € / {tr("pers.", "pers.", "pers.")}</span>
+              </div>
+
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-cyan-800 font-bold">Asilah Tour</p>
+                  <MapPin className="h-4 w-4 text-cyan-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-cyan-900">
+                  {tourismBookings
+                    .filter((b) => (b.packId?.includes("asilah") || b.packName?.toLowerCase().includes("asilah")) && b.status !== "declined")
+                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
+                </p>
+                <span className="text-[10px] text-cyan-700 font-semibold">25 € / {tr("pers.", "pers.", "pers.")}</span>
+              </div>
+
+              <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] tracking-widest uppercase text-indigo-800 font-bold">Chefchaouen</p>
+                  <MapPin className="h-4 w-4 text-indigo-600" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-indigo-900">
+                  {tourismBookings
+                    .filter((b) => (b.packId?.includes("chefchaouen") || b.packName?.toLowerCase().includes("chefchaouen") || b.packName?.toLowerCase().includes("chawan")) && b.status !== "declined")
+                    .reduce((sum, b) => sum + (b.numPeople || 1), 0)}
+                </p>
+                <span className="text-[10px] text-indigo-700 font-semibold">30 € / {tr("pers.", "pers.", "pers.")}</span>
+              </div>
+
+              <div className="rounded-xl border-2 border-emerald-400 bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-4 shadow-md col-span-2 sm:col-span-1">
+                <div className="flex items-center justify-between text-emerald-100">
+                  <p className="text-[10px] tracking-widest uppercase font-black">
+                    {tr("Tourism Commission", "Commission Tourisme", "Comisión Turismo")}
+                  </p>
+                  <Euro className="h-4 w-4 text-white" />
+                </div>
+                <p className="mt-1.5 font-display text-2xl font-black text-white">{tourismCommissions} €</p>
+                <span className="text-[10px] text-emerald-100 font-bold">5 € / {tr("guest", "passager", "pasajero")}</span>
+              </div>
+            </div>
+
+            {/* Blue-on-Blue Tourism Share Link Card */}
+            <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
+              <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="flex-1 space-y-4 relative z-10">
+                <div>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
+                      <Compass className="h-3.5 w-3.5 text-blue-300" />
+                      {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
+                      {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
+                    </span>
+                  </div>
+
+                  <h3 className="font-display text-lg font-extrabold text-white flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-blue-300" />
+                    {tr("Your Dedicated Tourism Link (/book-tourism)", "Votre lien de réservation Excursions (/book-tourism)", "Tu enlace de reserva de Turismo (/book-tourism)")}
+                  </h3>
+                  <p className="mt-1 text-xs text-blue-100 leading-relaxed max-w-xl">
+                    {tr(
+                      "Share this link with your clients for guided tours to Tangier (15 €), Asilah (25 €), and Chefchaouen (30 €). You automatically receive 5 € commission for every booked passenger.",
+                      "Partagez ce lien avec vos clients pour les visites de Tanger (15 €), Asilah (25 €) et Chefchaouen (30 €). Vous touchez 5 € de commission pour chaque passager inscrit.",
+                      "Comparte este enlace con tus clientes para tours a Tánger (15 €), Asilah (25 €) y Chefchaouen (30 €). Recibes 5 € de comisión por cada pasajero registrado."
+                    )}
+                  </p>
+
+                  <div className="mt-4 flex items-center gap-2.5 flex-wrap">
+                    <div className="flex-1 min-w-[240px] rounded-xl bg-blue-950/70 border border-blue-400/40 px-3.5 py-2.5 text-xs font-mono text-blue-200 select-all break-all shadow-inner">
+                      {getTourismBookingUrl(partner.code, L)}
+                    </div>
+
+                    <button
+                      onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
+                      className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
+                        copiedId === "tourism"
+                          ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                          : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
+                      }`}
+                    >
+                      {copiedId === "tourism" ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={getTourismBookingUrl(partner.code, L)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>{tr("View Page", "Voir la page", "Ver página")}</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {tourismQr && (
+                <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
+                  <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
+                    <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
+                  </div>
+                  <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
+                    {tr("Tourism QR", "QR Excursions", "QR Turismo")}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Tourism Bookings List */}
+            <div>
+              <h3 className="font-display text-sm tracking-wide mb-1">
+                {tr("Excursion Bookings", "Réservations Excursions", "Reservas de Excursiones")} ({tourismBookings.length})
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                {tr(
+                  "All guided tour bookings made through your link with guest lists, hotel room numbers, and commission breakdown.",
+                  "Toutes les réservations d'excursions avec les noms des passagers, numéros de chambre et calcul des commissions.",
+                  "Todas las reservas de excursiones con lista de pasajeros, número de habitación y cálculo de comisiones."
+                )}
+              </p>
+
+              {tourismBookings.length === 0 ? (
+                <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-10 text-center text-sm text-gray-400">
+                  {tr(
+                    "No excursion bookings yet — share your tourism link to start earning €5 per passenger.",
+                    "Pas encore d'excursions réservées — partagez votre lien pour commencer à gagner 5 € par passager.",
+                    "Aún no hay excursiones reservadas — comparte tu enlace para ganar 5 € por pasajero."
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tourismBookings.map((b) => {
+                    const hasTicket = b.status === "confirmed" || b.status === "checked-in";
+                    const numPeople = b.numPeople || 1;
+                    const unitPrice = getTourismPrice(b.packId || b.packName);
+                    const grossTotal = unitPrice * numPeople;
+                    const commissionAmt = numPeople * 5;
+
+                    let guestList: string[] = [];
+                    if (b.guestDetails) {
+                      try {
+                        const parsed = JSON.parse(b.guestDetails);
+                        if (Array.isArray(parsed)) {
+                          guestList = parsed.map((g) => `${g.firstName || ""} ${g.lastName || ""}`.trim()).filter(Boolean);
+                        }
+                      } catch {}
+                    }
+                    if (guestList.length === 0 && b.customerName) {
+                      guestList = b.customerName.split(/\s*&\s*/).map((s) => s.trim()).filter(Boolean);
+                    }
+
+                    // Look for matched festival booking
+                    const matchedFest = allFestivalBookings.find((fb) => {
+                      if (b.notes?.includes(fb.ticketCode)) return true;
+                      const fbPhone = (fb.phone || "").replace(/\D/g, "");
+                      const bPhone = (b.phone || "").replace(/\D/g, "");
+                      if (fbPhone.length >= 6 && bPhone.length >= 6 && (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))) return true;
+                      if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase()) return true;
+                      return false;
+                    });
+
+                    return (
+                      <div
+                        key={b.id}
+                        className="rounded-xl border border-blue-200/80 bg-white shadow-sm p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-gray-900 truncate">
+                              {b.customerName}
+                            </p>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-900 border border-blue-200">
+                              {b.packName}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              +{commissionAmt} € {tr("Commission", "Commission", "Comisión")}
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-gray-500 mt-1 space-y-0.5">
+                            <p>
+                              <strong className="text-gray-800">{numPeople} {numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")}</strong>
+                              {" "}
+                              ({unitPrice} €/pers → <strong className="text-blue-900 font-semibold">{grossTotal} €</strong>)
+                              {b.roomNumber ? ` · ${tr("Hotel Room:", "Chambre :", "Habitación:")} ${b.roomNumber}` : ""}
+                              {" · "}{new Date(b.createdAt).toLocaleDateString()}
+                            </p>
+                            {guestList.length > 0 && (
+                              <p className="text-[11px] text-gray-600">
+                                <span className="font-semibold">{tr("Guests:", "Participants :", "Participantes:")}</span>{" "}
+                                {guestList.join(", ")}
+                              </p>
+                            )}
+                            {matchedFest && (
+                              <p className="mt-1">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-semibold">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                  <span>{tr("Linked Festival Reservation:", "Réservation Festival liée :", "Reserva Festival vinculada:")} #{matchedFest.ticketCode} ({matchedFest.packName})</span>
+                                </span>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {hasTicket && (
+                            <a
+                              href={ticketUrl(b.ticketCode)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                              title={tr(
+                                `Open ticket ${b.ticketCode}`,
+                                `Ouvrir le billet ${b.ticketCode}`,
+                                `Abrir entrada ${b.ticketCode}`
+                              )}
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </a>
+                          )}
+                          {b.status === "checked-in" ? (
+                            <span
+                              className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles["checked-in"]}`}
+                            >
+                              {tr("Checked In", "Enregistré", "Registrado")}
+                            </span>
+                          ) : (
+                            <select
+                              value={b.status}
+                              onChange={(e) =>
+                                changeBookingStatus(b.id, e.target.value as BookingStatus)
+                              }
+                              className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status] ?? statusStyles.pending}`}
+                            >
+                              <option value="pending">
+                                {tr("Pending", "En attente", "Pendiente")}
+                              </option>
+                              <option value="confirmed">
+                                {tr("Confirmed", "Confirmé", "Confirmada")}
+                              </option>
+                              <option value="declined">
+                                {tr("Declined", "Refusé", "Rechazada")}
+                              </option>
+                            </select>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

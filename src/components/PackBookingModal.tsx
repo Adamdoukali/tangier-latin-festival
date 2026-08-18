@@ -735,24 +735,23 @@ export function PackBookingModal({
                       type="button"
                       onClick={() => {
                         setTransferType("port");
-                        setTransferLocation("Tanger Ville Port");
+                        setTransferLocation("Port of Tangier (Tanger Ville)");
                       }}
-                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                         transferType === "port"
                           ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
                           : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <Ship className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`} />
                         <span className="text-xs font-bold text-gray-900">
-                          {lang === "fr" ? "Port" : lang === "es" ? "Puerto" : "Port"}
+                          {lang === "fr" ? "Port de Tanger" : lang === "es" ? "Puerto de Tánger" : "Tangier Port"}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {lang === "fr" ? "€5 aller · €10 A/R" : lang === "es" ? "€5 ida · €10 I/V" : "€5 1-way · €10 round"}
-                        <span className="block text-[10px] text-gray-500 font-normal">/ {lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}</span>
-                      </div>
+                      {transferType === "port" && (
+                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                      )}
                     </button>
 
                     {/* Airport Option */}
@@ -762,22 +761,21 @@ export function PackBookingModal({
                         setTransferType("airport");
                         setTransferLocation("Tangier Ibn Battouta Airport (TNG)");
                       }}
-                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                         transferType === "airport"
                           ? "border-blue-500 bg-white shadow-xs ring-2 ring-blue-500/20"
                           : "border-blue-200/80 bg-white/70 hover:bg-white text-gray-700"
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <Plane className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`} />
                         <span className="text-xs font-bold text-gray-900">
                           {lang === "fr" ? "Aéroport" : lang === "es" ? "Aeropuerto" : "Airport"}
                         </span>
                       </div>
-                      <div className="mt-2 text-[11px] font-semibold text-blue-700">
-                        {lang === "fr" ? "€10–€15 aller · €20–€30 A/R" : lang === "es" ? "€10–€15 ida · €20–€30 I/V" : "€10–€15 1-way · €20–€30 round"}
-                        <span className="block text-[10px] text-gray-500 font-normal">/ {lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}</span>
-                      </div>
+                      {transferType === "airport" && (
+                        <Check className="h-4 w-4 text-blue-600 shrink-0" />
+                      )}
                     </button>
                   </div>
 
@@ -794,15 +792,15 @@ export function PackBookingModal({
                       >
                         {transferType === "port" ? (
                           <option value="Port of Tangier (Tanger Ville)">
-                            {lang === "fr" ? "Port de Tanger Ville — 5 € / 10 € A/R" : lang === "es" ? "Puerto de Tánger Ciudad — 5 € / 10 € I/V" : "Port of Tangier (Tanger Ville) — €5 / €10 R/T"}
+                            {lang === "fr" ? "Port de Tanger Ville" : lang === "es" ? "Puerto de Tánger Ciudad" : "Port of Tangier (Tanger Ville)"}
                           </option>
                         ) : (
                           <>
                             <option value="Tangier Ibn Battouta Airport (TNG)">
-                              {lang === "fr" ? "Aéroport Tanger Ibn Battouta (TNG) — 10 € / 20 € A/R" : lang === "es" ? "Aeropuerto Tánger Ibn Battouta (TNG) — 10 € / 20 € I/V" : "Tangier Ibn Battouta Airport (TNG) — €10 / €20 R/T"}
+                              {lang === "fr" ? "Aéroport Tanger Ibn Battouta (TNG)" : lang === "es" ? "Aeropuerto Tánger Ibn Battouta (TNG)" : "Tangier Ibn Battouta Airport (TNG)"}
                             </option>
                             <option value="Tetouan Sania Ramel Airport (TTU)">
-                              {lang === "fr" ? "Aéroport Tétouan Sania Ramel (TTU) — 15 € / 30 € A/R" : lang === "es" ? "Aeropuerto Tetuán Sania Ramel (TTU) — 15 € / 30 € I/V" : "Tetouan Sania Ramel Airport (TTU) — €15 / €30 R/T"}
+                              {lang === "fr" ? "Aéroport Tétouan Sania Ramel (TTU)" : lang === "es" ? "Aeropuerto Tetuán Sania Ramel (TTU)" : "Tetouan Sania Ramel Airport (TTU)"}
                             </option>
                           </>
                         )}
