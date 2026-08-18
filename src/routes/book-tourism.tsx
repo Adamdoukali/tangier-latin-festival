@@ -398,7 +398,13 @@ function BookTourismPage() {
 
   const handleSelectTour = (tour: TourPackage) => {
     setSelectedTour(tour);
-    window.scrollTo({ top: 400, behavior: "smooth" });
+    setTimeout(() => {
+      const formEl = document.getElementById("booking-form");
+      if (formEl) {
+        const topPos = formEl.getBoundingClientRect().top + window.pageYOffset - 80;
+        window.scrollTo({ top: Math.max(0, topPos), behavior: "smooth" });
+      }
+    }, 60);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
