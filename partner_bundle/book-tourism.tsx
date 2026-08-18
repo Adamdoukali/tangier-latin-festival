@@ -73,11 +73,11 @@ const TOURS_DATA: TourPackage[] = [
       fr: "Samedi · 9 Janvier, 2027",
       es: "Sábado · 9 de Enero, 2027",
     },
-    time: "09:00 – 14:00",
+    time: "15:00 – 19:30",
     duration: {
-      en: "5 Hours (Half-Day)",
-      fr: "5 Heures (Demi-journée)",
-      es: "5 Horas (Medio día)",
+      en: "4.5 Hours (Saturday 3:00 PM)",
+      fr: "4h30 (Samedi à 15h00)",
+      es: "4.5 Horas (Sábado a las 15:00)",
     },
     price: 15,
     currency: "€",
@@ -146,11 +146,11 @@ const TOURS_DATA: TourPackage[] = [
       fr: "Samedi · 9 Janvier, 2027",
       es: "Sábado · 9 de Enero, 2027",
     },
-    time: "09:30 – 15:30",
+    time: "12:00 – 17:30",
     duration: {
-      en: "6 Hours (Day Excursion)",
-      fr: "6 Heures (Excursion journée)",
-      es: "6 Horas (Excursión de día)",
+      en: "5.5 Hours (Starts at 12:00 PM)",
+      fr: "5h30 (Départ à 12h00)",
+      es: "5.5 Horas (Salida a las 12:00)",
     },
     price: 25,
     currency: "€",
@@ -219,11 +219,11 @@ const TOURS_DATA: TourPackage[] = [
       fr: "Dimanche · 10 Janvier, 2027",
       es: "Domingo · 10 de Enero, 2027",
     },
-    time: "08:30 – 17:30",
+    time: "11:00 – 19:00",
     duration: {
-      en: "9 Hours (Full-Day Adventure)",
-      fr: "9 Heures (Journée Complète)",
-      es: "9 Horas (Día Completo)",
+      en: "8 Hours (Starts at 11:00 AM)",
+      fr: "8 Heures (Départ à 11h00)",
+      es: "8 Horas (Salida a las 11:00)",
     },
     price: 30,
     currency: "€",
@@ -989,33 +989,6 @@ function BookTourismPage() {
                       value={form.country}
                       onChange={(e) => setForm({ ...form, country: e.target.value })}
                       placeholder="France / Spain / Morocco"
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition placeholder:text-gray-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {tr("Hotel Room # (If staying at Kenzi Solazur)", "N° de chambre (si logé au Kenzi Solazur)", "N° de habitación (si te alojas en Kenzi)")}
-                    </label>
-                    <input
-                      type="text"
-                      value={form.roomNumber}
-                      onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
-                      placeholder={tr("Ex: Room 314 (or leave blank)", "Ex: Chambre 314", "Ej: Hab. 314")}
-                      className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition placeholder:text-gray-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {tr("Special Requests / Notes", "Remarques particulières", "Notas o peticiones")}
-                    </label>
-                    <input
-                      type="text"
-                      value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder={tr("Ex: Dietary, language preferences", "Ex: Langue préférée, régime", "Ej: Preferencia de idioma")}
                       className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition placeholder:text-gray-400"
                     />
                   </div>
