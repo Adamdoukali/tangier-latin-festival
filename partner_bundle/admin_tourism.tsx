@@ -247,40 +247,8 @@ function AdminTourismPage() {
   // Handle status update
   const handleStatusChange = async (id: string, newStatus: BookingStatus) => {
     try {
-      const updated = await updateBookingStatus(id, newStatus);
+      await updateBookingStatus(id, newStatus);
       await reload();
-
-      if (newStatus === "confirmed" && updated?.email) {
-        const bLang = ((updated.lang || "en") as Language);
-        const tUrl = ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
-        const mail = ticketConfirmationEmail({
-          customerName: updated.customerName,
-          packName: translateDynamicText(updated.packName, bLang),
-          ticketCode: updated.ticketCode,
-          numPeople: updated.numPeople || 1,
-          ticketUrl: tUrl,
-          lang: bLang,
-          guests: parseGuests(updated),
-          arrivalDate: updated.arrivalDate,
-          departureDate: updated.departureDate,
-        });
-
-        sendFormNotification({
-          subject: `Tourism Booking Confirmed: ${updated.customerName} (${updated.ticketCode})`,
-          guestSubject: mail.subject,
-          lang: bLang,
-          ticket: { code: updated.ticketCode, url: tUrl },
-          fields: {
-            Name: updated.customerName,
-            Email: updated.email,
-            Excursion: updated.packName,
-            Participants: updated.numPeople || 1,
-            Ticket: tUrl,
-            Code: updated.ticketCode,
-          },
-          autoresponse: mail.body,
-        }).catch(() => {});
-      }
     } catch (e) {
       alert(e instanceof Error ? e.message : String(e));
     }

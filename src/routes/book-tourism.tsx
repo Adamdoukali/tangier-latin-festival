@@ -506,32 +506,22 @@ function BookTourismPage() {
       const tourDateStr = selectedTour.date[L] || selectedTour.date.en;
       await sendFormNotification({
         subject: `New Tourism Booking: ${selectedTour.city} (${numGuests} ${numGuests > 1 ? "guests" : "guest"})`,
-        guestSubject: tr(
-          "Your Excursion Booking Request — Tangier International Latin Festival",
-          "Votre demande d'excursion touristique — Tangier International Latin Festival",
-          "Tu solicitud de excursión turística — Tangier International Latin Festival"
-        ),
         lang: L,
         fields: {
           name: customerName,
           email: form.email,
           Tour: `${selectedTour.city} — ${selectedTour.subtitle[L] || selectedTour.subtitle.en}`,
           Date: `${tourDateStr} (${selectedTour.time})`,
-          Guests: numGuests,
+          Guests: String(numGuests),
           "Total Price": `${totalCost} ${selectedTour.currency}`,
           Phone: form.phone,
           Country: form.country || "N/A",
           ...(form.roomNumber ? { "Hotel Room": form.roomNumber } : {}),
           ...(form.notes ? { Notes: form.notes } : {}),
           ...(created ? { Reservation: created.ticketCode } : {}),
-          ...(collaborator ? { "Partner Referral": `${collaborator.name} (${collaborator.code})` } : {}),
+          ...(explicitCollaborator ? { "Partner Referral": `${explicitCollaborator.name} (${explicitCollaborator.code})` } : {}),
         },
-        autoresponse: bookingAutoResponse(
-          L,
-          created
-            ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) }
-            : undefined
-        ),
+        autoresponse: "",
       });
 
       setReservation(created);
@@ -556,7 +546,7 @@ function BookTourismPage() {
     setSubmitting(false);
   };
 
-  // ── Success Confirmation Screen ──
+  // ── Success Screen ──
   if (done && selectedTour) {
     const totalCost = selectedTour.price * numGuests;
     return (
@@ -570,17 +560,12 @@ function BookTourismPage() {
             {tr("Excursion Request Received!", "Demande d'excursion reçue !", "¡Solicitud de excursión recibida!")}
           </h1>
 
-          <div className="mt-3 inline-flex items-center gap-2 px-4 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold tracking-widest uppercase">
-            <Clock className="h-3.5 w-3.5 text-blue-600" />
-            {tr("Status: Pending Confirmation", "Statut : En attente de confirmation", "Estado: Pendiente de confirmación")}
-          </div>
-
           {/* Ticket / Reservation Card */}
           <div className="mt-8 rounded-2xl border border-blue-200 bg-white p-6 shadow-lg text-left space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div>
                 <p className="text-[11px] font-bold tracking-widest uppercase text-blue-600">
-                  {tr("Confirmed Destination", "Destination choisie", "Destino elegido")}
+                  {tr("Destination", "Destination", "Destino")}
                 </p>
                 <h3 className="font-display text-xl font-bold text-gray-900 mt-0.5">
                   {selectedTour.city}
