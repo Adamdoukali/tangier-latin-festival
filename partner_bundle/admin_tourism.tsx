@@ -31,6 +31,7 @@ import {
   updateBooking,
   deleteBooking,
   ticketUrl,
+  isTourismBooking,
   type Booking,
   type BookingStatus,
   type Collaborator,
@@ -93,13 +94,6 @@ const TOURS: TourDefinition[] = [
     color: "indigo",
   },
 ];
-
-function isTourismBooking(b: Booking): boolean {
-  if (b.packId?.startsWith("tour-")) return true;
-  if (b.packName?.toLowerCase().includes("tourism")) return true;
-  if (b.packName?.toLowerCase().includes("excursion")) return true;
-  return false;
-}
 
 function getTourId(b: Booking): string {
   if (b.packId?.startsWith("tour-")) return b.packId;

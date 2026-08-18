@@ -466,10 +466,24 @@ const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
   return row;
 };
 
+export function getTourIdFromName(packName?: string | null): string | null {
+  if (!packName) return null;
+  const s = packName.toLowerCase();
+  if (s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen")) return "tour-chefchaouen";
+  if (s.includes("asilah") || s.includes("asella")) return "tour-asilah";
+  if (s.includes("tangier") && !s.includes("solazur") && !s.includes("hotel") && !s.includes("room")) return "tour-tangier";
+  if (s.includes("tourism") || s.includes("excursion")) return "tour-tangier";
+  return null;
+}
+
+export const isValidUuid = (val: unknown): boolean =>
+  typeof val === "string" &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
 const bookingFromRow = (r: any): Booking => ({
   id: r.id,
   ticketCode: r.ticket_code,
-  packId: r.pack_id ?? "",
+  packId: r.pack_id ?? getTourIdFromName(r.pack_name) ?? "",
   packName: r.pack_name ?? "",
   customerName: r.customer_name ?? "",
   email: r.email ?? "",
@@ -957,13 +971,35 @@ export async function addBooking(
   if (booking.discountCode) {
     incrementDiscountUsage(booking.discountCode).catch(() => {});
   }
+
+  // Resolve collaboratorId to valid UUID if a partner code or ID was passed
+  let resolvedCollabId = booking.collaboratorId;
+  if (resolvedCollabId && !isValidUuid(resolvedCollabId)) {
+    try {
+      const allCollabs = await getCollaborators();
+      const found = allCollabs.find(
+        (c) =>
+          c.id === resolvedCollabId ||
+          c.code?.toUpperCase() === resolvedCollabId?.toUpperCase() ||
+          c.name?.toUpperCase() === resolvedCollabId?.toUpperCase()
+      );
+      if (found && isValidUuid(found.id)) {
+        resolvedCollabId = found.id;
+      } else {
+        resolvedCollabId = null;
+      }
+    } catch {
+      resolvedCollabId = null;
+    }
+  }
+
   if (useDb()) {
     try {
       const data = await insertRow(
         "bookings",
         {
           ticket_code: ticketCode,
-          pack_id: booking.packId || null,
+          pack_id: isValidUuid(booking.packId) ? booking.packId : null,
           pack_name: booking.packName,
           customer_name: booking.customerName,
           email: booking.email,
@@ -977,15 +1013,15 @@ export async function addBooking(
           lang: booking.lang || null,
           status: booking.status,
           source: booking.source ?? "manual",
-          collaborator_id: booking.collaboratorId ?? null,
+          collaborator_id: isValidUuid(resolvedCollabId) ? resolvedCollabId : null,
           room_number: booking.roomNumber ?? null,
           room_type: booking.roomType ?? null,
           guest_details: booking.guestDetails ?? null,
-          invite_id: booking.inviteId ?? null,
+          invite_id: isValidUuid(booking.inviteId) ? booking.inviteId : null,
           invite_code: booking.inviteCode ?? null,
           discount_code: booking.discountCode ?? null,
           discount_amount: booking.discountAmount ?? 0,
-          discount_code_id: booking.discountCodeId ?? null,
+          discount_code_id: isValidUuid(booking.discountCodeId) ? booking.discountCodeId : null,
           needs_transfer: !!booking.needsTransfer,
           transfer_type: booking.transferType ?? null,
           transfer_option: booking.transferOption ?? null,
@@ -1079,7 +1115,7 @@ export async function updateBooking(
     try {
       const rowUpdates: Record<string, any> = {};
       if (updates.customerName !== undefined) rowUpdates.customer_name = updates.customerName;
-      if (updates.packId !== undefined) rowUpdates.pack_id = updates.packId;
+      if (updates.packId !== undefined) rowUpdates.pack_id = isValidUuid(updates.packId) ? updates.packId : null;
       if (updates.packName !== undefined) rowUpdates.pack_name = updates.packName;
       if (updates.numPeople !== undefined) rowUpdates.num_people = updates.numPeople;
       if (updates.email !== undefined) rowUpdates.email = updates.email;
@@ -1091,6 +1127,7 @@ export async function updateBooking(
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
       if (updates.departureDate !== undefined) rowUpdates.departure_date = updates.departureDate;
       if (updates.guestDetails !== undefined) rowUpdates.guest_details = updates.guestDetails;
+      if (updates.collaboratorId !== undefined) rowUpdates.collaborator_id = isValidUuid(updates.collaboratorId) ? updates.collaboratorId : null;
 
       const { data, error } = await supabase!
         .from("bookings")
@@ -2663,8 +2700,11 @@ export function commissionLabel(c: Collaborator): string {
  *  booking that crosses the goal line is consumed by the mission. */
 export function isTourismBooking(b: Booking): boolean {
   if (b.packId?.startsWith("tour-")) return true;
-  if (b.packName?.toLowerCase().includes("tourism")) return true;
-  if (b.packName?.toLowerCase().includes("excursion")) return true;
+  const name = (b.packName || "").toLowerCase();
+  if (name.includes("tourism") || name.includes("excursion")) return true;
+  if (name.includes("asilah") || name.includes("asella")) return true;
+  if (name.includes("chefchaouen") || name.includes("chawan") || name.includes("chaouen")) return true;
+  if (name.includes("tangier") && !name.includes("solazur") && !name.includes("hotel") && !name.includes("room")) return true;
   return false;
 }
 
