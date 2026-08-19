@@ -1485,11 +1485,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap text-xs">
-                  <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-950 font-bold border border-amber-300">
+                  <span className="px-3.5 py-1.5 rounded-xl bg-amber-200/90 text-amber-950 font-black border border-amber-300 shadow-2xs">
                     {ticketsSold} {tr("Participants", "Participants", "Participantes")}
-                  </span>
-                  <span className="px-3 py-1 rounded-xl bg-amber-600 text-white font-extrabold shadow-2xs">
-                    +{formatForPartner(festEarned, partner)} {tr("Commission", "Commission", "Comisión")}
                   </span>
                 </div>
               </div>
@@ -1576,11 +1573,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap text-xs">
-                  <span className="px-3 py-1 rounded-xl bg-blue-200/80 text-blue-950 font-bold border border-blue-300">
+                  <span className="px-3.5 py-1.5 rounded-xl bg-blue-200/90 text-blue-950 font-black border border-blue-300 shadow-2xs">
                     {totalExcursionPassengers} {tr("Participants", "Participants", "Participantes")}
-                  </span>
-                  <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-extrabold shadow-2xs">
-                    +{totalTourCommission} € {tr("Commission", "Commission", "Comisión")}
                   </span>
                 </div>
               </div>
@@ -1646,7 +1640,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {totalTourRevenue} €
                   </p>
                   <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
-                    +{totalTourCommission} € {tr("your commission", "votre com.", "tu comisión")}
+                    {totalExcursionPassengers} {tr("participants", "participants", "participantes")}
                   </span>
                 </div>
               </div>
