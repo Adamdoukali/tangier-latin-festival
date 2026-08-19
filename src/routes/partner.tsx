@@ -1928,131 +1928,57 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     key={res.id}
                     className="rounded-3xl border-2 border-gray-200 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-gray-300"
                   >
-                    {/* Master Header Card Summary Row */}
-                    <div className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0 space-y-2.5">
-                        {/* Reservation Code & Lead Guests */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {/* Master Shared Ticket Code */}
-                          <span className="inline-flex items-center gap-1 font-mono text-xs font-black bg-slate-900 text-amber-400 px-2.5 py-1 rounded-lg shadow-2xs">
-                            <QrCode className="h-3.5 w-3.5 text-amber-400" />
-                            <span>#{res.ticketCode}</span>
-                          </span>
-
-                          {/* First Guest (Lead) */}
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-950 border border-amber-300 text-xs font-bold">
-                            <span className="text-[10px] uppercase tracking-wider text-amber-700 font-black">
-                              {tr("1st Guest:", "1er Invité :", "1er Huésped:")}
-                            </span>
-                            <span>{res.guest1}</span>
-                          </div>
-
-                          {/* Second Guest (Double Room / Partner) */}
-                          {res.guest2 ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold">
-                              <span className="text-[10px] uppercase tracking-wider text-amber-800 font-black">
-                                {tr("2nd Guest:", "2ème Invité :", "2º Huésped:")}
+                    {/* Master Header Card Summary Row: ONLY Big Guest Name(s) + Total Amount + Actions */}
+                    <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
+                        {/* Big Guest Name(s) */}
+                        <div className="min-w-0">
+                          <h4 className="font-display text-base sm:text-lg lg:text-xl font-black text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+                            <Users className="h-5 w-5 text-amber-600 shrink-0" />
+                            <span className="capitalize">{res.guest1}</span>
+                            {res.guest2 && (
+                              <>
+                                <span className="text-amber-600 font-bold text-base">&amp;</span>
+                                <span className="capitalize text-slate-900">{res.guest2}</span>
+                              </>
+                            )}
+                            {res.allGuests.length > 2 && (
+                              <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                                +{res.allGuests.length - 2} {tr("more", "autres", "más")}
                               </span>
-                              <span>{res.guest2}</span>
-                            </div>
-                          ) : isDouble ? (
-                            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 text-xs font-semibold">
-                              <Bed className="h-3.5 w-3.5 text-amber-600" />
-                              <span>{tr("Double Room (2 Guests)", "Chambre Double (2 Invités)", "Habitación Doble (2 Huéspedes)")}</span>
-                            </div>
-                          ) : null}
+                            )}
+                          </h4>
                         </div>
 
-                        {/* Color-Coded Badges Bar: Hotel (Yellow), Excursions (Blue), Shuttle (Grey), Total */}
-                        <div className="flex items-center gap-2 flex-wrap text-xs">
-                          {/* Total Unified Price */}
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-slate-900 text-white shadow-2xs">
-                            {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
-                          </span>
-
-                          {/* Partner Total Commission */}
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
-                            +{res.totalCommission} € {tr("Commission", "Commission", "Comisión")}
-                          </span>
-
-                          {/* Hotel Pass / Room badge (Yellowish) */}
-                          {res.festivalLabel ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-amber-50 text-amber-950 border border-amber-300">
-                              <Bed className="h-3.5 w-3.5 text-amber-600" />
-                              <span className="truncate max-w-[200px]">{res.festivalLabel}</span>
-                              {res.roomNumber && <strong className="ml-1 text-amber-900">#{res.roomNumber}</strong>}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] text-gray-400 bg-gray-50 border border-gray-200">
-                              {tr("No Pass", "Sans pass", "Sin pase")}
-                            </span>
-                          )}
-
-                          {/* Excursions badge (Blue) */}
-                          {res.tours.length > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-950 border border-blue-300">
-                              <Compass className="h-3.5 w-3.5 text-blue-600" />
-                              <span>
-                                {res.tours.map((t) => `${t.city} (${t.numPeople}p)`).join(", ")}
-                              </span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] text-gray-400 bg-gray-50 border border-gray-200">
-                              {tr("No Tours", "Sans excursion", "Sin tours")}
-                            </span>
-                          )}
-
-                          {/* Shuttle transfer badge (Grey) */}
-                          {res.shuttle ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-slate-100 text-slate-900 border border-slate-300">
-                              <Bus className="h-3.5 w-3.5 text-slate-600" />
-                              <span>
-                                {res.shuttle.location} · {res.shuttle.cost} €
-                              </span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] text-gray-400 bg-gray-50 border border-gray-200">
-                              {tr("No Shuttle", "Sans navette", "Sin shuttle")}
-                            </span>
-                          )}
-                        </div>
+                        {/* Combined Total Amount */}
+                        <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
+                          {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
+                        </span>
                       </div>
 
-                      {/* Actions: View Details Toggle + Ticket Button + Master Status */}
+                      {/* Actions: View Details Toggle + Master Status */}
                       <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                         <button
                           type="button"
                           onClick={() => toggleExpand(res.id)}
-                          className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                             isExpanded
                               ? "bg-[#13234d] text-white shadow-sm"
                               : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
                           }`}
                         >
-                          <Info className="h-3.5 w-3.5" />
-                          <span>{isExpanded ? tr("Hide details", "Masquer détails", "Ocultar") : tr("View details", "Voir détails", "Ver detalles")}</span>
-                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          <Info className="h-4 w-4" />
+                          <span>
+                            {isExpanded
+                              ? tr("Hide details", "Masquer détails", "Ocultar")
+                              : tr("View details", "Voir détails", "Ver detalles")}
+                          </span>
+                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                         </button>
-
-                        {hasTicket && (
-                          <a
-                            href={ticketUrl(res.ticketCode)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 transition shadow-2xs"
-                            title={tr(
-                              `Open ticket #${res.ticketCode}`,
-                              `Ouvrir le billet #${res.ticketCode}`,
-                              `Abrir entrada #${res.ticketCode}`
-                            )}
-                          >
-                            <QrCode className="h-4 w-4" />
-                          </a>
-                        )}
 
                         {res.status === "checked-in" ? (
                           <span
-                            className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest uppercase font-bold border ${statusStyles["checked-in"]}`}
+                            className={`px-3.5 py-2 rounded-full text-[10px] tracking-widest uppercase font-black border ${statusStyles["checked-in"]}`}
                           >
                             {tr("Checked In", "Enregistré", "Registrado")}
                           </span>
@@ -2062,7 +1988,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             onChange={(e) =>
                               changeUnifiedStatus(res, e.target.value as BookingStatus)
                             }
-                            className={`appearance-none rounded-full px-3 py-1.5 text-[10px] tracking-widest uppercase font-bold border cursor-pointer focus:outline-none ${statusStyles[res.status] ?? statusStyles.pending}`}
+                            className={`appearance-none rounded-full px-3.5 py-2 text-[10px] tracking-widest uppercase font-black border cursor-pointer focus:outline-none ${statusStyles[res.status] ?? statusStyles.pending}`}
                           >
                             <option value="pending">
                               {tr("Pending", "En attente", "Pendiente")}
@@ -2081,6 +2007,30 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {/* Expandable Master Details with Exact 3 Color-Coded Rectangles */}
                     {isExpanded && (
                       <div className="border-t border-gray-200 bg-slate-50/90 p-4 sm:p-6 text-xs text-gray-700 space-y-4">
+                        {/* Expanded Top Meta: Ticket Code + Commission badge + QR link */}
+                        <div className="flex items-center justify-between gap-3 flex-wrap bg-white p-3 rounded-2xl border border-gray-200 shadow-2xs">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 font-mono text-xs font-black bg-slate-900 text-amber-400 px-3 py-1.5 rounded-xl shadow-2xs">
+                              <QrCode className="h-3.5 w-3.5 text-amber-400" />
+                              <span>#{res.ticketCode}</span>
+                            </span>
+                            <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                              +{res.totalCommission} € {tr("Partner Commission", "Commission partenaire", "Comisión socio")}
+                            </span>
+                          </div>
+
+                          {hasTicket && (
+                            <a
+                              href={ticketUrl(res.ticketCode)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 hover:bg-amber-200 font-bold transition shadow-2xs text-xs"
+                            >
+                              <QrCode className="h-4 w-4 text-amber-700" />
+                              <span>{tr("Open Ticket", "Ouvrir Billet", "Abrir Entrada")}</span>
+                            </a>
+                          )}
+                        </div>
                         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                           {/* 1. Yellowish Box — Hotel & Room Accommodation */}
                           <div className="bg-amber-50/90 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-1.5">
