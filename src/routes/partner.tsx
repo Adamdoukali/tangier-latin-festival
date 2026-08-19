@@ -1135,6 +1135,36 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const unifiedReservations = buildUnifiedReservations(myBookings, allPacks, partner, allDiscounts, L as Language);
 
+  // Festival metrics
+  const liveFestival = myBookings.filter((b) => !isTourismBooking(b) && b.status !== "declined");
+  const doubleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "double").length;
+  const singleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "single").length;
+  const fullPassCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "fullpass").length;
+  const festSales = collaboratorRevenue(partner.id, myBookings, allPacks);
+  const festEarned = collaboratorFestivalCommission(partner, myBookings, allPacks, allDiscounts);
+
+  // Tourism metrics
+  const liveTourism = myBookings.filter((b) => isTourismBooking(b) && b.status !== "declined");
+  const asilahTourCount = liveTourism
+    .filter((b) => b.packId?.includes("asilah") || b.packName?.toLowerCase().includes("asilah") || b.packName?.toLowerCase().includes("asella"))
+    .reduce((s, b) => s + (b.numPeople || 1), 0);
+  const tangierTourCount = liveTourism
+    .filter((b) => b.packId?.includes("tangier") || b.packName?.toLowerCase().includes("tangier"))
+    .reduce((s, b) => s + (b.numPeople || 1), 0);
+  const chefchaouenTourCount = liveTourism
+    .filter((b) => b.packId?.includes("chefchaouen") || b.packName?.toLowerCase().includes("chefchaouen") || b.packName?.toLowerCase().includes("chawan") || b.packName?.toLowerCase().includes("chaouen"))
+    .reduce((s, b) => s + (b.numPeople || 1), 0);
+  const totalTourCommission = liveTourism.reduce((s, b) => s + (b.numPeople || 1) * 5, 0);
+  const totalTourRevenue = liveTourism.reduce((s, b) => s + getTourismPrice(b.packId || b.packName) * (b.numPeople || 1), 0);
+
+  // Shuttle metrics
+  const liveShuttle = myBookings.filter((b) => (b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0)) && b.status !== "declined");
+  const portShuttleCount = liveShuttle.filter((b) => b.transferType === "port").reduce((s, b) => s + (b.numPeople || 1), 0);
+  const airportShuttleCount = liveShuttle.filter((b) => b.transferType === "airport" || !b.transferType).reduce((s, b) => s + (b.numPeople || 1), 0);
+  const totalShuttlePassengers = liveShuttle.reduce((s, b) => s + (b.numPeople || 1), 0);
+  const totalShuttleRevenue = liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0);
+
+  // Combined totals
   const totalCombinedEarnings = unifiedReservations
     .filter((r) => r.status !== "declined")
     .reduce((sum, r) => sum + r.totalCommission, 0);
@@ -1142,10 +1172,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalExcursionPassengers = unifiedReservations
     .filter((r) => r.status !== "declined")
     .reduce((sum, r) => sum + r.tours.reduce((ts, t) => ts + t.numPeople, 0), 0);
-
-  const totalShuttlePassengers = unifiedReservations
-    .filter((r) => r.status !== "declined" && r.shuttle)
-    .reduce((sum, r) => sum + (r.shuttle?.numPeople || 0), 0);
 
   const filteredReservations = unifiedReservations.filter((res) => {
     if (filterTab === "hotel" && !res.festivalBooking) return false;
@@ -1199,91 +1225,352 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-9">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-xs p-4">
-            <div className="flex items-center justify-between text-gray-500">
-              <p className="text-[10px] tracking-widest uppercase font-bold">
-                {tr("Total Clients", "Total Clients", "Total Clientes")}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* TOP SUMMARY BAR (Total Clients & Overall Earnings)              */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-extrabold text-gray-500">
+                {tr("Total Clients", "Total Clients Inscrits", "Total Clientes")}
               </p>
-              <Users className="h-4 w-4 text-blue-600" />
+              <p className="mt-1 font-display text-3xl font-black text-slate-900">
+                {unifiedReservations.length}
+              </p>
+              <p className="text-xs text-gray-400 font-medium mt-0.5">
+                {ticketsSold} {tr("registered attendees", "participants enregistrés", "asistentes registrados")}
+              </p>
             </div>
-            <p className="mt-1.5 font-display text-2xl font-black text-slate-900">
-              {unifiedReservations.length}
-            </p>
-            <span className="text-[10px] text-gray-400 font-medium">
-              {ticketsSold} {tr("passengers", "participants", "participantes")}
-            </span>
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 border border-blue-200 grid place-items-center">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-xs p-4">
-            <div className="flex items-center justify-between text-gray-500">
-              <p className="text-[10px] tracking-widest uppercase font-bold">
-                {tr("Double Rooms", "Chambres Doubles", "Habitaciones Dobles")}
+          <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-md flex items-center justify-between sm:col-span-2">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-black text-emerald-100">
+                {tr("Your Total Earnings", "Total de vos commissions", "Tus Ganancias Totales")}
               </p>
-              <Bed className="h-4 w-4 text-amber-600" />
-            </div>
-            <p className="mt-1.5 font-display text-2xl font-black text-amber-900">
-              {
-                unifiedReservations.filter(
-                  (r) =>
-                    r.status !== "declined" &&
-                    (r.guest2 != null || /double|doble|couple/i.test(r.festivalLabel || ""))
-                ).length
-              }
-            </p>
-            <span className="text-[10px] text-amber-700 font-medium">
-              {tr("1st & 2nd guests", "1er & 2ème invités", "1º y 2º huéspedes")}
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-cyan-200 bg-cyan-50/70 shadow-xs p-4">
-            <div className="flex items-center justify-between text-cyan-800">
-              <p className="text-[10px] tracking-widest uppercase font-bold">
-                {tr("Excursions", "Excursions", "Excursiones")}
+              <p className="mt-1 font-display text-3xl font-black text-white">
+                +{totalCombinedEarnings} €
               </p>
-              <Compass className="h-4 w-4 text-cyan-600" />
-            </div>
-            <p className="mt-1.5 font-display text-2xl font-black text-cyan-950">
-              {totalExcursionPassengers}
-            </p>
-            <span className="text-[10px] text-cyan-700 font-semibold">
-              +5 € / {tr("passenger", "passager", "pasajero")}
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-sky-200 bg-sky-50/70 shadow-xs p-4">
-            <div className="flex items-center justify-between text-sky-800">
-              <p className="text-[10px] tracking-widest uppercase font-bold">
-                {tr("Shuttle Bus", "Navettes Bus", "Shuttle Bus")}
+              <p className="text-xs text-emerald-100 font-medium mt-0.5">
+                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} € ({tr("Tours", "Excursions", "Tours")})
               </p>
-              <Bus className="h-4 w-4 text-sky-600" />
             </div>
-            <p className="mt-1.5 font-display text-2xl font-black text-sky-950">
-              {totalShuttlePassengers}
-            </p>
-            <span className="text-[10px] text-sky-700 font-medium">
-              {tr("Port & Airport", "Port & Aéroport", "Puerto y Aeropuerto")}
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md p-4 col-span-2 sm:col-span-1">
-            <div className="flex items-center justify-between text-emerald-100">
-              <p className="text-[10px] tracking-widest uppercase font-black">
-                {tr("Total Earnings", "Vos Commissions", "Tus Ganancias")}
-              </p>
-              <Euro className="h-4 w-4 text-white" />
+            <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
+              <Euro className="h-6 w-6 text-white" />
             </div>
-            <p className="mt-1.5 font-display text-2xl font-black text-white">
-              +{totalCombinedEarnings} €
-            </p>
-            <span className="text-[10px] text-emerald-100 font-medium">
-              {tr("Fest + Tours + Rewards", "Festival + Visites", "Festival + Tours")}
-            </span>
           </div>
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 3 COLOR-CODED RECTANGLES                                        */}
+        {/* 1. YELLOWISH RECTANGLE: Shambadoob, Single, Footpath           */}
+        {/* 2. BLUE RECTANGLE: Asilah, Tanjel, Chefchaouen                  */}
+        {/* 3. GREY RECTANGLE: Navettes (Port, Airport, Shuttle)            */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="space-y-5">
+          {/* 1. YELLOWISH RECTANGLE — FESTIVAL ROOMS & PASSES */}
+          <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-yellow-50/70 to-amber-100/50 p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-amber-200/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-amber-500 text-white grid place-items-center shadow-xs">
+                  <Bed className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-black text-amber-950">
+                    {tr("Festival Rooms & Passes", "Chambres & Pass Festival", "Habitaciones y Pases de Festival")}
+                  </h3>
+                  <p className="text-xs text-amber-800/80 font-medium">
+                    {tr(
+                      "Double rooms, single rooms & full pass without hotel",
+                      "Chambres doubles, chambres single & full pass sans chambre",
+                      "Habitaciones dobles, individuales y full pass"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-950 font-bold border border-amber-300">
+                  {liveFestival.length} {tr("Bookings", "Réservations", "Reservas")}
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-amber-600 text-white font-extrabold shadow-2xs">
+                  {tr("Comm:", "Com :", "Com:")} {formatForPartner(festEarned, partner)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              {/* Chambre Double (Shambadoob) */}
+              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-amber-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Double Room", "Chambre Double", "Hab. Doble")}
+                  </span>
+                  <Bed className="h-4 w-4 text-amber-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                  {doubleRoomCount}
+                </p>
+                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                  {tr("1st & 2nd guests", "1er & 2ème invités", "1º y 2º huéspedes")}
+                </span>
+              </div>
+
+              {/* Chambre Single */}
+              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-amber-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Single Room", "Chambre Single", "Hab. Individual")}
+                  </span>
+                  <Users className="h-4 w-4 text-amber-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                  {singleRoomCount}
+                </p>
+                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                  {tr("1 guest / room", "1 invité / chambre", "1 huésped / hab.")}
+                </span>
+              </div>
+
+              {/* Full Pass (Footpath) */}
+              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-amber-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Full Pass", "Full Pass Seul", "Full Pass")}
+                  </span>
+                  <Ticket className="h-4 w-4 text-amber-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                  {fullPassCount}
+                </p>
+                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                  {tr("Without hotel room", "Sans chambre d'hôtel", "Sin habitación")}
+                </span>
+              </div>
+
+              {/* Festival Sales */}
+              <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-amber-100">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Festival Sales", "Ventes Festival", "Ventas Festival")}
+                  </span>
+                  <Euro className="h-4 w-4 text-white" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-white">
+                  {formatForPartner(festSales, partner)}
+                </p>
+                <span className="text-[11px] text-amber-100 font-medium block mt-0.5">
+                  {ticketsSold} {tr("passengers", "participants", "participantes")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. BLUE RECTANGLE — CULTURAL TOURS & EXCURSIONS */}
+          <div className="rounded-3xl border-2 border-blue-300 bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/50 p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-blue-200/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center shadow-xs">
+                  <Compass className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-black text-blue-950">
+                    {tr("Cultural Tours & Excursions", "Excursions Culturelles (Tours)", "Excursiones Culturales (Tours)")}
+                  </h3>
+                  <p className="text-xs text-blue-800/80 font-medium">
+                    {tr(
+                      "Guided excursions to Asilah, Tangier & Chefchaouen (+5 € / passenger commission)",
+                      "Visites guidées : Asilah, Tanger et Chefchaouen (+5 € / passager de commission)",
+                      "Tours guiados a Asilah, Tánger y Chefchaouen (+5 € / pasajero de comisión)"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="px-3 py-1 rounded-xl bg-blue-200/80 text-blue-950 font-bold border border-blue-300">
+                  {totalExcursionPassengers} {tr("Passengers", "Passagers", "Pasajeros")}
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-extrabold shadow-2xs">
+                  +{totalTourCommission} € {tr("Commission", "Commission", "Comisión")}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              {/* Asilah Tour */}
+              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-blue-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    Asilah Tour
+                  </span>
+                  <MapPin className="h-4 w-4 text-cyan-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                  {asilahTourCount}
+                </p>
+                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                  25 € / {tr("passenger", "passager", "pasajero")}
+                </span>
+              </div>
+
+              {/* Tangier Tour */}
+              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-blue-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    Tangier Tour
+                  </span>
+                  <MapPin className="h-4 w-4 text-blue-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                  {tangierTourCount}
+                </p>
+                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                  15 € / {tr("passenger", "passager", "pasajero")}
+                </span>
+              </div>
+
+              {/* Chefchaouen Tour */}
+              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-blue-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    Chefchaouen
+                  </span>
+                  <MapPin className="h-4 w-4 text-indigo-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                  {chefchaouenTourCount}
+                </p>
+                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                  30 € / {tr("passenger", "passager", "pasajero")}
+                </span>
+              </div>
+
+              {/* Tours Total Revenue */}
+              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-blue-100">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Tours Revenue", "Total Excursions", "Total Tours")}
+                  </span>
+                  <Euro className="h-4 w-4 text-white" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-white">
+                  {totalTourRevenue} €
+                </p>
+                <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
+                  +{totalTourCommission} € {tr("your commission", "votre com.", "tu comisión")}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. GREY RECTANGLE — SHUTTLE BUS & TRANSFERS */}
+          <div className="rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-slate-100 via-gray-100/90 to-zinc-200/60 p-5 sm:p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-300/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-slate-700 text-white grid place-items-center shadow-xs">
+                  <Bus className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-display text-base font-black text-slate-900">
+                    {tr("Shuttle Bus & Transfers (Navettes)", "Navettes Bus & Transferts", "Shuttle Bus y Traslados")}
+                  </h3>
+                  <p className="text-xs text-slate-600 font-medium">
+                    {tr(
+                      "Port and Airport pickups & round-trip schedules",
+                      "Prise en charge Port & Aéroport avec gestion des horaires",
+                      "Recogidas en Puerto y Aeropuerto con horarios de viaje"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-800 font-bold border border-slate-300">
+                  {liveShuttle.length} {tr("Transfers", "Transferts", "Traslados")}
+                </span>
+                <span className="px-3 py-1 rounded-xl bg-slate-800 text-white font-extrabold shadow-2xs">
+                  {totalShuttleRevenue} € {tr("Total", "Total", "Total")}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              {/* Port Shuttle */}
+              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Port Shuttle", "Navette Port", "Shuttle Puerto")}
+                  </span>
+                  <Ship className="h-4 w-4 text-slate-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                  {portShuttleCount}
+                </p>
+                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                  {tr("Port Tanger Ville", "Port Tanger Ville", "Puerto Tanger Ville")}
+                </span>
+              </div>
+
+              {/* Airport Shuttle */}
+              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Airport Shuttle", "Navette Aéroport", "Shuttle Aerop.")}
+                  </span>
+                  <Plane className="h-4 w-4 text-slate-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                  {airportShuttleCount}
+                </p>
+                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                  {tr("Tanger (TNG) / Tétouan", "Tanger (TNG) / Tétouan", "Tánger / Tetuán")}
+                </span>
+              </div>
+
+              {/* Total Shuttle Passengers */}
+              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Total Passengers", "Total Passagers", "Total Pasajeros")}
+                  </span>
+                  <Users className="h-4 w-4 text-slate-600" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                  {totalShuttlePassengers}
+                </p>
+                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                  {tr("In transit", "En transit", "En tránsito")}
+                </span>
+              </div>
+
+              {/* Total Transfer Money */}
+              <div className="bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-slate-200">
+                  <span className="text-[10px] font-black uppercase tracking-wider">
+                    {tr("Transfer Total", "Total Transferts", "Total Traslados")}
+                  </span>
+                  <Euro className="h-4 w-4 text-white" />
+                </div>
+                <p className="mt-2 font-display text-2xl font-black text-white">
+                  {totalShuttleRevenue} €
+                </p>
+                <span className="text-[11px] text-slate-200 font-medium block mt-0.5">
+                  {liveShuttle.length} {tr("bookings", "réservations", "reservas")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* BONUS MISSION                                                   */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {(partner.missionGoal ?? 0) > 0 &&
           (() => {
             const goal = partner.missionGoal!;
@@ -1292,10 +1579,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
             return (
               <div
-                className={`rounded-2xl border p-5 ${
+                className={`rounded-3xl border-2 p-5 ${
                   achieved
                     ? "border-emerald-300 bg-emerald-50"
-                    : "border-amber-200 bg-amber-50"
+                    : "border-amber-300 bg-amber-50"
                 }`}
               >
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -1325,7 +1612,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     : tr(
                         `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
                         `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
-                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventas que hagas después de completar la misión.`
+                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventes que hagas después de completar la misión.`
                       )}
                 </p>
                 <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
@@ -1340,81 +1627,165 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             );
           })()}
 
-        <div className="rounded-2xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="flex-1 space-y-3 relative z-10">
-            <div>
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
-                  <Compass className="h-3.5 w-3.5 text-blue-300" />
-                  {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* SELLING REFERRAL LINKS                                          */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="space-y-4">
+          {/* Main Packs Booking Link (Yellowish/Amber Accent) */}
+          <div className="rounded-3xl border-2 border-amber-300 bg-white shadow-xs p-6 flex flex-col sm:flex-row gap-6 items-start">
+            <div className="flex-1 space-y-3">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider mb-2">
+                  <Ticket className="h-3.5 w-3.5 text-amber-600" />
+                  {tr("Festival Packs Link", "Lien Packs Festival", "Enlace Packs Festival")}
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
-                  {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
-                </span>
-              </div>
-
-              <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-                <Compass className="h-4 w-4 text-cyan-300" />
-                {tr(
-                  "Your Cultural Excursions Referral Link",
-                  "Votre lien pour les excursions culturelles",
-                  "Tu enlace para excursiones culturales"
-                )}
-              </h3>
-              <p className="mt-1 text-xs text-blue-100/80 leading-relaxed">
-                {tr(
-                  "Share with your clients so they can book their guided day trips to Asilah, Tangier & Chefchaouen. All excursion reservations are automatically linked with their festival pass.",
-                  "Partagez avec vos clients pour qu'ils réservent leurs visites guidées à Asilah, Tanger et Chefchaouen.",
-                  "Comparte con tus clientes para que reserven sus tours guiados a Asilah, Tánger y Chefchaouen."
-                )}
-              </p>
-
-              <div className="mt-3 flex items-center gap-2 flex-wrap">
-                <code className="text-xs font-mono text-cyan-200 bg-blue-950/70 border border-blue-400/40 px-3 py-2 rounded-xl break-all">
-                  {getTourismBookingUrl(partner.code, L)}
-                </code>
-
-                <button
-                  onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
-                  className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
-                    copiedId === "tourism"
-                      ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                      : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
-                  }`}
-                >
-                  {copiedId === "tourism" ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4" />
-                      <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
-                    </>
+                <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-600" />
+                  {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">
+                  {tr(
+                    "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive their reservation confirmation.",
+                    "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass.",
+                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass."
                   )}
-                </button>
-
-                <a
-                  href={getTourismBookingUrl(partner.code, L)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  <span>{tr("View Page", "Voir la page", "Ver página")}</span>
-                </a>
+                </p>
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <code className="text-xs font-mono text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl break-all">
+                    {getBookingUrl(partner.code, L)}
+                  </code>
+                  <button
+                    onClick={() => copy("book", getBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      copiedId === "book"
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-amber-100 text-amber-900 hover:bg-amber-500 hover:text-slate-950"
+                    }`}
+                  >
+                    {copiedId === "book" ? (
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                    {copiedId === "book"
+                      ? tr("Copied", "Copié", "Copiado")
+                      : tr("Copy Link", "Copier le lien", "Copiar enlace")}
+                  </button>
+                  <a
+                    href={getBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
+                  </a>
+                </div>
               </div>
             </div>
+            {refQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0">
+                <div className="rounded-xl border border-amber-200 bg-white p-2.5 shadow-xs inline-block">
+                  <img src={refQr} alt="Booking link QR" className="w-24 h-24" />
+                </div>
+                <p className="mt-1 text-[10px] text-gray-400 font-medium">
+                  {tr("Packs QR Code", "QR Code Packs", "QR de Packs")}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Tourism & Excursions Link (Blue Accent) */}
+          <div className="rounded-3xl border-2 border-blue-400/80 bg-gradient-to-br from-[#0e275c] via-[#123880] to-[#1c4ea8] text-white shadow-xl shadow-blue-950/20 p-6 flex flex-col sm:flex-row gap-6 items-start relative overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex-1 space-y-3 relative z-10">
+              <div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
+                    <Compass className="h-3.5 w-3.5 text-blue-300" />
+                    {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
+                    {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
+                  </span>
+                </div>
+
+                <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
+                  <Compass className="h-4 w-4 text-cyan-300" />
+                  {tr(
+                    "Your Cultural Excursions Referral Link",
+                    "Votre lien pour les excursions culturelles",
+                    "Tu enlace para excursiones culturales"
+                  )}
+                </h3>
+                <p className="mt-1 text-xs text-blue-100/80 leading-relaxed">
+                  {tr(
+                    "Share with your clients so they can book their guided day trips to Asilah, Tangier & Chefchaouen. All excursion reservations are automatically linked with their festival pass.",
+                    "Partagez avec vos clients pour qu'ils réservent leurs visites guidées à Asilah, Tanger et Chefchaouen.",
+                    "Comparte con tus clientes para que reserven sus tours guiados a Asilah, Tánger y Chefchaouen."
+                  )}
+                </p>
+
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <code className="text-xs font-mono text-cyan-200 bg-blue-950/70 border border-blue-400/40 px-3 py-2 rounded-xl break-all">
+                    {getTourismBookingUrl(partner.code, L)}
+                  </code>
+
+                  <button
+                    onClick={() => copy("tourism", getTourismBookingUrl(partner.code, L))}
+                    className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-lg ${
+                      copiedId === "tourism"
+                        ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                        : "bg-gradient-to-r from-blue-400 to-cyan-400 hover:from-blue-300 hover:to-cyan-300 text-slate-950 shadow-blue-400/30 scale-100 hover:scale-105"
+                    }`}
+                  >
+                    {copiedId === "tourism" ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>{tr("Copied!", "Copié !", "¡Copiado!")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        <span>{tr("Copy Link", "Copier le lien", "Copiar enlace")}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={getTourismBookingUrl(partner.code, L)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>{tr("View Page", "Voir la page", "Ver página")}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {tourismQr && (
+              <div className="shrink-0 text-center mx-auto sm:mx-0 relative z-10">
+                <div className="rounded-xl border border-blue-400/40 bg-blue-950/80 p-2.5 shadow-md inline-block">
+                  <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
+                </div>
+                <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
+                  {tr("Tourism QR", "QR Excursions", "QR Turismo")}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* UNIFIED SINGLE-PAGE CLIENT RESERVATIONS LIST                     */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="pt-2 space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <h3 className="font-display text-lg font-bold text-gray-950 flex items-center gap-2">
+              <h3 className="font-display text-lg font-black text-gray-950 flex items-center gap-2">
                 <Ticket className="h-5 w-5 text-amber-600" />
                 <span>
                   {tr(
@@ -1423,23 +1794,24 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     "Todas las Reservas de Clientes"
                   )}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-100 text-amber-900 font-bold border border-amber-200">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-100 text-amber-900 font-bold border border-amber-300">
                   {unifiedReservations.length}
                 </span>
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
                 {tr(
-                  "All your clients in one page — hotel room, double guest assignments, excursions & shuttle transfers linked under the same reservation.",
-                  "Tous vos clients réunis sur une seule page — hôtel, chambre double (1er & 2ème invité), excursions et transferts reliés sous la même réservation.",
-                  "Todos tus clientes en una sola página — hotel, habitación doble (1º y 2º huésped), excursiones y traslados vinculados bajo la misma reserva."
+                  "All your clients on one page — hotel room, 1st & 2nd guest, excursions & shuttle transfers grouped together.",
+                  "Tous vos clients sur une seule page — hôtel, 1er & 2ème invité, excursions et transferts regroupés ensemble.",
+                  "Todos tus clientes en una sola página — hotel, 1º y 2º huésped, excursiones y traslados juntos."
                 )}
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-gray-200/80 p-1 rounded-xl text-xs font-bold">
+            {/* Color-Coded Filter Tabs */}
+            <div className="flex items-center gap-1.5 bg-gray-200/90 p-1.5 rounded-2xl text-xs font-bold">
               <button
                 onClick={() => setFilterTab("all")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
                   filterTab === "all"
                     ? "bg-white text-gray-950 shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -1449,37 +1821,41 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </button>
               <button
                 onClick={() => setFilterTab("hotel")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
                   filterTab === "hotel"
-                    ? "bg-white text-gray-950 shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-amber-100 text-amber-950 border border-amber-300 shadow-xs font-black"
+                    : "text-amber-900 hover:bg-amber-50"
                 }`}
               >
-                {tr("Hotel Passes", "Hôtels & Pass", "Hotel y Pases")}
+                <Bed className="h-3.5 w-3.5 text-amber-600" />
+                <span>{tr("Chambres & Pass", "Chambres & Pass", "Habitaciones")}</span>
               </button>
               <button
                 onClick={() => setFilterTab("tours")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
                   filterTab === "tours"
-                    ? "bg-white text-gray-950 shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-blue-100 text-blue-950 border border-blue-300 shadow-xs font-black"
+                    : "text-blue-900 hover:bg-blue-50"
                 }`}
               >
-                {tr("Tours", "Excursions", "Tours")} ({totalExcursionPassengers})
+                <Compass className="h-3.5 w-3.5 text-blue-600" />
+                <span>{tr("Tours (Asilah, Tanger)", "Tours", "Tours")} ({totalExcursionPassengers})</span>
               </button>
               <button
                 onClick={() => setFilterTab("shuttle")}
-                className={`px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
                   filterTab === "shuttle"
-                    ? "bg-white text-gray-950 shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "bg-slate-200 text-slate-950 border border-slate-400 shadow-xs font-black"
+                    : "text-slate-800 hover:bg-slate-100"
                 }`}
               >
-                {tr("Shuttle", "Navettes", "Shuttle")} ({totalShuttlePassengers})
+                <Bus className="h-3.5 w-3.5 text-slate-600" />
+                <span>{tr("Navettes", "Navettes", "Shuttle")} ({totalShuttlePassengers})</span>
               </button>
             </div>
           </div>
 
+          {/* Search Input Bar */}
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
@@ -1530,52 +1906,61 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 return (
                   <div
                     key={res.id}
-                    className="rounded-2xl border border-gray-200/90 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-gray-300"
+                    className="rounded-3xl border-2 border-gray-200 bg-white shadow-xs overflow-hidden transition-all duration-200 hover:border-gray-300"
                   >
+                    {/* Master Header Card Summary Row */}
                     <div className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1 min-w-0 space-y-2.5">
+                        {/* Reservation Code & Lead Guests */}
                         <div className="flex items-center gap-2 flex-wrap">
+                          {/* Master Shared Ticket Code */}
                           <span className="inline-flex items-center gap-1 font-mono text-xs font-black bg-slate-900 text-amber-400 px-2.5 py-1 rounded-lg shadow-2xs">
                             <QrCode className="h-3.5 w-3.5 text-amber-400" />
                             <span>#{res.ticketCode}</span>
                           </span>
 
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-950 border border-amber-200 text-xs font-bold">
-                            <span className="text-[10px] uppercase tracking-wider text-amber-600 font-extrabold">
+                          {/* First Guest (Lead) */}
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-950 border border-amber-300 text-xs font-bold">
+                            <span className="text-[10px] uppercase tracking-wider text-amber-700 font-black">
                               {tr("1st Guest:", "1er Invité :", "1er Huésped:")}
                             </span>
                             <span>{res.guest1}</span>
                           </div>
 
+                          {/* Second Guest (Double Room / Partner) */}
                           {res.guest2 ? (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-950 border border-indigo-200 text-xs font-bold">
-                              <span className="text-[10px] uppercase tracking-wider text-indigo-600 font-extrabold">
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold">
+                              <span className="text-[10px] uppercase tracking-wider text-amber-800 font-black">
                                 {tr("2nd Guest:", "2ème Invité :", "2º Huésped:")}
                               </span>
                               <span>{res.guest2}</span>
                             </div>
                           ) : isDouble ? (
-                            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold">
-                              <Bed className="h-3.5 w-3.5 text-indigo-500" />
+                            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-300 text-xs font-semibold">
+                              <Bed className="h-3.5 w-3.5 text-amber-600" />
                               <span>{tr("Double Room (2 Guests)", "Chambre Double (2 Invités)", "Habitación Doble (2 Huéspedes)")}</span>
                             </div>
                           ) : null}
                         </div>
 
+                        {/* Color-Coded Badges Bar: Hotel (Yellow), Excursions (Blue), Shuttle (Grey), Total */}
                         <div className="flex items-center gap-2 flex-wrap text-xs">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-slate-100 text-slate-950 border border-slate-300">
+                          {/* Total Unified Price */}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-slate-900 text-white shadow-2xs">
                             {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
                           </span>
 
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                          {/* Partner Total Commission */}
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
                             +{res.totalCommission} € {tr("Commission", "Commission", "Comisión")}
                           </span>
 
+                          {/* Hotel Pass / Room badge (Yellowish) */}
                           {res.festivalLabel ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-amber-50 text-amber-950 border border-amber-300">
                               <Bed className="h-3.5 w-3.5 text-amber-600" />
                               <span className="truncate max-w-[200px]">{res.festivalLabel}</span>
-                              {res.roomNumber && <strong className="ml-1 text-amber-950">#{res.roomNumber}</strong>}
+                              {res.roomNumber && <strong className="ml-1 text-amber-900">#{res.roomNumber}</strong>}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] text-gray-400 bg-gray-50 border border-gray-200">
@@ -1583,8 +1968,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             </span>
                           )}
 
+                          {/* Excursions badge (Blue) */}
                           {res.tours.length > 0 ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-900 border border-blue-200">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-blue-50 text-blue-950 border border-blue-300">
                               <Compass className="h-3.5 w-3.5 text-blue-600" />
                               <span>
                                 {res.tours.map((t) => `${t.city} (${t.numPeople}p)`).join(", ")}
@@ -1596,9 +1982,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             </span>
                           )}
 
+                          {/* Shuttle transfer badge (Grey) */}
                           {res.shuttle ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-sky-50 text-sky-800 border border-sky-200">
-                              <Bus className="h-3.5 w-3.5 text-sky-600" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-slate-100 text-slate-900 border border-slate-300">
+                              <Bus className="h-3.5 w-3.5 text-slate-600" />
                               <span>
                                 {res.shuttle.location} · {res.shuttle.cost} €
                               </span>
@@ -1611,6 +1998,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         </div>
                       </div>
 
+                      {/* Actions: View Details Toggle + Ticket Button + Master Status */}
                       <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                         <button
                           type="button"
@@ -1670,29 +2058,31 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       </div>
                     </div>
 
+                    {/* Expandable Master Details with Exact 3 Color-Coded Rectangles */}
                     {isExpanded && (
                       <div className="border-t border-gray-200 bg-slate-50/90 p-4 sm:p-6 text-xs text-gray-700 space-y-4">
                         <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                          <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs space-y-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">
+                          {/* 1. Yellowish Box — Hotel & Room Accommodation */}
+                          <div className="bg-amber-50/90 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block">
                               {tr("Hotel & Accommodation", "Hébergement & Chambre", "Alojamiento y Habitación")}
                             </span>
                             {res.festivalLabel ? (
                               <>
-                                <p className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                                <p className="font-bold text-amber-950 text-sm flex items-center gap-1.5">
                                   <Bed className="h-4 w-4 text-amber-600 shrink-0" />
                                   <span>{res.festivalLabel}</span>
                                 </p>
-                                <p className="text-gray-600">
+                                <p className="text-amber-900 font-medium">
                                   {res.nights ? `${res.nights} ${tr("Nights Stay", "Nuits", "Noches")}` : tr("Pass Duration", "Pass", "Pase")}
                                   {res.arrivalDate && res.departureDate ? ` · ${new Date(res.arrivalDate).toLocaleDateString()} → ${new Date(res.departureDate).toLocaleDateString()}` : ""}
                                 </p>
-                                <p className="text-gray-500">
-                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-gray-900">{res.festivalNetPrice} €</strong>
-                                  {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-semibold">(-{res.festivalDiscount} €)</span>}
+                                <p className="text-amber-800">
+                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-amber-950 font-black">{res.festivalNetPrice} €</strong>
+                                  {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-bold">(-{res.festivalDiscount} €)</span>}
                                 </p>
                                 {res.roomNumber && (
-                                  <p className="font-bold text-amber-900 inline-block bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px]">
+                                  <p className="font-bold text-amber-950 inline-block bg-amber-100 px-2 py-0.5 rounded border border-amber-300 text-[11px]">
                                     {tr("Assigned Room:", "Chambre assignée :", "Habitación asignada:")} #{res.roomNumber}
                                   </p>
                                 )}
@@ -1704,19 +2094,20 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             )}
                           </div>
 
-                          <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-2xs space-y-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">
+                          {/* 2. Blue Box — Cultural Excursions Breakdown */}
+                          <div className="bg-blue-50/90 p-4 rounded-2xl border-2 border-blue-300 shadow-2xs space-y-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-blue-900 block">
                               {tr("Cultural Excursions", "Excursions Culturelles", "Excursiones Culturales")}
                             </span>
                             {res.tours.length > 0 ? (
                               <div className="space-y-2">
                                 {res.tours.map((t, tIdx) => (
-                                  <div key={tIdx} className="bg-blue-50/60 p-2 rounded-lg border border-blue-200/80">
-                                    <div className="flex items-center justify-between font-bold text-gray-900">
+                                  <div key={tIdx} className="bg-white/90 p-2 rounded-xl border border-blue-200">
+                                    <div className="flex items-center justify-between font-bold text-blue-950">
                                       <span>{t.tourName}</span>
-                                      <span className="text-blue-900">{t.totalPrice} €</span>
+                                      <span className="text-blue-900 font-extrabold">{t.totalPrice} €</span>
                                     </div>
-                                    <p className="text-[11px] text-gray-600 mt-0.5">
+                                    <p className="text-[11px] text-blue-800 mt-0.5">
                                       {t.numPeople} {t.numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")} · {t.pricePerPerson} €/pers
                                       {" · "}<strong className="text-emerald-700">+{t.commission} € {tr("Commission", "Com.", "Com.")}</strong>
                                     </p>
@@ -1734,21 +2125,22 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             )}
                           </div>
 
-                          <div className="bg-white p-3.5 rounded-xl border border-sky-200 shadow-2xs space-y-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-sky-600 block">
+                          {/* 3. Grey Box — Shuttle & Airport/Port Transfers */}
+                          <div className="bg-slate-100 p-4 rounded-2xl border-2 border-slate-300 shadow-2xs space-y-1.5">
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 block">
                               {tr("Shuttle Transfer", "Transfert Navette", "Traslado Shuttle")}
                             </span>
                             {res.shuttle ? (
                               <>
-                                <p className="font-bold text-sky-950 flex items-center gap-1.5">
-                                  <Bus className="h-4 w-4 text-sky-600 shrink-0" />
+                                <p className="font-bold text-slate-950 flex items-center gap-1.5">
+                                  <Bus className="h-4 w-4 text-slate-700 shrink-0" />
                                   <span>{res.shuttle.location}</span>
                                 </p>
-                                <p className="text-sky-800 font-semibold">
+                                <p className="text-slate-800 font-semibold">
                                   {formatTransferOptionLabel(res.shuttle.option, L)} · {res.shuttle.cost} €
                                 </p>
                                 {res.shuttle.details && (
-                                  <p className="mt-1 text-[11px] text-sky-950 bg-sky-50 p-1.5 rounded border border-sky-200 font-mono">
+                                  <p className="mt-1 text-[11px] text-slate-900 bg-white p-2 rounded-lg border border-slate-300 font-mono">
                                     {res.shuttle.details}
                                   </p>
                                 )}
@@ -1761,7 +2153,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           </div>
                         </div>
 
-                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-2xs space-y-2.5">
+                        {/* Full Guest List & Contacts */}
+                        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-2.5">
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
                               {tr("Full Guest List & Contacts", "Liste des participants & Coordonnées", "Lista de participantes y Contactos")}
@@ -1788,22 +2181,25 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-1">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-950 font-bold text-xs border border-amber-200">
+                            {/* Explicit First Guest Badge */}
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-950 font-bold text-xs border border-amber-300">
                               <span className="text-[10px] uppercase tracking-wider text-amber-700 font-black">
                                 {tr("1st Guest (Lead):", "1er Invité (Principal) :", "1er Huésped (Principal):")}
                               </span>
                               <span>{res.guest1}</span>
                             </span>
 
+                            {/* Explicit Second Guest Badge */}
                             {res.guest2 && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-950 font-bold text-xs border border-indigo-200">
-                                <span className="text-[10px] uppercase tracking-wider text-indigo-700 font-black">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">
+                                <span className="text-[10px] uppercase tracking-wider text-amber-800 font-black">
                                   {tr("2nd Guest (Room):", "2ème Invité (Chambre) :", "2º Huésped (Habitación):")}
                                 </span>
                                 <span>{res.guest2}</span>
                               </span>
                             )}
 
+                            {/* Additional Guests */}
                             {res.allGuests.slice(2).map((gName, gIdx) => (
                               <span
                                 key={gIdx}
