@@ -907,12 +907,8 @@ function buildUnifiedReservations(
 
     let festCommission = 0;
     if (festBooking && festBooking.status !== "declined") {
-      const rate = partner.commissionRate || 0;
-      if (partner.commissionType === "percentage") {
-        festCommission = Math.round((festNet * rate) / 100);
-      } else {
-        festCommission = rate * festGuests;
-      }
+      const commMoney = collaboratorFestivalCommission(partner, [festBooking], packs, discounts);
+      festCommission = (partner.currency === "MAD" ? commMoney.mad : commMoney.eur) || 0;
     }
 
     const tourBookings = grp.filter((b) => isTourismBooking(b));
@@ -1187,9 +1183,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalShuttleRevenue = liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0);
 
   // Combined totals
-  const totalCombinedEarnings = unifiedReservations
-    .filter((r) => r.status !== "declined")
-    .reduce((sum, r) => sum + r.totalCommission, 0);
+  const totalFestivalCommission = (partner.currency === "MAD" ? festEarned.mad : festEarned.eur) || 0;
+  const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
 
   const totalExcursionPassengers = unifiedReservations
     .filter((r) => r.status !== "declined")
@@ -1275,7 +1270,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {tr("Your Total Earnings", "Total de vos commissions", "Tus Ganancias Totales")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
-                +{totalCombinedEarnings} €
+                {totalCombinedEarnings} €
               </p>
               <p className="text-xs text-emerald-100 font-medium mt-0.5">
                 {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} € ({tr("Tours", "Excursions", "Tours")})
@@ -1853,7 +1848,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               <span>#{res.ticketCode}</span>
                             </span>
                             <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
-                              +{res.totalCommission} € {tr("Partner Commission", "Commission partenaire", "Comisión socio")}
+                              {res.totalCommission} € {tr("Partner Commission", "Commission partenaire", "Comisión socio")}
                             </span>
                           </div>
 
