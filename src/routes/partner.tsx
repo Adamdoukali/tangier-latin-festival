@@ -1013,6 +1013,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [ticketsSold, setTicketsSold] = useState(0);
   const [statusError, setStatusError] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [refQr, setRefQr] = useState("");
+  const [tourismQr, setTourismQr] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "hotel" | "tours" | "shuttle">("all");
@@ -1119,6 +1121,24 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   useEffect(() => {
     reload();
   }, [reload]);
+
+  useEffect(() => {
+    QRCode.toDataURL(getBookingUrl(partner.code, L), {
+      width: 240,
+      margin: 1,
+      color: { dark: "#18181b", light: "#fafafa" },
+    })
+      .then(setRefQr)
+      .catch(() => setRefQr(""));
+
+    QRCode.toDataURL(getTourismBookingUrl(partner.code, L), {
+      width: 240,
+      margin: 1,
+      color: { dark: "#1e3a8a", light: "#eff6ff" },
+    })
+      .then(setTourismQr)
+      .catch(() => setTourismQr(""));
+  }, [partner.code, L]);
 
   const copy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
