@@ -31,6 +31,7 @@ import {
   Search,
   Filter,
   Tag,
+  TrendingUp,
 } from "lucide-react";
 import {
   partnerLogin,
