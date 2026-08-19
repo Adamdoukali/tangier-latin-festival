@@ -22,11 +22,17 @@ import {
   ChevronUp,
   MapPin,
   TrendingUp,
+  Plus,
+  UserCheck,
+  UserPlus,
+  Sparkles,
 } from "lucide-react";
 import {
   getBookings,
   getPacks,
+  addBooking,
   updateBookingTransfer,
+  calculateTransferCost,
   formatTransferOptionLabel,
   ticketUrl,
   type Booking,
@@ -50,6 +56,30 @@ function AdminShuttlePage() {
   const [typeFilter, setTypeFilter] = useState<"all" | "port" | "airport">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "declined">("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Add Transfer Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addMode, setAddMode] = useState<"existing" | "manual">("existing");
+  const [selectedExistingBookingId, setSelectedExistingBookingId] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
+  const [addForm, setAddForm] = useState({
+    customerName: "",
+    email: "",
+    phone: "",
+    country: "Morocco",
+    numPeople: 1,
+    arrivalDate: "2027-01-08",
+    departureDate: "2027-01-11",
+    transferType: "port" as TransferType,
+    transferOption: "round_trip" as TransferOption,
+    transferLocation: "Port of Tangier (Tanger Ville)",
+    transferDetails: "",
+    transferCost: 10,
+    status: "confirmed" as "confirmed" | "pending",
+    notes: "",
+  });
+  const [savingAdd, setSavingAdd] = useState(false);
+  const [addError, setAddError] = useState("");
 
   // Edit Modal State
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -243,6 +273,140 @@ function AdminShuttlePage() {
     window.open(`https://wa.me/${rawDigits}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
+  const existingClients = useMemo(() => {
+    if (!clientSearch.trim()) return bookings.slice(0, 50);
+    const q = clientSearch.toLowerCase().trim();
+    return bookings.filter(
+      (b) =>
+        (b.customerName || "").toLowerCase().includes(q) ||
+        (b.email || "").toLowerCase().includes(q) ||
+        (b.phone || "").toLowerCase().includes(q) ||
+        (b.ticketCode || "").toLowerCase().includes(q) ||
+        (b.packName || "").toLowerCase().includes(q)
+    );
+  }, [bookings, clientSearch]);
+
+  const handleOpenAddModal = () => {
+    setAddError("");
+    setSelectedExistingBookingId("");
+    setClientSearch("");
+    setAddForm({
+      customerName: "",
+      email: "",
+      phone: "",
+      country: "Morocco",
+      numPeople: 1,
+      arrivalDate: "2027-01-08",
+      departureDate: "2027-01-11",
+      transferType: "port",
+      transferOption: "round_trip",
+      transferLocation: "Port of Tangier (Tanger Ville)",
+      transferDetails: "",
+      transferCost: 10,
+      status: "confirmed",
+      notes: "",
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleSelectExistingBooking = (bId: string) => {
+    setSelectedExistingBookingId(bId);
+    const b = bookings.find((item) => item.id === bId);
+    if (b) {
+      const type = b.transferType || "port";
+      const option = b.transferOption || "round_trip";
+      const loc =
+        b.transferLocation ||
+        (type === "airport"
+          ? "Tangier Ibn Battouta Airport (TNG)"
+          : "Port of Tangier (Tanger Ville)");
+      const cost =
+        b.transferCost && b.transferCost > 0
+          ? b.transferCost
+          : calculateTransferCost(type, option, b.numPeople || 1, loc);
+
+      setAddForm((prev) => ({
+        ...prev,
+        customerName: b.customerName,
+        email: b.email || "",
+        phone: b.phone || "",
+        country: b.country || "Morocco",
+        numPeople: b.numPeople || 1,
+        arrivalDate: b.arrivalDate || "2027-01-08",
+        departureDate: b.departureDate || "2027-01-11",
+        transferType: type,
+        transferOption: option,
+        transferLocation: loc,
+        transferDetails: b.transferDetails || "",
+        transferCost: cost,
+        status: b.status === "declined" ? "confirmed" : (b.status as any) || "confirmed",
+        notes: b.notes || "",
+      }));
+    }
+  };
+
+  const handleSaveAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError("");
+    if (addMode === "existing") {
+      if (!selectedExistingBookingId) {
+        setAddError("Please select a client from the database.");
+        return;
+      }
+      setSavingAdd(true);
+      try {
+        await updateBookingTransfer(selectedExistingBookingId, {
+          needsTransfer: true,
+          transferType: addForm.transferType,
+          transferOption: addForm.transferOption,
+          transferLocation: addForm.transferLocation,
+          transferDetails: addForm.transferDetails,
+          transferCost: addForm.transferCost,
+        });
+        setIsAddModalOpen(false);
+        await reload();
+      } catch (err: any) {
+        setAddError(err?.message || "Failed to attach transfer to booking.");
+      } finally {
+        setSavingAdd(false);
+      }
+    } else {
+      if (!addForm.customerName.trim()) {
+        setAddError("Please enter the client's name.");
+        return;
+      }
+      setSavingAdd(true);
+      try {
+        await addBooking({
+          customerName: addForm.customerName.trim(),
+          email: addForm.email.trim(),
+          phone: addForm.phone.trim(),
+          country: addForm.country.trim() || "Morocco",
+          numPeople: Math.max(1, addForm.numPeople || 1),
+          packId: "",
+          packName: "Navette / Shuttle Transfer",
+          arrivalDate: addForm.arrivalDate || null,
+          departureDate: addForm.departureDate || null,
+          needsTransfer: true,
+          transferType: addForm.transferType,
+          transferOption: addForm.transferOption,
+          transferLocation: addForm.transferLocation,
+          transferDetails: addForm.transferDetails,
+          transferCost: addForm.transferCost,
+          status: addForm.status,
+          source: "manual",
+          notes: addForm.notes,
+        });
+        setIsAddModalOpen(false);
+        await reload();
+      } catch (err: any) {
+        setAddError(err?.message || "Failed to create transfer booking.");
+      } finally {
+        setSavingAdd(false);
+      }
+    }
+  };
+
   const handleOpenEdit = (b: Booking) => {
     const defaultLoc = b.transferType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Port of Tangier (Tanger Ville)";
     setEditingBooking(b);
@@ -291,13 +455,22 @@ function AdminShuttlePage() {
                 Transfer Shuttle Management
               </h1>
               <p className="text-xs text-gray-500">
-                Manage, group, and export airport and port shuttle passenger lists.
+                Manage, group, add, and export airport and port shuttle passenger lists.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Transfer / Navette</span>
+          </button>
+
           <button
             onClick={() => exportToCsv(shuttleBookings, `tlf-shuttles-all-${new Date().toISOString().slice(0, 10)}`)}
             disabled={!shuttleBookings.length}
@@ -970,6 +1143,455 @@ function AdminShuttlePage() {
                 {savingEdit ? "Saving..." : "Save Changes"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Add Transfer / Shuttle Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-blue-500/20 border border-blue-400/30 grid place-items-center text-blue-300">
+                  <Bus className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-base text-white">
+                    Add Transfer / Shuttle Pass
+                  </h3>
+                  <p className="text-[11px] text-blue-200">
+                    Assign a transfer to a festival invite/client or create a new manual entry.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAdd} className="p-6 space-y-4 text-xs">
+              {/* Mode Selection Tabs */}
+              <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddMode("existing");
+                    setAddError("");
+                  }}
+                  className={`flex-1 py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    addMode === "existing"
+                      ? "bg-white text-blue-700 shadow-xs"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  <span>Existing Invite / Client</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAddMode("manual");
+                    setAddError("");
+                  }}
+                  className={`flex-1 py-2 rounded-lg font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    addMode === "manual"
+                      ? "bg-white text-blue-700 shadow-xs"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>New Manual Client</span>
+                </button>
+              </div>
+
+              {addError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{addError}</span>
+                </div>
+              )}
+
+              {/* Mode A: Select Existing Booking from Database */}
+              {addMode === "existing" && (
+                <div className="space-y-2 p-3.5 bg-blue-50/60 rounded-2xl border border-blue-200">
+                  <label className="font-bold uppercase tracking-wider text-blue-950 block text-[11px]">
+                    1. Select Client from Database ({bookings.length} clients available)
+                  </label>
+
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={clientSearch}
+                      onChange={(e) => setClientSearch(e.target.value)}
+                      placeholder="Type name, ticket code (#TLF-...), email, or phone..."
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-300 bg-white text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                    {existingClients.map((b) => {
+                      const isSelected = selectedExistingBookingId === b.id;
+                      return (
+                        <div
+                          key={b.id}
+                          onClick={() => handleSelectExistingBooking(b.id)}
+                          className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${
+                            isSelected
+                              ? "bg-blue-600 text-white border-blue-600 shadow-xs font-bold"
+                              : "bg-white text-gray-800 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate font-bold flex items-center gap-1.5">
+                              <span>{b.customerName}</span>
+                              <span
+                                className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
+                                  isSelected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                #{b.ticketCode}
+                              </span>
+                            </p>
+                            <p
+                              className={`text-[11px] truncate ${
+                                isSelected ? "text-blue-100" : "text-gray-500"
+                              }`}
+                            >
+                              {b.packName || "Pass"} · {b.numPeople || 1} pax {b.phone ? `· ${b.phone}` : ""}
+                            </p>
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            {b.needsTransfer ? (
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                                  isSelected
+                                    ? "bg-amber-400 text-slate-950"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                Has Transfer
+                              </span>
+                            ) : (
+                              <span
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                                  isSelected
+                                    ? "bg-emerald-400 text-slate-950"
+                                    : "bg-emerald-100 text-emerald-800"
+                                }`}
+                              >
+                                No Transfer Yet
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Mode B: Manual Client Details */}
+              {addMode === "manual" && (
+                <div className="space-y-3 p-3.5 bg-gray-50 rounded-2xl border border-gray-200">
+                  <span className="font-bold uppercase tracking-wider text-gray-700 block text-[11px]">
+                    1. Guest Details
+                  </span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={addForm.customerName}
+                        onChange={(e) =>
+                          setAddForm({ ...addForm, customerName: e.target.value })
+                        }
+                        placeholder="e.g. John Doe"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Passengers Count
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={addForm.numPeople}
+                        onChange={(e) => {
+                          const num = Math.max(1, Number(e.target.value) || 1);
+                          const nextCost = calculateTransferCost(
+                            addForm.transferType,
+                            addForm.transferOption,
+                            num,
+                            addForm.transferLocation
+                          );
+                          setAddForm({
+                            ...addForm,
+                            numPeople: num,
+                            transferCost: nextCost,
+                          });
+                        }}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Phone (WhatsApp)
+                      </label>
+                      <input
+                        type="tel"
+                        value={addForm.phone}
+                        onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                        placeholder="+33 6..."
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={addForm.email}
+                        onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                        placeholder="client@email.com"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Arrival Date
+                      </label>
+                      <input
+                        type="date"
+                        value={addForm.arrivalDate}
+                        onChange={(e) =>
+                          setAddForm({ ...addForm, arrivalDate: e.target.value })
+                        }
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Departure Date
+                      </label>
+                      <input
+                        type="date"
+                        value={addForm.departureDate}
+                        onChange={(e) =>
+                          setAddForm({ ...addForm, departureDate: e.target.value })
+                        }
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Transfer Details */}
+              <div className="space-y-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <span className="font-bold uppercase tracking-wider text-slate-800 block text-[11px]">
+                  2. Transfer Specifications & Pricing
+                </span>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Transfer Type
+                    </label>
+                    <select
+                      value={addForm.transferType}
+                      onChange={(e) => {
+                        const nextType = e.target.value as TransferType;
+                        const nextLoc =
+                          nextType === "airport"
+                            ? "Tangier Ibn Battouta Airport (TNG)"
+                            : "Port of Tangier (Tanger Ville)";
+                        const nextCost = calculateTransferCost(
+                          nextType,
+                          addForm.transferOption,
+                          addForm.numPeople || 1,
+                          nextLoc
+                        );
+                        setAddForm({
+                          ...addForm,
+                          transferType: nextType,
+                          transferLocation: nextLoc,
+                          transferCost: nextCost,
+                        });
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer bg-white"
+                    >
+                      <option value="port">🚢 Port Shuttle</option>
+                      <option value="airport">✈️ Airport Shuttle</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Direction
+                    </label>
+                    <select
+                      value={addForm.transferOption}
+                      onChange={(e) => {
+                        const nextOpt = e.target.value as TransferOption;
+                        const nextCost = calculateTransferCost(
+                          addForm.transferType,
+                          nextOpt,
+                          addForm.numPeople || 1,
+                          addForm.transferLocation
+                        );
+                        setAddForm({
+                          ...addForm,
+                          transferOption: nextOpt,
+                          transferCost: nextCost,
+                        });
+                      }}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer bg-white"
+                    >
+                      <option value="round_trip">Round Trip (Aller-Retour)</option>
+                      <option value="one_way_arrival">One-Way Arrival (Aller simple)</option>
+                      <option value="one_way_departure">One-Way Departure (Retour simple)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">
+                    Pickup / Dropoff Location
+                  </label>
+                  <select
+                    value={addForm.transferLocation}
+                    onChange={(e) => {
+                      const nextLoc = e.target.value;
+                      const nextCost = calculateTransferCost(
+                        addForm.transferType,
+                        addForm.transferOption,
+                        addForm.numPeople || 1,
+                        nextLoc
+                      );
+                      setAddForm({
+                        ...addForm,
+                        transferLocation: nextLoc,
+                        transferCost: nextCost,
+                      });
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-medium bg-white"
+                  >
+                    {addForm.transferType === "port" ? (
+                      <option value="Port of Tangier (Tanger Ville)">
+                        Port of Tangier (Port de Tanger Ville)
+                      </option>
+                    ) : (
+                      <>
+                        <option value="Tangier Ibn Battouta Airport (TNG)">
+                          Tangier Ibn Battouta Airport (TNG) — €10 (1-way) / €20 (A/R)
+                        </option>
+                        <option value="Tetouan Sania Ramel Airport (TTU)">
+                          Tetouan Sania Ramel Airport (TTU) — €15 (1-way) / €30 (A/R)
+                        </option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">
+                    Flight / Ferry Details & Schedule
+                  </label>
+                  <input
+                    type="text"
+                    value={addForm.transferDetails}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, transferDetails: e.target.value })
+                    }
+                    placeholder="e.g. Flight AT123 arriving at 14:30 / Ferry Balearia 11:00"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">
+                      Total Transfer Fee (€)
+                    </label>
+                    <input
+                      type="number"
+                      value={addForm.transferCost}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          transferCost: Number(e.target.value) || 0,
+                        })
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-bold text-blue-700 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Status</label>
+                    <select
+                      value={addForm.status}
+                      onChange={(e) =>
+                        setAddForm({
+                          ...addForm,
+                          status: e.target.value as "confirmed" | "pending",
+                        })
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
+                    >
+                      <option value="confirmed">Confirmed</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">
+                    Notes / Remarks
+                  </label>
+                  <input
+                    type="text"
+                    value={addForm.notes}
+                    onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
+                    placeholder="Special instructions or luggage notes..."
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingAdd}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>{savingAdd ? "Saving..." : "Save Transfer"}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
