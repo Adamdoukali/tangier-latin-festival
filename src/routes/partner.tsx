@@ -1183,6 +1183,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalShuttleRevenue = liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0);
 
   // Combined totals
+  const totalFestivalSales = (partner.currency === "MAD" ? festSales.mad : festSales.eur) || 0;
+  const totalGrossSales = totalFestivalSales + totalTourRevenue;
+
   const totalFestivalCommission = (partner.currency === "MAD" ? festEarned.mad : festEarned.eur) || 0;
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
 
@@ -1244,9 +1247,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* TOP SUMMARY BAR (Total Clients & Overall Earnings)              */}
+        {/* TOP SUMMARY BAR (Total Clients, Total Sales & Total Commission) */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* 1. Total Clients */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-extrabold text-gray-500">
@@ -1264,7 +1268,26 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </div>
           </div>
 
-          <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-md flex items-center justify-between sm:col-span-2">
+          {/* 2. Total Sales / Total Ventes */}
+          <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-5 shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-black text-blue-200">
+                {tr("Total Sales", "Total Ventes", "Total Ventas")}
+              </p>
+              <p className="mt-1 font-display text-3xl font-black text-white">
+                {totalGrossSales} €
+              </p>
+              <p className="text-xs text-blue-200/80 font-medium mt-0.5">
+                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Tours", "Excursions", "Tours")})
+              </p>
+            </div>
+            <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
+              <TrendingUp className="h-6 w-6 text-blue-300" />
+            </div>
+          </div>
+
+          {/* 3. Total Commissions */}
+          <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-md flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-black text-emerald-100">
                 {tr("Your Total Earnings", "Total de vos commissions", "Tus Ganancias Totales")}
