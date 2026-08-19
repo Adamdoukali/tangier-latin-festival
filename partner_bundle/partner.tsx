@@ -1019,7 +1019,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [showMobileStats, setShowMobileStats] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterTab, setFilterTab] = useState<"all" | "hotel" | "tours" | "shuttle">("all");
+  const [filterTab, setFilterTab] = useState<"all" | "hotel" | "tours">("all");
 
   const reload = useCallback(async () => {
     const [packs, allBookings, discounts] = await Promise.all([
@@ -1198,7 +1198,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const filteredReservations = unifiedReservations.filter((res) => {
     if (filterTab === "hotel" && !res.festivalBooking) return false;
     if (filterTab === "tours" && res.tours.length === 0) return false;
-    if (filterTab === "shuttle" && !res.shuttle) return false;
 
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase().trim();
@@ -1367,9 +1366,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <Compass className="h-3.5 w-3.5 text-blue-300" />
                     {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
                   </span>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider">
-                    {tr("Earn 5 € / Passenger", "Gagnez 5 € / Passager", "Gana 5 € / Pasajero")}
-                  </span>
                 </div>
 
                 <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
@@ -1472,7 +1468,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </button>
           </div>
 
-          {/* 3 COLOR-CODED RECTANGLES */}
+          {/* 2 COLOR-CODED RECTANGLES (Rooms & Passes + Tours) */}
           <div className={`${showMobileStats ? "block space-y-4" : "hidden sm:block sm:space-y-5"}`}>
             {/* 1. YELLOWISH RECTANGLE — FESTIVAL ROOMS & PASSES */}
             <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-yellow-50/70 to-amber-100/50 p-5 sm:p-6 shadow-sm space-y-4">
@@ -1485,22 +1481,15 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <h3 className="font-display text-base font-black text-amber-950">
                       {tr("Festival Rooms & Passes", "Chambres & Pass Festival", "Habitaciones y Pases de Festival")}
                     </h3>
-                    <p className="text-xs text-amber-800/80 font-medium">
-                      {tr(
-                        "Double rooms, single rooms & full pass without hotel",
-                        "Chambres doubles, chambres single & full pass sans chambre",
-                        "Habitaciones dobles, individuales y full pass"
-                      )}
-                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                   <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-950 font-bold border border-amber-300">
-                    {liveFestival.length} {tr("Bookings", "Réservations", "Reservas")}
+                    {ticketsSold} {tr("Participants", "Participants", "Participantes")}
                   </span>
                   <span className="px-3 py-1 rounded-xl bg-amber-600 text-white font-extrabold shadow-2xs">
-                    {tr("Comm:", "Com :", "Com:")} {formatForPartner(festEarned, partner)}
+                    +{formatForPartner(festEarned, partner)} {tr("Commission", "Commission", "Comisión")}
                   </span>
                 </div>
               </div>
@@ -1518,7 +1507,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {doubleRoomCount}
                   </p>
                   <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                    {tr("1st & 2nd guests", "1er & 2ème invités", "1º y 2º huéspedes")}
+                    {tr("1st & 2nd participants", "1er & 2ème participants", "1º y 2º participantes")}
                   </span>
                 </div>
 
@@ -1534,7 +1523,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {singleRoomCount}
                   </p>
                   <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                    {tr("1 guest / room", "1 invité / chambre", "1 huésped / hab.")}
+                    {tr("1 participant / room", "1 participant / chambre", "1 participante / hab.")}
                   </span>
                 </div>
 
@@ -1566,7 +1555,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {formatForPartner(festSales, partner)}
                   </p>
                   <span className="text-[11px] text-amber-100 font-medium block mt-0.5">
-                    {ticketsSold} {tr("passengers", "participants", "participantes")}
+                    {ticketsSold} {tr("participants", "participants", "participantes")}
                   </span>
                 </div>
               </div>
@@ -1583,19 +1572,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <h3 className="font-display text-base font-black text-blue-950">
                       {tr("Cultural Tours & Excursions", "Excursions Culturelles (Tours)", "Excursiones Culturales (Tours)")}
                     </h3>
-                    <p className="text-xs text-blue-800/80 font-medium">
-                      {tr(
-                        "Guided excursions to Asilah, Tangier & Chefchaouen (+5 € / passenger commission)",
-                        "Visites guidées : Asilah, Tanger et Chefchaouen (+5 € / passager de commission)",
-                        "Tours guiados a Asilah, Tánger y Chefchaouen (+5 € / pasajero de comisión)"
-                      )}
-                    </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                   <span className="px-3 py-1 rounded-xl bg-blue-200/80 text-blue-950 font-bold border border-blue-300">
-                    {totalExcursionPassengers} {tr("Passengers", "Passagers", "Pasajeros")}
+                    {totalExcursionPassengers} {tr("Participants", "Participants", "Participantes")}
                   </span>
                   <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-extrabold shadow-2xs">
                     +{totalTourCommission} € {tr("Commission", "Commission", "Comisión")}
@@ -1616,7 +1598,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {asilahTourCount}
                   </p>
                   <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    25 € / {tr("passenger", "passager", "pasajero")}
+                    25 € / {tr("participant", "participant", "participante")}
                   </span>
                 </div>
 
@@ -1632,7 +1614,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {tangierTourCount}
                   </p>
                   <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    15 € / {tr("passenger", "passager", "pasajero")}
+                    15 € / {tr("participant", "participant", "participante")}
                   </span>
                 </div>
 
@@ -1648,7 +1630,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     {chefchaouenTourCount}
                   </p>
                   <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    30 € / {tr("passenger", "passager", "pasajero")}
+                    30 € / {tr("participant", "participant", "participante")}
                   </span>
                 </div>
 
@@ -1665,104 +1647,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </p>
                   <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
                     +{totalTourCommission} € {tr("your commission", "votre com.", "tu comisión")}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. GREY RECTANGLE — SHUTTLE BUS & TRANSFERS */}
-            <div className="rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-slate-100 via-gray-100/90 to-zinc-200/60 p-5 sm:p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-300/80 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-slate-700 text-white grid place-items-center shadow-xs">
-                    <Bus className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-base font-black text-slate-900">
-                      {tr("Shuttle Bus & Transfers (Navettes)", "Navettes Bus & Transferts", "Shuttle Bus y Traslados")}
-                    </h3>
-                    <p className="text-xs text-slate-600 font-medium">
-                      {tr(
-                        "Port and Airport pickups & round-trip schedules",
-                        "Prise en charge Port & Aéroport avec gestion des horaires",
-                        "Recogidas en Puerto y Aeropuerto con horarios de viaje"
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap text-xs">
-                  <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-800 font-bold border border-slate-300">
-                    {liveShuttle.length} {tr("Transfers", "Transferts", "Traslados")}
-                  </span>
-                  <span className="px-3 py-1 rounded-xl bg-slate-800 text-white font-extrabold shadow-2xs">
-                    {totalShuttleRevenue} € {tr("Total", "Total", "Total")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                {/* Port Shuttle */}
-                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                  <div className="flex items-center justify-between text-slate-700">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      {tr("Port Shuttle", "Navette Port", "Shuttle Puerto")}
-                    </span>
-                    <Ship className="h-4 w-4 text-slate-600" />
-                  </div>
-                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                    {portShuttleCount}
-                  </p>
-                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                    {tr("Port Tanger Ville", "Port Tanger Ville", "Puerto Tanger Ville")}
-                  </span>
-                </div>
-
-                {/* Airport Shuttle */}
-                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                  <div className="flex items-center justify-between text-slate-700">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      {tr("Airport Shuttle", "Navette Aéroport", "Shuttle Aerop.")}
-                    </span>
-                    <Plane className="h-4 w-4 text-slate-600" />
-                  </div>
-                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                    {airportShuttleCount}
-                  </p>
-                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                    {tr("Tanger (TNG) / Tétouan", "Tanger (TNG) / Tétouan", "Tánger / Tetuán")}
-                  </span>
-                </div>
-
-                {/* Total Shuttle Passengers */}
-                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                  <div className="flex items-center justify-between text-slate-700">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      {tr("Total Passengers", "Total Passagers", "Total Pasajeros")}
-                    </span>
-                    <Users className="h-4 w-4 text-slate-600" />
-                  </div>
-                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                    {totalShuttlePassengers}
-                  </p>
-                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                    {tr("In transit", "En transit", "En tránsito")}
-                  </span>
-                </div>
-
-                {/* Total Transfer Money */}
-                <div className="bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-2xl p-4 shadow-sm">
-                  <div className="flex items-center justify-between text-slate-200">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      {tr("Transfer Total", "Total Transferts", "Total Traslados")}
-                    </span>
-                    <Euro className="h-4 w-4 text-white" />
-                  </div>
-                  <p className="mt-2 font-display text-2xl font-black text-white">
-                    {totalShuttleRevenue} €
-                  </p>
-                  <span className="text-[11px] text-slate-200 font-medium block mt-0.5">
-                    {liveShuttle.length} {tr("bookings", "réservations", "reservas")}
                   </span>
                 </div>
               </div>
@@ -1791,9 +1675,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </h3>
               <p className="text-xs text-gray-500 mt-0.5">
                 {tr(
-                  "All your clients on one page — hotel room, 1st & 2nd guest, excursions & shuttle transfers grouped together.",
-                  "Tous vos clients sur une seule page — hôtel, 1er & 2ème invité, excursions et transferts regroupés ensemble.",
-                  "Todos tus clientes en una sola página — hotel, 1º y 2º huésped, excursiones y traslados juntos."
+                  "All your clients on one page — hotel room, 1st & 2nd participants & excursions grouped together.",
+                  "Tous vos clients sur une seule page — hôtel, 1er & 2ème participants et excursions regroupés ensemble.",
+                  "Todos tus clientes en una sola página — hotel, 1º y 2º participantes y excursiones juntos."
                 )}
               </p>
             </div>
@@ -1832,17 +1716,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 <Compass className="h-3.5 w-3.5 text-blue-600" />
                 <span>{tr("Tours (Asilah, Tanger)", "Tours", "Tours")} ({totalExcursionPassengers})</span>
               </button>
-              <button
-                onClick={() => setFilterTab("shuttle")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                  filterTab === "shuttle"
-                    ? "bg-slate-200 text-slate-950 border border-slate-400 shadow-xs font-black"
-                    : "text-slate-800 hover:bg-slate-100"
-                }`}
-              >
-                <Bus className="h-3.5 w-3.5 text-slate-600" />
-                <span>{tr("Navettes", "Navettes", "Shuttle")} ({totalShuttlePassengers})</span>
-              </button>
             </div>
           </div>
 
@@ -1854,9 +1727,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={tr(
-                "Search by guest name, reservation code (#TLF-...), phone, email, or room number...",
-                "Rechercher par nom d'invité, code réservation (#TLF-...), tél, email, ou N° de chambre...",
-                "Buscar por nombre de huésped, código de reserva (#TLF-...), teléfono, email o habitación..."
+                "Search by participant name, reservation code (#TLF-...), phone, email, or room number...",
+                "Rechercher par nom de participant, code réservation (#TLF-...), tél, email, ou N° de chambre...",
+                "Buscar por nombre de participante, código de reserva (#TLF-...), teléfono, email o habitación..."
               )}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-2xs"
             />
@@ -2002,7 +1875,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             </a>
                           )}
                         </div>
-                        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                        <div className="grid sm:grid-cols-2 gap-3.5">
                           {/* 1. Yellowish Box — Hotel & Room Accommodation */}
                           <div className="bg-amber-50/90 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-1.5">
                             <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block">
@@ -2049,7 +1922,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                       <span className="text-blue-900 font-extrabold">{t.totalPrice} €</span>
                                     </div>
                                     <p className="text-[11px] text-blue-800 mt-0.5">
-                                      {t.numPeople} {t.numPeople > 1 ? tr("passengers", "passagers", "pasajeros") : tr("passenger", "passager", "pasajero")} · {t.pricePerPerson} €/pers
+                                      {t.numPeople} {t.numPeople > 1 ? tr("participants", "participants", "participantes") : tr("participant", "participant", "participante")} · {t.pricePerPerson} €/pers
                                       {" · "}<strong className="text-emerald-700">+{t.commission} € {tr("Commission", "Com.", "Com.")}</strong>
                                     </p>
                                   </div>
@@ -2065,40 +1938,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               </p>
                             )}
                           </div>
-
-                          {/* 3. Grey Box — Shuttle & Airport/Port Transfers */}
-                          <div className="bg-slate-100 p-4 rounded-2xl border-2 border-slate-300 shadow-2xs space-y-1.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 block">
-                              {tr("Shuttle Transfer", "Transfert Navette", "Traslado Shuttle")}
-                            </span>
-                            {res.shuttle ? (
-                              <>
-                                <p className="font-bold text-slate-950 flex items-center gap-1.5">
-                                  <Bus className="h-4 w-4 text-slate-700 shrink-0" />
-                                  <span>{res.shuttle.location}</span>
-                                </p>
-                                <p className="text-slate-800 font-semibold">
-                                  {formatTransferOptionLabel(res.shuttle.option, L)} · {res.shuttle.cost} €
-                                </p>
-                                {res.shuttle.details && (
-                                  <p className="mt-1 text-[11px] text-slate-900 bg-white p-2 rounded-lg border border-slate-300 font-mono">
-                                    {res.shuttle.details}
-                                  </p>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-gray-400 italic mt-2">
-                                {tr("No transfer booked", "Aucun transfert sélectionné", "Sin traslado seleccionado")}
-                              </p>
-                            )}
-                          </div>
                         </div>
 
-                        {/* Full Guest List & Contacts */}
+                        {/* Full Participants List & Contacts */}
                         <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-2.5">
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                              {tr("Full Guest List & Contacts", "Liste des participants & Coordonnées", "Lista de participantes y Contactos")}
+                              {tr("Full Participants List & Contacts", "Liste des participants & Coordonnées", "Lista de participantes y Contactos")}
                             </span>
                             <div className="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
                               {res.email && (
@@ -2122,25 +1968,25 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           </div>
 
                           <div className="flex flex-wrap gap-2 pt-1">
-                            {/* Explicit First Guest Badge */}
+                            {/* Explicit First Participant Badge */}
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-950 font-bold text-xs border border-amber-300">
                               <span className="text-[10px] uppercase tracking-wider text-amber-700 font-black">
-                                {tr("1st Guest (Lead):", "1er Invité (Principal) :", "1er Huésped (Principal):")}
+                                {tr("1st Participant (Lead):", "1er Participant (Principal) :", "1er Participante (Principal):")}
                               </span>
                               <span>{res.guest1}</span>
                             </span>
 
-                            {/* Explicit Second Guest Badge */}
+                            {/* Explicit Second Participant Badge */}
                             {res.guest2 && (
                               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">
                                 <span className="text-[10px] uppercase tracking-wider text-amber-800 font-black">
-                                  {tr("2nd Guest (Room):", "2ème Invité (Chambre) :", "2º Huésped (Habitación):")}
+                                  {tr("2nd Participant (Room):", "2ème Participant (Chambre) :", "2º Participante (Habitación):")}
                                 </span>
                                 <span>{res.guest2}</span>
                               </span>
                             )}
 
-                            {/* Additional Guests */}
+                            {/* Additional Participants */}
                             {res.allGuests.slice(2).map((gName, gIdx) => (
                               <span
                                 key={gIdx}
