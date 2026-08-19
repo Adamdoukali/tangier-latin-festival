@@ -418,6 +418,14 @@ export function PackBookingModal({
               const finalDiscount = isApplicable ? appliedDiscount : null;
               const finalDiscountAmt = isApplicable ? discountAmount : 0;
 
+              const guestsStructured = guestNames.map((gn) => {
+                const parts = gn.split(" ");
+                return {
+                  firstName: parts[0] || "",
+                  lastName: parts.slice(1).join(" ") || "",
+                };
+              });
+
               try {
                 created = await addBooking({
                   packId: pack.id ?? "",
@@ -429,6 +437,7 @@ export function PackBookingModal({
                   arrivalDate: String(formData.get("Arrival Date") ?? "") || null,
                   departureDate: String(formData.get("Departure Date") ?? "") || null,
                   numPeople: numGuests,
+                  guestDetails: JSON.stringify(guestsStructured),
                   danceLevel: "",
                   notes: String(formData.get("Notes") ?? ""),
                   lang,
@@ -506,8 +515,20 @@ export function PackBookingModal({
               <div className="space-y-4">
                 {Array.from({ length: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1) }).map((_, i) => (
                   <div key={i} className="space-y-2">
-                    <p className="text-xs font-bold tracking-wider uppercase text-amber-600">
-                      {lang === "fr" ? `Invité ${i + 1}` : lang === "es" ? `Invitado ${i + 1}` : `Guest ${i + 1}`}
+                    <p className="text-xs font-bold tracking-wider uppercase text-amber-600 flex items-center gap-1.5">
+                      <span>
+                        {lang === "fr"
+                          ? i === 0
+                            ? "1er Invité (Participant Principal)"
+                            : "2ème Invité (Participant Chambre)"
+                          : lang === "es"
+                          ? i === 0
+                            ? "1er Huésped (Participante Principal)"
+                            : "2º Huésped (Participante Habitación)"
+                          : i === 0
+                          ? "First Guest (Lead Participant)"
+                          : "Second Guest (Roommate / Participant)"}
+                      </span>
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>

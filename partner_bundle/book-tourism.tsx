@@ -480,6 +480,7 @@ function BookTourismPage() {
     let created: Booking | null = null;
     try {
       created = await addBooking({
+        ticketCode: matchedFestivalBooking?.ticketCode,
         packId: selectedTour.id,
         packName: `Tourism: ${selectedTour.city} (${selectedTour.date[L] || selectedTour.date.en})`,
         customerName,

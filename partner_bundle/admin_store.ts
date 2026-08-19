@@ -965,9 +965,9 @@ export async function getBookingByTicketCode(code: string): Promise<Booking | un
 }
 
 export async function addBooking(
-  booking: Omit<Booking, "id" | "ticketCode" | "createdAt">
+  booking: Omit<Booking, "id" | "ticketCode" | "createdAt"> & { ticketCode?: string }
 ): Promise<Booking> {
-  const ticketCode = generateTicketCode();
+  const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
   if (booking.discountCode) {
     incrementDiscountUsage(booking.discountCode).catch(() => {});
   }
