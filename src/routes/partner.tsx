@@ -985,7 +985,7 @@ function buildUnifiedReservations(
       nights: festBooking ? getNights(festBooking, pack || undefined) : null,
       arrivalDate: festBooking?.arrivalDate || null,
       departureDate: festBooking?.departureDate || null,
-      festivalCommission,
+      festivalCommission: festCommission,
       tours,
       totalTourismPrice,
       totalTourismCommission,
