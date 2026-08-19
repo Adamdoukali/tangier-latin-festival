@@ -1015,6 +1015,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [refQr, setRefQr] = useState("");
   const [tourismQr, setTourismQr] = useState("");
+  const [showMobileStats, setShowMobileStats] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTab, setFilterTab] = useState<"all" | "hotel" | "tours" | "shuttle">("all");
@@ -1287,367 +1288,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* 3 COLOR-CODED RECTANGLES                                        */}
-        {/* 1. YELLOWISH RECTANGLE: Shambadoob, Single, Footpath           */}
-        {/* 2. BLUE RECTANGLE: Asilah, Tanjel, Chefchaouen                  */}
-        {/* 3. GREY RECTANGLE: Navettes (Port, Airport, Shuttle)            */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="space-y-5">
-          {/* 1. YELLOWISH RECTANGLE — FESTIVAL ROOMS & PASSES */}
-          <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-yellow-50/70 to-amber-100/50 p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-amber-200/80 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-amber-500 text-white grid place-items-center shadow-xs">
-                  <Bed className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-black text-amber-950">
-                    {tr("Festival Rooms & Passes", "Chambres & Pass Festival", "Habitaciones y Pases de Festival")}
-                  </h3>
-                  <p className="text-xs text-amber-800/80 font-medium">
-                    {tr(
-                      "Double rooms, single rooms & full pass without hotel",
-                      "Chambres doubles, chambres single & full pass sans chambre",
-                      "Habitaciones dobles, individuales y full pass"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-950 font-bold border border-amber-300">
-                  {liveFestival.length} {tr("Bookings", "Réservations", "Reservas")}
-                </span>
-                <span className="px-3 py-1 rounded-xl bg-amber-600 text-white font-extrabold shadow-2xs">
-                  {tr("Comm:", "Com :", "Com:")} {formatForPartner(festEarned, partner)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-              {/* Chambre Double (Shambadoob) */}
-              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-amber-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Double Room", "Chambre Double", "Hab. Doble")}
-                  </span>
-                  <Bed className="h-4 w-4 text-amber-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-amber-950">
-                  {doubleRoomCount}
-                </p>
-                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                  {tr("1st & 2nd guests", "1er & 2ème invités", "1º y 2º huéspedes")}
-                </span>
-              </div>
-
-              {/* Chambre Single */}
-              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-amber-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Single Room", "Chambre Single", "Hab. Individual")}
-                  </span>
-                  <Users className="h-4 w-4 text-amber-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-amber-950">
-                  {singleRoomCount}
-                </p>
-                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                  {tr("1 guest / room", "1 invité / chambre", "1 huésped / hab.")}
-                </span>
-              </div>
-
-              {/* Full Pass (Footpath) */}
-              <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-amber-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Full Pass", "Full Pass Seul", "Full Pass")}
-                  </span>
-                  <Ticket className="h-4 w-4 text-amber-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-amber-950">
-                  {fullPassCount}
-                </p>
-                <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                  {tr("Without hotel room", "Sans chambre d'hôtel", "Sin habitación")}
-                </span>
-              </div>
-
-              {/* Festival Sales */}
-              <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-amber-100">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Festival Sales", "Ventes Festival", "Ventas Festival")}
-                  </span>
-                  <Euro className="h-4 w-4 text-white" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-white">
-                  {formatForPartner(festSales, partner)}
-                </p>
-                <span className="text-[11px] text-amber-100 font-medium block mt-0.5">
-                  {ticketsSold} {tr("passengers", "participants", "participantes")}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. BLUE RECTANGLE — CULTURAL TOURS & EXCURSIONS */}
-          <div className="rounded-3xl border-2 border-blue-300 bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/50 p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-blue-200/80 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center shadow-xs">
-                  <Compass className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-black text-blue-950">
-                    {tr("Cultural Tours & Excursions", "Excursions Culturelles (Tours)", "Excursiones Culturales (Tours)")}
-                  </h3>
-                  <p className="text-xs text-blue-800/80 font-medium">
-                    {tr(
-                      "Guided excursions to Asilah, Tangier & Chefchaouen (+5 € / passenger commission)",
-                      "Visites guidées : Asilah, Tanger et Chefchaouen (+5 € / passager de commission)",
-                      "Tours guiados a Asilah, Tánger y Chefchaouen (+5 € / pasajero de comisión)"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                <span className="px-3 py-1 rounded-xl bg-blue-200/80 text-blue-950 font-bold border border-blue-300">
-                  {totalExcursionPassengers} {tr("Passengers", "Passagers", "Pasajeros")}
-                </span>
-                <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-extrabold shadow-2xs">
-                  +{totalTourCommission} € {tr("Commission", "Commission", "Comisión")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-              {/* Asilah Tour */}
-              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-blue-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    Asilah Tour
-                  </span>
-                  <MapPin className="h-4 w-4 text-cyan-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-blue-950">
-                  {asilahTourCount}
-                </p>
-                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                  25 € / {tr("passenger", "passager", "pasajero")}
-                </span>
-              </div>
-
-              {/* Tangier Tour */}
-              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-blue-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    Tangier Tour
-                  </span>
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-blue-950">
-                  {tangierTourCount}
-                </p>
-                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                  15 € / {tr("passenger", "passager", "pasajero")}
-                </span>
-              </div>
-
-              {/* Chefchaouen Tour */}
-              <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-blue-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    Chefchaouen
-                  </span>
-                  <MapPin className="h-4 w-4 text-indigo-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-blue-950">
-                  {chefchaouenTourCount}
-                </p>
-                <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                  30 € / {tr("passenger", "passager", "pasajero")}
-                </span>
-              </div>
-
-              {/* Tours Total Revenue */}
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-blue-100">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Tours Revenue", "Total Excursions", "Total Tours")}
-                  </span>
-                  <Euro className="h-4 w-4 text-white" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-white">
-                  {totalTourRevenue} €
-                </p>
-                <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
-                  +{totalTourCommission} € {tr("your commission", "votre com.", "tu comisión")}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3. GREY RECTANGLE — SHUTTLE BUS & TRANSFERS */}
-          <div className="rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-slate-100 via-gray-100/90 to-zinc-200/60 p-5 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-300/80 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-slate-700 text-white grid place-items-center shadow-xs">
-                  <Bus className="h-5 w-5" />
-                </div>
-                <div>
-                  <h3 className="font-display text-base font-black text-slate-900">
-                    {tr("Shuttle Bus & Transfers (Navettes)", "Navettes Bus & Transferts", "Shuttle Bus y Traslados")}
-                  </h3>
-                  <p className="text-xs text-slate-600 font-medium">
-                    {tr(
-                      "Port and Airport pickups & round-trip schedules",
-                      "Prise en charge Port & Aéroport avec gestion des horaires",
-                      "Recogidas en Puerto y Aeropuerto con horarios de viaje"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-wrap text-xs">
-                <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-800 font-bold border border-slate-300">
-                  {liveShuttle.length} {tr("Transfers", "Transferts", "Traslados")}
-                </span>
-                <span className="px-3 py-1 rounded-xl bg-slate-800 text-white font-extrabold shadow-2xs">
-                  {totalShuttleRevenue} € {tr("Total", "Total", "Total")}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-              {/* Port Shuttle */}
-              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Port Shuttle", "Navette Port", "Shuttle Puerto")}
-                  </span>
-                  <Ship className="h-4 w-4 text-slate-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                  {portShuttleCount}
-                </p>
-                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                  {tr("Port Tanger Ville", "Port Tanger Ville", "Puerto Tanger Ville")}
-                </span>
-              </div>
-
-              {/* Airport Shuttle */}
-              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Airport Shuttle", "Navette Aéroport", "Shuttle Aerop.")}
-                  </span>
-                  <Plane className="h-4 w-4 text-slate-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                  {airportShuttleCount}
-                </p>
-                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                  {tr("Tanger (TNG) / Tétouan", "Tanger (TNG) / Tétouan", "Tánger / Tetuán")}
-                </span>
-              </div>
-
-              {/* Total Shuttle Passengers */}
-              <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-700">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Total Passengers", "Total Passagers", "Total Pasajeros")}
-                  </span>
-                  <Users className="h-4 w-4 text-slate-600" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-slate-900">
-                  {totalShuttlePassengers}
-                </p>
-                <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
-                  {tr("In transit", "En transit", "En tránsito")}
-                </span>
-              </div>
-
-              {/* Total Transfer Money */}
-              <div className="bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center justify-between text-slate-200">
-                  <span className="text-[10px] font-black uppercase tracking-wider">
-                    {tr("Transfer Total", "Total Transferts", "Total Traslados")}
-                  </span>
-                  <Euro className="h-4 w-4 text-white" />
-                </div>
-                <p className="mt-2 font-display text-2xl font-black text-white">
-                  {totalShuttleRevenue} €
-                </p>
-                <span className="text-[11px] text-slate-200 font-medium block mt-0.5">
-                  {liveShuttle.length} {tr("bookings", "réservations", "reservas")}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* BONUS MISSION                                                   */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {(partner.missionGoal ?? 0) > 0 &&
-          (() => {
-            const goal = partner.missionGoal!;
-            const progress = Math.min(ticketsSold, goal);
-            const achieved = ticketsSold >= goal;
-            const reward = formatMoney(partner.missionReward ?? 0, partner.missionCurrency);
-            return (
-              <div
-                className={`rounded-3xl border-2 p-5 ${
-                  achieved
-                    ? "border-emerald-300 bg-emerald-50"
-                    : "border-amber-300 bg-amber-50"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <h3 className="font-display text-sm tracking-wide flex items-center gap-2">
-                    <Trophy
-                      className={`h-4 w-4 ${achieved ? "text-emerald-600" : "text-amber-600"}`}
-                    />
-                    {achieved
-                      ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
-                      : tr("Your Mission", "Votre mission", "Tu misión")}
-                  </h3>
-                  <span
-                    className={`text-xs font-semibold ${
-                      achieved ? "text-emerald-700" : "text-amber-700"
-                    }`}
-                  >
-                    {progress}/{goal}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-sm text-gray-600">
-                  {achieved
-                    ? tr(
-                        `You brought ${ticketsSold} people — you've won ${reward}! The festival team will contact you about your reward.`,
-                        `Vous avez amené ${ticketsSold} personnes — vous avez gagné ${reward} ! L'équipe du festival vous contactera pour votre récompense.`,
-                        `Has traído ${ticketsSold} personas — ¡has ganado ${reward}! El equipo del festival te contactará por tu recompensa.`
-                      )
-                    : tr(
-                        `Bring ${goal} ${goal === 1 ? "person" : "people"} to the festival and win ${reward}. Your commission starts on the sales you make after completing the mission.`,
-                        `Amenez ${goal} personne${goal === 1 ? "" : "s"} au festival et gagnez ${reward}. Votre commission démarre sur les ventes réalisées après avoir accompli la mission.`,
-                        `Trae ${goal} persona${goal === 1 ? "" : "s"} al festival y gana ${reward}. Tu comisión empieza con las ventes que hagas después de completar la misión.`
-                      )}
-                </p>
-                <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      achieved ? "bg-emerald-500" : "bg-amber-500"
-                    }`}
-                    style={{ width: `${Math.min(100, (progress / goal) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })()}
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SELLING REFERRAL LINKS                                          */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="space-y-4">
@@ -1796,6 +1436,336 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 </p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* 2. SALES & PERFORMANCE STATS (Expandable on Mobile, Direct on Desktop) */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="space-y-4">
+          {/* Mobile Expandable Toggle Button */}
+          <div className="block sm:hidden">
+            <button
+              type="button"
+              onClick={() => setShowMobileStats((prev) => !prev)}
+              className={`w-full py-3.5 px-4 rounded-2xl border-2 font-bold text-xs flex items-center justify-between transition cursor-pointer shadow-xs ${
+                showMobileStats
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-gradient-to-r from-amber-50 via-yellow-50 to-blue-50 text-slate-900 border-amber-300"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-amber-500" />
+                <span>
+                  {showMobileStats
+                    ? tr("Hide Sales & Performance Stats", "Masquer mes statistiques", "Ocultar estadísticas")
+                    : tr("📊 View Sales & Performance Stats", "📊 Voir mes statistiques & ventes", "📊 Ver mis ventas y estadísticas")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">
+                  {unifiedReservations.length} {tr("Clients", "Clients", "Clientes")}
+                </span>
+                {showMobileStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
+            </button>
+          </div>
+
+          {/* 3 COLOR-CODED RECTANGLES */}
+          <div className={`${showMobileStats ? "block space-y-4" : "hidden sm:block sm:space-y-5"}`}>
+            {/* 1. YELLOWISH RECTANGLE — FESTIVAL ROOMS & PASSES */}
+            <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-yellow-50/70 to-amber-100/50 p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-amber-200/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-amber-500 text-white grid place-items-center shadow-xs">
+                    <Bed className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base font-black text-amber-950">
+                      {tr("Festival Rooms & Passes", "Chambres & Pass Festival", "Habitaciones y Pases de Festival")}
+                    </h3>
+                    <p className="text-xs text-amber-800/80 font-medium">
+                      {tr(
+                        "Double rooms, single rooms & full pass without hotel",
+                        "Chambres doubles, chambres single & full pass sans chambre",
+                        "Habitaciones dobles, individuales y full pass"
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="px-3 py-1 rounded-xl bg-amber-200/80 text-amber-950 font-bold border border-amber-300">
+                    {liveFestival.length} {tr("Bookings", "Réservations", "Reservas")}
+                  </span>
+                  <span className="px-3 py-1 rounded-xl bg-amber-600 text-white font-extrabold shadow-2xs">
+                    {tr("Comm:", "Com :", "Com:")} {formatForPartner(festEarned, partner)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                {/* Chambre Double (Shambadoob) */}
+                <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-amber-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Double Room", "Chambre Double", "Hab. Doble")}
+                    </span>
+                    <Bed className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                    {doubleRoomCount}
+                  </p>
+                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                    {tr("1st & 2nd guests", "1er & 2ème invités", "1º y 2º huéspedes")}
+                  </span>
+                </div>
+
+                {/* Chambre Single */}
+                <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-amber-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Single Room", "Chambre Single", "Hab. Individual")}
+                    </span>
+                    <Users className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                    {singleRoomCount}
+                  </p>
+                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                    {tr("1 guest / room", "1 invité / chambre", "1 huésped / hab.")}
+                  </span>
+                </div>
+
+                {/* Full Pass (Footpath) */}
+                <div className="bg-white/95 rounded-2xl border-2 border-amber-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-amber-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Full Pass", "Full Pass Seul", "Full Pass")}
+                    </span>
+                    <Ticket className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-amber-950">
+                    {fullPassCount}
+                  </p>
+                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
+                    {tr("Without hotel room", "Sans chambre d'hôtel", "Sin habitación")}
+                  </span>
+                </div>
+
+                {/* Festival Sales */}
+                <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-amber-100">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Festival Sales", "Ventes Festival", "Ventas Festival")}
+                    </span>
+                    <Euro className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-white">
+                    {formatForPartner(festSales, partner)}
+                  </p>
+                  <span className="text-[11px] text-amber-100 font-medium block mt-0.5">
+                    {ticketsSold} {tr("passengers", "participants", "participantes")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. BLUE RECTANGLE — CULTURAL TOURS & EXCURSIONS */}
+            <div className="rounded-3xl border-2 border-blue-300 bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/50 p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-blue-200/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center shadow-xs">
+                    <Compass className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base font-black text-blue-950">
+                      {tr("Cultural Tours & Excursions", "Excursions Culturelles (Tours)", "Excursiones Culturales (Tours)")}
+                    </h3>
+                    <p className="text-xs text-blue-800/80 font-medium">
+                      {tr(
+                        "Guided excursions to Asilah, Tangier & Chefchaouen (+5 € / passenger commission)",
+                        "Visites guidées : Asilah, Tanger et Chefchaouen (+5 € / passager de commission)",
+                        "Tours guiados a Asilah, Tánger y Chefchaouen (+5 € / pasajero de comisión)"
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="px-3 py-1 rounded-xl bg-blue-200/80 text-blue-950 font-bold border border-blue-300">
+                    {totalExcursionPassengers} {tr("Passengers", "Passagers", "Pasajeros")}
+                  </span>
+                  <span className="px-3 py-1 rounded-xl bg-emerald-600 text-white font-extrabold shadow-2xs">
+                    +{totalTourCommission} € {tr("Commission", "Commission", "Comisión")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                {/* Asilah Tour */}
+                <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-blue-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      Asilah Tour
+                    </span>
+                    <MapPin className="h-4 w-4 text-cyan-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                    {asilahTourCount}
+                  </p>
+                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                    25 € / {tr("passenger", "passager", "pasajero")}
+                  </span>
+                </div>
+
+                {/* Tangier Tour */}
+                <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-blue-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      Tangier Tour
+                    </span>
+                    <MapPin className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                    {tangierTourCount}
+                  </p>
+                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                    15 € / {tr("passenger", "passager", "pasajero")}
+                  </span>
+                </div>
+
+                {/* Chefchaouen Tour */}
+                <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-blue-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      Chefchaouen
+                    </span>
+                    <MapPin className="h-4 w-4 text-indigo-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-blue-950">
+                    {chefchaouenTourCount}
+                  </p>
+                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
+                    30 € / {tr("passenger", "passager", "pasajero")}
+                  </span>
+                </div>
+
+                {/* Tours Total Revenue */}
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-blue-100">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Tours Revenue", "Total Excursions", "Total Tours")}
+                    </span>
+                    <Euro className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-white">
+                    {totalTourRevenue} €
+                  </p>
+                  <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
+                    +{totalTourCommission} € {tr("your commission", "votre com.", "tu comisión")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. GREY RECTANGLE — SHUTTLE BUS & TRANSFERS */}
+            <div className="rounded-3xl border-2 border-slate-300 bg-gradient-to-br from-slate-100 via-gray-100/90 to-zinc-200/60 p-5 sm:p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-slate-300/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-slate-700 text-white grid place-items-center shadow-xs">
+                    <Bus className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-base font-black text-slate-900">
+                      {tr("Shuttle Bus & Transfers (Navettes)", "Navettes Bus & Transferts", "Shuttle Bus y Traslados")}
+                    </h3>
+                    <p className="text-xs text-slate-600 font-medium">
+                      {tr(
+                        "Port and Airport pickups & round-trip schedules",
+                        "Prise en charge Port & Aéroport avec gestion des horaires",
+                        "Recogidas en Puerto y Aeropuerto con horarios de viaje"
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap text-xs">
+                  <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-800 font-bold border border-slate-300">
+                    {liveShuttle.length} {tr("Transfers", "Transferts", "Traslados")}
+                  </span>
+                  <span className="px-3 py-1 rounded-xl bg-slate-800 text-white font-extrabold shadow-2xs">
+                    {totalShuttleRevenue} € {tr("Total", "Total", "Total")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+                {/* Port Shuttle */}
+                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-slate-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Port Shuttle", "Navette Port", "Shuttle Puerto")}
+                    </span>
+                    <Ship className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                    {portShuttleCount}
+                  </p>
+                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                    {tr("Port Tanger Ville", "Port Tanger Ville", "Puerto Tanger Ville")}
+                  </span>
+                </div>
+
+                {/* Airport Shuttle */}
+                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-slate-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Airport Shuttle", "Navette Aéroport", "Shuttle Aerop.")}
+                    </span>
+                    <Plane className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                    {airportShuttleCount}
+                  </p>
+                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                    {tr("Tanger (TNG) / Tétouan", "Tanger (TNG) / Tétouan", "Tánger / Tetuán")}
+                  </span>
+                </div>
+
+                {/* Total Shuttle Passengers */}
+                <div className="bg-white/95 rounded-2xl border-2 border-slate-200 p-4 shadow-2xs">
+                  <div className="flex items-center justify-between text-slate-700">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Total Passengers", "Total Passagers", "Total Pasajeros")}
+                    </span>
+                    <Users className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-slate-900">
+                    {totalShuttlePassengers}
+                  </p>
+                  <span className="text-[11px] text-slate-600 font-semibold block mt-0.5">
+                    {tr("In transit", "En transit", "En tránsito")}
+                  </span>
+                </div>
+
+                {/* Total Transfer Money */}
+                <div className="bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-slate-200">
+                    <span className="text-[10px] font-black uppercase tracking-wider">
+                      {tr("Transfer Total", "Total Transferts", "Total Traslados")}
+                    </span>
+                    <Euro className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="mt-2 font-display text-2xl font-black text-white">
+                    {totalShuttleRevenue} €
+                  </p>
+                  <span className="text-[11px] text-slate-200 font-medium block mt-0.5">
+                    {liveShuttle.length} {tr("bookings", "réservations", "reservas")}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
