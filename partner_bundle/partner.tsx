@@ -1840,14 +1840,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             {res.tours.length > 0 ? (
                               <div className="space-y-2">
                                 {res.tours.map((t, tIdx) => (
-                                  <div key={tIdx} className="bg-white/90 p-2 rounded-xl border border-blue-200">
-                                    <div className="flex items-center justify-between font-bold text-blue-950">
-                                      <span>{t.tourName}</span>
-                                      <span className="text-blue-900 font-extrabold">{t.totalPrice} €</span>
-                                    </div>
-                                    <p className="text-[11px] text-blue-800 mt-0.5">
-                                      {t.numPeople} {t.numPeople > 1 ? tr("participants", "participants", "participantes") : tr("participant", "participant", "participante")} · {t.pricePerPerson} €/pers
-                                    </p>
+                                  <div key={tIdx} className="bg-white/90 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between gap-3 font-bold text-blue-950">
+                                    <span>{t.tourName}</span>
+                                    <span className="text-blue-900 font-extrabold shrink-0">
+                                      {tr("Total:", "Total :", "Total:")} {t.totalPrice} €
+                                    </span>
                                   </div>
                                 ))}
                                 <p className="text-[11px] text-blue-900 font-semibold flex items-center gap-1">
