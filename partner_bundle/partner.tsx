@@ -1349,15 +1349,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       ? tr("Copied", "Copié", "Copiado")
                       : tr("Copy Link", "Copier le lien", "Copiar enlace")}
                   </button>
-                  <a
-                    href={getBookingUrl(partner.code, L)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs text-gray-500 hover:text-gray-900 border border-gray-200 hover:bg-gray-50 transition"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>{tr("Preview", "Aperçu", "Vista previa")}</span>
-                  </a>
                 </div>
               </div>
             </div>
@@ -1427,16 +1418,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       </>
                     )}
                   </button>
-
-                  <a
-                    href={getTourismBookingUrl(partner.code, L)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-blue-200 hover:text-white bg-blue-900/50 hover:bg-blue-800/80 border border-blue-400/30 transition cursor-pointer"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span>{tr("View Page", "Voir la page", "Ver página")}</span>
-                  </a>
                 </div>
               </div>
             </div>
@@ -1685,49 +1666,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   {unifiedReservations.length}
                 </span>
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {tr(
-                  "All your clients on one page — hotel room, 1st & 2nd participants & excursions grouped together.",
-                  "Tous vos clients sur une seule page — hôtel, 1er & 2ème participants et excursions regroupés ensemble.",
-                  "Todos tus clientes en una sola página — hotel, 1º y 2º participantes y excursiones juntos."
-                )}
-              </p>
-            </div>
-
-            {/* Color-Coded Filter Tabs */}
-            <div className="flex items-center gap-1.5 bg-gray-200/90 p-1.5 rounded-2xl text-xs font-bold">
-              <button
-                onClick={() => setFilterTab("all")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
-                  filterTab === "all"
-                    ? "bg-white text-gray-950 shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {tr("All", "Tous", "Todos")} ({unifiedReservations.length})
-              </button>
-              <button
-                onClick={() => setFilterTab("hotel")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                  filterTab === "hotel"
-                    ? "bg-amber-100 text-amber-950 border border-amber-300 shadow-xs font-black"
-                    : "text-amber-900 hover:bg-amber-50"
-                }`}
-              >
-                <Bed className="h-3.5 w-3.5 text-amber-600" />
-                <span>{tr("Chambres & Pass", "Chambres & Pass", "Habitaciones")}</span>
-              </button>
-              <button
-                onClick={() => setFilterTab("tours")}
-                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1 ${
-                  filterTab === "tours"
-                    ? "bg-blue-100 text-blue-950 border border-blue-300 shadow-xs font-black"
-                    : "text-blue-900 hover:bg-blue-50"
-                }`}
-              >
-                <Compass className="h-3.5 w-3.5 text-blue-600" />
-                <span>{tr("Tours (Asilah, Tanger)", "Tours", "Tours")} ({totalExcursionPassengers})</span>
-              </button>
             </div>
           </div>
 
