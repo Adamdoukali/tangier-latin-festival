@@ -1464,24 +1464,21 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             <button
               type="button"
               onClick={() => setShowMobileStats((prev) => !prev)}
-              className={`w-full py-3.5 px-4 rounded-2xl border-2 font-black text-xs flex items-center justify-between transition cursor-pointer shadow-lg ${
+              className={`w-full py-3.5 px-4 rounded-2xl border-2 font-black text-xs flex items-center justify-between transition cursor-pointer shadow-md ${
                 showMobileStats
                   ? "bg-slate-900 text-white border-slate-800"
-                  : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 animate-pulse shadow-red-500/40"
+                  : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 shadow-red-500/30"
               }`}
             >
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-white" />
                 <span>
                   {showMobileStats
-                    ? tr("Hide Details", "Masquer le détail", "Ocultar detalle")
-                    : tr("View Details", "Voir le détail", "Ver detalle")}
+                    ? tr("Hide Details of your Sales", "Masquer le détail de vos ventes", "Ocultar detalle de tus ventas")
+                    : tr("View Details of your Sales", "Voir le détail de vos ventes", "Ver detalle de tus ventas")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black bg-white text-red-700 px-2.5 py-0.5 rounded-full shadow-2xs">
-                  {unifiedReservations.length} {tr("Clients", "Clients", "Clientes")}
-                </span>
                 {showMobileStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </div>
             </button>
