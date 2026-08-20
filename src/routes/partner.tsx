@@ -1774,18 +1774,15 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       </div>
                     </div>
 
-                    {/* Expandable Master Details with Exact 3 Color-Coded Rectangles */}
+                    {/* Expandable Master Details */}
                     {isExpanded && (
                       <div className="border-t border-gray-200 bg-slate-50/90 p-4 sm:p-6 text-xs text-gray-700 space-y-4">
-                        {/* Expanded Top Meta: Ticket Code + Commission badge + QR link */}
+                        {/* Expanded Top Meta: Ticket Code + QR link */}
                         <div className="flex items-center justify-between gap-3 flex-wrap bg-white p-3 rounded-2xl border border-gray-200 shadow-2xs">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="inline-flex items-center gap-1 font-mono text-xs font-black bg-slate-900 text-amber-400 px-3 py-1.5 rounded-xl shadow-2xs">
                               <QrCode className="h-3.5 w-3.5 text-amber-400" />
                               <span>#{res.ticketCode}</span>
-                            </span>
-                            <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
-                              {res.totalCommission} € {tr("Partner Commission", "Commission partenaire", "Comisión socio")}
                             </span>
                           </div>
 
@@ -1813,10 +1810,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                   <Bed className="h-4 w-4 text-amber-600 shrink-0" />
                                   <span>{res.festivalLabel}</span>
                                 </p>
-                                <p className="text-amber-900 font-medium">
-                                  {res.nights ? `${res.nights} ${tr("Nights Stay", "Nuits", "Noches")}` : tr("Pass Duration", "Pass", "Pase")}
-                                  {res.arrivalDate && res.departureDate ? ` · ${new Date(res.arrivalDate).toLocaleDateString()} → ${new Date(res.departureDate).toLocaleDateString()}` : ""}
-                                </p>
+                                {packRoomCategory(res.festivalPack?.name || res.festivalLabel, 1) !== "fullpass" &&
+                                  !res.festivalLabel?.toLowerCase().includes("sans") &&
+                                  res.nights && (
+                                    <p className="text-amber-900 font-medium">
+                                      {`${res.nights} ${tr("Nights Stay", "Nuits", "Noches")}`}
+                                      {res.arrivalDate && res.departureDate ? ` · ${new Date(res.arrivalDate).toLocaleDateString()} → ${new Date(res.departureDate).toLocaleDateString()}` : ""}
+                                    </p>
+                                  )}
                                 <p className="text-amber-800">
                                   {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-amber-950 font-black">{res.festivalNetPrice} €</strong>
                                   {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-bold">(-{res.festivalDiscount} €)</span>}
@@ -1849,7 +1850,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                     </div>
                                     <p className="text-[11px] text-blue-800 mt-0.5">
                                       {t.numPeople} {t.numPeople > 1 ? tr("participants", "participants", "participantes") : tr("participant", "participant", "participante")} · {t.pricePerPerson} €/pers
-                                      {" · "}<strong className="text-emerald-700">+{t.commission} € {tr("Commission", "Com.", "Com.")}</strong>
                                     </p>
                                   </div>
                                 ))}
@@ -1860,7 +1860,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               </div>
                             ) : (
                               <p className="text-gray-400 italic mt-2">
-                                {tr("No excursions booked", "Aucune excursion réservée", "Sin excursiones reservadas")}
+                                {tr("No excursions booked", "Aucune excursion réservée", "Sin excursions reservadas")}
                               </p>
                             )}
                           </div>
