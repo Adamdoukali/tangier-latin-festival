@@ -1194,6 +1194,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const festDue = Math.max(0, totalFestivalSales - totalFestivalCommission);
   const tourDue = Math.max(0, totalTourRevenue - totalTourCommission);
 
+  const totalParticipantsCount = unifiedReservations
+    .filter((r) => r.status !== "declined")
+    .reduce((sum, r) => sum + Math.max(1, r.allGuests.length, r.festivalBooking?.numPeople || 1), 0);
+  const totalDisplayParticipants = Math.max(ticketsSold, totalParticipantsCount);
+
   const totalExcursionPassengers = unifiedReservations
     .filter((r) => r.status !== "declined")
     .reduce((sum, r) => sum + r.tours.reduce((ts, t) => ts + t.numPeople, 0), 0);
@@ -1252,17 +1257,17 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* TOP SUMMARY BAR (Total Clients, Total Sales, Total Commission & Total Due) */}
+        {/* TOP SUMMARY BAR (Total Participants, Total Sales, Total Commission & Total Due) */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* 1. Total Clients */}
+          {/* 1. Total Participants */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-extrabold text-gray-500">
-                {tr("Total Clients", "Total Clients Inscrits", "Total Clientes")}
+                {tr("Total Participants", "Total Participants", "Total Participantes")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-slate-900">
-                {unifiedReservations.length}
+                {totalDisplayParticipants}
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-blue-50 border border-blue-200 grid place-items-center">
