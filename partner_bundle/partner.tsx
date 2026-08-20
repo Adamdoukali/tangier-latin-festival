@@ -1502,9 +1502,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-amber-950">
                     {doubleRoomCount}
                   </p>
-                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                    {tr("1st & 2nd participants", "1er & 2ème participants", "1º y 2º participantes")}
-                  </span>
                 </div>
 
                 {/* Chambre Single */}
@@ -1518,9 +1515,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-amber-950">
                     {singleRoomCount}
                   </p>
-                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                    {tr("1 participant / room", "1 participant / chambre", "1 participante / hab.")}
-                  </span>
                 </div>
 
                 {/* Full Pass (Footpath) */}
@@ -1534,9 +1528,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-amber-950">
                     {fullPassCount}
                   </p>
-                  <span className="text-[11px] text-amber-700 font-semibold block mt-0.5">
-                    {tr("Without hotel room", "Sans chambre d'hôtel", "Sin habitación")}
-                  </span>
                 </div>
 
                 {/* Festival Sales */}
@@ -1550,9 +1541,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-white">
                     {formatForPartner(festSales, partner)}
                   </p>
-                  <span className="text-[11px] text-amber-100 font-medium block mt-0.5">
-                    {ticketsSold} {tr("participants", "participants", "participantes")}
-                  </span>
                 </div>
               </div>
             </div>
@@ -1590,9 +1578,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-blue-950">
                     {asilahTourCount}
                   </p>
-                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    25 € / {tr("participant", "participant", "participante")}
-                  </span>
                 </div>
 
                 {/* Tangier Tour */}
@@ -1606,9 +1591,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-blue-950">
                     {tangierTourCount}
                   </p>
-                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    15 € / {tr("participant", "participant", "participante")}
-                  </span>
                 </div>
 
                 {/* Chefchaouen Tour */}
@@ -1622,9 +1604,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-blue-950">
                     {chefchaouenTourCount}
                   </p>
-                  <span className="text-[11px] text-blue-700 font-semibold block mt-0.5">
-                    30 € / {tr("participant", "participant", "participante")}
-                  </span>
                 </div>
 
                 {/* Tours Total Revenue */}
@@ -1638,9 +1617,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 font-display text-2xl font-black text-white">
                     {totalTourRevenue} €
                   </p>
-                  <span className="text-[11px] text-blue-100 font-medium block mt-0.5">
-                    {totalExcursionPassengers} {tr("participants", "participants", "participantes")}
-                  </span>
                 </div>
               </div>
             </div>
