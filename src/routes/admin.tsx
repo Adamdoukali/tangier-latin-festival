@@ -91,12 +91,12 @@ function AdminLayout() {
 
       {/* Sidebar — classic navy like the exhibitor portals */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#13234d] flex flex-col transition-transform duration-300 lg:relative lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#13234d] flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:self-start shrink-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center">
               <span className="font-display text-sm text-white font-bold">T</span>
@@ -119,7 +119,7 @@ function AdminLayout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const active = isActive(item.to, item.exact);
             return (
@@ -141,7 +141,7 @@ function AdminLayout() {
         </nav>
 
         {/* Back to site */}
-        <div className="px-3 py-4 border-t border-white/10 space-y-1">
+        <div className="px-3 py-4 border-t border-white/10 space-y-1 shrink-0">
           <Link
             to="/"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition"
