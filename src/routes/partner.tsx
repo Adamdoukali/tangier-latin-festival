@@ -1259,9 +1259,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               <p className="mt-1 font-display text-3xl font-black text-slate-900">
                 {unifiedReservations.length}
               </p>
-              <p className="text-xs text-gray-400 font-medium mt-0.5">
-                {ticketsSold} {tr("registered attendees", "participants enregistrés", "asistentes registrados")}
-              </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-blue-50 border border-blue-200 grid place-items-center">
               <Users className="h-6 w-6 text-blue-600" />
@@ -1864,81 +1861,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               </p>
                             )}
                           </div>
-                        </div>
-
-                        {/* Full Participants List & Contacts */}
-                        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-2xs space-y-2.5">
-                          <div className="flex items-center justify-between gap-3 flex-wrap">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                              {tr("Full Participants List & Contacts", "Liste des participants & Coordonnées", "Lista de participantes y Contactos")}
-                            </span>
-                            <div className="flex items-center gap-4 text-xs text-gray-600 flex-wrap">
-                              {res.email && (
-                                <a href={`mailto:${res.email}`} className="flex items-center gap-1 hover:text-amber-700 transition">
-                                  <Mail className="h-3.5 w-3.5 text-gray-400" />
-                                  <span>{res.email}</span>
-                                </a>
-                              )}
-                              {res.phone && (
-                                <a href={`tel:${res.phone}`} className="flex items-center gap-1 hover:text-amber-700 transition">
-                                  <Phone className="h-3.5 w-3.5 text-gray-400" />
-                                  <span>{res.phone}</span>
-                                </a>
-                              )}
-                              {res.country && (
-                                <span className="inline-flex items-center gap-1 text-gray-500">
-                                  <span>🌍 {res.country}</span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {/* Explicit First Participant Badge */}
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-950 font-bold text-xs border border-amber-300">
-                              <span className="text-[10px] uppercase tracking-wider text-amber-700 font-black">
-                                {tr("1st Participant (Lead):", "1er Participant (Principal) :", "1er Participante (Principal):")}
-                              </span>
-                              <span>{res.guest1}</span>
-                            </span>
-
-                            {/* Explicit Second Participant Badge */}
-                            {res.guest2 && (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-950 font-bold text-xs border border-amber-300">
-                                <span className="text-[10px] uppercase tracking-wider text-amber-800 font-black">
-                                  {tr("2nd Participant (Room):", "2ème Participant (Chambre) :", "2º Participante (Habitación):")}
-                                </span>
-                                <span>{res.guest2}</span>
-                              </span>
-                            )}
-
-                            {/* Additional Participants */}
-                            {res.allGuests.slice(2).map((gName, gIdx) => (
-                              <span
-                                key={gIdx}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-gray-100 text-gray-800 font-semibold text-xs border border-gray-200"
-                              >
-                                <Users className="h-3 w-3 text-gray-500" />
-                                <span>{gName}</span>
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Notes */}
-                          {res.allNotes.length > 0 && (
-                            <div className="pt-2 border-t border-gray-100">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">
-                                {tr("Notes & Remarks:", "Notes & Remarques :", "Notas y Observaciones:")}
-                              </span>
-                              <div className="space-y-1">
-                                {res.allNotes.map((note, nIdx) => (
-                                  <p key={nIdx} className="text-xs text-gray-600 italic bg-gray-50 p-2 rounded-lg border border-gray-100">
-                                    {note}
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     )}
