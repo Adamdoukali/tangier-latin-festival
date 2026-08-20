@@ -32,6 +32,7 @@ import {
   Filter,
   Tag,
   TrendingUp,
+  Building2,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -1189,6 +1190,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalFestivalCommission = (partner.currency === "MAD" ? festEarned.mad : festEarned.eur) || 0;
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
 
+  const totalDueToFestival = Math.max(0, totalGrossSales - totalCombinedEarnings);
+  const festDue = Math.max(0, totalFestivalSales - totalFestivalCommission);
+  const tourDue = Math.max(0, totalTourRevenue - totalTourCommission);
+
   const totalExcursionPassengers = unifiedReservations
     .filter((r) => r.status !== "declined")
     .reduce((sum, r) => sum + r.tours.reduce((ts, t) => ts + t.numPeople, 0), 0);
@@ -1247,9 +1252,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* TOP SUMMARY BAR (Total Clients, Total Sales & Total Commission) */}
+        {/* TOP SUMMARY BAR (Total Clients, Total Sales, Total Commission & Total Due) */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 1. Total Clients */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs flex items-center justify-between">
             <div>
@@ -1298,6 +1303,24 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
               <Euro className="h-6 w-6 text-white" />
+            </div>
+          </div>
+
+          {/* 4. Total à verser au Festival (Red) */}
+          <div className="rounded-2xl border border-rose-300 bg-gradient-to-br from-red-600 via-rose-600 to-red-700 text-white p-5 shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider font-black text-rose-100">
+                {tr("Total Due to Festival", "Total à verser au Festival", "Total a pagar al Festival")}
+              </p>
+              <p className="mt-1 font-display text-3xl font-black text-white">
+                {totalDueToFestival} €
+              </p>
+              <p className="text-xs text-rose-100 font-medium mt-0.5">
+                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Tours", "Excursions", "Tours")})
+              </p>
+            </div>
+            <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
@@ -1441,22 +1464,22 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             <button
               type="button"
               onClick={() => setShowMobileStats((prev) => !prev)}
-              className={`w-full py-3.5 px-4 rounded-2xl border-2 font-bold text-xs flex items-center justify-between transition cursor-pointer shadow-xs ${
+              className={`w-full py-3.5 px-4 rounded-2xl border-2 font-black text-xs flex items-center justify-between transition cursor-pointer shadow-lg ${
                 showMobileStats
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-gradient-to-r from-amber-50 via-yellow-50 to-blue-50 text-slate-900 border-amber-300"
+                  ? "bg-slate-900 text-white border-slate-800"
+                  : "bg-gradient-to-r from-red-600 via-rose-600 to-red-600 text-white border-red-400 animate-pulse shadow-red-500/40"
               }`}
             >
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-amber-500" />
+                <Info className="h-4 w-4 text-white" />
                 <span>
                   {showMobileStats
-                    ? tr("Hide Sales & Performance Stats", "Masquer mes statistiques", "Ocultar estadísticas")
-                    : tr("📊 View Sales & Performance Stats", "📊 Voir mes statistiques & ventes", "📊 Ver mis ventas y estadísticas")}
+                    ? tr("Hide Details", "Masquer le détail", "Ocultar detalle")
+                    : tr("View Details", "Voir le détail", "Ver detalle")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-black bg-white text-red-700 px-2.5 py-0.5 rounded-full shadow-2xs">
                   {unifiedReservations.length} {tr("Clients", "Clients", "Clientes")}
                 </span>
                 {showMobileStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
