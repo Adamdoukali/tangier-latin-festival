@@ -117,7 +117,13 @@ export interface Booking {
   notes: string;
   /** ISO dates (YYYY-MM-DD) from the booking form; hotel planning */
   arrivalDate?: string | null;
+  /** Arrival time (HH:MM) e.g. flight/ferry landing time */
+  arrivalTime?: string | null;
   departureDate?: string | null;
+  /** Departure time (HH:MM) e.g. flight/ferry departure time */
+  departureTime?: string | null;
+  /** Company / Organisation name (dance school, agency, etc.) */
+  company?: string | null;
   /** Bracelet override — a single category or a JSON array with one
    *  category per guest (e.g. '["artist","hotel"]'); null = automatic */
   bracelet?: string | null;
@@ -1580,6 +1586,8 @@ export interface RedeemData {
   numPeople: number;
   danceLevel: string;
   notes: string;
+  arrivalDate?: string | null;
+  departureDate?: string | null;
 }
 
 export async function redeemInvite(
@@ -2164,7 +2172,7 @@ export function packRoomCategory(
 ): PackRoomCategory {
   if (!packOrName) {
     if (numGuests === 2) return "double";
-    if (numGuests && numGuests >= 3) return "special";
+    if (numGuests && numGuests >= 3) return "double"; // All 3+ guests assigned to double room
     if (numGuests === 1) return "single";
     return "fullpass";
   }
@@ -2187,13 +2195,13 @@ export function packRoomCategory(
 
   const combined = `${name} ${sub} ${category}`.toLowerCase();
 
-  // 1. 3+ guests or triple/quad/special
+  // 1. 3+ guests or triple/quad/special -> assign to double room
   if (
     (guests && guests >= 3) ||
     /triple|quadruple|quad|special|spécial|3\s*pers|4\s*pers|5\s*pers|6\s*pers/i.test(combined) ||
     /special\s*pack|pack\s*spécial/i.test(category)
   ) {
-    return "special";
+    return "double";
   }
 
   // 2. 2 guests or double room / couple / chambre double
@@ -2215,7 +2223,7 @@ export function packRoomCategory(
 
   // 4. If name/sub/category mentions hotel or room
   if (/hotel|room|chambre|nuit|night|hébergement|alojamiento/i.test(combined)) {
-    return guests === 2 ? "double" : guests && guests >= 3 ? "special" : "single";
+    return guests === 1 ? "single" : "double";
   }
 
   return "fullpass";
@@ -2226,11 +2234,10 @@ export function bookingPeopleCount(booking: Booking, packs?: Pack[]): number {
   const pack = packs?.find((p) => p.id === booking.packId);
   const cat = packRoomCategory(pack || booking.packName, booking.numPeople);
   const guestCount = booking.customerName.split(/\s*&\s*/).filter(Boolean).length;
-  let count = Math.max(booking.numPeople || 1, guestCount);
+  const expectedPackGuests = packGuestCount(pack);
+  let count = Math.max(booking.numPeople || 1, expectedPackGuests, guestCount);
   if (cat === "double") {
     count = Math.max(2, count);
-  } else if (cat === "special" && (booking.numPeople || 1) < 3) {
-    count = Math.max(3, count);
   }
   return count;
 }
@@ -2243,7 +2250,7 @@ export type BraceletCategory = "artist" | "hotel" | "fullpass";
  *  or JSON array per guest) win; otherwise automatic — room packs →
  *  hotel bracelet, everything else → full pass. */
 export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategory[] {
-  const count = Math.max(1, booking.numPeople || 1);
+  const count = Math.max(bookingPeopleCount(booking, packs), booking.numPeople || 1);
   const pack = packs.find((p) => p.id === booking.packId);
   const def: BraceletCategory =
     packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass" ? "fullpass" : "hotel";

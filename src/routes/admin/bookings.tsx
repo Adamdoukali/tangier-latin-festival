@@ -23,7 +23,11 @@ import {
   getPacks,
   getCollaborators,
   packLabel,
+  packGuestCount,
+  packPrice,
+  ROOM_TYPES,
   ticketUrl,
+  commissionLabel,
   type Booking,
   type BookingStatus,
   type Collaborator,
@@ -63,48 +67,86 @@ function AdminBookings() {
   // Form state
   const [form, setForm] = useState({
     packId: "",
+    collaboratorId: "",
     firstName: "",
     lastName: "",
+    company: "",
+    additionalGuests: "",
     email: "",
     phone: "",
     country: "",
     numPeople: 1,
     danceLevel: "Beginner",
-    arrival: "",
-    departure: "",
+    arrival: "2027-01-08",
+    arrivalTime: "",
+    departure: "2027-01-11",
+    departureTime: "",
+    roomNumber: "",
+    roomType: "",
     notes: "",
     status: "pending" as BookingStatus,
   });
 
   const resetForm = () => {
+    const initialPack = packs[0];
+    const initialGuests = initialPack ? packGuestCount(initialPack) : 1;
     setForm({
-      packId: packs[0]?.id ?? "",
+      packId: initialPack?.id ?? "",
+      collaboratorId: "",
       firstName: "",
       lastName: "",
+      company: "",
+      additionalGuests: "",
       email: "",
       phone: "",
       country: "",
-      numPeople: 1,
+      numPeople: initialGuests > 0 ? initialGuests : 1,
       danceLevel: "Beginner",
-      arrival: "",
-      departure: "",
+      arrival: "2027-01-08",
+      arrivalTime: "",
+      departure: "2027-01-11",
+      departureTime: "",
+      roomNumber: "",
+      roomType: "",
       notes: "",
       status: "pending",
     });
+  };
+
+  const onPackSelect = (packId: string) => {
+    const p = packs.find((x) => x.id === packId);
+    const guests = p ? packGuestCount(p) : 1;
+    setForm((prev) => ({
+      ...prev,
+      packId,
+      numPeople: guests > 0 ? guests : prev.numPeople,
+    }));
   };
 
   const handleCreate = async () => {
     if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim() || !form.arrival.trim() || !form.departure.trim() || !form.packId) return;
     const pack = packs.find((p) => p.id === form.packId);
 
-    const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`;
+    const leadName = `${form.firstName.trim()} ${form.lastName.trim()}`;
+    const extraNames = form.additionalGuests
+      .split(/\s*&\s*|\s*,\s*|\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const customerName = extraNames.length > 0 ? [leadName, ...extraNames].join(" & ") : leadName;
+
     await addBooking({
       ...form,
       customerName,
+      company: form.company.trim() || null,
       packName: packLabel(pack),
       arrivalDate: form.arrival || null,
+      arrivalTime: form.arrivalTime.trim() || null,
       departureDate: form.departure || null,
-      source: "manual",
+      departureTime: form.departureTime.trim() || null,
+      roomNumber: form.roomNumber.trim() || null,
+      roomType: form.roomType.trim() || null,
+      collaboratorId: form.collaboratorId.trim() || null,
+      source: form.collaboratorId.trim() ? "referral" : "manual",
     });
     setShowForm(false);
     await reload();
@@ -549,38 +591,72 @@ function AdminBookings() {
             <div className="space-y-4">
               {/* Pack Select */}
               <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Pack
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                  Pack / Pass <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={form.packId}
-                  onChange={(e) => setForm({ ...form, packId: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                  onChange={(e) => onPackSelect(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer font-medium"
                 >
                   <option value="">Select a pack</option>
-                  {/* Inactive packs stay hidden on the website but can be booked
-                      here — create one on the Packs page (e.g. 5+ nights) for
-                      special reservations. */}
                   {packs.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
-                      {p.active ? "" : "  · PRIVATE (admin only)"}
+                      {p.active ? "" : "  · PRIVATE"}
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-[11px] text-gray-500">
-                  Need a special reservation (e.g. more than 4 nights)? Create the pack on
-                  the Packs page with <span className="text-gray-600">Active off</span> — it
-                  stays hidden from the website but you can book it here.
+                {(() => {
+                  const selPack = packs.find((p) => p.id === form.packId);
+                  if (!selPack) return null;
+                  const unit = parseInt(selPack.price, 10) || 0;
+                  const total = unit * (form.numPeople || 1);
+                  return (
+                    <div className="mt-2 p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
+                      <div>
+                        <span className="font-semibold">{selPack.name}</span> · {selPack.category || "Pass"}
+                      </div>
+                      <div className="font-bold text-sm text-amber-950">
+                        {unit} {selPack.currency || "€"} / person
+                        {form.numPeople > 1 && (
+                          <span className="ml-1.5 text-xs text-amber-800 font-normal">
+                            (Total: {total} {selPack.currency || "€"})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Assign to Partner / Collaborator */}
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                  Assign to Partner / Collaborator
+                </label>
+                <select
+                  value={form.collaboratorId}
+                  onChange={(e) => setForm({ ...form, collaboratorId: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                >
+                  <option value="">Direct / Festival Official (No Partner)</option>
+                  {collaborators.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code}) — {commissionLabel(c)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  Assigning to a partner tracks sales and commission in their partner portal.
                 </p>
               </div>
 
-              {/* Name */}
-              {/* First Name & Last Name */}
+              {/* Lead Guest First Name & Last Name */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    First Name <span className="text-red-500">*</span>
+                    First Name (Lead Guest) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -595,7 +671,7 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Last Name <span className="text-red-500">*</span>
+                    Last Name (Lead Guest) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -609,6 +685,39 @@ function AdminBookings() {
                   />
                 </div>
               </div>
+
+              {/* Company Name */}
+              <div>
+                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                  Company / Organisation
+                </label>
+                <input
+                  type="text"
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  placeholder="e.g. Latin Dance Academy, Salsa Studios"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+
+              {/* Additional Guests if numPeople >= 2 */}
+              {form.numPeople >= 2 && (
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Additional Guests (Guest 2, 3...)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.additionalGuests}
+                    onChange={(e) => setForm({ ...form, additionalGuests: e.target.value })}
+                    placeholder="e.g. Maria Gonzalez, Carlos Gomez"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                  />
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    Separate additional guest full names with commas or &amp; to assign them individual hotel room and bracelet slots.
+                  </p>
+                </div>
+              )}
 
               {/* Email & Phone */}
               <div className="grid grid-cols-2 gap-3">
@@ -640,7 +749,6 @@ function AdminBookings() {
                 </div>
               </div>
 
-
               {/* Country & People */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -658,8 +766,8 @@ function AdminBookings() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Number of People
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Number of Guests (Pax) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -668,12 +776,45 @@ function AdminBookings() {
                     onChange={(e) =>
                       setForm({ ...form, numPeople: parseInt(e.target.value) || 1 })
                     }
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition font-bold"
                   />
                 </div>
               </div>
 
-              {/* Arrival & Departure */}
+              {/* Hotel Room Number & Room Type */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                    Hotel Room Nº (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={form.roomNumber}
+                    onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
+                    placeholder="e.g. 214"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                    Hotel Room Type (Optional)
+                  </label>
+                  <select
+                    value={form.roomType}
+                    onChange={(e) => setForm({ ...form, roomType: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                  >
+                    <option value="">— Select room type —</option>
+                    {ROOM_TYPES.map((rt) => (
+                      <option key={rt.id} value={rt.label}>
+                        {rt.label} {rt.capacity ? `(${rt.capacity})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Arrival Date & Time */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
@@ -691,6 +832,22 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Arrival Time
+                  </label>
+                  <input
+                    type="time"
+                    value={form.arrivalTime}
+                    onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })}
+                    placeholder="e.g. 14:00"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+
+              {/* Departure Date & Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
                     Departure Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -703,47 +860,70 @@ function AdminBookings() {
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Departure Time
+                  </label>
+                  <input
+                    type="time"
+                    value={form.departureTime}
+                    onChange={(e) => setForm({ ...form, departureTime: e.target.value })}
+                    placeholder="e.g. 18:00"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
               </div>
 
-
-              {/* Dance Level */}
-              <div>
-                <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Dance Level
-                </label>
-                <select
-                  value={form.danceLevel}
-                  onChange={(e) =>
-                    setForm({ ...form, danceLevel: e.target.value })
-                  }
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
-                >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Professional">Professional</option>
-                </select>
+              {/* Dance Level & Initial Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                    Dance Level
+                  </label>
+                  <select
+                    value={form.danceLevel}
+                    onChange={(e) =>
+                      setForm({ ...form, danceLevel: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                    <option value="Professional">Professional</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
+                    Initial Status
+                  </label>
+                  <select
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm({ ...form, status: e.target.value as BookingStatus })
+                    }
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer font-semibold"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="checked-in">Checked In</option>
+                    <option value="declined">Declined</option>
+                  </select>
+                </div>
               </div>
 
-
-
-              {/* Status */}
+              {/* Notes */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Initial Status
+                  Notes &amp; Special Requests
                 </label>
-                <select
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value as BookingStatus })
-                  }
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="checked-in">Checked In</option>
-                  <option value="declined">Declined</option>
-                </select>
+                <input
+                  type="text"
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  placeholder="Special requirements, room preferences, etc."
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                />
               </div>
             </div>
 

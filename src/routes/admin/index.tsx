@@ -200,7 +200,7 @@ function AdminDashboard() {
       {(() => {
         const catOfClient = (c: ClientGuest) => {
           const p = allPacks.find((x) => x.id === c.packName || x.name === c.packName);
-          return packRoomCategory(p || c.packName, c.totalGuests);
+          return packRoomCategory(p || c.packName, 1);
         };
         const rowsData = [
           {

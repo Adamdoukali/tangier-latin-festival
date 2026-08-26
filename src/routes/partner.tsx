@@ -60,6 +60,7 @@ import {
   partnerTourismShareLink,
   packRoomCategory,
   formatTransferOptionLabel,
+  partnerCurrency,
   type Collaborator,
   type Pack,
   type Booking,
@@ -333,7 +334,7 @@ function LoginScreen({
             </form>
           </div>
           <div className="mt-6 text-center">
-            <Link to={lang && lang !== "en" ? `/?lang=${lang}` : "/"} className="text-xs text-gray-400 hover:text-gray-600 transition">
+            <Link to="/" search={lang && lang !== "en" ? { lang } : undefined} className="text-xs text-gray-400 hover:text-gray-600 transition">
               ← {tr("Back to the festival website", "Retour au site du festival", "Volver al sitio web del festival")}
             </Link>
           </div>
@@ -846,74 +847,50 @@ function buildUnifiedReservations(
   discounts: DiscountCode[],
   L: Language
 ): UnifiedClientBooking[] {
-  const groups: Booking[][] = [];
-  const visited = new Set<string>();
+  const festivalBookings = bookings.filter((b) => !isTourismBooking(b));
+  const tourismBookings = bookings.filter(isTourismBooking);
 
-  for (const b of bookings) {
-    if (visited.has(b.id)) continue;
+  const attachedTourIds = new Set<string>();
 
-    const group: Booking[] = [b];
-    visited.add(b.id);
-
-    const bCode = (b.ticketCode || "").toUpperCase().trim();
-    const bPhone = normalizePhone(b.phone);
-    const bEmail = (b.email || "").toLowerCase().trim();
-    const bName = (b.customerName || "").toLowerCase().trim();
-
-    for (const other of bookings) {
-      if (visited.has(other.id)) continue;
-      const otherCode = (other.ticketCode || "").toUpperCase().trim();
-      const otherPhone = normalizePhone(other.phone);
-      const otherEmail = (other.email || "").toLowerCase().trim();
-      const otherNotes = (other.notes || "").toUpperCase();
-      const otherName = (other.customerName || "").toLowerCase().trim();
-
-      const matchesTicket = bCode && otherCode && bCode === otherCode;
-      const matchesNoteTicket =
-        (bCode && otherNotes.includes(bCode)) ||
-        (otherCode && (b.notes || "").toUpperCase().includes(otherCode));
-      const matchesPhone =
-        bPhone.length >= 6 &&
-        otherPhone.length >= 6 &&
-        (bPhone.endsWith(otherPhone.slice(-8)) || otherPhone.endsWith(bPhone.slice(-8)));
-      const matchesEmail = bEmail.length > 3 && otherEmail.length > 3 && bEmail === otherEmail;
-      const matchesName =
-        bName.length > 3 &&
-        otherName.length > 3 &&
-        (bName === otherName || bName.includes(otherName) || otherName.includes(bName));
-
-      if (matchesTicket || matchesNoteTicket || matchesPhone || matchesEmail || matchesName) {
-        group.push(other);
-        visited.add(other.id);
-      }
-    }
-    groups.push(group);
-  }
-
-  return groups.map((grp) => {
-    const festBooking = grp.find((b) => !isTourismBooking(b));
-    const primary = festBooking || grp[0];
-
-    const { guest1, guest2, allGuests } = extractGuests(primary);
-    const pack = festBooking ? packs.find((p) => p.id === festBooking.packId) : null;
-    const label = festBooking
-      ? translateDynamicText(pack ? packLabel(pack) : festBooking.packName, L)
-      : "";
+  // 1. Build a UnifiedClientBooking for EACH festival booking
+  const festivalReservations: UnifiedClientBooking[] = festivalBookings.map((fb) => {
+    const { guest1, guest2, allGuests } = extractGuests(fb);
+    const pack = packs.find((p) => p.id === fb.packId);
+    const label = translateDynamicText(pack ? packLabel(pack) : fb.packName, L);
 
     const festUnitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
-    const festGuests = festBooking ? festBooking.numPeople || 1 : 0;
+    const festGuests = fb.numPeople || 1;
     const festGross = festUnitPrice * festGuests;
-    const festDiscount = festBooking ? festBooking.discountAmount || 0 : 0;
+    const festDiscount = fb.discountAmount || 0;
     const festNet = Math.max(0, festGross - festDiscount);
 
     let festCommission = 0;
-    if (festBooking && festBooking.status !== "declined") {
-      const commMoney = collaboratorFestivalCommission(partner, [festBooking], packs, discounts);
-      festCommission = (partner.currency === "MAD" ? commMoney.mad : commMoney.eur) || 0;
+    if (fb.status !== "declined") {
+      const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts);
+      festCommission = (partnerCurrency(partner) === "MAD" ? commMoney.mad : commMoney.eur) || 0;
     }
 
-    const tourBookings = grp.filter((b) => isTourismBooking(b));
-    const tours = tourBookings.map((tb) => {
+    const fbCode = (fb.ticketCode || "").toUpperCase().trim();
+    const fbPhone = normalizePhone(fb.phone);
+    const fbEmail = (fb.email || "").toLowerCase().trim();
+
+    // Match tourism bookings that belong to this specific festival guest
+    const matchingTours = tourismBookings.filter((tb) => {
+      const tbCode = (tb.ticketCode || "").toUpperCase().trim();
+      const tbNotes = (tb.notes || "").toUpperCase();
+      const tbPhone = normalizePhone(tb.phone);
+      const tbEmail = (tb.email || "").toLowerCase().trim();
+
+      const matchTicket = (fbCode && tbCode && fbCode === tbCode) || (fbCode && tbNotes.includes(fbCode));
+      const matchEmail = fbEmail.length > 3 && tbEmail.length > 3 && fbEmail === tbEmail;
+      const matchPhone = fbPhone.length >= 6 && tbPhone.length >= 6 && (fbPhone.endsWith(tbPhone.slice(-8)) || tbPhone.endsWith(fbPhone.slice(-8)));
+
+      return matchTicket || matchEmail || matchPhone;
+    });
+
+    matchingTours.forEach((t) => attachedTourIds.add(t.id));
+
+    const tours = matchingTours.map((tb) => {
       const numPeople = tb.numPeople || 1;
       const unitPrice = getTourismPrice(tb.packId || tb.packName);
       const gross = unitPrice * numPeople;
@@ -934,9 +911,10 @@ function buildUnifiedReservations(
     const totalTourismPrice = tours.reduce((sum, t) => sum + t.totalPrice, 0);
     const totalTourismCommission = tours.reduce((sum, t) => sum + t.commission, 0);
 
-    const shuttleSource = grp.find(
-      (b) => b.needsTransfer || b.transferType || (b.transferCost && b.transferCost > 0)
-    );
+    const shuttleSource = fb.needsTransfer || fb.transferType || (fb.transferCost && fb.transferCost > 0)
+      ? fb
+      : matchingTours.find((b) => b.needsTransfer || b.transferType || (b.transferCost && b.transferCost > 0));
+
     const shuttle = shuttleSource
       ? {
           needsTransfer: true,
@@ -955,34 +933,33 @@ function buildUnifiedReservations(
     const totalAmount = festNet + totalTourismPrice + shuttleCost;
     const totalCommission = festCommission + totalTourismCommission;
 
-    const allNotes = grp
-      .map((b) => b.notes)
+    const allNotes = [fb.notes, ...matchingTours.map((t) => t.notes)]
       .filter((n): n is string => !!n && n.trim().length > 0);
 
-    const roomNumber = grp.find((b) => b.roomNumber)?.roomNumber || null;
+    const roomNumber = fb.roomNumber || matchingTours.find((b) => b.roomNumber)?.roomNumber || null;
 
     return {
-      id: primary.id,
-      ticketCode: primary.ticketCode,
-      customerName: primary.customerName,
+      id: fb.id,
+      ticketCode: fb.ticketCode,
+      customerName: fb.customerName,
       guest1,
       guest2,
       allGuests,
-      email: primary.email,
-      phone: primary.phone,
-      country: primary.country || "Morocco",
+      email: fb.email,
+      phone: fb.phone,
+      country: fb.country || "Morocco",
       roomNumber,
-      status: primary.status,
-      createdAt: primary.createdAt,
-      festivalBooking: festBooking || null,
+      status: fb.status,
+      createdAt: fb.createdAt,
+      festivalBooking: fb,
       festivalPack: pack,
       festivalLabel: label,
       festivalGrossPrice: festGross,
       festivalDiscount: festDiscount,
       festivalNetPrice: festNet,
-      nights: festBooking ? getNights(festBooking, pack || undefined) : null,
-      arrivalDate: festBooking?.arrivalDate || null,
-      departureDate: festBooking?.departureDate || null,
+      nights: getNights(fb, pack || undefined),
+      arrivalDate: fb.arrivalDate || null,
+      departureDate: fb.departureDate || null,
       festivalCommission: festCommission,
       tours,
       totalTourismPrice,
@@ -993,6 +970,70 @@ function buildUnifiedReservations(
       allNotes,
     };
   });
+
+  // 2. Standalone tourism bookings that weren't attached to any festival reservation
+  const standaloneTours: UnifiedClientBooking[] = tourismBookings
+    .filter((tb) => !attachedTourIds.has(tb.id))
+    .map((tb) => {
+      const { guest1, guest2, allGuests } = extractGuests(tb);
+      const numPeople = tb.numPeople || 1;
+      const unitPrice = getTourismPrice(tb.packId || tb.packName);
+      const gross = unitPrice * numPeople;
+      const comm = tb.status !== "declined" ? numPeople * 5 : 0;
+
+      const tours = [
+        {
+          booking: tb,
+          tourName: tb.packName,
+          city: tb.packName.replace(/tourism:\s*/i, "").split("(")[0].trim(),
+          date: tb.arrivalDate || "2027-01-09",
+          numPeople,
+          pricePerPerson: unitPrice,
+          totalPrice: gross,
+          commission: comm,
+          notes: tb.notes,
+        },
+      ];
+
+      const allNotes = tb.notes ? [tb.notes] : [];
+
+      return {
+        id: tb.id,
+        ticketCode: tb.ticketCode,
+        customerName: tb.customerName,
+        guest1,
+        guest2,
+        allGuests,
+        email: tb.email,
+        phone: tb.phone,
+        country: tb.country || "Morocco",
+        roomNumber: tb.roomNumber || null,
+        status: tb.status,
+        createdAt: tb.createdAt,
+        festivalBooking: null,
+        festivalPack: null,
+        festivalLabel: "",
+        festivalGrossPrice: 0,
+        festivalDiscount: 0,
+        festivalNetPrice: 0,
+        nights: null,
+        arrivalDate: tb.arrivalDate || null,
+        departureDate: tb.departureDate || null,
+        festivalCommission: 0,
+        tours,
+        totalTourismPrice: gross,
+        totalTourismCommission: comm,
+        shuttle: null,
+        totalAmount: gross,
+        totalCommission: comm,
+        allNotes,
+      };
+    });
+
+  // Combine all reservations and sort by creation date descending
+  return [...festivalReservations, ...standaloneTours].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 }
 
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
@@ -1029,12 +1070,23 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     const festBookings = allBookings.filter((b) => !isTourismBooking(b));
     setAllFestivalBookings(festBookings);
 
+    const isAssigned = (b: Booking) => {
+      if (!b) return false;
+      if (b.collaboratorId) {
+        if (b.collaboratorId === partner.id) return true;
+        if (b.collaboratorId.toLowerCase() === partner.id.toLowerCase()) return true;
+        if (partner.code && b.collaboratorId.toLowerCase() === partner.code.toLowerCase()) return true;
+      }
+      if (b.inviteCode && partner.code && b.inviteCode.toUpperCase() === partner.code.toUpperCase()) return true;
+      return false;
+    };
+
     const mine = allBookings
       .filter((b) => {
-        if (b.collaboratorId === partner.id) return true;
+        if (isAssigned(b)) return true;
         if (isTourismBooking(b) && !b.collaboratorId) {
           const matchedFestival = festBookings.find((fb) => {
-            if (fb.collaboratorId !== partner.id) return false;
+            if (!isAssigned(fb)) return false;
             const fbPhone = normalizePhone(fb.phone);
             const bPhone = normalizePhone(b.phone);
             if (
@@ -1044,14 +1096,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             )
               return true;
             if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase())
-              return true;
-            const fbName = fb.customerName.toLowerCase().trim();
-            const bName = b.customerName.toLowerCase().trim();
-            if (
-              fbName &&
-              bName &&
-              (fbName === bName || fbName.includes(bName) || bName.includes(fbName))
-            )
               return true;
             return false;
           });
@@ -1184,10 +1228,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalShuttleRevenue = liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0);
 
   // Combined totals
-  const totalFestivalSales = (partner.currency === "MAD" ? festSales.mad : festSales.eur) || 0;
+  const totalFestivalSales = (partnerCurrency(partner) === "MAD" ? festSales.mad : festSales.eur) || 0;
   const totalGrossSales = totalFestivalSales + totalTourRevenue;
 
-  const totalFestivalCommission = (partner.currency === "MAD" ? festEarned.mad : festEarned.eur) || 0;
+  const totalFestivalCommission = (partnerCurrency(partner) === "MAD" ? festEarned.mad : festEarned.eur) || 0;
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
 
   const totalDueToFestival = Math.max(0, totalGrossSales - totalCombinedEarnings);

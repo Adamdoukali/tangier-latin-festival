@@ -403,7 +403,18 @@ function AdminHotel() {
                 </td>
                 <td className="px-4 py-2.5 font-medium text-gray-900">{r.guests[0] ?? "—"}</td>
                 <td className="px-4 py-2.5 text-gray-700">
-                  {r.category === "double" ? (r.guests[1] ?? "—") : ""}
+                  {r.category === "double" ? (
+                    r.guests.length > 2 ? (
+                      <div>
+                        <span>{r.guests[1]}</span>
+                        <span className="ml-1.5 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium" title={r.guests.slice(2).join(" & ")}>
+                          +{r.guests.length - 2} more ({r.guests.slice(2).join(", ")})
+                        </span>
+                      </div>
+                    ) : (
+                      r.guests[1] ?? (r.booking.numPeople > 1 ? "Guest 2" : "—")
+                    )
+                  ) : ""}
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
                   {guestOrigin(r.booking) === "morocco" ? (

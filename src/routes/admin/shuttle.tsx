@@ -383,6 +383,7 @@ function AdminShuttlePage() {
           phone: addForm.phone.trim(),
           country: addForm.country.trim() || "Morocco",
           numPeople: Math.max(1, addForm.numPeople || 1),
+          danceLevel: "",
           packId: "",
           packName: "Navette / Shuttle Transfer",
           arrivalDate: addForm.arrivalDate || null,

@@ -57,8 +57,8 @@ export function useLanguage() {
   };
 
   const t = (key: keyof typeof translations.en): string => {
-    const dict = translations[activeLang] || translations.en;
-    return dict[key] || translations.en[key] || "";
+    const dict = (translations[activeLang] || translations.en) as Record<string, string>;
+    return dict[key as string] || (translations.en as Record<string, string>)[key as string] || "";
   };
 
   return {

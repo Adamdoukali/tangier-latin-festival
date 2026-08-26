@@ -287,7 +287,7 @@ const TOURS_DATA: TourPackage[] = [
 ];
 
 function BookTourismPage() {
-  const { lang, setLang } = useLanguage();
+  const { lang, changeLanguage: setLang } = useLanguage();
   const L = (lang as Language) || "en";
   const tr = (en: string, fr: string, es: string) =>
     L === "fr" ? fr : L === "es" ? es : en;
@@ -307,6 +307,12 @@ function BookTourismPage() {
     phone: "",
     country: "",
     roomNumber: "",
+    needsTransfer: false,
+    transportCompany: "",
+    arrivalDate: "",
+    arrivalTime: "",
+    departureDate: "",
+    departureTime: "",
     notes: "",
   });
 
@@ -471,6 +477,10 @@ function BookTourismPage() {
       : "";
     const fullNotes = [
       form.roomNumber ? `Hotel Room: ${form.roomNumber}` : "",
+      form.needsTransfer ? `Transfer: YES` : "",
+      form.transportCompany ? `Transport Company: ${form.transportCompany}` : "",
+      form.arrivalDate ? `Arrival: ${form.arrivalDate}${form.arrivalTime ? " " + form.arrivalTime : ""}` : "",
+      form.departureDate ? `Departure: ${form.departureDate}${form.departureTime ? " " + form.departureTime : ""}` : "",
       form.notes ? `Notes: ${form.notes}` : "",
       linkedNote,
     ]
@@ -490,8 +500,12 @@ function BookTourismPage() {
         numPeople: numGuests,
         danceLevel: "",
         notes: fullNotes,
-        arrivalDate: "2027-01-09",
-        departureDate: "2027-01-11",
+        arrivalDate: form.arrivalDate || "2027-01-09",
+        arrivalTime: form.arrivalTime || null,
+        departureDate: form.departureDate || "2027-01-11",
+        departureTime: form.departureTime || null,
+        needsTransfer: form.needsTransfer || false,
+        transferDetails: form.transportCompany || null,
         roomNumber: form.roomNumber || matchedFestivalBooking?.roomNumber || null,
         guestDetails: JSON.stringify(form.guests),
         lang: L,
@@ -518,6 +532,10 @@ function BookTourismPage() {
           Phone: form.phone,
           Country: form.country || "N/A",
           ...(form.roomNumber ? { "Hotel Room": form.roomNumber } : {}),
+          ...(form.needsTransfer ? { "Transfer": "Yes" } : {}),
+          ...(form.transportCompany ? { "Transport Company": form.transportCompany } : {}),
+          ...(form.arrivalDate ? { "Arrival": `${form.arrivalDate}${form.arrivalTime ? " at " + form.arrivalTime : ""}` } : {}),
+          ...(form.departureDate ? { "Departure": `${form.departureDate}${form.departureTime ? " at " + form.departureTime : ""}` } : {}),
           ...(form.notes ? { Notes: form.notes } : {}),
           ...(created ? { Reservation: created.ticketCode } : {}),
           ...(explicitCollaborator ? { "Partner Referral": `${explicitCollaborator.name} (${explicitCollaborator.code})` } : {}),
@@ -1013,6 +1031,122 @@ function BookTourismPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Transfer / Shuttle Section */}
+              <div className="space-y-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                  {tr("Airport / Port Transfer", "Transfert Aéroport / Port", "Traslado Aeropuerto / Puerto")}
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <label className="text-xs font-medium text-gray-700">
+                    {tr("Do you need a transfer?", "Avez-vous besoin d'un transfert ?", "¿Necesitas un traslado?")}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, needsTransfer: true })}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                        form.needsTransfer
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-blue-300"
+                      }`}
+                    >
+                      {tr("Yes", "Oui", "Sí")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, needsTransfer: false, transportCompany: "", arrivalDate: "", arrivalTime: "", departureDate: "", departureTime: "" })}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                        !form.needsTransfer
+                          ? "bg-slate-700 text-white border-slate-700 shadow-sm"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
+                      {tr("No", "Non", "No")}
+                    </button>
+                  </div>
+                </div>
+
+                {form.needsTransfer && (
+                  <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-3 mt-2">
+                    <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+                      {tr(
+                        "Please provide your flight or ferry details so we can arrange your airport/port pickup.",
+                        "Veuillez indiquer les détails de votre vol ou ferry afin que nous puissions organiser votre prise en charge.",
+                        "Indique los datos de su vuelo o ferry para organizar el traslado."
+                      )}
+                    </p>
+
+                    {/* Transport Company */}
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-700 mb-1">
+                        {tr("Airline / Ferry Company", "Compagnie aérienne / Ferry", "Aerolínea / Compañía de ferry")}
+                      </label>
+                      <input
+                        type="text"
+                        value={form.transportCompany}
+                        onChange={(e) => setForm({ ...form, transportCompany: e.target.value })}
+                        placeholder={tr("e.g. Ryanair, Royal Air Maroc, FRS Ferries", "ex. Ryanair, Royal Air Maroc, FRS Ferries", "ej. Ryanair, Royal Air Maroc, FRS Ferries")}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition placeholder:text-gray-400"
+                      />
+                    </div>
+
+                    {/* Arrival Date & Time */}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-gray-700 mb-1">
+                          {tr("Arrival Date (coming in)", "Date d'arrivée", "Fecha de llegada")}
+                        </label>
+                        <input
+                          type="date"
+                          value={form.arrivalDate}
+                          onChange={(e) => setForm({ ...form, arrivalDate: e.target.value })}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-gray-700 mb-1">
+                          {tr("Arrival Time", "Heure d'arrivée", "Hora de llegada")}
+                        </label>
+                        <input
+                          type="time"
+                          value={form.arrivalTime}
+                          onChange={(e) => setForm({ ...form, arrivalTime: e.target.value })}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Departure Date & Time */}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-gray-700 mb-1">
+                          {tr("Departure Date (going back)", "Date de départ (retour)", "Fecha de salida (regreso)")}
+                        </label>
+                        <input
+                          type="date"
+                          value={form.departureDate}
+                          min={form.arrivalDate || undefined}
+                          onChange={(e) => setForm({ ...form, departureDate: e.target.value })}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-gray-700 mb-1">
+                          {tr("Departure Time", "Heure de départ", "Hora de salida")}
+                        </label>
+                        <input
+                          type="time"
+                          value={form.departureTime}
+                          onChange={(e) => setForm({ ...form, departureTime: e.target.value })}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Total Calculation & Terms */}

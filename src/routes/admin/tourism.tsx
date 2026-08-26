@@ -22,16 +22,19 @@ import {
   Ticket,
   ChevronRight,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import {
   getBookings,
   getPacks,
   getCollaborators,
+  addBooking,
   updateBookingStatus,
   updateBooking,
   deleteBooking,
   ticketUrl,
   isTourismBooking,
+  commissionLabel,
   type Booking,
   type BookingStatus,
   type Collaborator,
@@ -135,6 +138,22 @@ function AdminTourismPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // New Tour Modal
+  const [showNewModal, setShowNewModal] = useState(false);
+  const [newForm, setNewForm] = useState({
+    customerName: "",
+    additionalGuests: "",
+    tourId: "tour-tangier",
+    numPeople: 1,
+    email: "",
+    phone: "",
+    country: "Morocco",
+    roomNumber: "",
+    collaboratorId: "",
+    notes: "",
+    status: "pending" as BookingStatus,
+  });
+
   // Edit Modal
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [editForm, setEditForm] = useState({
@@ -145,6 +164,7 @@ function AdminTourismPage() {
     phone: "",
     country: "",
     roomNumber: "",
+    collaboratorId: "",
     notes: "",
     status: "pending" as BookingStatus,
   });
@@ -169,6 +189,69 @@ function AdminTourismPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  // Create new tour booking
+  const handleCreateTourBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newForm.customerName.trim() || !newForm.email.trim() || !newForm.phone.trim()) {
+      alert("Please fill in customer name, email, and phone.");
+      return;
+    }
+    const tourDef = TOURS.find((t) => t.id === newForm.tourId) || TOURS[0];
+    const extraNames = newForm.additionalGuests
+      .split(/\s*&\s*|\s*,\s*|\n+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const fullCustomerName = extraNames.length > 0
+      ? [newForm.customerName.trim(), ...extraNames].join(" & ")
+      : newForm.customerName.trim();
+
+    try {
+      await addBooking({
+        packId: tourDef.id,
+        packName: `Tourism: ${tourDef.name} (${tourDef.date})`,
+        customerName: fullCustomerName,
+        email: newForm.email.trim(),
+        phone: newForm.phone.trim(),
+        country: newForm.country.trim() || "Morocco",
+        numPeople: Math.max(1, newForm.numPeople || 1),
+        danceLevel: "",
+        notes: newForm.notes.trim(),
+        arrivalDate: "2027-01-09",
+        departureDate: "2027-01-11",
+        roomNumber: newForm.roomNumber.trim() || null,
+        guestDetails: JSON.stringify(
+          [newForm.customerName.trim(), ...extraNames].map((name) => {
+            const parts = name.split(/\s+/);
+            return {
+              firstName: parts[0] || "",
+              lastName: parts.slice(1).join(" ") || "",
+            };
+          })
+        ),
+        status: newForm.status,
+        collaboratorId: newForm.collaboratorId.trim() || null,
+        source: newForm.collaboratorId.trim() ? "referral" : "manual",
+      });
+      setShowNewModal(false);
+      setNewForm({
+        customerName: "",
+        additionalGuests: "",
+        tourId: "tour-tangier",
+        numPeople: 1,
+        email: "",
+        phone: "",
+        country: "Morocco",
+        roomNumber: "",
+        collaboratorId: "",
+        notes: "",
+        status: "pending",
+      });
+      await reload();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : String(err));
+    }
   };
 
   // Filter only tourism bookings
@@ -265,6 +348,7 @@ function AdminTourismPage() {
       phone: b.phone || "",
       country: b.country || "",
       roomNumber: b.roomNumber || "",
+      collaboratorId: b.collaboratorId || "",
       notes: b.notes || "",
       status: b.status,
     });
@@ -287,6 +371,8 @@ function AdminTourismPage() {
         phone: editForm.phone,
         country: editForm.country,
         roomNumber: editForm.roomNumber || null,
+        collaboratorId: editForm.collaboratorId.trim() || null,
+        source: editForm.collaboratorId.trim() ? "referral" : (editingBooking.source || "manual"),
         notes: editForm.notes,
         status: editForm.status,
       });
@@ -431,6 +517,14 @@ function AdminTourismPage() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setShowNewModal(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition shadow-xs cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Tour Booking</span>
+          </button>
+
           <button
             onClick={() => exportCSV()}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition cursor-pointer"
@@ -842,6 +936,237 @@ function AdminTourismPage() {
         )}
       </div>
 
+      {/* New Tour Booking Modal */}
+      {showNewModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
+                  Direct Excursion Booking
+                </span>
+                <h3 className="font-display text-lg font-bold text-gray-900">
+                  New Tour Booking
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowNewModal(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTourBooking} className="space-y-4 text-xs">
+              {/* Tour Selection */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-1">
+                  Excursion Choice <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={newForm.tourId}
+                  onChange={(e) => setNewForm({ ...newForm, tourId: e.target.value })}
+                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2.5 text-xs focus:outline-none focus:border-amber-500 font-medium"
+                >
+                  {TOURS.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} — {t.date} ({t.pricePerPerson} {t.currency}/person)
+                    </option>
+                  ))}
+                </select>
+
+                {(() => {
+                  const selTour = TOURS.find((t) => t.id === newForm.tourId) || TOURS[0];
+                  const total = selTour.pricePerPerson * (newForm.numPeople || 1);
+                  return (
+                    <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between text-blue-900">
+                      <div>
+                        <span className="font-bold">{selTour.name}</span>
+                        <p className="text-[11px] text-blue-700 mt-0.5">{selTour.location} · {selTour.time}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-blue-950">{total} {selTour.currency}</span>
+                        <p className="text-[10px] text-blue-600">({selTour.pricePerPerson} {selTour.currency} × {newForm.numPeople || 1} pax)</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Assign to Partner / Collaborator */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-1">
+                  Assign to Partner / Collaborator
+                </label>
+                <select
+                  value={newForm.collaboratorId}
+                  onChange={(e) => setNewForm({ ...newForm, collaboratorId: e.target.value })}
+                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-xs focus:outline-none focus:border-amber-500 font-medium"
+                >
+                  <option value="">Direct / Official Website (No Partner)</option>
+                  {collaborators.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code}) — {commissionLabel(c)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  Assigning to a partner attributes €5/guest commission to their partner portal.
+                </p>
+              </div>
+
+              {/* Lead Guest Name */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-1">
+                  Customer / Lead Guest Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="First and Last Name"
+                  value={newForm.customerName}
+                  onChange={(e) => setNewForm({ ...newForm, customerName: e.target.value })}
+                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-xs focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {/* Additional Guests if numPeople >= 2 */}
+              {newForm.numPeople >= 2 && (
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    Additional Guests (Guest 2, 3...)
+                  </label>
+                  <input
+                    type="text"
+                    value={newForm.additionalGuests}
+                    onChange={(e) => setNewForm({ ...newForm, additionalGuests: e.target.value })}
+                    placeholder="e.g. Maria Gonzalez, Carlos Gomez"
+                    className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="mt-1 text-[11px] text-gray-500">
+                    Separate names with commas or &amp; for the guide manifest.
+                  </p>
+                </div>
+              )}
+
+              {/* Number of People & Hotel Room */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    Number of Guests (Pax) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    required
+                    value={newForm.numPeople}
+                    onChange={(e) =>
+                      setNewForm({ ...newForm, numPeople: parseInt(e.target.value, 10) || 1 })
+                    }
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Hotel Room Nº (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 214"
+                    value={newForm.roomNumber}
+                    onChange={(e) => setNewForm({ ...newForm, roomNumber: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Email & Phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={newForm.email}
+                    onChange={(e) => setNewForm({ ...newForm, email: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    Phone / WhatsApp <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newForm.phone}
+                    onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Country & Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={newForm.country}
+                    onChange={(e) => setNewForm({ ...newForm, country: e.target.value })}
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Initial Status</label>
+                  <select
+                    value={newForm.status}
+                    onChange={(e) =>
+                      setNewForm({ ...newForm, status: e.target.value as BookingStatus })
+                    }
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500 font-semibold"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="checked-in">Checked In</option>
+                    <option value="declined">Declined</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-1">Special Requests / Notes</label>
+                <textarea
+                  rows={2}
+                  value={newForm.notes}
+                  onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
+                  placeholder="Dietary requirements, accessibility, etc."
+                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-xs focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewModal(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 font-bold hover:bg-gray-50 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-500 text-zinc-950 font-bold hover:bg-amber-400 transition cursor-pointer"
+                >
+                  Create Tour Booking
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Edit Booking Modal */}
       {editingBooking && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -902,9 +1227,28 @@ function AdminTourismPage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, numPeople: parseInt(e.target.value, 10) || 1 })
                     }
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-blue-500"
+                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-blue-500 font-bold"
                   />
                 </div>
+              </div>
+
+              {/* Assign to Partner / Collaborator */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-1">
+                  Assign to Partner / Collaborator
+                </label>
+                <select
+                  value={editForm.collaboratorId}
+                  onChange={(e) => setEditForm({ ...editForm, collaboratorId: e.target.value })}
+                  className="w-full rounded-xl border border-gray-300 px-3.5 py-2 text-xs focus:outline-none focus:border-blue-500 font-medium"
+                >
+                  <option value="">Direct / Official Website (No Partner)</option>
+                  {collaborators.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.code}) — {commissionLabel(c)}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
