@@ -153,6 +153,8 @@ export interface Booking {
   transferOption?: TransferOption | null;
   /** Transfer specific location name, e.g. 'Tanger Ville Port', 'Tangier Airport (TNG)' */
   transferLocation?: string | null;
+  /** Departure Airport / Port of origin e.g. 'Paris Orly', 'Madrid' */
+  departureAirport?: string | null;
   /** Flight or boat number / timing info if provided by client */
   transferDetails?: string | null;
   /** Total cost for the transfer in EUR */
@@ -2706,12 +2708,21 @@ export function commissionLabel(c: Collaborator): string {
  *  starts on the bookings that come after the goal is reached. A
  *  booking that crosses the goal line is consumed by the mission. */
 export function isTourismBooking(b: Booking): boolean {
-  if (b.packId?.startsWith("tour-")) return true;
+  if (!b) return false;
+  const pid = (b.packId || "").toLowerCase();
+  if (pid.startsWith("tour-") || pid.includes("tour") || pid.includes("excursion") || pid.includes("tourism")) return true;
+  if (pid.includes("asilah") || pid.includes("asella")) return true;
+  if (pid.includes("chefchaouen") || pid.includes("chaouen") || pid.includes("chawan")) return true;
+
   const name = (b.packName || "").toLowerCase();
-  if (name.includes("tourism") || name.includes("excursion")) return true;
+  if (name.includes("tourism") || name.includes("excursion") || name.includes("tourisme") || name.includes("visite")) return true;
   if (name.includes("asilah") || name.includes("asella")) return true;
   if (name.includes("chefchaouen") || name.includes("chawan") || name.includes("chaouen")) return true;
-  if (name.includes("tangier") && !name.includes("solazur") && !name.includes("hotel") && !name.includes("room")) return true;
+  if (name.includes("tangier") || name.includes("tanger")) {
+    if (!name.includes("solazur") && !name.includes("hotel") && !name.includes("room") && !name.includes("chambre") && !name.includes("pack") && !name.includes("pass") && !name.includes("festival")) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -2724,7 +2735,10 @@ export function getTourismPrice(tourIdOrName: string | null | undefined): number
   if (s.includes("asilah") || s.includes("asella")) {
     return 25;
   }
-  return 15; // Tangier
+  if (s.includes("tangier") || s.includes("tanger")) {
+    return 15;
+  }
+  return 15; // Tangier fallback
 }
 
 export function normalizePhone(phone: string | null | undefined): string {

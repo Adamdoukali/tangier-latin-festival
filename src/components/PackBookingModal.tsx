@@ -60,6 +60,10 @@ export function PackBookingModal({
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
   const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
+  const [departureAirport, setDepartureAirport] = useState("");
+  const [transportCompany, setTransportCompany] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [departureTime, setDepartureTime] = useState("");
   const [transferDetails, setTransferDetails] = useState("");
 
   const transferCost = needsTransfer
@@ -394,6 +398,21 @@ export function PackBookingModal({
                 : undefined;
 
               const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
+
+              if (needsTransfer) {
+                if (!departureAirport.trim() || !transportCompany.trim() || !departureTime.trim()) {
+                  alert(
+                    lang === "fr"
+                      ? "Veuillez renseigner l'aéroport de départ, la compagnie et l'heure de départ pour le transfert."
+                      : lang === "es"
+                      ? "Por favor complete el aeropuerto de salida, la compañía y la hora de salida para el traslado."
+                      : "Please fill in departure airport, company, and departure time for your transfer."
+                  );
+                  setIsSubmitting(false);
+                  return;
+                }
+              }
+
               const guestNames: string[] = [];
               if (numGuests > 1) {
                 for (let i = 1; i <= numGuests; i++) {
@@ -434,8 +453,11 @@ export function PackBookingModal({
                   email: customerEmail,
                   phone,
                   country: String(formData.get("Country") ?? ""),
+                  company: transportCompany.trim() || null,
                   arrivalDate: String(formData.get("Arrival Date") ?? "") || null,
+                  arrivalTime: arrivalTime.trim() || null,
                   departureDate: String(formData.get("Departure Date") ?? "") || null,
+                  departureTime: departureTime.trim() || null,
                   numPeople: numGuests,
                   guestDetails: JSON.stringify(guestsStructured),
                   danceLevel: "",
@@ -451,7 +473,18 @@ export function PackBookingModal({
                   transferType: needsTransfer ? transferType : null,
                   transferOption: needsTransfer ? transferOption : null,
                   transferLocation: needsTransfer ? transferLocation : null,
-                  transferDetails: needsTransfer ? transferDetails : null,
+                  departureAirport: needsTransfer ? (departureAirport.trim() || null) : null,
+                  transferDetails: needsTransfer
+                    ? [
+                        departureAirport ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}` : "",
+                        transportCompany ? `Company: ${transportCompany}` : "",
+                        arrivalTime ? `Arrival: ${arrivalTime}` : "",
+                        departureTime ? `Departure: ${departureTime}` : "",
+                        transferDetails ? `Flight/Ferry: ${transferDetails}` : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" | ") || null
+                    : null,
                   transferCost: needsTransfer ? transferCost : 0,
                 });
               } catch (dbErr) {
@@ -460,7 +493,7 @@ export function PackBookingModal({
 
               try {
                 const transferSummary = needsTransfer
-                  ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
+                  ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${departureAirport ? ` - Origin: ${departureAirport}` : ""}${transportCompany ? ` - Company: ${transportCompany}` : ""}${arrivalTime ? ` - Arr Time: ${arrivalTime}` : ""}${departureTime ? ` - Dep Time: ${departureTime}` : ""}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
                   : "No transfer";
 
                 const sent = await sendFormNotification({
@@ -480,8 +513,8 @@ export function PackBookingModal({
                     pack: pack.sub ? `${pack.name} — ${pack.sub}` : pack.name,
                     price: `${finalTotalPrice} ${currency}`,
                     guests: String(numGuests),
-                    arrival: String(formData.get("Arrival Date") ?? ""),
-                    departure: String(formData.get("Departure Date") ?? ""),
+                    arrival: `${String(formData.get("Arrival Date") ?? "")}${arrivalTime ? " " + arrivalTime : ""}`,
+                    departure: `${String(formData.get("Departure Date") ?? "")}${departureTime ? " " + departureTime : ""}`,
                     shuttleTransfer: transferSummary,
                     ticketCode: created?.ticketCode ?? "",
                     Notes: String(formData.get("Notes") ?? ""),
@@ -850,14 +883,93 @@ export function PackBookingModal({
                     </div>
                   </div>
 
-                  {/* Flight/Boat Details Input */}
+                  {/* Departure Airport / Port (Mandatory) */}
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                      {transferType === "airport"
+                        ? (lang === "fr"
+                            ? "Aéroport de départ (Obligatoire) *"
+                            : lang === "es"
+                            ? "Aeropuerto de salida (Obligatorio) *"
+                            : "Departure Airport (Required) *")
+                        : (lang === "fr"
+                            ? "Port de départ (Obligatoire) *"
+                            : lang === "es"
+                            ? "Puerto de salida (Obligatorio) *"
+                            : "Departure Port (Required) *")}
+                    </label>
+                    <input
+                      type="text"
+                      required={needsTransfer}
+                      value={departureAirport}
+                      onChange={(e) => setDepartureAirport(e.target.value)}
+                      placeholder={
+                        transferType === "airport"
+                          ? (lang === "fr" ? "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London..." : "Ex: Paris Orly, CDG, Madrid, Brussels, London...")
+                          : (lang === "fr" ? "Ex: Tarifa, Algésiras, Barcelone..." : "Ex: Tarifa, Algeciras, Barcelona...")
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Transport Company (Airline / Ferry) */}
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                      {lang === "fr"
+                        ? "Compagnie aérienne / Ferry (Obligatoire) *"
+                        : lang === "es"
+                        ? "Aerolínea / Compañía de ferry (Obligatorio) *"
+                        : "Airline / Ferry Company (Required) *"}
+                    </label>
+                    <input
+                      type="text"
+                      required={needsTransfer}
+                      value={transportCompany}
+                      onChange={(e) => setTransportCompany(e.target.value)}
+                      placeholder={
+                        transferType === "airport"
+                          ? (lang === "fr" ? "Ex: Ryanair, Royal Air Maroc, Air Arabia..." : "Ex: Ryanair, Iberia, Royal Air Maroc...")
+                          : (lang === "fr" ? "Ex: FRS Ferries, Balearia, AML..." : "Ex: FRS Ferries, Balearia, AML...")
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Arrival & Departure Time Inputs */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">
+                        {lang === "fr" ? "Heure d'arrivée" : lang === "es" ? "Hora de llegada" : "Arrival Time"}
+                      </label>
+                      <input
+                        type="time"
+                        value={arrivalTime}
+                        onChange={(e) => setArrivalTime(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                        {lang === "fr" ? "Heure de départ (Obligatoire) *" : lang === "es" ? "Hora de salida (Obligatorio) *" : "Departure Time (Required) *"}
+                      </label>
+                      <input
+                        type="time"
+                        required={needsTransfer}
+                        value={departureTime}
+                        onChange={(e) => setDepartureTime(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Flight/Boat Number Details Input */}
                   <div>
                     <label className="text-[11px] font-semibold text-gray-700 block mb-1">
                       {lang === "fr"
-                        ? "N° de vol / ferry et heure estimée (Optionnel)"
+                        ? "N° de vol / ferry (Optionnel)"
                         : lang === "es"
-                        ? "N° de vuelo / ferry y hora estimada (Opcional)"
-                        : "Flight / Ferry # and estimated time (Optional)"}
+                        ? "N° de vuelo / ferry (Opcional)"
+                        : "Flight / Ferry # (Optional)"}
                     </label>
                     <input
                       type="text"
@@ -865,8 +977,8 @@ export function PackBookingModal({
                       onChange={(e) => setTransferDetails(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? (lang === "fr" ? "Ex: Vol AT123 à 14:30" : "Ex: Flight AT123 at 14:30")
-                          : (lang === "fr" ? "Ex: Ferry Balearia à 11:00" : "Ex: Ferry FRS / Balearia at 11:00")
+                          ? (lang === "fr" ? "Ex: Vol AT123" : "Ex: Flight AT123")
+                          : (lang === "fr" ? "Ex: Ferry Tanger-Tarifa" : "Ex: Ferry Tanger-Tarifa")
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -888,24 +1000,15 @@ export function PackBookingModal({
 
             {/* Promo / School Code */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
-              <div className="flex items-start gap-2.5">
-                <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-900">
-                    {lang === "fr"
-                      ? "Vous faites un show avec votre école ?"
-                      : lang === "es"
-                      ? "¿Actúas en un show con tu escuela?"
-                      : "Performing a show with your dance school?"}
-                  </p>
-                  <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
-                    {lang === "fr"
-                      ? "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit."
-                      : lang === "es"
-                      ? "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
-                      : "Enter your school's confidential code to benefit from the discounted rate."}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-amber-500 shrink-0" />
+                <p className="text-xs font-semibold text-gray-900">
+                  {lang === "fr"
+                    ? "Code Promo / Code Réduction"
+                    : lang === "es"
+                    ? "Código Promocional / Descuento"
+                    : "Promo / Discount Code"}
+                </p>
               </div>
               <div className="flex gap-2 pt-1">
                 <input

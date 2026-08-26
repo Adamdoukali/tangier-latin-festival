@@ -1041,6 +1041,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const tr = (en: string, fr: string, es: string) =>
     L === "fr" ? fr : L === "es" ? es : en;
 
+  const isMadPartner = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
+
   const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
   const toggleExpand = (id: string) =>
     setExpandedBookings((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -1076,17 +1078,27 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         if (b.collaboratorId === partner.id) return true;
         if (b.collaboratorId.toLowerCase() === partner.id.toLowerCase()) return true;
         if (partner.code && b.collaboratorId.toLowerCase() === partner.code.toLowerCase()) return true;
+        if (partner.code && b.collaboratorId.toUpperCase().includes(partner.code.toUpperCase())) return true;
       }
       if (b.inviteCode && partner.code && b.inviteCode.toUpperCase() === partner.code.toUpperCase()) return true;
+      if (b.notes && partner.code) {
+        const n = b.notes.toUpperCase();
+        if (n.includes(`REFERRAL: ${partner.code.toUpperCase()}`) || n.includes(`REF: ${partner.code.toUpperCase()}`) || n.includes(partner.code.toUpperCase())) return true;
+      }
       return false;
     };
 
     const mine = allBookings
       .filter((b) => {
         if (isAssigned(b)) return true;
-        if (isTourismBooking(b) && !b.collaboratorId) {
+        if (isTourismBooking(b)) {
           const matchedFestival = festBookings.find((fb) => {
             if (!isAssigned(fb)) return false;
+            const fbCode = (fb.ticketCode || "").toUpperCase().trim();
+            const tbCode = (b.ticketCode || "").toUpperCase().trim();
+            const tbNotes = (b.notes || "").toUpperCase();
+            if (fbCode && tbCode && fbCode === tbCode) return true;
+            if (fbCode && tbNotes.includes(fbCode)) return true;
             const fbPhone = normalizePhone(fb.phone);
             const bPhone = normalizePhone(b.phone);
             if (
@@ -1095,8 +1107,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))
             )
               return true;
-            if (fb.email && b.email && fb.email.toLowerCase() === b.email.toLowerCase())
+            if (fb.email && b.email && fb.email.toLowerCase().trim() === b.email.toLowerCase().trim())
               return true;
+            if (fb.customerName && b.customerName) {
+              const fbName = fb.customerName.toLowerCase().trim();
+              const bName = b.customerName.toLowerCase().trim();
+              if (fbName.length > 2 && (fbName === bName || fbName.includes(bName) || bName.includes(fbName)))
+                return true;
+            }
             return false;
           });
           if (matchedFestival) return true;
@@ -1116,6 +1134,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const changeUnifiedStatus = async (res: UnifiedClientBooking, status: BookingStatus) => {
     setStatusError("");
+    if (isMadPartner) {
+      setStatusError(
+        tr(
+          "Status for MAD partner reservations is managed exclusively by the festival administrator.",
+          "Le statut des réservations en Dirhams est géré exclusivement par l'administrateur du festival.",
+          "El estado de las reservas en Dirhams se gestiona exclusivamente por el administrador."
+        )
+      );
+      return;
+    }
     const allIds = [
       ...(res.festivalBooking ? [res.festivalBooking.id] : []),
       ...res.tours.map((t) => t.booking.id),
@@ -1203,22 +1231,45 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const doubleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "double").length;
   const singleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "single").length;
   const fullPassCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "fullpass").length;
-  const festSales = collaboratorRevenue(partner.id, myBookings, allPacks);
+  const festSales = liveFestival.reduce((acc, b) => {
+    const { amount, currency } = packPrice(allPacks.find((p) => p.id === b.packId));
+    const grossValue = amount * (b.numPeople || 1);
+    const value = Math.max(0, grossValue - (b.discountAmount || 0));
+    return currency === "MAD"
+      ? { ...acc, mad: acc.mad + value }
+      : { ...acc, eur: acc.eur + value };
+  }, emptyMoney());
   const festEarned = collaboratorFestivalCommission(partner, myBookings, allPacks, allDiscounts);
 
-  // Tourism metrics
-  const liveTourism = myBookings.filter((b) => isTourismBooking(b) && b.status !== "declined");
-  const asilahTourCount = liveTourism
-    .filter((b) => b.packId?.includes("asilah") || b.packName?.toLowerCase().includes("asilah") || b.packName?.toLowerCase().includes("asella"))
-    .reduce((s, b) => s + (b.numPeople || 1), 0);
-  const tangierTourCount = liveTourism
-    .filter((b) => b.packId?.includes("tangier") || b.packName?.toLowerCase().includes("tangier"))
-    .reduce((s, b) => s + (b.numPeople || 1), 0);
-  const chefchaouenTourCount = liveTourism
-    .filter((b) => b.packId?.includes("chefchaouen") || b.packName?.toLowerCase().includes("chefchaouen") || b.packName?.toLowerCase().includes("chawan") || b.packName?.toLowerCase().includes("chaouen"))
-    .reduce((s, b) => s + (b.numPeople || 1), 0);
-  const totalTourCommission = liveTourism.reduce((s, b) => s + (b.numPeople || 1) * 5, 0);
-  const totalTourRevenue = liveTourism.reduce((s, b) => s + getTourismPrice(b.packId || b.packName) * (b.numPeople || 1), 0);
+  // Excursions metrics — accurately computed from all client reservations
+  const allLiveTours = unifiedReservations
+    .filter((r) => r.status !== "declined")
+    .flatMap((r) => r.tours);
+
+  const asilahTourCount = allLiveTours
+    .filter((t) => {
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      return s.includes("asilah") || s.includes("asella");
+    })
+    .reduce((s, t) => s + t.numPeople, 0);
+
+  const tangierTourCount = allLiveTours
+    .filter((t) => {
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      return s.includes("tangier") || s.includes("tanger");
+    })
+    .reduce((s, t) => s + t.numPeople, 0);
+
+  const chefchaouenTourCount = allLiveTours
+    .filter((t) => {
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      return s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen");
+    })
+    .reduce((s, t) => s + t.numPeople, 0);
+
+  const totalTourRevenue = allLiveTours.reduce((sum, t) => sum + t.totalPrice, 0);
+  const totalTourCommission = allLiveTours.reduce((sum, t) => sum + t.commission, 0);
+  const totalExcursionPassengers = allLiveTours.reduce((sum, t) => sum + t.numPeople, 0);
 
   // Shuttle metrics
   const liveShuttle = myBookings.filter((b) => (b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0)) && b.status !== "declined");
@@ -1242,10 +1293,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     .filter((r) => r.status !== "declined")
     .reduce((sum, r) => sum + Math.max(1, r.allGuests.length, r.festivalBooking?.numPeople || 1), 0);
   const totalDisplayParticipants = Math.max(ticketsSold, totalParticipantsCount);
-
-  const totalExcursionPassengers = unifiedReservations
-    .filter((r) => r.status !== "declined")
-    .reduce((sum, r) => sum + r.tours.reduce((ts, t) => ts + t.numPeople, 0), 0);
 
   const filteredReservations = unifiedReservations.filter((res) => {
     if (filterTab === "hotel" && !res.festivalBooking) return false;
@@ -1329,7 +1376,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalGrossSales} €
               </p>
               <p className="text-xs text-blue-200/80 font-medium mt-0.5">
-                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Tours", "Excursions", "Tours")})
+                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
@@ -1347,7 +1394,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalCombinedEarnings} €
               </p>
               <p className="text-xs text-emerald-100 font-medium mt-0.5">
-                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} € ({tr("Tours", "Excursions", "Tours")})
+                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} € ({tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
@@ -1365,7 +1412,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalDueToFestival} €
               </p>
               <p className="text-xs text-rose-100 font-medium mt-0.5">
-                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Tours", "Excursions", "Tours")})
+                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
@@ -1442,7 +1489,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-400/20 text-blue-200 border border-blue-300/30 text-xs font-bold uppercase tracking-wider">
                     <Compass className="h-3.5 w-3.5 text-blue-300" />
-                    {tr("Tourism & Excursions Link", "Lien Excursions Guidées", "Enlace de Turismo")}
+                    {tr("Excursions Link", "Lien Excursions Guidées", "Enlace de Excursiones")}
                   </span>
                 </div>
 
@@ -1458,7 +1505,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   {tr(
                     "Share with your clients so they can book their guided day trips to Asilah, Tangier & Chefchaouen. All excursion reservations are automatically linked with their festival pass.",
                     "Partagez avec vos clients pour qu'ils réservent leurs visites guidées à Asilah, Tanger et Chefchaouen.",
-                    "Comparte con tus clientes para que reserven sus tours guiados a Asilah, Tánger y Chefchaouen."
+                    "Comparte con tus clientes para que reserven sus excursiones guiadas a Asilah, Tánger y Chefchaouen."
                   )}
                 </p>
 
@@ -1497,7 +1544,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <img src={tourismQr} alt="Tourism link QR" className="w-24 h-24 rounded-lg" />
                 </div>
                 <p className="mt-1 text-[10px] text-blue-200 font-semibold uppercase tracking-wider">
-                  {tr("Tourism QR", "QR Excursions", "QR Turismo")}
+                  {tr("Excursions QR", "QR Excursions", "QR Excursiones")}
                 </p>
               </div>
             )}
@@ -1611,7 +1658,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </div>
             </div>
 
-            {/* 2. BLUE RECTANGLE — CULTURAL TOURS & EXCURSIONS */}
+            {/* 2. BLUE RECTANGLE — CULTURAL EXCURSIONS */}
             <div className="rounded-3xl border-2 border-blue-300 bg-gradient-to-br from-blue-50/90 via-sky-50/70 to-indigo-50/50 p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap border-b border-blue-200/80 pb-3">
                 <div className="flex items-center gap-2.5">
@@ -1620,7 +1667,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </div>
                   <div>
                     <h3 className="font-display text-base font-black text-blue-950">
-                      {tr("Cultural Tours & Excursions", "Excursions Culturelles (Tours)", "Excursiones Culturales (Tours)")}
+                      {tr("Cultural Excursions", "Excursions Culturelles", "Excursiones Culturales")}
                     </h3>
                   </div>
                 </div>
@@ -1633,11 +1680,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                {/* Asilah Tour */}
+                {/* Asilah Excursion */}
                 <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
                   <div className="flex items-center justify-between text-blue-700">
                     <span className="text-[10px] font-black uppercase tracking-wider">
-                      Asilah Tour
+                      Asilah
                     </span>
                     <MapPin className="h-4 w-4 text-cyan-600" />
                   </div>
@@ -1646,11 +1693,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </p>
                 </div>
 
-                {/* Tangier Tour */}
+                {/* Tangier Excursion */}
                 <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
                   <div className="flex items-center justify-between text-blue-700">
                     <span className="text-[10px] font-black uppercase tracking-wider">
-                      Tangier Tour
+                      Tangier
                     </span>
                     <MapPin className="h-4 w-4 text-blue-600" />
                   </div>
@@ -1659,7 +1706,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </p>
                 </div>
 
-                {/* Chefchaouen Tour */}
+                {/* Chefchaouen Excursion */}
                 <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
                   <div className="flex items-center justify-between text-blue-700">
                     <span className="text-[10px] font-black uppercase tracking-wider">
@@ -1672,11 +1719,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </p>
                 </div>
 
-                {/* Tours Total Revenue */}
+                {/* Excursions Total Revenue */}
                 <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center justify-between text-blue-100">
                     <span className="text-[10px] font-black uppercase tracking-wider">
-                      {tr("Tours Revenue", "Total Excursions", "Total Tours")}
+                      {tr("Excursions Revenue", "Total Excursions", "Total Excursiones")}
                     </span>
                     <Euro className="h-4 w-4 text-white" />
                   </div>
@@ -1734,6 +1781,19 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               </button>
             )}
           </div>
+
+          {isMadPartner && (
+            <div className="mb-3 px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center gap-2">
+              <Lock className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>
+                {tr(
+                  "Note: Booking validation and confirmation for MAD accounts are managed directly by Festival Administration.",
+                  "Note : La validation et confirmation des réservations pour les comptes en Dirhams sont gérées directement par l'Administration du festival.",
+                  "Nota: La validación y confirmación de reservas en Dirhams son gestionadas directamente por la Administración del festival."
+                )}
+              </span>
+            </div>
+          )}
 
           {statusError && (
             <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
@@ -1817,6 +1877,24 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             className={`px-3.5 py-2 rounded-full text-[10px] tracking-widest uppercase font-black border ${statusStyles["checked-in"]}`}
                           >
                             {tr("Checked In", "Enregistré", "Registrado")}
+                          </span>
+                        ) : isMadPartner ? (
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[10px] tracking-widest uppercase font-black border cursor-default select-none ${statusStyles[res.status] ?? statusStyles.pending}`}
+                            title={tr(
+                              "Status is verified and managed exclusively by Festival Admin",
+                              "Le statut est vérifié et géré exclusivement par l'administration du festival",
+                              "El estado es verificado y gestionado exclusivamente por el administrador"
+                            )}
+                          >
+                            <Lock className="h-3 w-3 opacity-60" />
+                            <span>
+                              {res.status === "confirmed"
+                                ? tr("Confirmed", "Confirmé", "Confirmada")
+                                : res.status === "declined"
+                                ? tr("Declined", "Refusé", "Rechazada")
+                                : tr("Pending", "En attente", "Pendiente")}
+                            </span>
                           </span>
                         ) : (
                           <select

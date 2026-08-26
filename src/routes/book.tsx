@@ -74,6 +74,10 @@ function BookPage() {
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
   const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
+  const [departureAirport, setDepartureAirport] = useState("");
+  const [transportCompany, setTransportCompany] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+  const [departureTime, setDepartureTime] = useState("");
   const [transferDetails, setTransferDetails] = useState("");
 
   // Discount code state
@@ -315,11 +319,14 @@ function BookPage() {
         email: form.email,
         phone: form.phone,
         country: form.country,
+        company: transportCompany.trim() || null,
         numPeople: form.guests.length > 0 ? form.guests.length : (getGuestCount(selected) || 1),
         danceLevel: "",
         notes: form.notes,
         arrivalDate: form.arrival || null,
+        arrivalTime: arrivalTime.trim() || null,
         departureDate: form.departure || null,
+        departureTime: departureTime.trim() || null,
         lang,
         status: "pending",
         source: collaborator ? "referral" : "website",
@@ -331,7 +338,18 @@ function BookPage() {
         transferType: needsTransfer ? transferType : null,
         transferOption: needsTransfer ? transferOption : null,
         transferLocation: needsTransfer ? transferLocation : null,
-        transferDetails: needsTransfer ? transferDetails : null,
+        departureAirport: needsTransfer ? (departureAirport.trim() || null) : null,
+        transferDetails: needsTransfer
+          ? [
+              departureAirport ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}` : "",
+              transportCompany ? `Company: ${transportCompany}` : "",
+              arrivalTime ? `Arrival: ${arrivalTime}` : "",
+              departureTime ? `Departure: ${departureTime}` : "",
+              transferDetails ? `Flight/Ferry: ${transferDetails}` : "",
+            ]
+              .filter(Boolean)
+              .join(" | ") || null
+          : null,
         transferCost: needsTransfer ? transferCost : 0,
       });
     } catch (dbErr) {
@@ -340,7 +358,7 @@ function BookPage() {
 
     try {
       const transferSummary = needsTransfer
-        ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
+        ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${departureAirport ? ` - Origin: ${departureAirport}` : ""}${transportCompany ? ` - Company: ${transportCompany}` : ""}${arrivalTime ? ` - Arr Time: ${arrivalTime}` : ""}${departureTime ? ` - Dep Time: ${departureTime}` : ""}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
         : "No transfer";
 
       // Notify the festival team + automatic reply to the customer
@@ -358,8 +376,8 @@ function BookPage() {
           Pack: `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`,
           Phone: form.phone,
           Country: form.country,
-          Arrival: form.arrival,
-          Departure: form.departure,
+          Arrival: `${form.arrival}${arrivalTime ? " " + arrivalTime : ""}`,
+          Departure: `${form.departure}${departureTime ? " " + departureTime : ""}`,
           shuttleTransfer: transferSummary,
           ticketCode: created?.ticketCode ?? "",
           Notes: form.notes,
@@ -832,13 +850,96 @@ function BookPage() {
                     </div>
                   </div>
 
+                  {/* Departure Airport / Port (Mandatory) */}
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                      {transferType === "airport"
+                        ? tr(
+                            "Departure Airport (Required) *",
+                            "Aéroport de départ (Obligatoire) *",
+                            "Aeropuerto de salida (Obligatorio) *"
+                          )
+                        : tr(
+                            "Departure Port (Required) *",
+                            "Port de départ (Obligatoire) *",
+                            "Puerto de salida (Obligatorio) *"
+                          )}
+                    </label>
+                    <input
+                      type="text"
+                      required={needsTransfer}
+                      value={departureAirport}
+                      onChange={(e) => setDepartureAirport(e.target.value)}
+                      placeholder={
+                        transferType === "airport"
+                          ? tr("Ex: Paris CDG / Orly, Madrid, Brussels, London...", "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London...", "Ej: Madrid Barajas, Barcelona, Paris...")
+                          : tr("Ex: Tarifa, Algeciras, Barcelona...", "Ex: Tarifa, Algésiras, Barcelone...", "Ej: Tarifa, Algeciras, Barcelona...")
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Transport Company (Airline / Ferry) */}
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                      {tr(
+                        "Airline / Ferry Company (Required) *",
+                        "Compagnie aérienne / Ferry (Obligatoire) *",
+                        "Aerolínea / Compañía de ferry (Obligatorio) *"
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      required={needsTransfer}
+                      value={transportCompany}
+                      onChange={(e) => setTransportCompany(e.target.value)}
+                      placeholder={
+                        transferType === "airport"
+                          ? tr("Ex: Ryanair, Royal Air Maroc, Air Arabia...", "Ex: Ryanair, Royal Air Maroc, Air Arabia...", "Ej: Ryanair, Iberia, Royal Air Maroc...")
+                          : tr("Ex: FRS Ferries, Balearia, AML...", "Ex: FRS Ferries, Balearia, AML...", "Ej: FRS Ferries, Balearia, AML...")
+                      }
+                      className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Arrival & Departure Time Inputs */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">
+                        {tr("Arrival Time", "Heure d'arrivée", "Hora de llegada")}
+                      </label>
+                      <input
+                        type="time"
+                        value={arrivalTime}
+                        onChange={(e) => setArrivalTime(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                        {tr(
+                          "Departure Time (Required) *",
+                          "Heure de départ (Obligatoire) *",
+                          "Hora de salida (Obligatorio) *"
+                        )}
+                      </label>
+                      <input
+                        type="time"
+                        required={needsTransfer}
+                        value={departureTime}
+                        onChange={(e) => setDepartureTime(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
                   {/* Flight/Boat Details Input */}
                   <div>
                     <label className="text-[11px] font-semibold text-gray-700 block mb-1">
                       {tr(
-                        "Flight / Ferry # and estimated time (Optional)",
-                        "N° de vol / ferry et heure estimée (Optionnel)",
-                        "N° de vuelo / ferry y hora estimada (Opcional)"
+                        "Flight / Ferry # (Optional)",
+                        "N° de vol / ferry (Optionnel)",
+                        "N° de vuelo / ferry (Opcional)"
                       )}
                     </label>
                     <input
@@ -847,8 +948,8 @@ function BookPage() {
                       onChange={(e) => setTransferDetails(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? tr("Ex: Flight AT123 at 14:30", "Ex: Vol AT123 à 14:30", "Ej: Vuelo AT123 a las 14:30")
-                          : tr("Ex: Ferry Balearia at 11:00", "Ex: Ferry Balearia à 11:00", "Ej: Ferry Balearia a las 11:00")
+                          ? tr("Ex: Flight AT123", "Ex: Vol AT123", "Ej: Vuelo AT123")
+                          : tr("Ex: Ferry Tanger-Tarifa", "Ex: Ferry Tanger-Tarifa", "Ej: Ferry Tanger-Tarifa")
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -871,24 +972,15 @@ function BookPage() {
 
             {/* Promo / School Code */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
-              <div className="flex items-start gap-2.5">
-                <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-900">
-                    {tr(
-                      "Performing a show with your dance school?",
-                      "Vous faites un show avec votre école ?",
-                      "¿Actúas en un show con tu escuela?"
-                    )}
-                  </p>
-                  <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
-                    {tr(
-                      "Enter your school's confidential code to benefit from the discounted rate.",
-                      "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit.",
-                      "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
-                    )}
-                  </p>
-                </div>
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-amber-500 shrink-0" />
+                <p className="text-xs font-semibold text-gray-900">
+                  {tr(
+                    "Promo / Discount Code",
+                    "Code Promo / Code Réduction",
+                    "Código Promocional / Descuento"
+                  )}
+                </p>
               </div>
               <div className="flex gap-2 pt-1">
                 <input
@@ -940,7 +1032,8 @@ function BookPage() {
               !form.email.trim() ||
               !form.phone.trim() ||
               !form.arrival.trim() ||
-              !form.departure.trim()
+              !form.departure.trim() ||
+              (needsTransfer && (!departureAirport.trim() || !transportCompany.trim() || !departureTime.trim()))
             }
 
             className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-zinc-950 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-amber-200"
@@ -988,24 +1081,15 @@ function BookPage() {
 
       {/* PROMO / DISCOUNT CODE BAR ON STEP 1 */}
       <div className="max-w-md mx-auto mb-8 rounded-xl border border-amber-200 bg-white p-4 shadow-sm space-y-2">
-        <div className="flex items-start gap-2.5">
-          <Tag className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
-          <div>
-            <p className="text-xs font-bold text-gray-900">
-              {tr(
-                "Performing a show with your dance school?",
-                "Vous faites un show avec votre école ?",
-                "¿Actúas en un show con tu escuela?"
-              )}
-            </p>
-            <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
-              {tr(
-                "Enter your school's confidential code to benefit from the discounted rate.",
-                "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit.",
-                "Ingresa el código confidencial de tu escuela para obtener la tarifa reducida."
-              )}
-            </p>
-          </div>
+        <div className="flex items-center gap-2">
+          <Tag className="h-4 w-4 text-amber-500 shrink-0" />
+          <p className="text-xs font-bold text-gray-900">
+            {tr(
+              "Promo / Discount Code",
+              "Code Promo / Code Réduction",
+              "Código Promocional / Descuento"
+            )}
+          </p>
         </div>
         <div className="flex gap-2 pt-1">
           <input
