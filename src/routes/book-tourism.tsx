@@ -808,7 +808,7 @@ function BookTourismPage() {
 
       {/* Booking Form Section */}
       <div id="booking-form" className="max-w-2xl mx-auto">
-        <div className="rounded-3xl border border-gray-200 bg-white shadow-xl p-6 sm:p-8">
+        <div className="rounded-3xl border border-gray-200 bg-white shadow-xl p-4 sm:p-8">
           <div className="flex items-center gap-3 pb-5 border-b border-gray-100 mb-6">
             <div className="h-10 w-10 rounded-2xl bg-blue-600 text-white grid place-items-center shadow-sm">
               <Compass className="h-5 w-5" />

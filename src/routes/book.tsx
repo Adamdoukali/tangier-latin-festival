@@ -562,7 +562,7 @@ function BookPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 max-w-lg mx-auto"
+          className="rounded-2xl border border-gray-200 bg-white shadow-sm p-4 sm:p-6 max-w-lg mx-auto"
         >
           <h3 className="font-display text-lg text-gray-900 mb-1">
             {tr("Your details", "Vos informations", "Tus datos")}
