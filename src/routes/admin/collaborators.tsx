@@ -49,7 +49,7 @@ import {
   type CommissionCurrency,
   type PartnerLanguage,
 } from "@/lib/admin-store";
-import { downloadCsv } from "@/lib/csv-export";
+import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/collaborators")({
   component: AdminCollaborators,
@@ -295,7 +295,7 @@ function AdminCollaborators() {
     );
   });
 
-  const downloadCollaboratorsCsv = () => {
+  const downloadCollaboratorsXlsx = () => {
     const header = [
       "Collaborateurs",
       "Code",
@@ -371,9 +371,10 @@ function AdminCollaborators() {
         collaborator.active ? "yes" : "no",
       ];
     });
-    downloadCsv(
-      `admin-collaborators-${new Date().toISOString().slice(0, 10)}.csv`,
-      [header, ...rows]
+    downloadXlsx(
+      `admin-collaborators-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [header, ...rows],
+      "Collaborateurs"
     );
   };
 
@@ -696,10 +697,10 @@ function AdminCollaborators() {
       {stats.length > 0 && (
         <div className="flex justify-end">
           <button
-            onClick={downloadCollaboratorsCsv}
+            onClick={downloadCollaboratorsXlsx}
             className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition cursor-pointer"
           >
-            <Download className="h-4 w-4" /> Export Admin CSV
+            <Download className="h-4 w-4" /> Export Admin XLSX
           </button>
         </div>
       )}

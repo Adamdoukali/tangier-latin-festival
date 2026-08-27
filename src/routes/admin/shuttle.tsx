@@ -40,7 +40,7 @@ import {
   type TransferType,
   type TransferOption,
 } from "@/lib/admin-store";
-import { downloadCsv } from "@/lib/csv-export";
+import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/shuttle")({
   component: AdminShuttlePage,
@@ -188,8 +188,8 @@ function AdminShuttlePage() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [shuttleBookings]);
 
-  // Full transfer CSV; every field is escaped by the shared exporter.
-  const exportToCsv = (dataToExport: Booking[], filename: string) => {
+  // Full transfer Excel workbook with one booking per row.
+  const exportToXlsx = (dataToExport: Booking[], filename: string) => {
     if (!dataToExport.length) return;
     const headers = [
       "Reservation Code",
@@ -251,7 +251,7 @@ function AdminShuttlePage() {
         booking.notes,
       ];
     });
-    downloadCsv(`${filename}.csv`, [headers, ...rows]);
+    downloadXlsx(`${filename}.xlsx`, [headers, ...rows], "Transfers");
   };
 
   const copyToClipboard = (text: string, id: string) => {
@@ -472,12 +472,12 @@ function AdminShuttlePage() {
           </button>
 
           <button
-            onClick={() => exportToCsv(shuttleBookings, `festival-transferts-${new Date().toISOString().slice(0, 10)}`)}
+            onClick={() => exportToXlsx(shuttleBookings, `festival-transferts-${new Date().toISOString().slice(0, 10)}`)}
             disabled={!shuttleBookings.length}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export All CSV ({shuttleBookings.length})
+            Export All XLSX ({shuttleBookings.length})
           </button>
         </div>
       </div>
@@ -670,7 +670,7 @@ function AdminShuttlePage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
-                        exportToCsv(
+                        exportToXlsx(
                           groupBookings,
                           `tlf-arrivals-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
@@ -678,7 +678,7 @@ function AdminShuttlePage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5 text-white" />
-                      Export Group CSV
+                      Export Group XLSX
                     </button>
                   </div>
                 </div>
@@ -793,7 +793,7 @@ function AdminShuttlePage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() =>
-                        exportToCsv(
+                        exportToXlsx(
                           groupBookings,
                           `tlf-departures-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
@@ -801,7 +801,7 @@ function AdminShuttlePage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5 text-white" />
-                      Export Group CSV
+                      Export Group XLSX
                     </button>
                   </div>
                 </div>

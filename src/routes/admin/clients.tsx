@@ -27,7 +27,7 @@ import {
   type ClientGuest,
   type GuestDetail,
 } from "@/lib/admin-store";
-import { downloadCsv } from "@/lib/csv-export";
+import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/clients")({
   component: AdminClients,
@@ -180,7 +180,7 @@ function AdminClients() {
     }
   };
 
-  const downloadClientsCsv = (targetOrigin: "all" | "morocco" | "international" = "all") => {
+  const downloadClientsXlsx = (targetOrigin: "all" | "morocco" | "international" = "all") => {
     const header = [
       "Prénom",
       "Nom",
@@ -201,7 +201,7 @@ function AdminClients() {
       return true;
     });
 
-    const csvRows = targetList.map((c) => [
+    const spreadsheetRows = targetList.map((c) => [
       c.firstName,
       c.lastName,
       c.email,
@@ -221,9 +221,14 @@ function AdminClients() {
         : targetOrigin === "international"
         ? "etranger"
         : "all";
-    downloadCsv(
-      `clients-database-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`,
-      [header, ...csvRows]
+    downloadXlsx(
+      `clients-database-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [header, ...spreadsheetRows],
+      targetOrigin === "morocco"
+        ? "Clients Maroc"
+        : targetOrigin === "international"
+          ? "Clients Etranger"
+          : "Tous les clients"
     );
   };
 
@@ -241,25 +246,25 @@ function AdminClients() {
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={() => downloadClientsCsv("morocco")}
+            onClick={() => downloadClientsXlsx("morocco")}
             disabled={moroccanCount === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 CSV Maroc ({moroccanCount})
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanCount})
           </button>
           <button
-            onClick={() => downloadClientsCsv("international")}
+            onClick={() => downloadClientsXlsx("international")}
             disabled={internationalCount === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 CSV Étranger ({internationalCount})
+            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalCount})
           </button>
           <button
-            onClick={() => downloadClientsCsv("all")}
+            onClick={() => downloadClientsXlsx("all")}
             disabled={allClients.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 CSV All ({allClients.length})
+            <Download className="h-3.5 w-3.5" /> 📁 XLSX All ({allClients.length})
           </button>
         </div>
       </div>

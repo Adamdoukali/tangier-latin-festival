@@ -31,7 +31,7 @@ import {
   type Pack,
   type Collaborator,
 } from "@/lib/admin-store";
-import { downloadCsv } from "@/lib/csv-export";
+import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/hotel")({
   component: AdminHotel,
@@ -191,12 +191,12 @@ function AdminHotel() {
   const nightsOf = (r: Room) =>
     r.pack?.features.find((f) => /night|nuit|noche/i.test(f)) ?? r.pack?.sub ?? "";
 
-  // Excel-friendly UTF-8 CSV, one row per guest.
+  // Real Excel workbook, one row per guest.
   // Rooming-list export in the festival's own sheet format:
   // one row per GUEST, rooms numbered per promoter
   // (Id chambre / Promoteur · Prénom · Nom · dates · nuits · type ·
   //  Montant · Commission · Paiement · Reste à payer · Commentaire).
-  const downloadRoomingCsv = (targetOrigin: "all" | "morocco" | "international" = "all") => {
+  const downloadRoomingXlsx = (targetOrigin: "all" | "morocco" | "international" = "all") => {
     const header = [
       "Id chambre / Promoteur",
       "N° chambre",
@@ -249,7 +249,7 @@ function AdminHotel() {
     };
 
     // Rooms numbered within each promoter group, in the displayed order
-    const csvRows: Array<Array<string | number>> = [];
+    const spreadsheetRows: Array<Array<string | number>> = [];
     for (const [, g] of sortedGroups) {
       const promoter = g.rooms[0]?.partner?.name ?? "Direct";
       const ordered = [
@@ -275,7 +275,7 @@ function AdminHotel() {
           const nom = parts.slice(1).join(" ").toUpperCase();
           const amount = guestAmount(r);
           const commission = guestCommission(r);
-          csvRows.push([
+          spreadsheetRows.push([
             roomId,
             r.booking.roomNumber ?? "",
             prenom,
@@ -303,9 +303,14 @@ function AdminHotel() {
         : targetOrigin === "international"
         ? "etranger"
         : "all";
-    downloadCsv(
-      `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`,
-      [header, ...csvRows]
+    downloadXlsx(
+      `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [header, ...spreadsheetRows],
+      targetOrigin === "morocco"
+        ? "Rooming Maroc"
+        : targetOrigin === "international"
+          ? "Rooming Etranger"
+          : "Rooming list"
     );
   };
 
@@ -466,28 +471,28 @@ function AdminHotel() {
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={() => downloadRoomingCsv("morocco")}
+            onClick={() => downloadRoomingXlsx("morocco")}
             disabled={moroccanRooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download CSV containing only Moroccan guests"
+            title="Download Excel workbook containing only Moroccan guests"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 CSV Maroc ({moroccanGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanGuests} guests)
           </button>
           <button
-            onClick={() => downloadRoomingCsv("international")}
+            onClick={() => downloadRoomingXlsx("international")}
             disabled={internationalRooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download CSV containing only Étranger / International guests"
+            title="Download Excel workbook containing only Étranger / International guests"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 CSV Étranger ({internationalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalGuests} guests)
           </button>
           <button
-            onClick={() => downloadRoomingCsv("all")}
+            onClick={() => downloadRoomingXlsx("all")}
             disabled={rooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download CSV containing all rooms and guests"
+            title="Download Excel workbook containing all rooms and guests"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 CSV All ({totalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 📁 XLSX All ({totalGuests} guests)
           </button>
         </div>
       </div>
