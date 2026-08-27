@@ -2802,11 +2802,17 @@ export async function findMatchingFestivalBooking(query: {
   // 3. Match by name & name tokens
   if (cleanName && cleanName.length >= 3) {
     const queryTokens = cleanName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+    const isStrongNameMatch = (candidate: string) => {
+      const normalized = candidate.trim().toLowerCase();
+      if (normalized === cleanName) return true;
+      const candidateTokens = normalized.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+      const sharedCount = queryTokens.filter((token) => candidateTokens.includes(token)).length;
+      const shorterLength = Math.min(queryTokens.length, candidateTokens.length);
+      return shorterLength >= 2 && sharedCount === shorterLength;
+    };
     const byName = festivalBookings.find((b) => {
       const bName = (b.customerName || "").trim().toLowerCase();
-      if (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName)) return true;
-      const bTokens = bName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
-      if (queryTokens.some((qt) => bTokens.includes(qt))) return true;
+      if (isStrongNameMatch(bName)) return true;
 
       if (b.guestDetails) {
         try {
@@ -2814,9 +2820,7 @@ export async function findMatchingFestivalBooking(query: {
           if (Array.isArray(guests)) {
             return guests.some((g) => {
               const fullName = `${g.firstName || ""} ${g.lastName || ""}`.trim().toLowerCase();
-              if (fullName === cleanName || fullName.includes(cleanName) || cleanName.includes(fullName)) return true;
-              const gTokens = fullName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
-              return queryTokens.some((qt) => gTokens.includes(qt));
+              return isStrongNameMatch(fullName);
             });
           }
         } catch {}

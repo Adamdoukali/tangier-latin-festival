@@ -842,6 +842,53 @@ interface UnifiedClientBooking {
   allNotes: string[];
 }
 
+function bookingMatchNames(booking: Booking): string[] {
+  const extracted = extractGuests(booking);
+  return [booking.customerName, extracted.guest1, extracted.guest2, ...extracted.allGuests]
+    .filter((name): name is string => !!name)
+    .map((name) => name.toLowerCase().trim())
+    .filter(Boolean);
+}
+
+function tourismFestivalMatchScore(festival: Booking, tourism: Booking): number {
+  const festivalCode = (festival.ticketCode || "").toUpperCase().trim();
+  const tourismCode = (tourism.ticketCode || "").toUpperCase().trim();
+  const tourismNotes = (tourism.notes || "").toUpperCase();
+  if (
+    festivalCode &&
+    ((tourismCode && festivalCode === tourismCode) || tourismNotes.includes(festivalCode))
+  ) return 100;
+
+  const festivalEmail = (festival.email || "").toLowerCase().trim();
+  const tourismEmail = (tourism.email || "").toLowerCase().trim();
+  if (festivalEmail.includes("@") && festivalEmail === tourismEmail) return 80;
+
+  const festivalPhone = normalizePhone(festival.phone);
+  const tourismPhone = normalizePhone(tourism.phone);
+  if (
+    festivalPhone.length >= 8 &&
+    tourismPhone.length >= 8 &&
+    festivalPhone.slice(-8) === tourismPhone.slice(-8)
+  ) return 70;
+
+  let bestNameScore = 0;
+  for (const festivalName of bookingMatchNames(festival)) {
+    const festivalTokens = festivalName.split(/[\s,&+]+/).filter((word) => word.length >= 3);
+    for (const tourismName of bookingMatchNames(tourism)) {
+      if (festivalName === tourismName) bestNameScore = Math.max(bestNameScore, 60);
+      const tourismTokens = tourismName.split(/[\s,&+]+/).filter((word) => word.length >= 3);
+      const shared = festivalTokens.filter((word) => tourismTokens.includes(word));
+      const shorterLength = Math.min(festivalTokens.length, tourismTokens.length);
+      if (shorterLength >= 2 && shared.length === shorterLength) {
+        bestNameScore = Math.max(bestNameScore, 50);
+      } else if (shared.length >= 2) {
+        bestNameScore = Math.max(bestNameScore, 30);
+      }
+    }
+  }
+  return bestNameScore;
+}
+
 function buildUnifiedReservations(
   bookings: Booking[],
   packs: Pack[],
@@ -855,6 +902,19 @@ function buildUnifiedReservations(
   const tourismBookings = bookings.filter(isTourismBooking);
 
   const attachedTourIds = new Set<string>();
+  const tourismOwner = new Map<string, string>();
+  for (const tourism of tourismBookings) {
+    let bestFestivalId = "";
+    let bestScore = 0;
+    for (const festival of festivalBookings) {
+      const score = tourismFestivalMatchScore(festival, tourism);
+      if (score > bestScore) {
+        bestScore = score;
+        bestFestivalId = festival.id;
+      }
+    }
+    if (bestFestivalId) tourismOwner.set(tourism.id, bestFestivalId);
+  }
 
   // 1. Build a UnifiedClientBooking for EACH festival booking
   const festivalReservations: UnifiedClientBooking[] = festivalBookings.map((fb) => {
@@ -881,41 +941,8 @@ function buildUnifiedReservations(
       festCommission = moneyIn(commMoney, displayCurrency);
     }
 
-    const fbCode = (fb.ticketCode || "").toUpperCase().trim();
-    const fbPhone = normalizePhone(fb.phone);
-    const fbEmail = (fb.email || "").toLowerCase().trim();
-
-    // Match tourism bookings that belong to this specific festival guest
-    const matchingTours = tourismBookings.filter((tb) => {
-      const tbCode = (tb.ticketCode || "").toUpperCase().trim();
-      const tbNotes = (tb.notes || "").toUpperCase();
-      const tbPhone = normalizePhone(tb.phone);
-      const tbEmail = (tb.email || "").toLowerCase().trim();
-
-      const matchTicket = (fbCode && tbCode && fbCode === tbCode) || (fbCode && tbNotes.includes(fbCode));
-      const matchEmail = fbEmail.length > 3 && tbEmail.length > 3 && fbEmail === tbEmail;
-      const matchPhone = fbPhone.length >= 6 && tbPhone.length >= 6 && (fbPhone.endsWith(tbPhone.slice(-8)) || tbPhone.endsWith(fbPhone.slice(-8)));
-
-      const fbGuests = [guest1, guest2, ...allGuests, fb.customerName]
-        .filter(Boolean)
-        .map((n) => (n || "").toLowerCase().trim());
-      const tbExtract = extractGuests(tb);
-      const tbGuests = [tb.customerName, tbExtract.guest1, tbExtract.guest2, ...tbExtract.allGuests]
-        .filter(Boolean)
-        .map((n) => (n || "").toLowerCase().trim());
-
-      const matchName = fbGuests.some((fg) =>
-        tbGuests.some((tg) => {
-          if (!fg || !tg || fg.length < 2 || tg.length < 2) return false;
-          if (fg === tg || fg.includes(tg) || tg.includes(fg)) return true;
-          const fgWords = fg.split(/[\s,&+]+/).filter((w) => w.length >= 3);
-          const tgWords = tg.split(/[\s,&+]+/).filter((w) => w.length >= 3);
-          return fgWords.some((fw) => tgWords.includes(fw));
-        })
-      );
-
-      return matchTicket || matchEmail || matchPhone || matchName;
-    });
+    // Each tourism booking can belong to only one best-matching festival booking.
+    const matchingTours = tourismBookings.filter((tb) => tourismOwner.get(tb.id) === fb.id);
 
     matchingTours.forEach((t) => attachedTourIds.add(t.id));
 
@@ -1148,11 +1175,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             if (fb.customerName && b.customerName) {
               const fbName = fb.customerName.toLowerCase().trim();
               const bName = b.customerName.toLowerCase().trim();
-              if (fbName.length > 2 && (fbName === bName || fbName.includes(bName) || bName.includes(fbName)))
-                return true;
+              if (fbName === bName) return true;
               const fbWords = fbName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
               const bWords = bName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
-              if (fbWords.some((fw) => bWords.includes(fw))) return true;
+              const sharedCount = fbWords.filter((word) => bWords.includes(word)).length;
+              const shorterLength = Math.min(fbWords.length, bWords.length);
+              if (shorterLength >= 2 && sharedCount === shorterLength) return true;
             }
             return false;
           });
