@@ -466,10 +466,12 @@ function BookTourismPage() {
 
     const totalCost = selectedTour.price * numGuests;
 
+    const partnerTag = refCode ? `Referral: ${refCode}` : "";
     const linkedNote = matchedFestivalBooking
       ? `[Linked Festival Ticket #${matchedFestivalBooking.ticketCode}]`
       : "";
     const fullNotes = [
+      partnerTag,
       form.roomNumber ? `Hotel Room: ${form.roomNumber}` : "",
       form.notes ? `Notes: ${form.notes}` : "",
       linkedNote,

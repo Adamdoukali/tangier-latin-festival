@@ -1732,14 +1732,23 @@ export async function getCollaborators(): Promise<Collaborator[]> {
 
 export async function getCollaboratorByCode(code: string): Promise<Collaborator | undefined> {
   if (!code) return undefined;
-  const wanted = code.trim().toUpperCase();
+  const raw = code.trim().toUpperCase();
+  let decoded = raw;
+  try {
+    decoded = decodeURIComponent(code).trim().toUpperCase();
+  } catch {}
   const all = await getCollaborators();
-  return all.find(
-    (c) =>
-      c.code?.toUpperCase() === wanted ||
-      c.name?.toUpperCase() === wanted ||
-      c.id === code
-  );
+  return all.find((c) => {
+    const cCode = c.code?.trim().toUpperCase();
+    const cName = c.name?.trim().toUpperCase();
+    const cId = c.id?.trim().toUpperCase();
+    if (cCode && (cCode === raw || cCode === decoded)) return true;
+    if (cName && (cName === raw || cName === decoded)) return true;
+    if (cId && (cId === raw || cId === decoded || c.id === code)) return true;
+    if (cCode && (raw.startsWith(cCode) || decoded.startsWith(cCode))) return true;
+    if (cName && (raw.startsWith(cName) || decoded.startsWith(cName))) return true;
+    return false;
+  });
 }
 
 export async function getCollaboratorById(id: string): Promise<Collaborator | undefined> {

@@ -885,8 +885,13 @@ function buildUnifiedReservations(
       const matchTicket = (fbCode && tbCode && fbCode === tbCode) || (fbCode && tbNotes.includes(fbCode));
       const matchEmail = fbEmail.length > 3 && tbEmail.length > 3 && fbEmail === tbEmail;
       const matchPhone = fbPhone.length >= 6 && tbPhone.length >= 6 && (fbPhone.endsWith(tbPhone.slice(-8)) || tbPhone.endsWith(fbPhone.slice(-8)));
+      const matchName = fb.customerName && tb.customerName && (
+        fb.customerName.toLowerCase().trim() === tb.customerName.toLowerCase().trim() ||
+        fb.customerName.toLowerCase().includes(tb.customerName.toLowerCase()) ||
+        tb.customerName.toLowerCase().includes(fb.customerName.toLowerCase())
+      );
 
-      return matchTicket || matchEmail || matchPhone;
+      return matchTicket || matchEmail || matchPhone || matchName;
     });
 
     matchingTours.forEach((t) => attachedTourIds.add(t.id));
@@ -1075,16 +1080,21 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
     const isAssigned = (b: Booking) => {
       if (!b) return false;
-      if (b.collaboratorId) {
-        if (b.collaboratorId === partner.id) return true;
-        if (b.collaboratorId.toLowerCase() === partner.id.toLowerCase()) return true;
-        if (partner.code && b.collaboratorId.toLowerCase() === partner.code.toLowerCase()) return true;
-        if (partner.code && b.collaboratorId.toUpperCase().includes(partner.code.toUpperCase())) return true;
+      const cId = (b.collaboratorId || "").trim();
+      const pId = (partner.id || "").trim();
+      const pCode = (partner.code || "").trim().toUpperCase();
+      const pName = (partner.name || "").trim().toUpperCase();
+
+      if (cId) {
+        if (cId === pId || cId.toLowerCase() === pId.toLowerCase()) return true;
+        if (pCode && (cId.toUpperCase() === pCode || cId.toUpperCase().includes(pCode))) return true;
+        if (pName && (cId.toUpperCase() === pName || cId.toUpperCase().includes(pName))) return true;
       }
-      if (b.inviteCode && partner.code && b.inviteCode.toUpperCase() === partner.code.toUpperCase()) return true;
-      if (b.notes && partner.code) {
+      if (b.inviteCode && pCode && b.inviteCode.toUpperCase() === pCode) return true;
+      if (b.notes) {
         const n = b.notes.toUpperCase();
-        if (n.includes(`REFERRAL: ${partner.code.toUpperCase()}`) || n.includes(`REF: ${partner.code.toUpperCase()}`) || n.includes(partner.code.toUpperCase())) return true;
+        if (pCode && (n.includes(`REFERRAL: ${pCode}`) || n.includes(`REF: ${pCode}`) || n.includes(pCode))) return true;
+        if (pName && n.includes(pName)) return true;
       }
       return false;
     };
@@ -1233,7 +1243,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const singleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "single").length;
   const fullPassCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "fullpass").length;
   const festSales = liveFestival.reduce((acc, b) => {
-    const { amount, currency } = packPrice(allPacks.find((p) => p.id === b.packId));
+    const pack = allPacks.find((p) => p.id === b.packId || p.name === b.packName || (b.packName && b.packName.includes(p.name)));
+    let { amount, currency } = packPrice(pack);
+    if (amount === 0 && b.packName) {
+      const match = b.packName.match(/(\d+)\s*(€|eur|mad|dh)/i) || b.packName.match(/(\d+)/);
+      if (match) amount = parseInt(match[1], 10);
+      if (/mad|dh/i.test(b.packName)) currency = "MAD";
+    }
     const grossValue = amount * (b.numPeople || 1);
     const value = Math.max(0, grossValue - (b.discountAmount || 0));
     return currency === "MAD"
@@ -1249,28 +1265,28 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const asilahTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
       return s.includes("asilah") || s.includes("asella");
     })
-    .reduce((s, t) => s + t.numPeople, 0);
+    .reduce((s, t) => s + (t.numPeople || 1), 0);
 
   const tangierTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
       return s.includes("tangier") || s.includes("tanger");
     })
-    .reduce((s, t) => s + t.numPeople, 0);
+    .reduce((s, t) => s + (t.numPeople || 1), 0);
 
   const chefchaouenTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "")).toLowerCase();
+      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
       return s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen");
     })
-    .reduce((s, t) => s + t.numPeople, 0);
+    .reduce((s, t) => s + (t.numPeople || 1), 0);
 
   const totalTourRevenue = allLiveTours.reduce((sum, t) => sum + t.totalPrice, 0);
   const totalTourCommission = allLiveTours.reduce((sum, t) => sum + t.commission, 0);
-  const totalExcursionPassengers = allLiveTours.reduce((sum, t) => sum + t.numPeople, 0);
+  const totalExcursionPassengers = allLiveTours.reduce((sum, t) => sum + (t.numPeople || 1), 0);
 
   // Shuttle metrics
   const liveShuttle = myBookings.filter((b) => (b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0)) && b.status !== "declined");
@@ -1292,8 +1308,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const totalParticipantsCount = unifiedReservations
     .filter((r) => r.status !== "declined")
-    .reduce((sum, r) => sum + Math.max(1, r.allGuests.length, r.festivalBooking?.numPeople || 1), 0);
-  const totalDisplayParticipants = Math.max(ticketsSold, totalParticipantsCount);
+    .reduce((sum, r) => sum + Math.max(1, r.allGuests.length, r.festivalBooking?.numPeople || 0, r.tours.reduce((ts, t) => ts + (t.numPeople || 1), 0)), 0);
+  const totalDisplayParticipants = totalParticipantsCount;
 
   const filteredReservations = unifiedReservations.filter((res) => {
     if (filterTab === "hotel" && !res.festivalBooking) return false;
