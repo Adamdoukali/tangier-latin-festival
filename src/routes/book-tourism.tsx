@@ -958,50 +958,6 @@ function BookTourismPage() {
 
               {/* Contact Information */}
               <div className="space-y-3">
-                {/* Festival Ticket Link Input */}
-                <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3.5 space-y-2">
-                  <label className="block text-xs font-bold text-blue-950">
-                    {tr(
-                      "Already booked a Festival Pass? Enter your Ticket Code (Optional):",
-                      "Vous avez déjà un Pass Festival ? Entrez votre code billet (Optionnel) :",
-                      "¿Ya tienes tu Pase del Festival? Introduce tu código de entrada (Opcional):"
-                    )}
-                  </label>
-                  <input
-                    type="text"
-                    value={ticketCodeInput}
-                    onChange={(e) => setTicketCodeInput(e.target.value.toUpperCase())}
-                    placeholder="Ex: #TLF-QGXVWQFP"
-                    className="w-full rounded-xl border border-blue-300 bg-white px-3.5 py-2 text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400 uppercase"
-                  />
-                  <p className="text-[10px] text-blue-700">
-                    {tr(
-                      "Your excursion will be automatically linked to your hotel room and festival pass.",
-                      "Votre excursion sera automatiquement reliée à votre chambre et pass festival.",
-                      "Tu excursión se vinculará automáticamente a tu habitación y pase del festival."
-                    )}
-                  </p>
-                </div>
-
-                {matchedFestivalBooking && (
-                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 flex items-start gap-3 shadow-xs">
-                    <div className="h-7 w-7 rounded-xl bg-emerald-600 text-white grid place-items-center shrink-0 mt-0.5">
-                      <CheckCircle2 className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-emerald-900 flex items-center gap-1.5 flex-wrap">
-                        <span>{tr("Festival Pass Linked!", "Réservation Festival Associée !", "¡Pase de Festival Vinculado!")}</span>
-                        <span className="font-mono text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-200">
-                          #{matchedFestivalBooking.ticketCode}
-                        </span>
-                      </p>
-                      <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
-                        {matchedFestivalBooking.customerName} · {matchedFestivalBooking.packName}
-                        {matchedFestivalBooking.roomNumber ? ` · ${tr("Room", "Chambre", "Habitación")} ${matchedFestivalBooking.roomNumber}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-700">
                   {tr("Contact & Pickup Details", "Contact & Prise en charge", "Contacto y recogida")}

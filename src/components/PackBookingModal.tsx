@@ -1095,10 +1095,10 @@ export function PackBookingModal({
                 <div>
                   <p className="text-xs font-semibold text-gray-900 leading-snug">
                     {lang === "fr"
-                      ? "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école."
+                      ? "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école."
                       : lang === "es"
-                      ? "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
-                      : "Will you perform with your dance school? Enter your school’s confidential code."}
+                      ? "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
+                      : "Will you make a show with your dance school? Enter your school’s confidential code."}
                   </p>
                 </div>
               </div>

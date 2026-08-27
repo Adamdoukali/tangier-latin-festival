@@ -1185,18 +1185,16 @@ function BookPage() {
                 })}
               </div>
             </div>
-
-
-            {/* Promo / School Code */}
+{/* Promo / School Code */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-amber-500 shrink-0" />
                 <div>
                   <p className="text-xs font-semibold text-gray-900 leading-snug">
                     {tr(
-                      "Will you perform with your dance school? Enter your school’s confidential code.",
-                      "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école.",
-                      "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
+                      "Will you make a show with your dance school? Enter your school's confidential code.",
+                      "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école.",
+                      "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
                     )}
                   </p>
                 </div>
@@ -1304,9 +1302,9 @@ function BookPage() {
           <Tag className="h-4 w-4 text-amber-500 shrink-0" />
           <p className="text-xs font-semibold text-gray-900 leading-snug">
             {tr(
-              "Will you perform with your dance school? Enter your school’s confidential code.",
-              "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école.",
-              "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
+              "Will you make a show with your dance school? Enter your school's confidential code.",
+              "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école.",
+              "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
             )}
           </p>
         </div>
