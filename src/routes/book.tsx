@@ -30,8 +30,11 @@ import {
   packGuestCount,
   packLabel,
   ticketUrl,
+  EUR_TO_MAD,
+  partnerCurrency,
   type Pack,
   type Booking,
+  type Collaborator,
   type DiscountCode,
   type TransferType,
   type TransferOption,
@@ -54,8 +57,6 @@ export const Route = createFileRoute("/book")({
   component: BookPage,
 });
 
-const EUR_TO_MAD = 11;
-
 function BookPage() {
   const { lang } = useLanguage();
   const L = lang as Language;
@@ -68,6 +69,10 @@ function BookPage() {
   const [done, setDone] = useState(false);
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
+  const [referralPartner, setReferralPartner] = useState<Collaborator | null>(null);
+  const isMadReferral = referralPartner ? partnerCurrency(referralPartner) === "MAD" : false;
+  const displayRate = isMadReferral ? EUR_TO_MAD : 1;
+  const displayCurrency = isMadReferral ? "MAD" : "€";
 
   // Shuttle Transfer State
   const [needsTransfer, setNeedsTransfer] = useState(false);
@@ -124,12 +129,12 @@ function BookPage() {
   // ?lang — open the page in the partner's configured language instead.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("lang")) return;
     const ref = params.get("ref") || getRememberedReferral();
     if (!ref) return;
     getCollaboratorByCode(ref)
       .then((c) => {
-        if (c?.language) {
+        setReferralPartner(c ?? null);
+        if (c?.language && !params.get("lang")) {
           localStorage.setItem("tlf_lang", c.language);
           params.set("lang", c.language);
           window.location.replace(`${window.location.pathname}?${params.toString()}`);
@@ -506,14 +511,17 @@ function BookPage() {
   // ── Step 2: registration form ──
   if (selected) {
     const guestCount = getGuestCount(selected);
-    const singlePrice = parseInt(selected.price, 10) || 0;
+    const baseSinglePrice = parseInt(selected.price, 10) || 0;
+    const singlePrice = baseSinglePrice * displayRate;
     const totalBasePrice = singlePrice * guestCount;
-    const currency = selected.currency || "€";
+    const currency = displayCurrency;
     const transferPassengersCount = guestCount > 1 ? selectedTransferGuests.length : 1;
     const transferCost = needsTransfer
       ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
       : 0;
-    const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
+    const displayDiscountAmount = discountAmount * displayRate;
+    const displayTransferCost = transferCost * displayRate;
+    const finalTotalPrice = Math.max(0, totalBasePrice - displayDiscountAmount) + displayTransferCost;
 
     return (
       <Shell>
@@ -562,7 +570,7 @@ function BookPage() {
             {discountAmount > 0 && (
               <div className="flex justify-between items-center text-emerald-700 font-semibold">
                 <span>{L === "fr" ? "Réduction appliquée :" : L === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
-                <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${discountAmount} ${currency}`}</span>
+                <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${displayDiscountAmount} ${currency}`}</span>
               </div>
             )}
 
@@ -575,7 +583,7 @@ function BookPage() {
                     `Traslado (${transferType === "port" ? "Puerto" : "Aeropuerto"} · ${formatTransferOptionLabel(transferOption, L)}):`
                   )}
                 </span>
-                <span>+{transferCost} {currency}</span>
+                <span>+{displayTransferCost} {currency}</span>
               </div>
             )}
 
@@ -1048,7 +1056,7 @@ function BookPage() {
                       </span>
                     </span>
                     <span className="text-sm font-extrabold text-blue-700">
-                      +{transferCost} {currency}
+                      +{displayTransferCost} {currency}
                     </span>
                   </div>
                 </div>
@@ -1235,7 +1243,9 @@ function BookPage() {
             const discAmt = isApplicable && appliedDiscount
               ? calculateDiscountAmount(appliedDiscount, baseP, packGuestCount(p), baseP, p.currency || "€", p.id)
               : 0;
-            const finalP = Math.max(0, baseP - discAmt);
+            const displayBaseP = baseP * displayRate;
+            const displayDiscAmt = discAmt * displayRate;
+            const finalP = Math.max(0, displayBaseP - displayDiscAmt);
             const hasDiscount = isApplicable && discAmt > 0;
 
             return (
@@ -1261,7 +1271,7 @@ function BookPage() {
                     <Tag className="h-3 w-3" />
                     -{appliedDiscount?.discountType === "percent"
                       ? `${appliedDiscount.discountAmount}%`
-                      : `€${discAmt}`}
+                      : `${displayDiscAmt} ${displayCurrency}`}
                   </span>
                 )}
 
@@ -1277,25 +1287,25 @@ function BookPage() {
                   <div className="mt-3">
                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
                       <span className="line-through">
-                        {p.price} {p.currency || "€"}
+                        {displayBaseP} {displayCurrency}
                       </span>
                       <span className="text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded uppercase">
-                        {tr("Save", "Économisez", "Ahorra")} €{discAmt}
+                        {tr("Save", "Économisez", "Ahorra")} {displayDiscAmt} {displayCurrency}
                       </span>
                     </div>
                     <p className="font-display text-3xl text-amber-600 font-bold">
                       {finalP}
                       <span className="text-xs text-gray-500 ml-1">
-                        {p.currency || "€"}
+                        {displayCurrency}
                         {unit ? ` / ${unit}` : ""}
                       </span>
                     </p>
                   </div>
                 ) : (
                   <p className="mt-3 font-display text-3xl text-amber-600">
-                    {p.price}
+                    {displayBaseP}
                     <span className="text-xs text-gray-500 ml-1">
-                      {p.currency || "€"}
+                      {displayCurrency}
                       {unit ? ` / ${unit}` : ""}
                     </span>
                   </p>
@@ -1312,7 +1322,7 @@ function BookPage() {
                 <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
                   <Ticket className="h-3.5 w-3.5" />
                   {tr("Choose this pack →", "Choisir ce pack →", "Elegir este pack →")}
-                  {hasDiscount ? ` (${tr("Save", "Économisez", "Ahorra")} €${discAmt})` : ""}
+                  {hasDiscount ? ` (${tr("Save", "Économisez", "Ahorra")} ${displayDiscAmt} ${displayCurrency})` : ""}
                 </span>
               </button>
             );

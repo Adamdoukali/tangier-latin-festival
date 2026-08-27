@@ -23,6 +23,8 @@ import {
   getRememberedReferral,
   ticketUrl,
   findMatchingFestivalBooking,
+  EUR_TO_MAD,
+  partnerCurrency,
   type Booking,
   type Collaborator,
 } from "@/lib/admin-store";
@@ -299,6 +301,10 @@ function BookTourismPage() {
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
+  const [referralPartner, setReferralPartner] = useState<Collaborator | null>(null);
+  const isMadReferral = referralPartner ? partnerCurrency(referralPartner) === "MAD" : false;
+  const displayTourPrice = (price: number) => price * (isMadReferral ? EUR_TO_MAD : 1);
+  const displayCurrency = isMadReferral ? "MAD" : "€";
   const [ticketCodeInput, setTicketCodeInput] = useState("");
   const [matchedFestivalBooking, setMatchedFestivalBooking] = useState<Booking | null>(null);
 
@@ -358,15 +364,16 @@ function BookTourismPage() {
     const ref = params.get("ref") || getRememberedReferral();
     if (ref) {
       setPartnerCode(ref);
-      if (!params.get("lang")) {
-        getCollaboratorByCode(ref)
-          .then((c) => {
+      getCollaboratorByCode(ref)
+        .then((c) => {
+          setReferralPartner(c ?? null);
+          if (!params.get("lang")) {
             if (c?.language && (c.language === "fr" || c.language === "es" || c.language === "en")) {
               setLang(c.language);
             }
-          })
-          .catch(() => {});
-      }
+          }
+        })
+        .catch(() => {});
     }
 
     // Direct preselection via ?tour=
@@ -538,7 +545,7 @@ function BookTourismPage() {
           Tour: `${selectedTour.city} — ${selectedTour.subtitle[L] || selectedTour.subtitle.en}`,
           Date: `${tourDateStr} (${selectedTour.time})`,
           Guests: String(numGuests),
-          "Total Price": `${totalCost} ${selectedTour.currency}`,
+          "Total Price": `${displayTourPrice(totalCost)} ${displayCurrency}`,
           Phone: form.phone,
           Country: form.country || "N/A",
           ...(form.roomNumber ? { "Hotel Room": form.roomNumber } : {}),
@@ -598,7 +605,7 @@ function BookTourismPage() {
               </div>
               <div className="text-right">
                 <span className="text-xl font-extrabold text-blue-700">
-                  {totalCost} {selectedTour.currency}
+                  {displayTourPrice(totalCost)} {displayCurrency}
                 </span>
                 <span className="block text-[10px] text-gray-500 font-medium">
                   ({numGuests} {numGuests > 1 ? tr("guests", "personnes", "personas") : tr("guest", "personne", "persona")})
@@ -752,7 +759,7 @@ function BookTourismPage() {
                     {tr("Price / pers.", "Prix / pers.", "Precio / pers.")}
                   </span>
                   <span className="font-display text-xl font-black text-blue-700 leading-none">
-                    {tItem.price} {tItem.currency}
+                    {displayTourPrice(tItem.price)} {displayCurrency}
                   </span>
                 </div>
 
@@ -884,10 +891,10 @@ function BookTourismPage() {
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-semibold text-gray-500 block">
-                      {selectedTour.price} {selectedTour.currency} / {tr("person", "pers.", "pers.")}
+                      {displayTourPrice(selectedTour.price)} {displayCurrency} / {tr("person", "pers.", "pers.")}
                     </span>
                     <span className="font-display text-2xl font-black text-blue-700">
-                      {selectedTour.price * numGuests} {selectedTour.currency}
+                      {displayTourPrice(selectedTour.price * numGuests)} {displayCurrency}
                     </span>
                   </div>
                 </div>
@@ -1023,15 +1030,15 @@ function BookTourismPage() {
               {/* Total Calculation & Terms */}
               <div className="rounded-2xl bg-slate-900 text-white p-5 space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-300">
-                  <span>{selectedTour.city} ({numGuests} × {selectedTour.price} {selectedTour.currency})</span>
-                  <span>{selectedTour.price * numGuests} {selectedTour.currency}</span>
+                  <span>{selectedTour.city} ({numGuests} × {displayTourPrice(selectedTour.price)} {displayCurrency})</span>
+                  <span>{displayTourPrice(selectedTour.price * numGuests)} {displayCurrency}</span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-slate-800">
                   <span className="font-display font-bold text-sm text-slate-200">
                     {tr("Total Amount to Pay:", "Montant Total :", "Monto Total:")}
                   </span>
                   <span className="font-display text-2xl font-black text-amber-400">
-                    {selectedTour.price * numGuests} {selectedTour.currency}
+                    {displayTourPrice(selectedTour.price * numGuests)} {displayCurrency}
                   </span>
                 </div>
               </div>
@@ -1059,9 +1066,9 @@ function BookTourismPage() {
                     <CheckCircle2 className="h-5 w-5" />
                     <span>
                       {tr(
-                        `Confirm Booking (${selectedTour.price * numGuests} ${selectedTour.currency})`,
-                        `Confirmer la réservation (${selectedTour.price * numGuests} ${selectedTour.currency})`,
-                        `Confirmar reserva (${selectedTour.price * numGuests} ${selectedTour.currency})`
+                        `Confirm Booking (${displayTourPrice(selectedTour.price * numGuests)} ${displayCurrency})`,
+                        `Confirmer la réservation (${displayTourPrice(selectedTour.price * numGuests)} ${displayCurrency})`,
+                        `Confirmar reserva (${displayTourPrice(selectedTour.price * numGuests)} ${displayCurrency})`
                       )}
                     </span>
                   </>

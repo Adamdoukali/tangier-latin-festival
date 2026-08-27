@@ -52,6 +52,7 @@ import {
   commissionLabel,
   formatMoney,
   formatForPartner,
+  moneyIn,
   emptyMoney,
   type Money,
   packLabel,
@@ -848,6 +849,8 @@ function buildUnifiedReservations(
   discounts: DiscountCode[],
   L: Language
 ): UnifiedClientBooking[] {
+  const displayCurrency = partnerCurrency(partner);
+  const fromEur = (value: number) => moneyIn({ eur: value, mad: 0 }, displayCurrency);
   const festivalBookings = bookings.filter((b) => !isTourismBooking(b));
   const tourismBookings = bookings.filter(isTourismBooking);
 
@@ -859,16 +862,23 @@ function buildUnifiedReservations(
     const pack = packs.find((p) => p.id === fb.packId);
     const label = translateDynamicText(pack ? packLabel(pack) : fb.packName, L);
 
-    const festUnitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+    const rawFestUnitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
+    const rawFestCurrency = packPrice(pack).currency;
+    const festUnitPrice = moneyIn(
+      rawFestCurrency === "MAD"
+        ? { eur: 0, mad: rawFestUnitPrice }
+        : { eur: rawFestUnitPrice, mad: 0 },
+      displayCurrency
+    );
     const festGuests = fb.numPeople || 1;
     const festGross = festUnitPrice * festGuests;
-    const festDiscount = fb.discountAmount || 0;
+    const festDiscount = fromEur(fb.discountAmount || 0);
     const festNet = Math.max(0, festGross - festDiscount);
 
     let festCommission = 0;
     if (fb.status !== "declined") {
       const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts);
-      festCommission = (partnerCurrency(partner) === "MAD" ? commMoney.mad : commMoney.eur) || 0;
+      festCommission = moneyIn(commMoney, displayCurrency);
     }
 
     const fbCode = (fb.ticketCode || "").toUpperCase().trim();
@@ -911,9 +921,9 @@ function buildUnifiedReservations(
 
     const tours = matchingTours.map((tb) => {
       const numPeople = tb.numPeople || 1;
-      const unitPrice = getTourismPrice(tb.packId || tb.packName);
+      const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
       const gross = unitPrice * numPeople;
-      const comm = tb.status !== "declined" ? numPeople * 5 : 0;
+      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
       return {
         booking: tb,
         tourName: tb.packName,
@@ -943,7 +953,7 @@ function buildUnifiedReservations(
             shuttleSource.transferLocation ||
             (shuttleSource.transferType === "port" ? "Port of Tangier" : "Tangier Airport"),
           details: shuttleSource.transferDetails || null,
-          cost: shuttleSource.transferCost || 0,
+          cost: fromEur(shuttleSource.transferCost || 0),
           numPeople: shuttleSource.numPeople || 1,
         }
       : null;
@@ -996,9 +1006,9 @@ function buildUnifiedReservations(
     .map((tb) => {
       const { guest1, guest2, allGuests } = extractGuests(tb);
       const numPeople = tb.numPeople || 1;
-      const unitPrice = getTourismPrice(tb.packId || tb.packName);
+      const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
       const gross = unitPrice * numPeople;
-      const comm = tb.status !== "declined" ? numPeople * 5 : 0;
+      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
 
       const tours = [
         {
@@ -1061,6 +1071,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     L === "fr" ? fr : L === "es" ? es : en;
 
   const isMadPartner = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
+  const accountCurrency = partnerCurrency(partner);
+  const accountCurrencyLabel = accountCurrency === "MAD" ? "MAD" : "€";
 
   const [expandedBookings, setExpandedBookings] = useState<Record<string, boolean>>({});
   const toggleExpand = (id: string) =>
@@ -1309,13 +1321,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const portShuttleCount = liveShuttle.filter((b) => b.transferType === "port").reduce((s, b) => s + (b.numPeople || 1), 0);
   const airportShuttleCount = liveShuttle.filter((b) => b.transferType === "airport" || !b.transferType).reduce((s, b) => s + (b.numPeople || 1), 0);
   const totalShuttlePassengers = liveShuttle.reduce((s, b) => s + (b.numPeople || 1), 0);
-  const totalShuttleRevenue = liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0);
+  const totalShuttleRevenue = moneyIn(
+    { eur: liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0), mad: 0 },
+    accountCurrency
+  );
 
   // Combined totals
-  const totalFestivalSales = (partnerCurrency(partner) === "MAD" ? festSales.mad : festSales.eur) || 0;
+  const totalFestivalSales = moneyIn(festSales, accountCurrency);
   const totalGrossSales = totalFestivalSales + totalTourRevenue + totalShuttleRevenue;
 
-  const totalFestivalCommission = (partnerCurrency(partner) === "MAD" ? festEarned.mad : festEarned.eur) || 0;
+  const totalFestivalCommission = moneyIn(festEarned, accountCurrency);
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
 
   const totalDueToFestival = Math.max(0, totalGrossSales - totalCombinedEarnings);
@@ -1406,10 +1421,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {tr("Total Sales", "Total Ventes", "Total Ventas")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
-                {totalGrossSales} €
+                {totalGrossSales} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-blue-200/80 font-medium mt-0.5">
-                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} € ({tr("Transfers", "Transferts", "Traslados")})
+                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} {accountCurrencyLabel} ({tr("Transfers", "Transferts", "Traslados")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
@@ -1424,14 +1439,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {tr("Your Total Earnings", "Total de vos commissions", "Tus Ganancias Totales")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
-                {totalCombinedEarnings} €
+                {totalCombinedEarnings} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-emerald-100 font-medium mt-0.5">
-                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} € ({tr("Excursions", "Excursions", "Excursiones")})
+                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
-              <Euro className="h-6 w-6 text-white" />
+              {isMadPartner ? <span className="text-sm font-black text-white">MAD</span> : <Euro className="h-6 w-6 text-white" />}
             </div>
           </div>
 
@@ -1442,10 +1457,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {tr("Total Due to Festival", "Total à verser au Festival", "Total a pagar al Festival")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
-                {totalDueToFestival} €
+                {totalDueToFestival} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-rose-100 font-medium mt-0.5">
-                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} € ({tr("Transfers", "Transferts", "Traslados")})
+                {festDue} {accountCurrencyLabel} ({tr("Festival", "Festival", "Festival")}) + {tourDue} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} {accountCurrencyLabel} ({tr("Transfers", "Transferts", "Traslados")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
@@ -1682,7 +1697,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <span className="text-[10px] font-black uppercase tracking-wider">
                       {tr("Festival Sales", "Ventes Festival", "Ventas Festival")}
                     </span>
-                    <Euro className="h-4 w-4 text-white" />
+                    {isMadPartner ? <span className="text-[10px] font-black text-white">MAD</span> : <Euro className="h-4 w-4 text-white" />}
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-white">
                     {formatForPartner(festSales, partner)}
@@ -1758,10 +1773,10 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <span className="text-[10px] font-black uppercase tracking-wider">
                       {tr("Excursions Revenue", "Total Excursions", "Total Excursiones")}
                     </span>
-                    <Euro className="h-4 w-4 text-white" />
+                    {isMadPartner ? <span className="text-[10px] font-black text-white">MAD</span> : <Euro className="h-4 w-4 text-white" />}
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-white">
-                    {totalTourRevenue} €
+                    {totalTourRevenue} {accountCurrencyLabel}
                   </p>
                 </div>
               </div>
@@ -1882,13 +1897,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         {/* Combined Total Amount with Sub-Breakdown Detail */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
-                            {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
+                            {tr("Total:", "Total :", "Total:")} {res.totalAmount} {accountCurrencyLabel}
                           </span>
                           {res.shuttle && res.shuttle.cost > 0 && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl shadow-2xs">
-                              {res.festivalNetPrice > 0 ? <span>{res.festivalNetPrice} €</span> : null}
-                              {res.totalTourismPrice > 0 ? <span>+ {res.totalTourismPrice} € {tr("tour", "excursion", "excursión")}</span> : null}
-                              <span className="text-blue-700 font-extrabold">+ {res.shuttle.cost} € {tr("transfer", "navette", "traslado")}</span>
+                              {res.festivalNetPrice > 0 ? <span>{res.festivalNetPrice} {accountCurrencyLabel}</span> : null}
+                              {res.totalTourismPrice > 0 ? <span>+ {res.totalTourismPrice} {accountCurrencyLabel} {tr("tour", "excursion", "excursión")}</span> : null}
+                              <span className="text-blue-700 font-extrabold">+ {res.shuttle.cost} {accountCurrencyLabel} {tr("transfer", "navette", "traslado")}</span>
                             </span>
                           )}
                         </div>
@@ -1994,8 +2009,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                     </p>
                                   )}
                                 <p className="text-amber-800">
-                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-amber-950 font-black">{res.festivalNetPrice} €</strong>
-                                  {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-bold">(-{res.festivalDiscount} €)</span>}
+                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-amber-950 font-black">{res.festivalNetPrice} {accountCurrencyLabel}</strong>
+                                  {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-bold">(-{res.festivalDiscount} {accountCurrencyLabel})</span>}
                                 </p>
                                 {res.roomNumber && (
                                   <p className="font-bold text-amber-950 inline-block bg-amber-100 px-2 py-0.5 rounded border border-amber-300 text-[11px]">
@@ -2021,7 +2036,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                   <div key={tIdx} className="bg-white/90 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between gap-3 font-bold text-blue-950">
                                     <span>{t.tourName}</span>
                                     <span className="text-blue-900 font-extrabold shrink-0">
-                                      {tr("Total:", "Total :", "Total:")} {t.totalPrice} €
+                                      {tr("Total:", "Total :", "Total:")} {t.totalPrice} {accountCurrencyLabel}
                                     </span>
                                   </div>
                                 ))}
@@ -2046,7 +2061,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                   <span>{tr("Shuttle Transfer", "Navette & Transfert", "Traslado y Transporte")}</span>
                                 </span>
                                 <span className="text-xs font-black text-indigo-950 bg-indigo-100 px-2.5 py-0.5 rounded-lg border border-indigo-200">
-                                  +{res.shuttle.cost} €
+                                  +{res.shuttle.cost} {accountCurrencyLabel}
                                 </span>
                               </div>
                               <p className="font-bold text-indigo-950 text-xs">
