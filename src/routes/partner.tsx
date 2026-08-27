@@ -1863,10 +1863,19 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           </h4>
                         </div>
 
-                        {/* Combined Total Amount */}
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
-                          {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
-                        </span>
+                        {/* Combined Total Amount with Sub-Breakdown Detail */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
+                            {tr("Total:", "Total :", "Total:")} {res.totalAmount} €
+                          </span>
+                          {res.shuttle && res.shuttle.cost > 0 && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl shadow-2xs">
+                              {res.festivalNetPrice > 0 ? <span>{res.festivalNetPrice} €</span> : null}
+                              {res.totalTourismPrice > 0 ? <span>+ {res.totalTourismPrice} € {tr("tour", "excursion", "excursión")}</span> : null}
+                              <span className="text-blue-700 font-extrabold">+ {res.shuttle.cost} € {tr("transfer", "navette", "traslado")}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Actions: View Details Toggle + Master Status */}
@@ -2022,6 +2031,29 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               </p>
                             )}
                           </div>
+
+                          {/* 3. Violet/Indigo Box — Shuttle Transfer */}
+                          {res.shuttle && res.shuttle.cost > 0 && (
+                            <div className="bg-indigo-50/90 p-4 rounded-2xl border-2 border-indigo-300 shadow-2xs space-y-1.5 sm:col-span-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                                  <Bus className="h-3.5 w-3.5 text-indigo-600" />
+                                  <span>{tr("Shuttle Transfer", "Navette & Transfert", "Traslado y Transporte")}</span>
+                                </span>
+                                <span className="text-xs font-black text-indigo-950 bg-indigo-100 px-2.5 py-0.5 rounded-lg border border-indigo-200">
+                                  +{res.shuttle.cost} €
+                                </span>
+                              </div>
+                              <p className="font-bold text-indigo-950 text-xs">
+                                {res.shuttle.location} · {formatTransferOptionLabel(res.shuttle.option, L)}
+                              </p>
+                              {res.shuttle.details && (
+                                <p className="text-[11px] text-indigo-800 font-medium whitespace-pre-wrap">
+                                  {res.shuttle.details}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
