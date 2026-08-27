@@ -60,14 +60,18 @@ export function PackBookingModal({
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
   const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
+  const [selectedTransferGuests, setSelectedTransferGuests] = useState<number[]>(() =>
+    Array.from({ length: numGuests }, (_, i) => i)
+  );
   const [departureAirport, setDepartureAirport] = useState("");
   const [transportCompany, setTransportCompany] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
   const [departureTime, setDepartureTime] = useState("");
   const [transferDetails, setTransferDetails] = useState("");
 
+  const transferPassengersCount = numGuests > 1 ? selectedTransferGuests.length : 1;
   const transferCost = needsTransfer
-    ? calculateTransferCost(transferType, transferOption, numGuests, transferLocation)
+    ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
     : 0;
 
   const isInitialApplicable = isDiscountApplicableToPack(initialDiscount, pack.id);
@@ -400,13 +404,20 @@ export function PackBookingModal({
               const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
 
               if (needsTransfer) {
-                if (!departureAirport.trim() || !transportCompany.trim() || !departureTime.trim()) {
+                const missingTimes =
+                  transferOption === "round_trip"
+                    ? !arrivalTime.trim() || !departureTime.trim()
+                    : transferOption === "one_way_arrival"
+                    ? !arrivalTime.trim()
+                    : !departureTime.trim();
+
+                if (!departureAirport.trim() || !transportCompany.trim() || missingTimes) {
                   alert(
                     lang === "fr"
-                      ? "Veuillez renseigner l'aéroport de départ, la compagnie et l'heure de départ pour le transfert."
+                      ? "Veuillez renseigner l'aéroport/port de départ, la compagnie et les horaires requis pour le transfert."
                       : lang === "es"
-                      ? "Por favor complete el aeropuerto de salida, la compañía y la hora de salida para el traslado."
-                      : "Please fill in departure airport, company, and departure time for your transfer."
+                      ? "Por favor complete el aeropuerto/puerto de salida, la compañía y los horarios requeridos para el traslado."
+                      : "Please fill in departure airport/port, company, and required times for your transfer."
                   );
                   setIsSubmitting(false);
                   return;
@@ -445,6 +456,13 @@ export function PackBookingModal({
                 };
               });
 
+              const selectedGuestsLabel =
+                numGuests > 1
+                  ? selectedTransferGuests
+                      .map((idx) => guestNames[idx] || `Participant ${idx + 1}`)
+                      .join(", ")
+                  : customerName || "Participant 1";
+
               try {
                 created = await addBooking({
                   packId: pack.id ?? "",
@@ -476,10 +494,11 @@ export function PackBookingModal({
                   departureAirport: needsTransfer ? (departureAirport.trim() || null) : null,
                   transferDetails: needsTransfer
                     ? [
+                        numGuests > 1 ? `Transfer Passengers: ${selectedGuestsLabel}` : "",
                         departureAirport ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}` : "",
                         transportCompany ? `Company: ${transportCompany}` : "",
-                        arrivalTime ? `Arrival: ${arrivalTime}` : "",
-                        departureTime ? `Departure: ${departureTime}` : "",
+                        arrivalTime ? `Arrival Time: ${arrivalTime}` : "",
+                        departureTime ? `Departure Time: ${departureTime}` : "",
                         transferDetails ? `Flight/Ferry: ${transferDetails}` : "",
                       ]
                         .filter(Boolean)
@@ -877,6 +896,60 @@ export function PackBookingModal({
                     </div>
                   </div>
 
+                  {/* Participant Selection for Transfer (if multiple guests) */}
+                  {numGuests > 1 && (
+                    <div className="space-y-1.5 pt-1">
+                      <label className="text-[11px] font-bold text-blue-950 block">
+                        {lang === "fr"
+                          ? "Sélectionnez les participants pour le transfert :"
+                          : lang === "es"
+                          ? "Seleccione los participantes para el traslado:"
+                          : "Select participants included in transfer:"}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Array.from({ length: numGuests }).map((_, gIdx) => {
+                          const isSelected = selectedTransferGuests.includes(gIdx);
+                          return (
+                            <button
+                              key={gIdx}
+                              type="button"
+                              onClick={() => {
+                                setSelectedTransferGuests((prev) => {
+                                  if (prev.includes(gIdx)) {
+                                    if (prev.length === 1) return prev;
+                                    return prev.filter((i) => i !== gIdx);
+                                  } else {
+                                    return [...prev, gIdx].sort();
+                                  }
+                                });
+                              }}
+                              className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center justify-between transition cursor-pointer ${
+                                isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                                  : "bg-white text-gray-700 border-gray-300 hover:border-blue-300"
+                              }`}
+                            >
+                              <span>
+                                {lang === "fr"
+                                  ? `Participant ${gIdx + 1}`
+                                  : lang === "es"
+                                  ? `Participante ${gIdx + 1}`
+                                  : `Participant ${gIdx + 1}`}
+                              </span>
+                              <div
+                                className={`h-4 w-4 rounded-md border flex items-center justify-center ${
+                                  isSelected ? "bg-white text-blue-600 border-white" : "border-gray-300"
+                                }`}
+                              >
+                                {isSelected && <Check className="h-3 w-3" />}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Departure Airport / Port (Mandatory) */}
                   <div>
                     <label className="text-[11px] font-bold text-gray-800 block mb-1">
@@ -929,14 +1002,25 @@ export function PackBookingModal({
                     />
                   </div>
 
-                  {/* Arrival & Departure Time Inputs */}
+                  {/* Arrival & Departure Time Inputs (Both Mandatory) */}
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-[11px] font-semibold text-gray-700 block mb-1">
-                        {lang === "fr" ? "Heure d'arrivée" : lang === "es" ? "Hora de llegada" : "Arrival Time"}
+                      <label className="text-[11px] font-bold text-gray-800 block mb-1">
+                        {lang === "fr"
+                          ? transferOption === "one_way_departure"
+                            ? "Heure d'arrivée (Optionnel)"
+                            : "Heure d'arrivée (Obligatoire) *"
+                          : lang === "es"
+                          ? transferOption === "one_way_departure"
+                            ? "Hora de llegada (Opcional)"
+                            : "Hora de llegada (Obligatorio) *"
+                          : transferOption === "one_way_departure"
+                          ? "Arrival Time (Optional)"
+                          : "Arrival Time (Required) *"}
                       </label>
                       <input
                         type="time"
+                        required={needsTransfer && transferOption !== "one_way_departure"}
                         value={arrivalTime}
                         onChange={(e) => setArrivalTime(e.target.value)}
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
@@ -944,11 +1028,21 @@ export function PackBookingModal({
                     </div>
                     <div>
                       <label className="text-[11px] font-bold text-gray-800 block mb-1">
-                        {lang === "fr" ? "Heure de départ (Obligatoire) *" : lang === "es" ? "Hora de salida (Obligatorio) *" : "Departure Time (Required) *"}
+                        {lang === "fr"
+                          ? transferOption === "one_way_arrival"
+                            ? "Heure de départ (Optionnel)"
+                            : "Heure de départ (Obligatoire) *"
+                          : lang === "es"
+                          ? transferOption === "one_way_arrival"
+                            ? "Hora de salida (Opcional)"
+                            : "Hora de salida (Obligatorio) *"
+                          : transferOption === "one_way_arrival"
+                          ? "Departure Time (Optional)"
+                          : "Departure Time (Required) *"}
                       </label>
                       <input
                         type="time"
-                        required={needsTransfer}
+                        required={needsTransfer && transferOption !== "one_way_arrival"}
                         value={departureTime}
                         onChange={(e) => setDepartureTime(e.target.value)}
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
@@ -982,7 +1076,9 @@ export function PackBookingModal({
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-100/70 text-xs font-bold text-blue-900">
                     <span>
                       {lang === "fr" ? "Total transfert navette :" : lang === "es" ? "Total traslado:" : "Shuttle Transfer Total:"}
-                      {numGuests > 1 && <span className="font-normal text-blue-800 ml-1">({numGuests} {lang === "fr" ? "pers." : "guests"})</span>}
+                      <span className="font-normal text-blue-800 ml-1">
+                        ({transferPassengersCount} {transferPassengersCount > 1 ? (lang === "fr" ? "participants" : "guests") : (lang === "fr" ? "participant" : "guest")})
+                      </span>
                     </span>
                     <span className="text-sm font-extrabold text-blue-700">
                       +{transferCost} {currency}
