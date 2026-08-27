@@ -295,7 +295,7 @@ export function PackBookingModal({
                 <div className="space-y-1 py-1">
                   {Array.from({ length: numGuests }).map((_, idx) => (
                     <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
-                      <span>{lang === "fr" ? `Invité ${idx + 1}` : lang === "es" ? `Invitado ${idx + 1}` : `Guest ${idx + 1}`}</span>
+                      <span>{lang === "fr" ? `Participant ${idx + 1}` : lang === "es" ? `Participante ${idx + 1}` : `Participant ${idx + 1}`}</span>
                       <span>{singlePrice} {currency}</span>
                     </div>
                   ))}
@@ -551,16 +551,10 @@ export function PackBookingModal({
                     <p className="text-xs font-bold tracking-wider uppercase text-amber-600 flex items-center gap-1.5">
                       <span>
                         {lang === "fr"
-                          ? i === 0
-                            ? "1er Invité (Participant Principal)"
-                            : "2ème Invité (Participant Chambre)"
+                          ? `Participant ${i + 1}`
                           : lang === "es"
-                          ? i === 0
-                            ? "1er Huésped (Participante Principal)"
-                            : "2º Huésped (Participante Habitación)"
-                          : i === 0
-                          ? "First Guest (Lead Participant)"
-                          : "Second Guest (Roommate / Participant)"}
+                          ? `Participante ${i + 1}`
+                          : `Participant ${i + 1}`}
                       </span>
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">

@@ -519,7 +519,7 @@ function BookPage() {
               <div className="space-y-1 py-1">
                 {Array.from({ length: guestCount }).map((_, idx) => (
                   <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
-                    <span>{L === "fr" ? `Invité ${idx + 1}` : L === "es" ? `Invitado ${idx + 1}` : `Guest ${idx + 1}`}</span>
+                    <span>{L === "fr" ? `Participant ${idx + 1}` : L === "es" ? `Participante ${idx + 1}` : `Participant ${idx + 1}`}</span>
                     <span>{singlePrice} {currency}</span>
                   </div>
                 ))}
@@ -580,7 +580,7 @@ function BookPage() {
               <div key={idx} className="space-y-2">
                 {form.guests.length > 1 && (
                   <p className="text-xs font-semibold tracking-wider uppercase text-amber-600">
-                    {tr("Guest", "Invité", "Invitado")} {idx + 1}
+                    {tr("Participant", "Participant", "Participante")} {idx + 1}
                   </p>
                 )}
                 <div className="grid sm:grid-cols-2 gap-3">
