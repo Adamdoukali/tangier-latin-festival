@@ -1003,19 +1003,12 @@ export function PackBookingModal({
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-amber-500 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-gray-900">
+                  <p className="text-xs font-semibold text-gray-900 leading-snug">
                     {lang === "fr"
-                      ? "Code École / Promo"
+                      ? "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école."
                       : lang === "es"
-                      ? "Código Escuela / Promo"
-                      : "School Promo / Discount Code"}
-                  </p>
-                  <p className="text-[11px] text-gray-500">
-                    {lang === "fr"
-                      ? "Saisissez le code confidentiel de votre école."
-                      : lang === "es"
-                      ? "Introduce el código confidencial de tu escuela."
-                      : "Enter your school's confidential code."}
+                      ? "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
+                      : "Will you perform with your dance school? Enter your school’s confidential code."}
                   </p>
                 </div>
               </div>

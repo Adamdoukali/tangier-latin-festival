@@ -975,18 +975,11 @@ function BookPage() {
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-amber-500 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-gray-900">
+                  <p className="text-xs font-semibold text-gray-900 leading-snug">
                     {tr(
-                      "School Promo / Discount Code",
-                      "Code École / Promo",
-                      "Código Escuela / Promo"
-                    )}
-                  </p>
-                  <p className="text-[11px] text-gray-500">
-                    {tr(
-                      "Enter your school's confidential code.",
-                      "Saisissez le code confidentiel de votre école.",
-                      "Introduce el código confidencial de tu escuela."
+                      "Will you perform with your dance school? Enter your school’s confidential code.",
+                      "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école.",
+                      "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
                     )}
                   </p>
                 </div>
@@ -1092,11 +1085,11 @@ function BookPage() {
       <div className="max-w-md mx-auto mb-8 rounded-xl border border-amber-200 bg-white p-4 shadow-sm space-y-2">
         <div className="flex items-center gap-2">
           <Tag className="h-4 w-4 text-amber-500 shrink-0" />
-          <p className="text-xs font-bold text-gray-900">
+          <p className="text-xs font-semibold text-gray-900 leading-snug">
             {tr(
-              "Promo / Discount Code",
-              "Code Promo / Code Réduction",
-              "Código Promocional / Descuento"
+              "Will you perform with your dance school? Enter your school’s confidential code.",
+              "Vous participez avec votre école de danse ? Saisissez le code confidentiel de votre école.",
+              "¿Actúas con tu escuela de baile? Introduce el código confidencial de tu escuela."
             )}
           </p>
         </div>
