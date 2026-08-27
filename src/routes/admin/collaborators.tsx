@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
 import {
   Plus,
   Pencil,
@@ -22,6 +21,8 @@ import {
 } from "lucide-react";
 import {
   getCollaboratorStats,
+  getBookings,
+  getPacks,
   addCollaborator,
   updateCollaborator,
   deleteCollaborator,
@@ -33,16 +34,22 @@ import {
   missionColumnsReady,
   formatMoney,
   formatForPartner,
-  partnerCurrency,
+  bookingPeopleCount,
+  isTourismBooking,
   moneyIn,
+  packRoomCategory,
+  partnerCurrency,
   commissionLabel,
   partnerShareLink,
   type Collaborator,
   type CollaboratorStats,
+  type Booking,
+  type Pack,
   type CommissionType,
   type CommissionCurrency,
   type PartnerLanguage,
 } from "@/lib/admin-store";
+import { downloadCsv } from "@/lib/csv-export";
 
 export const Route = createFileRoute("/admin/collaborators")({
   component: AdminCollaborators,
@@ -122,6 +129,8 @@ function referralUrl(code: string, lang?: PartnerLanguage): string {
 
 function AdminCollaborators() {
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [packs, setPacks] = useState<Pack[]>([]);
   const [ready, setReady] = useState(true);
   const [commissionReady, setCommissionReady] = useState(true);
   const [langReady, setLangReady] = useState(true);
@@ -139,13 +148,15 @@ function AdminCollaborators() {
   const [search, setSearch] = useState("");
 
   const reload = useCallback(async () => {
-    const [ok, commOk, langOk, missionOk, ratesOk, s] = await Promise.all([
+    const [ok, commOk, langOk, missionOk, ratesOk, s, b, p] = await Promise.all([
       collaboratorsReady(),
       commissionColumnsReady(),
       languageColumnReady(),
       missionColumnsReady(),
       commissionRatesReady(),
       getCollaboratorStats(),
+      getBookings(),
+      getPacks(),
     ]);
     setReady(ok);
     setCommissionReady(commOk);
@@ -153,6 +164,8 @@ function AdminCollaborators() {
     setMissionReady(missionOk);
     setRatesReady(ratesOk);
     setStats(s.sort((a, b) => b.ticketsSold - a.ticketsSold));
+    setBookings(b);
+    setPacks(p);
     setLoading(false);
   }, []);
 
@@ -268,9 +281,7 @@ function AdminCollaborators() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  // Excel-friendly export of the table (semicolon-delimited CSV with a
-  // UTF-8 BOM opens directly in Excel with proper accents and columns).
-  // Search filters the table and what the Excel export contains.
+  // Search filters the table and the collaborator CSV export.
   const visibleStats = stats.filter(({ collaborator: c }) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
@@ -284,88 +295,86 @@ function AdminCollaborators() {
     );
   });
 
-  const downloadExcel = () => {
+  const downloadCollaboratorsCsv = () => {
     const header = [
-      "Collaborator",
+      "Collaborateurs",
       "Code",
-      "Language",
-      "Single Rooms",
-      "Double Rooms",
+      "Chambre single",
+      "Chambre double",
       "Full Pass",
-      "Tickets Sold",
-      "Currency",
-      "Sales",
-      "Commission",
+      "Excursions",
+      "Transferts",
+      "Total participants",
+      "Total ventes",
+      "Total Commissions",
+      "Total à verser au Festival",
       "Commission Deal",
       "Mission",
       "Mission Reward",
       "Active",
     ];
-    const rows = visibleStats.map(({ collaborator: c, ...s }) => [
-      c.name,
-      c.code,
-      (c.language ?? "en").toUpperCase(),
-      s.singleRooms,
-      s.doubleRooms,
-      s.fullPass,
-      s.ticketsSold,
-      partnerCurrency(c),
-      moneyIn(s.revenue, partnerCurrency(c)),
-      moneyIn(s.commission, partnerCurrency(c)),
-      commissionLabel(c),
-      c.missionGoal
-        ? `${Math.min(s.ticketsSold, c.missionGoal)}/${c.missionGoal}${s.ticketsSold >= c.missionGoal ? " (achieved)" : ""}`
-        : "",
-      c.missionGoal ? formatMoney(c.missionReward ?? 0, c.missionCurrency) : "",
-      c.active ? "yes" : "no",
-    ]);
-    const totals = [
-      "TOTAL",
-      "",
-      "",
-      visibleStats.reduce((a, x) => a + x.singleRooms, 0),
-      visibleStats.reduce((a, x) => a + x.doubleRooms, 0),
-      visibleStats.reduce((a, x) => a + x.fullPass, 0),
-      visibleStats.reduce((a, x) => a + x.ticketsSold, 0),
-      // Totals per currency group so euro and dirham partners stay apart
-      "EUR partners",
-      visibleStats
-        .filter((x) => partnerCurrency(x.collaborator) === "EUR")
-        .reduce((a, x) => a + moneyIn(x.revenue, "EUR"), 0),
-      visibleStats
-        .filter((x) => partnerCurrency(x.collaborator) === "EUR")
-        .reduce((a, x) => a + moneyIn(x.commission, "EUR"), 0),
-      "",
-      "",
-      "",
-      "",
-    ];
-    const totalsMad = [
-      "TOTAL",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "MAD partners",
-      visibleStats
-        .filter((x) => partnerCurrency(x.collaborator) === "MAD")
-        .reduce((a, x) => a + moneyIn(x.revenue, "MAD"), 0),
-      visibleStats
-        .filter((x) => partnerCurrency(x.collaborator) === "MAD")
-        .reduce((a, x) => a + moneyIn(x.commission, "MAD"), 0),
-      "",
-      "",
-      "",
-      "",
-    ];
-    // Real .xlsx so Excel opens it correctly in every language/locale.
-    const ws = XLSX.utils.aoa_to_sheet([header, ...rows, totals, totalsMad]);
-    ws["!cols"] = header.map((h) => ({ wch: Math.max(12, h.length + 4) }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Collaborators");
-    XLSX.writeFile(wb, `collaborators-sales-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    const rows = visibleStats.map(({ collaborator, revenue, commission }) => {
+      const mine = bookings.filter(
+        (booking) => booking.collaboratorId === collaborator.id && booking.status !== "declined"
+      );
+      const festival = mine.filter(
+        (booking) => !isTourismBooking(booking) && !/navette|shuttle\s*transfer/i.test(booking.packName)
+      );
+      const categoryOf = (booking: Booking) =>
+        packRoomCategory(
+          packs.find((pack) => pack.id === booking.packId) || booking.packName,
+          booking.numPeople
+        );
+      const excursions = mine
+        .filter(isTourismBooking)
+        .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
+      const transfers = mine
+        .filter(
+          (booking) =>
+            !!booking.needsTransfer || !!booking.transferType || (booking.transferCost ?? 0) > 0
+        )
+        .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
+      const participants = festival.reduce(
+        (sum, booking) => sum + bookingPeopleCount(booking, packs),
+        0
+      );
+      const currency = partnerCurrency(collaborator);
+      const transferSales = mine.reduce((sum, booking) => sum + (booking.transferCost ?? 0), 0);
+      const sales = moneyIn(revenue, currency) + moneyIn({ eur: transferSales, mad: 0 }, currency);
+      const earned = moneyIn(commission, currency);
+      const missionAchieved = !!collaborator.missionGoal && participants >= collaborator.missionGoal;
+      const reward = missionAchieved
+        ? moneyIn(
+            collaborator.missionCurrency === "MAD"
+              ? { eur: 0, mad: collaborator.missionReward ?? 0 }
+              : { eur: collaborator.missionReward ?? 0, mad: 0 },
+            currency
+          )
+        : 0;
+      return [
+        collaborator.name,
+        collaborator.code,
+        festival.filter((booking) => categoryOf(booking) === "single").length,
+        festival.filter((booking) => categoryOf(booking) === "double").length,
+        festival.filter((booking) => categoryOf(booking) === "fullpass").length,
+        excursions,
+        transfers,
+        participants,
+        sales,
+        earned,
+        sales - earned - reward,
+        commissionLabel(collaborator),
+        collaborator.missionGoal
+          ? `${Math.min(participants, collaborator.missionGoal)}/${collaborator.missionGoal}`
+          : "",
+        reward,
+        collaborator.active ? "yes" : "no",
+      ];
+    });
+    downloadCsv(
+      `admin-collaborators-${new Date().toISOString().slice(0, 10)}.csv`,
+      [header, ...rows]
+    );
   };
 
   return (
@@ -683,14 +692,14 @@ function AdminCollaborators() {
         )}
       </div>
 
-      {/* Excel export (Chambre double / Chambre single / Full Pass per partner) */}
+      {/* Complete collaborator CSV summary. */}
       {stats.length > 0 && (
         <div className="flex justify-end">
           <button
-            onClick={downloadExcel}
-            className="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-200 transition cursor-pointer"
+            onClick={downloadCollaboratorsCsv}
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition cursor-pointer"
           >
-            <Download className="h-4 w-4" /> Download Excel (rooms &amp; sales)
+            <Download className="h-4 w-4" /> Export Admin CSV
           </button>
         </div>
       )}

@@ -40,6 +40,7 @@ import {
   type TransferType,
   type TransferOption,
 } from "@/lib/admin-store";
+import { downloadCsv } from "@/lib/csv-export";
 
 export const Route = createFileRoute("/admin/shuttle")({
   component: AdminShuttlePage,
@@ -187,10 +188,9 @@ function AdminShuttlePage() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [shuttleBookings]);
 
-  // CSV Export Utility
+  // Full transfer CSV; every field is escaped by the shared exporter.
   const exportToCsv = (dataToExport: Booking[], filename: string) => {
     if (!dataToExport.length) return;
-
     const headers = [
       "Reservation Code",
       "Customer Name",
@@ -204,55 +204,54 @@ function AdminShuttlePage() {
       "Location / Hub",
       "Transfer Direction",
       "Arrival Date",
+      "Arrival Time",
       "Departure Date",
+      "Departure Time",
       "Flight / Ferry Details",
       "Transfer Cost (EUR)",
       "Status",
       "Notes",
     ];
-
-    const rows = dataToExport.map((b) => {
-      let guestNames = b.customerName;
-      if (b.guestDetails) {
+    const rows = dataToExport.map((booking) => {
+      let guestNames = booking.customerName;
+      if (booking.guestDetails) {
         try {
-          const parsed = JSON.parse(b.guestDetails);
+          const parsed = JSON.parse(booking.guestDetails);
           if (Array.isArray(parsed)) {
-            guestNames = parsed.map((g: any) => `${g.firstName || ""} ${g.lastName || ""}`.trim()).join(" & ");
+            guestNames = parsed
+              .map((guest) => `${guest.firstName || ""} ${guest.lastName || ""}`.trim())
+              .filter(Boolean)
+              .join(" & ");
           }
         } catch {
-          // use default customerName
+          // Keep the reservation name.
         }
       }
-
+      const detailField = (label: string) =>
+        booking.transferDetails?.match(new RegExp(`(?:^|\\n)${label}:\\s*([^\\n]+)`, "i"))?.[1]?.trim() || "";
       return [
-        `"${b.ticketCode || ""}"`,
-        `"${(b.customerName || "").replace(/"/g, '""')}"`,
-        b.numPeople || 1,
-        `"${guestNames.replace(/"/g, '""')}"`,
-        `"${(b.phone || "").replace(/"/g, '""')}"`,
-        `"${(b.email || "").replace(/"/g, '""')}"`,
-        `"${(b.country || "").replace(/"/g, '""')}"`,
-        `"${(b.packName || "").replace(/"/g, '""')}"`,
-        `"${b.transferType ? b.transferType.toUpperCase() : ""}"`,
-        `"${(b.transferLocation || "").replace(/"/g, '""')}"`,
-        `"${formatTransferOptionLabel(b.transferOption, "en")}"`,
-        `"${b.arrivalDate || ""}"`,
-        `"${b.departureDate || ""}"`,
-        `"${(b.transferDetails || "").replace(/"/g, '""')}"`,
-        b.transferCost != null ? b.transferCost : 0,
-        `"${b.status || "pending"}"`,
-        `"${(b.notes || "").replace(/"/g, '""')}"`,
-      ].join(",");
+        booking.ticketCode,
+        booking.customerName,
+        booking.numPeople || 1,
+        guestNames,
+        booking.phone,
+        booking.email,
+        booking.country,
+        booking.packName,
+        booking.transferType?.toUpperCase() || "",
+        booking.transferLocation || "",
+        formatTransferOptionLabel(booking.transferOption, "en"),
+        booking.arrivalDate || "",
+        booking.arrivalTime || detailField("Arrival Time"),
+        booking.departureDate || "",
+        booking.departureTime || detailField("Departure Time"),
+        booking.transferDetails || "",
+        booking.transferCost ?? 0,
+        booking.status,
+        booking.notes,
+      ];
     });
-
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(","), ...rows].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `${filename}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`${filename}.csv`, [headers, ...rows]);
   };
 
   const copyToClipboard = (text: string, id: string) => {
@@ -473,12 +472,12 @@ function AdminShuttlePage() {
           </button>
 
           <button
-            onClick={() => exportToCsv(shuttleBookings, `tlf-shuttles-all-${new Date().toISOString().slice(0, 10)}`)}
+            onClick={() => exportToCsv(shuttleBookings, `festival-transferts-${new Date().toISOString().slice(0, 10)}`)}
             disabled={!shuttleBookings.length}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export All to CSV ({shuttleBookings.length})
+            Export All CSV ({shuttleBookings.length})
           </button>
         </div>
       </div>
@@ -676,9 +675,9 @@ function AdminShuttlePage() {
                           `tlf-arrivals-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
                       }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-800 text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
                     >
-                      <Download className="h-3.5 w-3.5 text-emerald-600" />
+                      <Download className="h-3.5 w-3.5 text-white" />
                       Export Group CSV
                     </button>
                   </div>
@@ -799,9 +798,9 @@ function AdminShuttlePage() {
                           `tlf-departures-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
                       }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-purple-300 hover:bg-purple-50 text-purple-800 text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
                     >
-                      <Download className="h-3.5 w-3.5 text-purple-600" />
+                      <Download className="h-3.5 w-3.5 text-white" />
                       Export Group CSV
                     </button>
                   </div>

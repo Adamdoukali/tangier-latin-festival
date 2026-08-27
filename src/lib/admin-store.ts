@@ -1132,6 +1132,7 @@ export async function updateBooking(
       if (updates.phone !== undefined) rowUpdates.phone = updates.phone;
       if (updates.country !== undefined) rowUpdates.country = updates.country;
       if (updates.roomNumber !== undefined) rowUpdates.room_number = updates.roomNumber;
+      if (updates.roomType !== undefined) rowUpdates.room_type = updates.roomType;
       if (updates.notes !== undefined) rowUpdates.notes = updates.notes;
       if (updates.status !== undefined) rowUpdates.status = updates.status;
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;

@@ -1894,6 +1894,23 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   res.guest2 != null ||
                   /double|doble|couple/i.test(res.festivalLabel || "") ||
                   (res.festivalBooking?.numPeople || 1) >= 2;
+                const priceBreakdown = [
+                  {
+                    amount: res.festivalNetPrice,
+                    label: "",
+                    className: "text-slate-700",
+                  },
+                  {
+                    amount: res.totalTourismPrice,
+                    label: tr("excursion", "excursion", "excursión"),
+                    className: "text-slate-700",
+                  },
+                  {
+                    amount: res.shuttle?.cost ?? 0,
+                    label: tr("transfer", "navette", "traslado"),
+                    className: "text-blue-700",
+                  },
+                ].filter((part) => part.amount > 0);
 
                 return (
                   <div
@@ -1927,11 +1944,18 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
                             {tr("Total:", "Total :", "Total:")} {res.totalAmount} {accountCurrencyLabel}
                           </span>
-                          {res.shuttle && res.shuttle.cost > 0 && (
+                          {priceBreakdown.length > 0 && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl shadow-2xs">
-                              {res.festivalNetPrice > 0 ? <span>{res.festivalNetPrice} {accountCurrencyLabel}</span> : null}
-                              {res.totalTourismPrice > 0 ? <span>+ {res.totalTourismPrice} {accountCurrencyLabel} {tr("tour", "excursion", "excursión")}</span> : null}
-                              <span className="text-blue-700 font-extrabold">+ {res.shuttle.cost} {accountCurrencyLabel} {tr("transfer", "navette", "traslado")}</span>
+                              {priceBreakdown.map((part, index) => (
+                                <span
+                                  key={part.label || "pack"}
+                                  className={part.className}
+                                >
+                                  {index > 0 ? "+ " : ""}
+                                  {part.amount} {accountCurrencyLabel}
+                                  {part.label ? ` ${part.label}` : ""}
+                                </span>
+                              ))}
                             </span>
                           )}
                         </div>

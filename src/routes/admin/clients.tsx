@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
 import {
   Users,
   Search,
@@ -28,6 +27,7 @@ import {
   type ClientGuest,
   type GuestDetail,
 } from "@/lib/admin-store";
+import { downloadCsv } from "@/lib/csv-export";
 
 export const Route = createFileRoute("/admin/clients")({
   component: AdminClients,
@@ -180,7 +180,7 @@ function AdminClients() {
     }
   };
 
-  const downloadExcel = (targetOrigin: "all" | "morocco" | "international" = "all") => {
+  const downloadClientsCsv = (targetOrigin: "all" | "morocco" | "international" = "all") => {
     const header = [
       "Prénom",
       "Nom",
@@ -215,37 +215,16 @@ function AdminClients() {
       c.notes ?? "",
     ]);
 
-    const ws = XLSX.utils.aoa_to_sheet([header, ...csvRows]);
-    ws["!cols"] = [
-      { wch: 16 }, // Prénom
-      { wch: 18 }, // Nom
-      { wch: 28 }, // Email
-      { wch: 18 }, // Téléphone
-      { wch: 18 }, // Origine
-      { wch: 12 }, // N° Chambre
-      { wch: 26 }, // Type Chambre
-      { wch: 28 }, // Pack
-      { wch: 14 }, // Code Billet
-      { wch: 24 }, // Promoteur
-      { wch: 30 }, // Notes
-    ];
-
-    const wb = XLSX.utils.book_new();
-    const sheetName =
-      targetOrigin === "morocco"
-        ? "Clients Maroc"
-        : targetOrigin === "international"
-        ? "Clients Étranger"
-        : "Tous les Clients";
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
     const suffix =
       targetOrigin === "morocco"
         ? "maroc"
         : targetOrigin === "international"
         ? "etranger"
         : "all";
-    XLSX.writeFile(wb, `clients-database-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    downloadCsv(
+      `clients-database-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`,
+      [header, ...csvRows]
+    );
   };
 
   return (
@@ -262,25 +241,25 @@ function AdminClients() {
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={() => downloadExcel("morocco")}
+            onClick={() => downloadClientsCsv("morocco")}
             disabled={moroccanCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 Export Maroc ({moroccanCount})
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 CSV Maroc ({moroccanCount})
           </button>
           <button
-            onClick={() => downloadExcel("international")}
+            onClick={() => downloadClientsCsv("international")}
             disabled={internationalCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 Export Étranger ({internationalCount})
+            <Download className="h-3.5 w-3.5" /> 🌐 CSV Étranger ({internationalCount})
           </button>
           <button
-            onClick={() => downloadExcel("all")}
+            onClick={() => downloadClientsCsv("all")}
             disabled={allClients.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 Export All ({allClients.length})
+            <Download className="h-3.5 w-3.5" /> 📁 CSV All ({allClients.length})
           </button>
         </div>
       </div>
@@ -495,10 +474,21 @@ function AdminClients() {
                       </select>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {client.roomNumber ? (
-                        <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs">
-                          Nº {client.roomNumber}
-                          {client.roomType ? ` · ${client.roomType}` : ""}
+                      {client.roomNumber || client.roomType ? (
+                        <span
+                          className={`font-semibold px-2 py-0.5 rounded border text-xs ${
+                            client.roomNumber
+                              ? "text-emerald-800 bg-emerald-50 border-emerald-200"
+                              : "text-amber-800 bg-amber-50 border-amber-200"
+                          }`}
+                          title={
+                            client.roomNumber
+                              ? "Hotel room assigned"
+                              : "Room type assigned; hotel room number pending"
+                          }
+                        >
+                          {client.roomNumber ? `Nº ${client.roomNumber}` : client.roomType}
+                          {client.roomNumber && client.roomType ? ` · ${client.roomType}` : ""}
                         </span>
                       ) : (
                         <span className="text-xs text-gray-400">Unassigned</span>

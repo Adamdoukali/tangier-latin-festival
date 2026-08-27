@@ -41,6 +41,7 @@ import {
 } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
+import { downloadCsv } from "@/lib/csv-export";
 
 export const Route = createFileRoute("/admin/tourism")({
   component: AdminTourismPage,
@@ -396,8 +397,8 @@ function AdminTourismPage() {
     }
   };
 
-  // CSV Export for current view or specific tour
-  const exportCSV = (tourId?: string) => {
+  // Detailed CSV export for the current view or one excursion manifest.
+  const exportCsv = (tourId?: string) => {
     const list = tourId
       ? tourismBookings.filter((b) => getTourId(b) === tourId)
       : filteredBookings;
@@ -405,8 +406,7 @@ function AdminTourismPage() {
     const tourDef = tourId ? TOURS.find((t) => t.id === tourId) : null;
     const filename = tourDef
       ? `TLF-2027-Tourism-Manifest-${tourDef.shortName}.csv`
-      : `TLF-2027-Tourism-All-Bookings.csv`;
-
+      : `TLF-2027-Tourism-All-Bookings-${new Date().toISOString().slice(0, 10)}.csv`;
     const headers = [
       "Ticket Code",
       "Customer / Lead Name",
@@ -416,6 +416,8 @@ function AdminTourismPage() {
       "Tour Date",
       "Schedule",
       "Total Price (EUR)",
+      "Commission (EUR)",
+      "Amount Due to Festival (EUR)",
       "Email",
       "Phone / WhatsApp",
       "Country",
@@ -425,44 +427,34 @@ function AdminTourismPage() {
       "Status",
       "Created At",
     ];
-
-    const rows = list.map((b) => {
-      const bTour = TOURS.find((t) => t.id === getTourId(b)) || TOURS[0];
-      const guests = parseGuests(b);
-      const collab = collaborators.find((c) => c.id === b.collaboratorId);
-      const cost = (b.numPeople || 1) * bTour.pricePerPerson;
-
+    const rows = list.map((booking) => {
+      const tour = TOURS.find((item) => item.id === getTourId(booking)) || TOURS[0];
+      const guests = parseGuests(booking);
+      const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
+      const total = (booking.numPeople || 1) * tour.pricePerPerson;
+      const commission = collaborator && booking.status !== "declined" ? (booking.numPeople || 1) * 5 : 0;
       return [
-        b.ticketCode,
-        `"${(b.customerName || "").replace(/"/g, '""')}"`,
-        `"${guests.join("; ").replace(/"/g, '""')}"`,
-        b.numPeople || 1,
-        `"${bTour.name}"`,
-        `"${bTour.date}"`,
-        `"${bTour.time}"`,
-        cost,
-        b.email || "",
-        `"${b.phone || ""}"`,
-        `"${b.country || ""}"`,
-        `"${b.roomNumber || ""}"`,
-        collab ? `"${collab.name} (${collab.code})"` : "Direct Website",
-        `"${(b.notes || "").replace(/"/g, '""')}"`,
-        b.status,
-        b.createdAt,
+        booking.ticketCode,
+        booking.customerName,
+        guests.join("; "),
+        booking.numPeople || 1,
+        tour.name,
+        tour.date,
+        tour.time,
+        total,
+        commission,
+        total - commission,
+        booking.email,
+        booking.phone,
+        booking.country,
+        booking.roomNumber || "",
+        collaborator ? `${collaborator.name} (${collaborator.code})` : "Direct Website",
+        booking.notes,
+        booking.status,
+        booking.createdAt,
       ];
     });
-
-    const csvContent =
-      "data:text/csv;charset=utf-8,\uFEFF" +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(filename, [headers, ...rows]);
   };
 
   // WhatsApp Tour Manifest Coordinator Dispatch
@@ -526,8 +518,8 @@ function AdminTourismPage() {
           </button>
 
           <button
-            onClick={() => exportCSV()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition cursor-pointer"
+            onClick={() => exportCsv()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition cursor-pointer shadow-xs"
           >
             <Download className="h-4 w-4" />
             <span>Export CSV</span>
@@ -667,9 +659,9 @@ function AdminTourismPage() {
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                 <button
                   type="button"
-                  onClick={() => exportCSV(t.id)}
-                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold transition cursor-pointer"
-                  title="Export Manifest CSV for Tour Driver and Guide"
+                  onClick={() => exportCsv(t.id)}
+                  className="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition cursor-pointer"
+                  title="Export CSV manifest for the tour driver and guide"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Manifest CSV</span>

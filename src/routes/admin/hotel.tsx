@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useCallback } from "react";
-import * as XLSX from "xlsx";
 import {
   BedDouble,
   Bed,
@@ -32,6 +31,7 @@ import {
   type Pack,
   type Collaborator,
 } from "@/lib/admin-store";
+import { downloadCsv } from "@/lib/csv-export";
 
 export const Route = createFileRoute("/admin/hotel")({
   component: AdminHotel,
@@ -191,12 +191,12 @@ function AdminHotel() {
   const nightsOf = (r: Room) =>
     r.pack?.features.find((f) => /night|nuit|noche/i.test(f)) ?? r.pack?.sub ?? "";
 
-  // Excel-friendly CSV (semicolon + BOM), one row per room
+  // Excel-friendly UTF-8 CSV, one row per guest.
   // Rooming-list export in the festival's own sheet format:
   // one row per GUEST, rooms numbered per promoter
   // (Id chambre / Promoteur · Prénom · Nom · dates · nuits · type ·
   //  Montant · Commission · Paiement · Reste à payer · Commentaire).
-  const downloadExcel = (targetOrigin: "all" | "morocco" | "international" = "all") => {
+  const downloadRoomingCsv = (targetOrigin: "all" | "morocco" | "international" = "all") => {
     const header = [
       "Id chambre / Promoteur",
       "N° chambre",
@@ -207,10 +207,12 @@ function AdminHotel() {
       "Date de sortie",
       "Nombre de nuits",
       "Type de chambre",
+      "Catégorie de chambre",
       "Montant",
       "Commission",
       "Paiement",
       "Reste à payer",
+      "Total à verser au Festival",
       "Commentaire",
     ];
 
@@ -259,9 +261,7 @@ function AdminHotel() {
         if (targetOrigin !== "all" && orig !== targetOrigin) return;
 
         const roomId = `Chambre ${i + 1} / ${promoter}`;
-        const roomType = r.booking.roomType
-          ? r.booking.roomType
-          : r.pack
+        const packType = r.pack
           ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
           : r.booking.packName;
         const originText =
@@ -273,6 +273,8 @@ function AdminHotel() {
           const parts = full.split(/\s+/);
           const prenom = parts[0] ?? "";
           const nom = parts.slice(1).join(" ").toUpperCase();
+          const amount = guestAmount(r);
+          const commission = guestCommission(r);
           csvRows.push([
             roomId,
             r.booking.roomNumber ?? "",
@@ -282,50 +284,29 @@ function AdminHotel() {
             frDate(r.booking.arrivalDate),
             frDate(r.booking.departureDate),
             nightsOfRoom(r),
-            roomType,
-            guestAmount(r),
-            guestCommission(r),
+            packType,
+            r.booking.roomType ?? "",
+            amount,
+            commission,
             "", // Paiement — filled in by the team
             "", // Reste à payer
+            amount === "" ? "" : amount - (commission === "" ? 0 : commission),
             `${r.booking.ticketCode}${r.booking.notes ? ` — ${r.booking.notes}` : ""}`,
           ]);
         }
       });
     }
 
-    // Real .xlsx so Excel opens it correctly in every language/locale.
-    const ws = XLSX.utils.aoa_to_sheet([header, ...csvRows]);
-    ws["!cols"] = [
-      { wch: 26 }, // Id chambre / Promoteur
-      { wch: 11 }, // N° chambre
-      { wch: 14 }, // Prénom
-      { wch: 16 }, // Nom
-      { wch: 18 }, // Origine / Pays
-      { wch: 13 }, // Date d'entrée
-      { wch: 13 }, // Date de sortie
-      { wch: 14 }, // Nombre de nuits
-      { wch: 38 }, // Type de chambre
-      { wch: 10 }, // Montant
-      { wch: 11 }, // Commission
-      { wch: 10 }, // Paiement
-      { wch: 12 }, // Reste à payer
-      { wch: 34 }, // Commentaire
-    ];
-    const wb = XLSX.utils.book_new();
-    const sheetName =
-      targetOrigin === "morocco"
-        ? "Maroc"
-        : targetOrigin === "international"
-        ? "Étranger"
-        : "Rooming list";
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
     const suffix =
       targetOrigin === "morocco"
         ? "maroc"
         : targetOrigin === "international"
         ? "etranger"
         : "all";
-    XLSX.writeFile(wb, `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    downloadCsv(
+      `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`,
+      [header, ...csvRows]
+    );
   };
 
   const statusStyles: Record<string, string> = {
@@ -485,28 +466,28 @@ function AdminHotel() {
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={() => downloadExcel("morocco")}
+            onClick={() => downloadRoomingCsv("morocco")}
             disabled={moroccanRooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel containing only Moroccan guests"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            title="Download CSV containing only Moroccan guests"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 Excel Maroc ({moroccanGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 CSV Maroc ({moroccanGuests} guests)
           </button>
           <button
-            onClick={() => downloadExcel("international")}
+            onClick={() => downloadRoomingCsv("international")}
             disabled={internationalRooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel containing only Étranger / International guests"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            title="Download CSV containing only Étranger / International guests"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 Excel Étranger ({internationalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🌐 CSV Étranger ({internationalGuests} guests)
           </button>
           <button
-            onClick={() => downloadExcel("all")}
+            onClick={() => downloadRoomingCsv("all")}
             disabled={rooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel containing all rooms and guests"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            title="Download CSV containing all rooms and guests"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 Excel All ({totalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 📁 CSV All ({totalGuests} guests)
           </button>
         </div>
       </div>
