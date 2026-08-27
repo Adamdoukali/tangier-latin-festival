@@ -496,7 +496,7 @@ function BookTourismPage() {
         ticketCode: linkedTicketCode,
         packId: selectedTour.id,
         packName: `Tourism: ${selectedTour.city} (${selectedTour.date[L] || selectedTour.date.en})`,
-        customerName: guestNames,
+        customerName: customerName,
         email: form.email.trim(),
         phone: form.phone.trim(),
         country: form.country.trim() || matchedFestivalBooking?.country || "Morocco",
