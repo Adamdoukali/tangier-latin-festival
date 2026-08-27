@@ -1897,17 +1897,20 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 const priceBreakdown = [
                   {
                     amount: res.festivalNetPrice,
-                    label: "",
+                    label: tr("Total pack", "Total pack", "Total pack"),
+                    isPack: true,
                     className: "text-slate-700",
                   },
                   {
                     amount: res.totalTourismPrice,
                     label: tr("excursion", "excursion", "excursión"),
+                    isPack: false,
                     className: "text-slate-700",
                   },
                   {
                     amount: res.shuttle?.cost ?? 0,
                     label: tr("transfer", "navette", "traslado"),
+                    isPack: false,
                     className: "text-blue-700",
                   },
                 ].filter((part) => part.amount > 0);
@@ -1952,8 +1955,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                   className={part.className}
                                 >
                                   {index > 0 ? "+ " : ""}
-                                  {part.amount} {accountCurrencyLabel}
-                                  {part.label ? ` ${part.label}` : ""}
+                                  {part.isPack
+                                    ? `${part.label} ${part.amount} ${accountCurrencyLabel}`
+                                    : `${part.amount} ${accountCurrencyLabel} ${part.label}`}
                                 </span>
                               ))}
                             </span>
