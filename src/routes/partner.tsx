@@ -885,10 +885,23 @@ function buildUnifiedReservations(
       const matchTicket = (fbCode && tbCode && fbCode === tbCode) || (fbCode && tbNotes.includes(fbCode));
       const matchEmail = fbEmail.length > 3 && tbEmail.length > 3 && fbEmail === tbEmail;
       const matchPhone = fbPhone.length >= 6 && tbPhone.length >= 6 && (fbPhone.endsWith(tbPhone.slice(-8)) || tbPhone.endsWith(fbPhone.slice(-8)));
-      const matchName = fb.customerName && tb.customerName && (
-        fb.customerName.toLowerCase().trim() === tb.customerName.toLowerCase().trim() ||
-        fb.customerName.toLowerCase().includes(tb.customerName.toLowerCase()) ||
-        tb.customerName.toLowerCase().includes(fb.customerName.toLowerCase())
+
+      const fbGuests = [guest1, guest2, ...allGuests, fb.customerName]
+        .filter(Boolean)
+        .map((n) => (n || "").toLowerCase().trim());
+      const tbExtract = extractGuests(tb);
+      const tbGuests = [tb.customerName, tbExtract.guest1, tbExtract.guest2, ...tbExtract.allGuests]
+        .filter(Boolean)
+        .map((n) => (n || "").toLowerCase().trim());
+
+      const matchName = fbGuests.some((fg) =>
+        tbGuests.some((tg) => {
+          if (!fg || !tg || fg.length < 2 || tg.length < 2) return false;
+          if (fg === tg || fg.includes(tg) || tg.includes(fg)) return true;
+          const fgWords = fg.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+          const tgWords = tg.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+          return fgWords.some((fw) => tgWords.includes(fw));
+        })
       );
 
       return matchTicket || matchEmail || matchPhone || matchName;
@@ -1125,6 +1138,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               const bName = b.customerName.toLowerCase().trim();
               if (fbName.length > 2 && (fbName === bName || fbName.includes(bName) || bName.includes(fbName)))
                 return true;
+              const fbWords = fbName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+              const bWords = bName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+              if (fbWords.some((fw) => bWords.includes(fw))) return true;
             }
             return false;
           });

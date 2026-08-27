@@ -2755,8 +2755,8 @@ export function normalizePhone(phone: string | null | undefined): string {
   return phone.replace(/\D/g, "");
 }
 
-/** Auto-link database query to find a matching master festival pack booking */
 export async function findMatchingFestivalBooking(query: {
+  ticketCode?: string | null;
   phone?: string | null;
   email?: string | null;
   name?: string | null;
@@ -2764,9 +2764,19 @@ export async function findMatchingFestivalBooking(query: {
   const bookings = await getBookings();
   const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && b.status !== "declined");
 
+  const cleanCode = (query.ticketCode || "").trim().toUpperCase().replace(/^#/, "");
   const cleanPhone = normalizePhone(query.phone);
   const cleanEmail = (query.email || "").trim().toLowerCase();
   const cleanName = (query.name || "").trim().toLowerCase();
+
+  // 0. Match by ticket code
+  if (cleanCode.length >= 4) {
+    const byCode = festivalBookings.find((b) => {
+      const bCode = (b.ticketCode || "").trim().toUpperCase();
+      return bCode === cleanCode || bCode.includes(cleanCode) || cleanCode.includes(bCode);
+    });
+    if (byCode) return byCode;
+  }
 
   // 1. Match by phone (last 8 digits)
   if (cleanPhone.length >= 6) {
@@ -2787,19 +2797,24 @@ export async function findMatchingFestivalBooking(query: {
     if (byEmail) return byEmail;
   }
 
-  // 3. Match by name
-  if (cleanName && cleanName.length >= 4) {
+  // 3. Match by name & name tokens
+  if (cleanName && cleanName.length >= 3) {
+    const queryTokens = cleanName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
     const byName = festivalBookings.find((b) => {
       const bName = (b.customerName || "").trim().toLowerCase();
-      if (bName === cleanName) return true;
-      if (bName.includes(cleanName) || cleanName.includes(bName)) return true;
+      if (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName)) return true;
+      const bTokens = bName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+      if (queryTokens.some((qt) => bTokens.includes(qt))) return true;
+
       if (b.guestDetails) {
         try {
           const guests = JSON.parse(b.guestDetails);
           if (Array.isArray(guests)) {
             return guests.some((g) => {
               const fullName = `${g.firstName || ""} ${g.lastName || ""}`.trim().toLowerCase();
-              return fullName === cleanName || fullName.includes(cleanName);
+              if (fullName === cleanName || fullName.includes(cleanName) || cleanName.includes(fullName)) return true;
+              const gTokens = fullName.split(/[\s,&+]+/).filter((w) => w.length >= 3);
+              return queryTokens.some((qt) => gTokens.includes(qt));
             });
           }
         } catch {}

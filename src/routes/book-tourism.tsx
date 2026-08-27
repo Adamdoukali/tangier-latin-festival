@@ -299,6 +299,7 @@ function BookTourismPage() {
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
   const [partnerCode, setPartnerCode] = useState<string | null>(null);
+  const [ticketCodeInput, setTicketCodeInput] = useState("");
   const [matchedFestivalBooking, setMatchedFestivalBooking] = useState<Booking | null>(null);
 
   const [form, setForm] = useState({
@@ -310,19 +311,20 @@ function BookTourismPage() {
     notes: "",
   });
 
-  // Cross-booking auto-linking lookup: search database as user enters phone, email or name
+  // Cross-booking auto-linking lookup: search database as user enters ticket code, phone, email or name
   useEffect(() => {
     const timer = setTimeout(async () => {
       const leadName = form.guests[0]?.firstName
         ? `${form.guests[0].firstName} ${form.guests[0].lastName}`.trim()
         : undefined;
 
-      if (!form.phone && !form.email && !leadName) {
+      if (!ticketCodeInput && !form.phone && !form.email && !leadName) {
         setMatchedFestivalBooking(null);
         return;
       }
 
       const match = await findMatchingFestivalBooking({
+        ticketCode: ticketCodeInput.trim() || undefined,
         phone: form.phone,
         email: form.email,
         name: leadName,
@@ -334,14 +336,20 @@ function BookTourismPage() {
         if (match.roomNumber) {
           setForm((f) => ({ ...f, roomNumber: f.roomNumber || match.roomNumber! }));
         }
-        if (match.country) {
+        if (match.country && !form.country) {
           setForm((f) => ({ ...f, country: f.country || match.country }));
         }
+        if (match.email && !form.email) {
+          setForm((f) => ({ ...f, email: f.email || match.email }));
+        }
+        if (match.phone && !form.phone) {
+          setForm((f) => ({ ...f, phone: f.phone || match.phone }));
+        }
       }
-    }, 450);
+    }, 400);
 
     return () => clearTimeout(timer);
-  }, [form.phone, form.email, form.guests]);
+  }, [ticketCodeInput, form.phone, form.email, form.guests]);
 
   // Check ?ref= partner code and automatically sync language if needed
   useEffect(() => {
@@ -481,20 +489,23 @@ function BookTourismPage() {
 
     let created: Booking | null = null;
     try {
+      // If matched with an existing festival booking, keep the exact same ticketCode
+      const linkedTicketCode = matchedFestivalBooking?.ticketCode || (ticketCodeInput.trim() ? ticketCodeInput.trim().toUpperCase() : undefined);
+
       created = await addBooking({
-        ticketCode: matchedFestivalBooking?.ticketCode,
+        ticketCode: linkedTicketCode,
         packId: selectedTour.id,
         packName: `Tourism: ${selectedTour.city} (${selectedTour.date[L] || selectedTour.date.en})`,
-        customerName,
-        email: form.email,
-        phone: form.phone,
-        country: form.country || "Morocco",
+        customerName: guestNames,
+        email: form.email.trim(),
+        phone: form.phone.trim(),
+        country: form.country.trim() || matchedFestivalBooking?.country || "Morocco",
         numPeople: numGuests,
         danceLevel: "",
         notes: fullNotes,
         arrivalDate: "2027-01-09",
         departureDate: "2027-01-11",
-        roomNumber: form.roomNumber || matchedFestivalBooking?.roomNumber || null,
+        roomNumber: form.roomNumber.trim() || matchedFestivalBooking?.roomNumber || null,
         guestDetails: JSON.stringify(form.guests),
         lang: L,
         status: "pending",
@@ -947,6 +958,31 @@ function BookTourismPage() {
 
               {/* Contact Information */}
               <div className="space-y-3">
+                {/* Festival Ticket Link Input */}
+                <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3.5 space-y-2">
+                  <label className="block text-xs font-bold text-blue-950">
+                    {tr(
+                      "Already booked a Festival Pass? Enter your Ticket Code (Optional):",
+                      "Vous avez déjà un Pass Festival ? Entrez votre code billet (Optionnel) :",
+                      "¿Ya tienes tu Pase del Festival? Introduce tu código de entrada (Opcional):"
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={ticketCodeInput}
+                    onChange={(e) => setTicketCodeInput(e.target.value.toUpperCase())}
+                    placeholder="Ex: #TLF-QGXVWQFP"
+                    className="w-full rounded-xl border border-blue-300 bg-white px-3.5 py-2 text-xs font-mono font-bold text-blue-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400 uppercase"
+                  />
+                  <p className="text-[10px] text-blue-700">
+                    {tr(
+                      "Your excursion will be automatically linked to your hotel room and festival pass.",
+                      "Votre excursion sera automatiquement reliée à votre chambre et pass festival.",
+                      "Tu excursión se vinculará automáticamente a tu habitación y pase del festival."
+                    )}
+                  </p>
+                </div>
+
                 {matchedFestivalBooking && (
                   <div className="rounded-2xl border border-emerald-300 bg-emerald-50/90 p-3.5 flex items-start gap-3 shadow-xs">
                     <div className="h-7 w-7 rounded-xl bg-emerald-600 text-white grid place-items-center shrink-0 mt-0.5">
