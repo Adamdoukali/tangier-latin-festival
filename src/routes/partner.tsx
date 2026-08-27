@@ -1313,7 +1313,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   // Combined totals
   const totalFestivalSales = (partnerCurrency(partner) === "MAD" ? festSales.mad : festSales.eur) || 0;
-  const totalGrossSales = totalFestivalSales + totalTourRevenue;
+  const totalGrossSales = totalFestivalSales + totalTourRevenue + totalShuttleRevenue;
 
   const totalFestivalCommission = (partnerCurrency(partner) === "MAD" ? festEarned.mad : festEarned.eur) || 0;
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
@@ -1409,7 +1409,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalGrossSales} €
               </p>
               <p className="text-xs text-blue-200/80 font-medium mt-0.5">
-                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Excursions", "Excursions", "Excursiones")})
+                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} € ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} € ({tr("Transfers", "Transferts", "Traslados")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
@@ -1445,7 +1445,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalDueToFestival} €
               </p>
               <p className="text-xs text-rose-100 font-medium mt-0.5">
-                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Excursions", "Excursions", "Excursiones")})
+                {festDue} € ({tr("Festival", "Festival", "Festival")}) + {tourDue} € ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} € ({tr("Transfers", "Transferts", "Traslados")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
