@@ -34,11 +34,6 @@ import {
   missionColumnsReady,
   formatMoney,
   formatForPartner,
-  bookingPeopleCount,
-  isTourismBooking,
-  moneyIn,
-  packRoomCategory,
-  partnerCurrency,
   commissionLabel,
   partnerShareLink,
   type Collaborator,
@@ -49,6 +44,10 @@ import {
   type CommissionCurrency,
   type PartnerLanguage,
 } from "@/lib/admin-store";
+import {
+  buildCollaboratorDetailsSpreadsheet,
+  buildCollaboratorSummarySpreadsheet,
+} from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/collaborators")({
@@ -281,7 +280,7 @@ function AdminCollaborators() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
-  // Search filters the table and the collaborator CSV export.
+  // Search filters the table and both collaborator workbook exports.
   const visibleStats = stats.filter(({ collaborator: c }) => {
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
@@ -295,86 +294,23 @@ function AdminCollaborators() {
     );
   });
 
-  const downloadCollaboratorsXlsx = () => {
-    const header = [
-      "Collaborateurs",
-      "Code",
-      "Chambre single",
-      "Chambre double",
-      "Full Pass",
-      "Excursions",
-      "Transferts",
-      "Total participants",
-      "Total ventes",
-      "Total Commissions",
-      "Total à verser au Festival",
-      "Commission Deal",
-      "Mission",
-      "Mission Reward",
-      "Active",
-    ];
-    const rows = visibleStats.map(({ collaborator, revenue, commission }) => {
-      const mine = bookings.filter(
-        (booking) => booking.collaboratorId === collaborator.id && booking.status !== "declined"
-      );
-      const festival = mine.filter(
-        (booking) => !isTourismBooking(booking) && !/navette|shuttle\s*transfer/i.test(booking.packName)
-      );
-      const categoryOf = (booking: Booking) =>
-        packRoomCategory(
-          packs.find((pack) => pack.id === booking.packId) || booking.packName,
-          booking.numPeople
-        );
-      const excursions = mine
-        .filter(isTourismBooking)
-        .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
-      const transfers = mine
-        .filter(
-          (booking) =>
-            !!booking.needsTransfer || !!booking.transferType || (booking.transferCost ?? 0) > 0
-        )
-        .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
-      const participants = festival.reduce(
-        (sum, booking) => sum + bookingPeopleCount(booking, packs),
-        0
-      );
-      const currency = partnerCurrency(collaborator);
-      const transferSales = mine.reduce((sum, booking) => sum + (booking.transferCost ?? 0), 0);
-      const sales = moneyIn(revenue, currency) + moneyIn({ eur: transferSales, mad: 0 }, currency);
-      const earned = moneyIn(commission, currency);
-      const missionAchieved = !!collaborator.missionGoal && participants >= collaborator.missionGoal;
-      const reward = missionAchieved
-        ? moneyIn(
-            collaborator.missionCurrency === "MAD"
-              ? { eur: 0, mad: collaborator.missionReward ?? 0 }
-              : { eur: collaborator.missionReward ?? 0, mad: 0 },
-            currency
-          )
-        : 0;
-      return [
-        collaborator.name,
-        collaborator.code,
-        festival.filter((booking) => categoryOf(booking) === "single").length,
-        festival.filter((booking) => categoryOf(booking) === "double").length,
-        festival.filter((booking) => categoryOf(booking) === "fullpass").length,
-        excursions,
-        transfers,
-        participants,
-        sales,
-        earned,
-        sales - earned - reward,
-        commissionLabel(collaborator),
-        collaborator.missionGoal
-          ? `${Math.min(participants, collaborator.missionGoal)}/${collaborator.missionGoal}`
-          : "",
-        reward,
-        collaborator.active ? "yes" : "no",
-      ];
-    });
+  const downloadCollaboratorsSummaryXlsx = () => {
     downloadXlsx(
-      `admin-collaborators-${new Date().toISOString().slice(0, 10)}.xlsx`,
-      [header, ...rows],
-      "Collaborateurs"
+      `bilan-collaborateurs-resume-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      buildCollaboratorSummarySpreadsheet(visibleStats, bookings, packs),
+      "Bilan resume"
+    );
+  };
+
+  const downloadCollaboratorsDetailsXlsx = () => {
+    downloadXlsx(
+      `bilan-collaborateurs-details-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      buildCollaboratorDetailsSpreadsheet(
+        visibleStats.map(({ collaborator }) => collaborator),
+        bookings,
+        packs
+      ),
+      "Bilan details"
     );
   };
 
@@ -693,14 +629,20 @@ function AdminCollaborators() {
         )}
       </div>
 
-      {/* Complete collaborator CSV summary. */}
+      {/* Supplied collaborator summary and detailed financial templates. */}
       {stats.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
           <button
-            onClick={downloadCollaboratorsXlsx}
+            onClick={downloadCollaboratorsSummaryXlsx}
             className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition cursor-pointer"
           >
-            <Download className="h-4 w-4" /> Export Admin XLSX
+            <Download className="h-4 w-4" /> Bilan résumé XLSX
+          </button>
+          <button
+            onClick={downloadCollaboratorsDetailsXlsx}
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 transition cursor-pointer"
+          >
+            <Download className="h-4 w-4" /> Bilan détails XLSX
           </button>
         </div>
       )}

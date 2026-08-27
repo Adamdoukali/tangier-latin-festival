@@ -30,6 +30,7 @@ import {
 import {
   getBookings,
   getPacks,
+  getCollaborators,
   addBooking,
   updateBookingTransfer,
   calculateTransferCost,
@@ -37,9 +38,11 @@ import {
   ticketUrl,
   type Booking,
   type Pack,
+  type Collaborator,
   type TransferType,
   type TransferOption,
 } from "@/lib/admin-store";
+import { buildTransferSpreadsheet } from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/shuttle")({
@@ -51,6 +54,7 @@ type TabView = "arrivals" | "departures" | "all";
 function AdminShuttlePage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<TabView>("arrivals");
@@ -96,9 +100,10 @@ function AdminShuttlePage() {
 
   const reload = useCallback(async () => {
     setLoading(true);
-    const [b, p] = await Promise.all([getBookings(), getPacks()]);
+    const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
     setBookings(b);
     setPacks(p);
+    setCollaborators(c);
     setLoading(false);
   }, []);
 
@@ -188,70 +193,14 @@ function AdminShuttlePage() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [shuttleBookings]);
 
-  // Full transfer Excel workbook with one booking per row.
+  // Transfer workbook in the supplied festival template, one row per passenger.
   const exportToXlsx = (dataToExport: Booking[], filename: string) => {
     if (!dataToExport.length) return;
-    const headers = [
-      "Reservation Code",
-      "Customer Name",
-      "Number of Guests",
-      "Guest Names",
-      "Phone",
-      "Email",
-      "Country",
-      "Pack",
-      "Transfer Type",
-      "Location / Hub",
-      "Transfer Direction",
-      "Arrival Date",
-      "Arrival Time",
-      "Departure Date",
-      "Departure Time",
-      "Flight / Ferry Details",
-      "Transfer Cost (EUR)",
-      "Status",
-      "Notes",
-    ];
-    const rows = dataToExport.map((booking) => {
-      let guestNames = booking.customerName;
-      if (booking.guestDetails) {
-        try {
-          const parsed = JSON.parse(booking.guestDetails);
-          if (Array.isArray(parsed)) {
-            guestNames = parsed
-              .map((guest) => `${guest.firstName || ""} ${guest.lastName || ""}`.trim())
-              .filter(Boolean)
-              .join(" & ");
-          }
-        } catch {
-          // Keep the reservation name.
-        }
-      }
-      const detailField = (label: string) =>
-        booking.transferDetails?.match(new RegExp(`(?:^|\\n)${label}:\\s*([^\\n]+)`, "i"))?.[1]?.trim() || "";
-      return [
-        booking.ticketCode,
-        booking.customerName,
-        booking.numPeople || 1,
-        guestNames,
-        booking.phone,
-        booking.email,
-        booking.country,
-        booking.packName,
-        booking.transferType?.toUpperCase() || "",
-        booking.transferLocation || "",
-        formatTransferOptionLabel(booking.transferOption, "en"),
-        booking.arrivalDate || "",
-        booking.arrivalTime || detailField("Arrival Time"),
-        booking.departureDate || "",
-        booking.departureTime || detailField("Departure Time"),
-        booking.transferDetails || "",
-        booking.transferCost ?? 0,
-        booking.status,
-        booking.notes,
-      ];
-    });
-    downloadXlsx(`${filename}.xlsx`, [headers, ...rows], "Transfers");
+    downloadXlsx(
+      `${filename}.xlsx`,
+      buildTransferSpreadsheet(dataToExport, packs, collaborators),
+      "Transferts"
+    );
   };
 
   const copyToClipboard = (text: string, id: string) => {
@@ -472,7 +421,7 @@ function AdminShuttlePage() {
           </button>
 
           <button
-            onClick={() => exportToXlsx(shuttleBookings, `festival-transferts-${new Date().toISOString().slice(0, 10)}`)}
+            onClick={() => exportToXlsx(shuttleBookings, `tableau-transferts-${new Date().toISOString().slice(0, 10)}`)}
             disabled={!shuttleBookings.length}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
@@ -672,7 +621,7 @@ function AdminShuttlePage() {
                       onClick={() =>
                         exportToXlsx(
                           groupBookings,
-                          `tlf-arrivals-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
+                          `tableau-transferts-arrivees-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
                       }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
@@ -795,7 +744,7 @@ function AdminShuttlePage() {
                       onClick={() =>
                         exportToXlsx(
                           groupBookings,
-                          `tlf-departures-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
+                          `tableau-transferts-departs-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
                         )
                       }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"

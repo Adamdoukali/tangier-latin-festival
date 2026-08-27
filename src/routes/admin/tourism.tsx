@@ -38,9 +38,11 @@ import {
   type Booking,
   type BookingStatus,
   type Collaborator,
+  type Pack,
 } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
+import { buildExcursionSpreadsheet } from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/tourism")({
@@ -132,6 +134,7 @@ function parseGuests(b: Booking): string[] {
 
 function AdminTourismPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -176,8 +179,9 @@ function AdminTourismPage() {
 
   const reload = useCallback(async () => {
     setLoading(true);
-    const [b, c] = await Promise.all([getBookings(), getCollaborators()]);
+    const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
     setBookings(b);
+    setPacks(p);
     setCollaborators(c);
     setLoading(false);
   }, []);
@@ -405,58 +409,11 @@ function AdminTourismPage() {
 
     const tourDef = tourId ? TOURS.find((t) => t.id === tourId) : null;
     const filename = tourDef
-      ? `TLF-2027-Tourism-Manifest-${tourDef.shortName}.xlsx`
-      : `TLF-2027-Tourism-All-Bookings-${new Date().toISOString().slice(0, 10)}.xlsx`;
-    const headers = [
-      "Ticket Code",
-      "Customer / Lead Name",
-      "Individual Guests",
-      "Guest Count",
-      "Excursion / Tour",
-      "Tour Date",
-      "Schedule",
-      "Total Price (EUR)",
-      "Commission (EUR)",
-      "Amount Due to Festival (EUR)",
-      "Email",
-      "Phone / WhatsApp",
-      "Country",
-      "Hotel Room #",
-      "Partner Referral",
-      "Special Requests / Notes",
-      "Status",
-      "Created At",
-    ];
-    const rows = list.map((booking) => {
-      const tour = TOURS.find((item) => item.id === getTourId(booking)) || TOURS[0];
-      const guests = parseGuests(booking);
-      const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
-      const total = (booking.numPeople || 1) * tour.pricePerPerson;
-      const commission = collaborator && booking.status !== "declined" ? (booking.numPeople || 1) * 5 : 0;
-      return [
-        booking.ticketCode,
-        booking.customerName,
-        guests.join("; "),
-        booking.numPeople || 1,
-        tour.name,
-        tour.date,
-        tour.time,
-        total,
-        commission,
-        total - commission,
-        booking.email,
-        booking.phone,
-        booking.country,
-        booking.roomNumber || "",
-        collaborator ? `${collaborator.name} (${collaborator.code})` : "Direct Website",
-        booking.notes,
-        booking.status,
-        booking.createdAt,
-      ];
-    });
+      ? `tableau-excursions-${tourDef.shortName}.xlsx`
+      : `tableau-excursions-${new Date().toISOString().slice(0, 10)}.xlsx`;
     downloadXlsx(
       filename,
-      [headers, ...rows],
+      buildExcursionSpreadsheet(list, packs, collaborators),
       tourDef ? tourDef.shortName : "Tourism bookings"
     );
   };

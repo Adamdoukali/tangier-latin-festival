@@ -17,6 +17,7 @@ import {
   getBookings,
   getPacks,
   getCollaborators,
+  getClients,
   packRoomCategory,
   bookingPeopleCount,
   guestOrigin,
@@ -31,6 +32,11 @@ import {
   type Pack,
   type Collaborator,
 } from "@/lib/admin-store";
+import {
+  formatSpreadsheetDate,
+  formatSpreadsheetOrigin,
+  HOTEL_EXPORT_HEADER,
+} from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/hotel")({
@@ -197,27 +203,6 @@ function AdminHotel() {
   // (Id chambre / Promoteur · Prénom · Nom · dates · nuits · type ·
   //  Montant · Commission · Paiement · Reste à payer · Commentaire).
   const downloadRoomingXlsx = (targetOrigin: "all" | "morocco" | "international" = "all") => {
-    const header = [
-      "Id chambre / Promoteur",
-      "N° chambre",
-      "Prénom",
-      "Nom",
-      "Origine / Pays",
-      "Date d'entrée",
-      "Date de sortie",
-      "Nombre de nuits",
-      "Type de chambre",
-      "Catégorie de chambre",
-      "Montant",
-      "Commission",
-      "Paiement",
-      "Reste à payer",
-      "Total à verser au Festival",
-      "Commentaire",
-    ];
-
-    const frDate = (d?: string | null) =>
-      d ? new Date(d).toLocaleDateString("fr-FR") : "";
     const nightsOfRoom = (r: Room): number | "" => {
       if (r.booking.arrivalDate && r.booking.departureDate) {
         const n = Math.round(
@@ -264,25 +249,18 @@ function AdminHotel() {
         const packType = r.pack
           ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
           : r.booking.packName;
-        const originText =
-          orig === "morocco" ? "Maroc 🇲🇦" : `${r.booking.country || "Étranger"} 🌐`;
-
-        const guestCount = Math.max(r.booking.numPeople || 1, r.guests.length);
-        for (let gi = 0; gi < guestCount; gi++) {
-          const full = (r.guests[gi] ?? "").trim();
-          const parts = full.split(/\s+/);
-          const prenom = parts[0] ?? "";
-          const nom = parts.slice(1).join(" ").toUpperCase();
+        const clients = getClients([r.booking], packs, collaborators);
+        for (const client of clients) {
           const amount = guestAmount(r);
           const commission = guestCommission(r);
           spreadsheetRows.push([
             roomId,
             r.booking.roomNumber ?? "",
-            prenom,
-            nom,
-            originText,
-            frDate(r.booking.arrivalDate),
-            frDate(r.booking.departureDate),
+            client.firstName,
+            client.lastName.toUpperCase(),
+            formatSpreadsheetOrigin(client.country, client.origin === "morocco"),
+            formatSpreadsheetDate(r.booking.arrivalDate),
+            formatSpreadsheetDate(r.booking.departureDate),
             nightsOfRoom(r),
             packType,
             r.booking.roomType ?? "",
@@ -304,13 +282,9 @@ function AdminHotel() {
         ? "etranger"
         : "all";
     downloadXlsx(
-      `hotel-rooming-list-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
-      [header, ...spreadsheetRows],
-      targetOrigin === "morocco"
-        ? "Rooming Maroc"
-        : targetOrigin === "international"
-          ? "Rooming Etranger"
-          : "Rooming list"
+      `database-hotel-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      [HOTEL_EXPORT_HEADER, ...spreadsheetRows],
+      "Hotel"
     );
   };
 
