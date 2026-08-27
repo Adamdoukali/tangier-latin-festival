@@ -696,7 +696,7 @@ function BookPage() {
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Arrival Date (Going)", "Date d'arrivée (Aller)", "Fecha de llegada (Ida)")}{" "}
+                  {tr("Arrival Date", "Date d'arrivée", "Fecha de llegada")}{" "}
                   <span className="text-red-600">*</span>
                 </label>
                 <input
@@ -714,7 +714,7 @@ function BookPage() {
               </div>
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  {tr("Departure Date (Return)", "Date de départ (Vuelta)", "Fecha de salida (Vuelta)")}{" "}
+                  {tr("Departure Date", "Date de départ", "Fecha de salida")}{" "}
                   <span className="text-red-600">*</span>
                 </label>
                 <input

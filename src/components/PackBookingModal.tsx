@@ -712,7 +712,7 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
                   <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                  {lang === "fr" ? "Date d'arrivée (Aller) *" : lang === "es" ? "Fecha de llegada (Ida) *" : "Arrival Date (Going) *"}
+                  {lang === "fr" ? "Date d'arrivée *" : lang === "es" ? "Fecha de llegada *" : "Arrival Date *"}
                 </label>
                 <input
                   type="date"
@@ -727,7 +727,7 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
                   <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                  {lang === "fr" ? "Date de départ (Retour) *" : lang === "es" ? "Fecha de salida (Vuelta) *" : "Departure Date (Return) *"}
+                  {lang === "fr" ? "Date de départ *" : lang === "es" ? "Fecha de salida *" : "Departure Date *"}
                 </label>
                 <input
                   type="date"
