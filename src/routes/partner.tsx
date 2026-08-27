@@ -1821,7 +1821,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               <span>
                 {tr(
                   "Note: Booking validation and confirmation for MAD accounts are managed directly by Festival Administration.",
-                  "Note : La validation et confirmation des réservations pour les comptes en Dirhams sont gérées directement par l'Administration du festival.",
+                  "La validation et confirmation des réservations sont gérées directement par l'Administration du festival.",
                   "Nota: La validación y confirmación de reservas en Dirhams son gestionadas directamente por la Administración del festival."
                 )}
               </span>
