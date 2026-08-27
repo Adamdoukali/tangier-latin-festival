@@ -1972,17 +1972,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             </span>
                           </div>
 
-                          {hasTicket && (
-                            <a
-                              href={ticketUrl(res.ticketCode)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 hover:bg-amber-200 font-bold transition shadow-2xs text-xs"
-                            >
-                              <QrCode className="h-4 w-4 text-amber-700" />
-                              <span>{tr("Open Ticket", "Ouvrir Billet", "Abrir Entrada")}</span>
-                            </a>
-                          )}
                         </div>
                         <div className="grid sm:grid-cols-2 gap-3.5">
                           {/* 1. Yellowish Box — Hotel & Room Accommodation */}
