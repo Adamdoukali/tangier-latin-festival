@@ -414,7 +414,6 @@ function BookPage() {
           const tourDef = tours.find((t) => t.id === tourId);
           if (tourDef) {
             await addBooking({
-              ticketCode: created?.ticketCode,
               packId: tourDef.id,
               packName: `Tourism: ${tourDef.name.en} (${tourDef.date.en})`,
               customerName,
@@ -431,7 +430,7 @@ function BookPage() {
               status: "pending",
               source: collaborator ? "referral" : "website",
               collaboratorId: collaborator?.id ?? null,
-            }).catch((err) => console.warn("Could not record attached tour:", err));
+            }, { allowLocalFallback: false });
           }
         }
       }

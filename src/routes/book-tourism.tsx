@@ -475,8 +475,10 @@ function BookTourismPage() {
     const totalCost = selectedTour.price * numGuests;
 
     const partnerTag = refCode ? `Referral: ${refCode}` : "";
-    const linkedNote = matchedFestivalBooking
-      ? `[Linked Festival Ticket #${matchedFestivalBooking.ticketCode}]`
+    const festivalTicketCode =
+      matchedFestivalBooking?.ticketCode || ticketCodeInput.trim().toUpperCase();
+    const linkedNote = festivalTicketCode
+      ? `[Linked Festival Ticket #${festivalTicketCode}]`
       : "";
     const fullNotes = [
       partnerTag,
@@ -489,11 +491,11 @@ function BookTourismPage() {
 
     let created: Booking | null = null;
     try {
-      // If matched with an existing festival booking, keep the exact same ticketCode
-      const linkedTicketCode = matchedFestivalBooking?.ticketCode || (ticketCodeInput.trim() ? ticketCodeInput.trim().toUpperCase() : undefined);
-
       created = await addBooking({
-        ticketCode: linkedTicketCode,
+        // Every booking row needs its own reservation code. Reusing the festival
+        // ticket code violates the database's unique constraint and previously
+        // made the excursion fall back to browser-only storage. The festival
+        // booking remains linked through collaboratorId and the note above.
         packId: selectedTour.id,
         packName: `Tourism: ${selectedTour.city} (${selectedTour.date[L] || selectedTour.date.en})`,
         customerName: customerName,
@@ -511,9 +513,18 @@ function BookTourismPage() {
         status: "pending",
         source: finalCollaboratorId ? "referral" : "website",
         collaboratorId: finalCollaboratorId,
-      });
+      }, { allowLocalFallback: false });
     } catch (dbErr) {
       console.warn("Could not record tourism booking:", dbErr);
+      setError(
+        tr(
+          "We could not save your excursion. Please try again; no reservation was created.",
+          "Nous n'avons pas pu enregistrer votre excursion. Veuillez réessayer ; aucune réservation n'a été créée.",
+          "No pudimos guardar tu excursión. Inténtalo de nuevo; no se creó ninguna reserva."
+        )
+      );
+      setSubmitting(false);
+      return;
     }
 
     try {

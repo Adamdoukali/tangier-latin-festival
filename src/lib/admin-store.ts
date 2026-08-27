@@ -973,7 +973,8 @@ export async function getBookingByTicketCode(code: string): Promise<Booking | un
 }
 
 export async function addBooking(
-  booking: Omit<Booking, "id" | "ticketCode" | "createdAt"> & { ticketCode?: string }
+  booking: Omit<Booking, "id" | "ticketCode" | "createdAt"> & { ticketCode?: string },
+  options: { allowLocalFallback?: boolean } = {}
 ): Promise<Booking> {
   const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
   if (booking.discountCode) {
@@ -1060,6 +1061,7 @@ export async function addBooking(
       return bookingFromRow(data);
     } catch (e) {
       warn("addBooking", e);
+      if (options.allowLocalFallback === false) throw e;
     }
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
