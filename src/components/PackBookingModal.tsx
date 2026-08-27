@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle, Calendar, Compass, MapPin } from "lucide-react";
+import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle, Calendar, MapPin } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText } from "@/lib/translations";
@@ -21,27 +21,6 @@ import {
 import { Bus, Plane, Ship } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
-
-export const AVAILABLE_TOURS = [
-  {
-    id: "tour-tangier",
-    name: { en: "Tangier Discovery Tour", fr: "Excursion Découverte de Tanger", es: "Excursión Descubrimiento de Tánger" },
-    date: { en: "Saturday · Jan 9, 2027 (15:00–19:00)", fr: "Samedi · 9 Jan 2027 (15h00–19h00)", es: "Sábado · 9 Ene 2027 (15:00–19:00)" },
-    price: 15,
-  },
-  {
-    id: "tour-asilah",
-    name: { en: "Asilah Coastal Tour", fr: "Excursion Côtière d'Asilah", es: "Excursión Costera de Arcila" },
-    date: { en: "Saturday · Jan 9, 2027 (12:00–19:00)", fr: "Samedi · 9 Jan 2027 (12h00–19h00)", es: "Sábado · 9 Ene 2027 (12:00–19:00)" },
-    price: 25,
-  },
-  {
-    id: "tour-chefchaouen",
-    name: { en: "Chefchaouen Blue Pearl Tour", fr: "Excursion Perle Bleue Chefchaouen", es: "Excursión Perla Azul Chauen" },
-    date: { en: "Sunday · Jan 10, 2027 (11:00–19:00)", fr: "Dimanche · 10 Jan 2027 (11h00–19h00)", es: "Domingo · 10 Ene 2027 (11:00–19:00)" },
-    price: 30,
-  },
-];
 
 const ALLOWED_COUNTRY_CODES = new Set([
   "MA", // Morocco
@@ -94,13 +73,6 @@ export function PackBookingModal({
   const transferCost = needsTransfer
     ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
     : 0;
-
-  // Cultural Excursions State
-  const [selectedTours, setSelectedTours] = useState<string[]>([]);
-  const toursCost = selectedTours.reduce(
-    (sum, tid) => sum + (AVAILABLE_TOURS.find((t) => t.id === tid)?.price || 0) * numGuests,
-    0
-  );
 
   const isInitialApplicable = isDiscountApplicableToPack(initialDiscount, pack.id);
 
@@ -193,7 +165,7 @@ export function PackBookingModal({
     }
   }, [initialDiscount, initialDiscountCode, totalBasePrice, pack.id, numGuests, singlePrice, currency]);
 
-  const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost + toursCost;
+  const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
 
   const handleApplyDiscount = async () => {
     if (!discountInput.trim()) return;
@@ -351,19 +323,6 @@ export function PackBookingModal({
                       : `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, lang)}):`}
                   </span>
                   <span>+{transferCost} {currency}</span>
-                </div>
-              )}
-
-              {selectedTours.length > 0 && (
-                <div className="flex justify-between items-center text-indigo-700 font-semibold">
-                  <span>
-                    {lang === "fr"
-                      ? `Excursions (${selectedTours.length} sélectionnée${selectedTours.length > 1 ? "s" : ""}) :`
-                      : lang === "es"
-                      ? `Excursiones (${selectedTours.length} seleccionada${selectedTours.length > 1 ? "s" : ""}):`
-                      : `Excursions (${selectedTours.length} selected):`}
-                  </span>
-                  <span>+{toursCost} {currency}</span>
                 </div>
               )}
 
@@ -549,34 +508,6 @@ export function PackBookingModal({
                 });
               } catch (dbErr) {
                 console.warn("Could not record booking in database:", dbErr);
-              }
-
-              // Also record any selected excursions attached to this booking
-              if (selectedTours.length > 0) {
-                for (const tourId of selectedTours) {
-                  const tourDef = AVAILABLE_TOURS.find((t) => t.id === tourId);
-                  if (tourDef) {
-                    await addBooking({
-                      ticketCode: created?.ticketCode,
-                      packId: tourDef.id,
-                      packName: `Tourism: ${tourDef.name.en} (${tourDef.date.en})`,
-                      customerName,
-                      email: customerEmail,
-                      phone,
-                      country: String(formData.get("Country") ?? "") || "Morocco",
-                      numPeople: numGuests,
-                      guestDetails: JSON.stringify(guestsStructured),
-                      danceLevel: "",
-                      notes: `[Linked Festival Pack #${created?.ticketCode || ""}]`,
-                      arrivalDate: "2027-01-09",
-                      departureDate: "2027-01-11",
-                      lang,
-                      status: "pending",
-                      source: collaborator ? "referral" : "website",
-                      collaboratorId: collaborator?.id ?? null,
-                    }).catch((err) => console.warn("Could not record attached tour:", err));
-                  }
-                }
               }
 
               try {
@@ -1155,73 +1086,6 @@ export function PackBookingModal({
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Cultural Excursions Section */}
-            <div className="rounded-2xl border border-blue-200 bg-blue-50/40 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Compass className="h-4 w-4 text-blue-600 shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">
-                      {lang === "fr"
-                        ? "Excursions culturelles guidées (Optionnel)"
-                        : lang === "es"
-                        ? "Excursiones culturales guiadas (Opcional)"
-                        : "Guided Cultural Excursions (Optional)"}
-                    </p>
-                    <p className="text-[10px] text-gray-500">
-                      {lang === "fr"
-                        ? "Guides officiels + transport climatisé depuis l'hôtel Kenzi Solazur"
-                        : lang === "es"
-                        ? "Guías oficiales + transporte climatizado desde el Hotel Kenzi Solazur"
-                        : "Official guides + AC transport from Hotel Kenzi Solazur"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-1">
-                {AVAILABLE_TOURS.map((t) => {
-                  const isChecked = selectedTours.includes(t.id);
-                  return (
-                    <label
-                      key={t.id}
-                      className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition ${
-                        isChecked
-                          ? "bg-white border-blue-600 shadow-xs ring-1 ring-blue-500"
-                          : "bg-white/80 border-gray-200 hover:border-blue-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedTours([...selectedTours, t.id]);
-                            } else {
-                              setSelectedTours(selectedTours.filter((id) => id !== t.id));
-                            }
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">
-                            {t.name[lang as "en" | "fr" | "es"] || t.name.en}
-                          </p>
-                          <p className="text-[10px] text-gray-500">
-                            {t.date[lang as "en" | "fr" | "es"] || t.date.en}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-blue-700 shrink-0 ml-2">
-                        +{t.price * numGuests} {currency}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Promo / School Code */}
