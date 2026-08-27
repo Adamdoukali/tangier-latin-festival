@@ -1012,10 +1012,10 @@ export function PackBookingModal({
                   </p>
                   <p className="text-[11px] text-gray-500">
                     {lang === "fr"
-                      ? "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit."
+                      ? "Saisissez le code confidentiel de votre école."
                       : lang === "es"
-                      ? "Introduce el código confidencial de tu escuela para beneficiarte de la tarifa reducida."
-                      : "Enter your school's confidential code to benefit from the discounted rate."}
+                      ? "Introduce el código confidencial de tu escuela."
+                      : "Enter your school's confidential code."}
                   </p>
                 </div>
               </div>

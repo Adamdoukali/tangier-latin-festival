@@ -984,9 +984,9 @@ function BookPage() {
                   </p>
                   <p className="text-[11px] text-gray-500">
                     {tr(
-                      "Enter your school's confidential code to benefit from the discounted rate.",
-                      "Saisissez le code confidentiel de votre école pour bénéficier du tarif réduit.",
-                      "Introduce el código confidencial de tu escuela para beneficiarte de la tarifa reducida."
+                      "Enter your school's confidential code.",
+                      "Saisissez le code confidentiel de votre école.",
+                      "Introduce el código confidencial de tu escuela."
                     )}
                   </p>
                 </div>
