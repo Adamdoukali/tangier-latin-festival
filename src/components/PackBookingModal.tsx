@@ -1,5 +1,18 @@
 import { useState, useMemo, useEffect } from "react";
-import { X, Sparkles, User, Mail, Phone, Globe, CheckCircle2, Tag, Check, AlertCircle, Calendar, MapPin } from "lucide-react";
+import {
+  X,
+  Sparkles,
+  User,
+  Mail,
+  Phone,
+  Globe,
+  CheckCircle2,
+  Tag,
+  Check,
+  AlertCircle,
+  Calendar,
+  MapPin,
+} from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText } from "@/lib/translations";
@@ -19,19 +32,67 @@ import {
   type TransferOption,
 } from "@/lib/admin-store";
 import { Bus, Plane, Ship } from "lucide-react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { sendFormNotification, bookingAutoResponse } from "@/lib/form-notify";
 
 const ALLOWED_COUNTRY_CODES = new Set([
   "MA", // Morocco
   // Europe
-  "AD", "AL", "AT", "BA", "BE", "BG", "BY", "CH", "CY", "CZ", "DE", "DK", 
-  "EE", "ES", "FI", "FR", "GB", "GR", "HR", "HU", "IE", "IS", "IT", "LI", 
-  "LT", "LU", "LV", "MC", "MD", "ME", "MK", "MT", "NL", "NO", "PL", "PT", 
-  "RO", "RS", "RU", "SE", "SI", "SK", "SM", "UA", "VA"
+  "AD",
+  "AL",
+  "AT",
+  "BA",
+  "BE",
+  "BG",
+  "BY",
+  "CH",
+  "CY",
+  "CZ",
+  "DE",
+  "DK",
+  "EE",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LT",
+  "LU",
+  "LV",
+  "MC",
+  "MD",
+  "ME",
+  "MK",
+  "MT",
+  "NL",
+  "NO",
+  "PL",
+  "PT",
+  "RO",
+  "RS",
+  "RU",
+  "SE",
+  "SI",
+  "SK",
+  "SM",
+  "UA",
+  "VA",
 ]);
 
-const filteredCountries = countries.filter(c => ALLOWED_COUNTRY_CODES.has(c.code));
+const filteredCountries = countries.filter((c) => ALLOWED_COUNTRY_CODES.has(c.code));
 
 export function PackBookingModal({
   pack,
@@ -39,7 +100,14 @@ export function PackBookingModal({
   initialDiscountCode,
   initialDiscount,
 }: {
-  pack: { id?: string; name: string; sub: string; price: string; currency?: string; numGuests?: number };
+  pack: {
+    id?: string;
+    name: string;
+    sub: string;
+    price: string;
+    currency?: string;
+    numGuests?: number;
+  };
   onClose: () => void;
   initialDiscountCode?: string;
   initialDiscount?: DiscountCode | null;
@@ -50,7 +118,8 @@ export function PackBookingModal({
   const [error, setError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
+  const numGuests =
+    pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
   const singlePrice = parseInt(pack.price, 10) || 0;
   const totalBasePrice = singlePrice * numGuests;
   const currency = pack.currency || "€";
@@ -59,9 +128,11 @@ export function PackBookingModal({
   const [needsTransfer, setNeedsTransfer] = useState(false);
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
-  const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
+  const [transferLocation, setTransferLocation] = useState<string>(
+    "Port of Tangier (Tanger Ville)",
+  );
   const [selectedTransferGuests, setSelectedTransferGuests] = useState<number[]>(() =>
-    Array.from({ length: numGuests }, (_, i) => i)
+    Array.from({ length: numGuests }, (_, i) => i),
   );
   const [departureAirport, setDepartureAirport] = useState("");
   const [transportCompany, setTransportCompany] = useState("");
@@ -78,30 +149,44 @@ export function PackBookingModal({
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState(
-    isInitialApplicable ? (initialDiscountCode || initialDiscount?.code || "") : ""
+    isInitialApplicable ? initialDiscountCode || initialDiscount?.code || "" : "",
   );
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(
-    isInitialApplicable ? (initialDiscount || null) : null
+    isInitialApplicable ? initialDiscount || null : null,
   );
 
   const [discountAmount, setDiscountAmount] = useState(
     isInitialApplicable && initialDiscount
-      ? calculateDiscountAmount(initialDiscount, totalBasePrice, numGuests, singlePrice, currency, pack.id)
-      : 0
+      ? calculateDiscountAmount(
+          initialDiscount,
+          totalBasePrice,
+          numGuests,
+          singlePrice,
+          currency,
+          pack.id,
+        )
+      : 0,
   );
   const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(() => {
     if (!isInitialApplicable || !initialDiscount) return null;
     const isMad = /mad|dh/i.test(currency);
-    const amt = calculateDiscountAmount(initialDiscount, totalBasePrice, numGuests, singlePrice, currency, pack.id);
+    const amt = calculateDiscountAmount(
+      initialDiscount,
+      totalBasePrice,
+      numGuests,
+      singlePrice,
+      currency,
+      pack.id,
+    );
     const madAmt = initialDiscount.discountAmount * 11;
     const scopeText =
       initialDiscount.applyScope === "fixed_price"
         ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * 11} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
         : initialDiscount.applyScope === "per_person"
-        ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
-        : initialDiscount.discountType === "percent"
-        ? `-${initialDiscount.discountAmount}%`
-        : `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${amt}`}`;
+          ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
+          : initialDiscount.discountType === "percent"
+            ? `-${initialDiscount.discountAmount}%`
+            : `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${amt}`}`;
     return {
       success: true,
       text: `Discount code "${initialDiscount.code}" applied (${scopeText})!`,
@@ -112,7 +197,14 @@ export function PackBookingModal({
   useEffect(() => {
     if (initialDiscount) {
       if (isDiscountApplicableToPack(initialDiscount, pack.id)) {
-        const amt = calculateDiscountAmount(initialDiscount, totalBasePrice, numGuests, singlePrice, currency, pack.id);
+        const amt = calculateDiscountAmount(
+          initialDiscount,
+          totalBasePrice,
+          numGuests,
+          singlePrice,
+          currency,
+          pack.id,
+        );
         setAppliedDiscount(initialDiscount);
         setDiscountAmount(amt);
         setDiscountInput(initialDiscount.code);
@@ -122,10 +214,10 @@ export function PackBookingModal({
           initialDiscount.applyScope === "fixed_price"
             ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * 11} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
             : initialDiscount.applyScope === "per_person"
-            ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
-            : initialDiscount.discountType === "percent"
-            ? `-${initialDiscount.discountAmount}%`
-            : `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${amt}`}`;
+              ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
+              : initialDiscount.discountType === "percent"
+                ? `-${initialDiscount.discountAmount}%`
+                : `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${amt}`}`;
         setDiscountMsg({
           success: true,
           text: `Discount code "${initialDiscount.code}" applied (${scopeText})!`,
@@ -137,7 +229,14 @@ export function PackBookingModal({
         setDiscountInput("");
       }
     } else if (initialDiscountCode) {
-      validateDiscountCode(initialDiscountCode, totalBasePrice, pack.id, numGuests, singlePrice, currency).then((res) => {
+      validateDiscountCode(
+        initialDiscountCode,
+        totalBasePrice,
+        pack.id,
+        numGuests,
+        singlePrice,
+        currency,
+      ).then((res) => {
         if (res.valid && res.discount && res.discountAmount != null) {
           setAppliedDiscount(res.discount);
           setDiscountAmount(res.discountAmount);
@@ -148,10 +247,10 @@ export function PackBookingModal({
             res.discount.applyScope === "fixed_price"
               ? `Special rate: ${isMad ? `${(res.discount.overridePrice ?? 0) * 11} MAD` : `€${res.discount.overridePrice ?? 0}`}`
               : res.discount.applyScope === "per_person"
-              ? `${isMad ? `-${madAmt} MAD (-€${res.discount.discountAmount})` : `-€${res.discount.discountAmount}`}/person`
-              : res.discount.discountType === "percent"
-              ? `-${res.discount.discountAmount}%`
-              : `${isMad ? `-${madAmt} MAD (-€${res.discount.discountAmount})` : `-€${res.discountAmount}`}`;
+                ? `${isMad ? `-${madAmt} MAD (-€${res.discount.discountAmount})` : `-€${res.discount.discountAmount}`}/person`
+                : res.discount.discountType === "percent"
+                  ? `-${res.discount.discountAmount}%`
+                  : `${isMad ? `-${madAmt} MAD (-€${res.discount.discountAmount})` : `-€${res.discountAmount}`}`;
           setDiscountMsg({
             success: true,
             text: `Discount code "${res.discount.code}" applied (${scopeText})!`,
@@ -163,7 +262,15 @@ export function PackBookingModal({
         }
       });
     }
-  }, [initialDiscount, initialDiscountCode, totalBasePrice, pack.id, numGuests, singlePrice, currency]);
+  }, [
+    initialDiscount,
+    initialDiscountCode,
+    totalBasePrice,
+    pack.id,
+    numGuests,
+    singlePrice,
+    currency,
+  ]);
 
   const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
 
@@ -171,7 +278,14 @@ export function PackBookingModal({
     if (!discountInput.trim()) return;
     setValidatingCode(true);
     setDiscountMsg(null);
-    const result = await validateDiscountCode(discountInput, totalBasePrice, pack.id, numGuests, singlePrice, currency);
+    const result = await validateDiscountCode(
+      discountInput,
+      totalBasePrice,
+      pack.id,
+      numGuests,
+      singlePrice,
+      currency,
+    );
     if (result.valid && result.discount && result.discountAmount != null) {
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
@@ -181,10 +295,10 @@ export function PackBookingModal({
         result.discount.applyScope === "fixed_price"
           ? `Special rate: ${isMad ? `${(result.discount.overridePrice ?? 0) * 11} MAD` : `€${result.discount.overridePrice ?? 0}`}`
           : result.discount.applyScope === "per_person"
-          ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
-          : result.discount.discountType === "percent"
-          ? `-${result.discount.discountAmount}%`
-          : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
+            ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
+            : result.discount.discountType === "percent"
+              ? `-${result.discount.discountAmount}%`
+              : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
       setDiscountMsg({
         success: true,
         text: `Discount code "${result.discount.code}" applied (${scopeText})!`,
@@ -192,9 +306,19 @@ export function PackBookingModal({
     } else {
       setAppliedDiscount(null);
       setDiscountAmount(0);
-      const errorMsg = result.error === "This discount code is not applicable to the selected pack"
-        ? (lang === "fr" ? "Ce code promo n'est pas applicable à ce pack" : lang === "es" ? "Este código no es aplicable a este paquete" : result.error)
-        : (result.error || (lang === "fr" ? "Code promo invalide" : lang === "es" ? "Código no válido" : "Invalid discount code"));
+      const errorMsg =
+        result.error === "This discount code is not applicable to the selected pack"
+          ? lang === "fr"
+            ? "Ce code promo n'est pas applicable à ce pack"
+            : lang === "es"
+              ? "Este código no es aplicable a este paquete"
+              : result.error
+          : result.error ||
+            (lang === "fr"
+              ? "Code promo invalide"
+              : lang === "es"
+                ? "Código no válido"
+                : "Invalid discount code");
       setDiscountMsg({
         success: false,
         text: errorMsg,
@@ -203,13 +327,17 @@ export function PackBookingModal({
     setValidatingCode(false);
   };
 
-
   // Memoize large country lists to prevent lag when opening the modal
   const phoneOptions = useMemo(() => {
     return filteredCountries.map((c) => (
       <SelectItem key={c.code} value={c.dial_code} className="cursor-pointer">
         <div className="flex items-center gap-2">
-          <img src={getFlagUrl(c.code)} alt={c.name} loading="lazy" className="w-4 h-3 object-cover rounded-[2px] shadow-sm" />
+          <img
+            src={getFlagUrl(c.code)}
+            alt={c.name}
+            loading="lazy"
+            className="w-4 h-3 object-cover rounded-[2px] shadow-sm"
+          />
           <span>{c.dial_code}</span>
         </div>
       </SelectItem>
@@ -220,7 +348,12 @@ export function PackBookingModal({
     return filteredCountries.map((c) => (
       <SelectItem key={c.code} value={c.name} className="cursor-pointer">
         <div className="flex items-center gap-3">
-          <img src={getFlagUrl(c.code)} alt={c.name} loading="lazy" className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm" />
+          <img
+            src={getFlagUrl(c.code)}
+            alt={c.name}
+            loading="lazy"
+            className="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"
+          />
           <span>{c.name}</span>
         </div>
       </SelectItem>
@@ -283,7 +416,9 @@ export function PackBookingModal({
               </div>
               <div className="text-right shrink-0">
                 <span className="text-xs font-semibold text-amber-600 block">
-                  {singlePrice > 0 ? `${singlePrice} ${currency} / ${lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}` : pack.price}
+                  {singlePrice > 0
+                    ? `${singlePrice} ${currency} / ${lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}`
+                    : pack.price}
                 </span>
               </div>
             </div>
@@ -291,16 +426,35 @@ export function PackBookingModal({
             {/* Detailed Per-Person & Total Breakdown */}
             <div className="pt-3 border-t border-amber-200/80 space-y-1.5 text-xs text-gray-700 font-medium">
               <div className="flex justify-between items-center text-gray-600">
-                <span>{lang === "fr" ? "Prix par personne :" : lang === "es" ? "Precio por persona:" : "Price per person:"}</span>
-                <span className="font-semibold text-gray-900">{singlePrice} {currency}</span>
+                <span>
+                  {lang === "fr"
+                    ? "Prix par personne :"
+                    : lang === "es"
+                      ? "Precio por persona:"
+                      : "Price per person:"}
+                </span>
+                <span className="font-semibold text-gray-900">
+                  {singlePrice} {currency}
+                </span>
               </div>
 
               {numGuests > 1 && (
                 <div className="space-y-1 py-1">
                   {Array.from({ length: numGuests }).map((_, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
-                      <span>{lang === "fr" ? `Participant ${idx + 1}` : lang === "es" ? `Participante ${idx + 1}` : `Participant ${idx + 1}`}</span>
-                      <span>{singlePrice} {currency}</span>
+                    <div
+                      key={idx}
+                      className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400"
+                    >
+                      <span>
+                        {lang === "fr"
+                          ? `Participant ${idx + 1}`
+                          : lang === "es"
+                            ? `Participante ${idx + 1}`
+                            : `Participant ${idx + 1}`}
+                      </span>
+                      <span>
+                        {singlePrice} {currency}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -308,8 +462,19 @@ export function PackBookingModal({
 
               {discountAmount > 0 && (
                 <div className="flex justify-between items-center text-emerald-700 font-semibold">
-                  <span>{lang === "fr" ? "Réduction appliquée :" : lang === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
-                  <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${discountAmount} ${currency}`}</span>
+                  <span>
+                    {lang === "fr"
+                      ? "Réduction appliquée :"
+                      : lang === "es"
+                        ? "Descuento aplicado:"
+                        : "Discount applied:"}
+                  </span>
+                  <span>
+                    -
+                    {appliedDiscount?.discountType === "percent"
+                      ? `${appliedDiscount.discountAmount}%`
+                      : `${discountAmount} ${currency}`}
+                  </span>
                 </div>
               )}
 
@@ -319,18 +484,28 @@ export function PackBookingModal({
                     {lang === "fr"
                       ? `Navette (${transferType === "port" ? "Port" : "Aéroport"} · ${formatTransferOptionLabel(transferOption, lang)}) :`
                       : lang === "es"
-                      ? `Traslado (${transferType === "port" ? "Puerto" : "Aeropuerto"} · ${formatTransferOptionLabel(transferOption, lang)}):`
-                      : `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, lang)}):`}
+                        ? `Traslado (${transferType === "port" ? "Puerto" : "Aeropuerto"} · ${formatTransferOptionLabel(transferOption, lang)}):`
+                        : `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, lang)}):`}
                   </span>
-                  <span>+{transferCost} {currency}</span>
+                  <span>
+                    +{transferCost} {currency}
+                  </span>
                 </div>
               )}
 
               <div className="flex justify-between items-center pt-2 border-t border-amber-300 font-bold text-sm text-gray-900">
                 <span>
                   {numGuests > 1
-                    ? (lang === "fr" ? `Montant Total (${numGuests} personnes)` : lang === "es" ? `Monto Total (${numGuests} personas)` : `Total Amount (${numGuests} guests)`)
-                    : (lang === "fr" ? "Montant Total" : lang === "es" ? "Monto Total" : "Total Amount")}
+                    ? lang === "fr"
+                      ? `Montant Total (${numGuests} personnes)`
+                      : lang === "es"
+                        ? `Monto Total (${numGuests} personas)`
+                        : `Total Amount (${numGuests} guests)`
+                    : lang === "fr"
+                      ? "Montant Total"
+                      : lang === "es"
+                        ? "Monto Total"
+                        : "Total Amount"}
                 </span>
                 <span className="font-extrabold text-lg text-amber-600">
                   {finalTotalPrice} {currency}
@@ -339,7 +514,6 @@ export function PackBookingModal({
             </div>
           </div>
         </div>
-
 
         {/* Form or Success */}
         {submitted ? (
@@ -401,23 +575,24 @@ export function PackBookingModal({
                 ? await getCollaboratorByCode(refCode).catch(() => undefined)
                 : undefined;
 
-              const numGuests = pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
+              const numGuests =
+                pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
 
               if (needsTransfer) {
                 const missingTimes =
                   transferOption === "round_trip"
                     ? !arrivalTime.trim() || !departureTime.trim()
                     : transferOption === "one_way_arrival"
-                    ? !arrivalTime.trim()
-                    : !departureTime.trim();
+                      ? !arrivalTime.trim()
+                      : !departureTime.trim();
 
                 if (!departureAirport.trim() || !transportCompany.trim() || missingTimes) {
                   alert(
                     lang === "fr"
                       ? "Veuillez renseigner l'aéroport/port de départ, la compagnie et les horaires requis pour le transfert."
                       : lang === "es"
-                      ? "Por favor complete el aeropuerto/puerto de salida, la compañía y los horarios requeridos para el traslado."
-                      : "Please fill in departure airport/port, company, and required times for your transfer."
+                        ? "Por favor complete el aeropuerto/puerto de salida, la compañía y los horarios requeridos para el traslado."
+                        : "Please fill in departure airport/port, company, and required times for your transfer.",
                   );
                   setIsSubmitting(false);
                   return;
@@ -437,9 +612,9 @@ export function PackBookingModal({
                 if (fn || ln) guestNames.push(`${fn} ${ln}`.trim());
               }
               const customerName = guestNames.join(" & ");
-              const phone = `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
+              const phone =
+                `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
               const customerEmail = String(formData.get("Email") ?? "");
-
 
               // Record the booking FIRST so the guest gets their reservation
               // number on screen and in the auto-reply email.
@@ -491,11 +666,13 @@ export function PackBookingModal({
                   transferType: needsTransfer ? transferType : null,
                   transferOption: needsTransfer ? transferOption : null,
                   transferLocation: needsTransfer ? transferLocation : null,
-                  departureAirport: needsTransfer ? (departureAirport.trim() || null) : null,
+                  departureAirport: needsTransfer ? departureAirport.trim() || null : null,
                   transferDetails: needsTransfer
                     ? [
                         numGuests > 1 ? `Transfer Passengers: ${selectedGuestsLabel}` : "",
-                        departureAirport ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}` : "",
+                        departureAirport
+                          ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}`
+                          : "",
                         transportCompany ? `Company: ${transportCompany}` : "",
                         arrivalTime ? `Arrival Time: ${arrivalTime}` : "",
                         departureTime ? `Departure Time: ${departureTime}` : "",
@@ -544,7 +721,7 @@ export function PackBookingModal({
                     lang,
                     created
                       ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) }
-                      : undefined
+                      : undefined,
                   ),
                 });
                 // Booking already recorded — an email hiccup shouldn't make
@@ -563,17 +740,22 @@ export function PackBookingModal({
           >
             <input type="hidden" name="Pack" value={`${pack.name} - ${pack.sub} (${pack.price})`} />
             {/* Guest First & Last Name Inputs */}
-            {(pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)) > 1 ? (
+            {(pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1)) >
+            1 ? (
               <div className="space-y-4">
-                {Array.from({ length: pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1) }).map((_, i) => (
+                {Array.from({
+                  length:
+                    pack.numGuests ??
+                    (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1),
+                }).map((_, i) => (
                   <div key={i} className="space-y-2">
                     <p className="text-xs font-bold tracking-wider uppercase text-amber-600 flex items-center gap-1.5">
                       <span>
                         {lang === "fr"
                           ? `Participant ${i + 1}`
                           : lang === "es"
-                          ? `Participante ${i + 1}`
-                          : `Participant ${i + 1}`}
+                            ? `Participante ${i + 1}`
+                            : `Participant ${i + 1}`}
                       </span>
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -712,7 +894,11 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
                   <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                  {lang === "fr" ? "Date d'arrivée *" : lang === "es" ? "Fecha de llegada *" : "Arrival Date *"}
+                  {lang === "fr"
+                    ? "Date d'arrivée *"
+                    : lang === "es"
+                      ? "Fecha de llegada *"
+                      : "Arrival Date *"}
                 </label>
                 <input
                   type="date"
@@ -727,7 +913,11 @@ export function PackBookingModal({
               <div>
                 <label className="flex items-center gap-1.5 text-xs tracking-wider uppercase text-gray-700 mb-1.5 font-semibold">
                   <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                  {lang === "fr" ? "Date de départ *" : lang === "es" ? "Fecha de salida *" : "Departure Date *"}
+                  {lang === "fr"
+                    ? "Date de départ *"
+                    : lang === "es"
+                      ? "Fecha de salida *"
+                      : "Departure Date *"}
                 </label>
                 <input
                   type="date"
@@ -741,8 +931,8 @@ export function PackBookingModal({
               </div>
             </div>
 
-            {/* Shuttle Transfer Section */}
-            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 space-y-3.5">
+            {/* Transfers now use the standalone /book-transfer form. */}
+            <div className="hidden" aria-hidden="true">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg bg-blue-600 text-white grid place-items-center shadow-xs">
@@ -753,15 +943,15 @@ export function PackBookingModal({
                       {lang === "fr"
                         ? "Navette & Transfert"
                         : lang === "es"
-                        ? "Traslado y Transporte"
-                        : "Shuttle Transfer"}
+                          ? "Traslado y Transporte"
+                          : "Shuttle Transfer"}
                     </p>
                     <p className="text-[11px] text-blue-700 font-medium">
                       {lang === "fr"
                         ? "Transfert depuis/vers le port ou l'aéroport"
                         : lang === "es"
-                        ? "Traslado desde/hacia el puerto o aeropuerto"
-                        : "Transfer to/from port or airport to hotel"}
+                          ? "Traslado desde/hacia el puerto o aeropuerto"
+                          : "Transfer to/from port or airport to hotel"}
                     </p>
                   </div>
                 </div>
@@ -811,9 +1001,15 @@ export function PackBookingModal({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Ship className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`} />
+                        <Ship
+                          className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`}
+                        />
                         <span className="text-xs font-bold text-gray-900">
-                          {lang === "fr" ? "Port de Tanger" : lang === "es" ? "Puerto de Tánger" : "Tangier Port"}
+                          {lang === "fr"
+                            ? "Port de Tanger"
+                            : lang === "es"
+                              ? "Puerto de Tánger"
+                              : "Tangier Port"}
                         </span>
                       </div>
                       {transferType === "port" && (
@@ -835,7 +1031,9 @@ export function PackBookingModal({
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Plane className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`} />
+                        <Plane
+                          className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`}
+                        />
                         <span className="text-xs font-bold text-gray-900">
                           {lang === "fr" ? "Aéroport" : lang === "es" ? "Aeropuerto" : "Airport"}
                         </span>
@@ -850,7 +1048,11 @@ export function PackBookingModal({
                   <div className="grid sm:grid-cols-2 gap-2.5">
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700 block mb-1">
-                        {lang === "fr" ? "Lieu précis" : lang === "es" ? "Ubicación" : "Pickup/Dropoff Hub"}
+                        {lang === "fr"
+                          ? "Lieu précis"
+                          : lang === "es"
+                            ? "Ubicación"
+                            : "Pickup/Dropoff Hub"}
                       </label>
                       <select
                         value={transferLocation}
@@ -859,15 +1061,27 @@ export function PackBookingModal({
                       >
                         {transferType === "port" ? (
                           <option value="Port of Tangier (Tanger Ville)">
-                            {lang === "fr" ? "Port de Tanger Ville" : lang === "es" ? "Puerto de Tánger Ciudad" : "Port of Tangier (Tanger Ville)"}
+                            {lang === "fr"
+                              ? "Port de Tanger Ville"
+                              : lang === "es"
+                                ? "Puerto de Tánger Ciudad"
+                                : "Port of Tangier (Tanger Ville)"}
                           </option>
                         ) : (
                           <>
                             <option value="Tangier Ibn Battouta Airport (TNG)">
-                              {lang === "fr" ? "Aéroport Tanger Ibn Battouta (TNG)" : lang === "es" ? "Aeropuerto Tánger Ibn Battouta (TNG)" : "Tangier Ibn Battouta Airport (TNG)"}
+                              {lang === "fr"
+                                ? "Aéroport Tanger Ibn Battouta (TNG)"
+                                : lang === "es"
+                                  ? "Aeropuerto Tánger Ibn Battouta (TNG)"
+                                  : "Tangier Ibn Battouta Airport (TNG)"}
                             </option>
                             <option value="Tetouan Sania Ramel Airport (TTU)">
-                              {lang === "fr" ? "Aéroport Tétouan Sania Ramel (TTU)" : lang === "es" ? "Aeropuerto Tetuán Sania Ramel (TTU)" : "Tetouan Sania Ramel Airport (TTU)"}
+                              {lang === "fr"
+                                ? "Aéroport Tétouan Sania Ramel (TTU)"
+                                : lang === "es"
+                                  ? "Aeropuerto Tetuán Sania Ramel (TTU)"
+                                  : "Tetouan Sania Ramel Airport (TTU)"}
                             </option>
                           </>
                         )}
@@ -876,7 +1090,11 @@ export function PackBookingModal({
 
                     <div>
                       <label className="text-[11px] font-bold uppercase tracking-wider text-gray-700 block mb-1">
-                        {lang === "fr" ? "Formule de trajet" : lang === "es" ? "Tipo de trayecto" : "Transfer Direction"}
+                        {lang === "fr"
+                          ? "Formule de trajet"
+                          : lang === "es"
+                            ? "Tipo de trayecto"
+                            : "Transfer Direction"}
                       </label>
                       <select
                         value={transferOption}
@@ -884,13 +1102,25 @@ export function PackBookingModal({
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="round_trip">
-                          {lang === "fr" ? "Aller-Retour (A/R)" : lang === "es" ? "Ida y Vuelta" : "Round Trip (Arrival & Return)"}
+                          {lang === "fr"
+                            ? "Aller-Retour (A/R)"
+                            : lang === "es"
+                              ? "Ida y Vuelta"
+                              : "Round Trip (Arrival & Return)"}
                         </option>
                         <option value="one_way_arrival">
-                          {lang === "fr" ? "Aller simple (Arrivée)" : lang === "es" ? "Solo ida (Llegada)" : "One-Way (Arrival only)"}
+                          {lang === "fr"
+                            ? "Aller simple (Arrivée)"
+                            : lang === "es"
+                              ? "Solo ida (Llegada)"
+                              : "One-Way (Arrival only)"}
                         </option>
                         <option value="one_way_departure">
-                          {lang === "fr" ? "Retour simple (Départ)" : lang === "es" ? "Solo vuelta (Salida)" : "One-Way (Return only)"}
+                          {lang === "fr"
+                            ? "Retour simple (Départ)"
+                            : lang === "es"
+                              ? "Solo vuelta (Salida)"
+                              : "One-Way (Return only)"}
                         </option>
                       </select>
                     </div>
@@ -903,8 +1133,8 @@ export function PackBookingModal({
                         {lang === "fr"
                           ? "Sélectionnez les participants pour le transfert :"
                           : lang === "es"
-                          ? "Seleccione los participantes para el traslado:"
-                          : "Select participants included in transfer:"}
+                            ? "Seleccione los participantes para el traslado:"
+                            : "Select participants included in transfer:"}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {Array.from({ length: numGuests }).map((_, gIdx) => {
@@ -933,12 +1163,14 @@ export function PackBookingModal({
                                 {lang === "fr"
                                   ? `Participant ${gIdx + 1}`
                                   : lang === "es"
-                                  ? `Participante ${gIdx + 1}`
-                                  : `Participant ${gIdx + 1}`}
+                                    ? `Participante ${gIdx + 1}`
+                                    : `Participant ${gIdx + 1}`}
                               </span>
                               <div
                                 className={`h-4 w-4 rounded-md border flex items-center justify-center ${
-                                  isSelected ? "bg-white text-blue-600 border-white" : "border-gray-300"
+                                  isSelected
+                                    ? "bg-white text-blue-600 border-white"
+                                    : "border-gray-300"
                                 }`}
                               >
                                 {isSelected && <Check className="h-3 w-3" />}
@@ -954,16 +1186,16 @@ export function PackBookingModal({
                   <div>
                     <label className="text-[11px] font-bold text-gray-800 block mb-1">
                       {transferType === "airport"
-                        ? (lang === "fr"
-                            ? "Aéroport de départ (Obligatoire) *"
-                            : lang === "es"
+                        ? lang === "fr"
+                          ? "Aéroport de départ (Obligatoire) *"
+                          : lang === "es"
                             ? "Aeropuerto de salida (Obligatorio) *"
-                            : "Departure Airport (Required) *")
-                        : (lang === "fr"
-                            ? "Port de départ (Obligatoire) *"
-                            : lang === "es"
+                            : "Departure Airport (Required) *"
+                        : lang === "fr"
+                          ? "Port de départ (Obligatoire) *"
+                          : lang === "es"
                             ? "Puerto de salida (Obligatorio) *"
-                            : "Departure Port (Required) *")}
+                            : "Departure Port (Required) *"}
                     </label>
                     <input
                       type="text"
@@ -972,8 +1204,12 @@ export function PackBookingModal({
                       onChange={(e) => setDepartureAirport(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? (lang === "fr" ? "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London..." : "Ex: Paris Orly, CDG, Madrid, Brussels, London...")
-                          : (lang === "fr" ? "Ex: Tarifa, Algésiras, Barcelone..." : "Ex: Tarifa, Algeciras, Barcelona...")
+                          ? lang === "fr"
+                            ? "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London..."
+                            : "Ex: Paris Orly, CDG, Madrid, Brussels, London..."
+                          : lang === "fr"
+                            ? "Ex: Tarifa, Algésiras, Barcelone..."
+                            : "Ex: Tarifa, Algeciras, Barcelona..."
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -985,8 +1221,8 @@ export function PackBookingModal({
                       {lang === "fr"
                         ? "Compagnie aérienne / Ferry (Obligatoire) *"
                         : lang === "es"
-                        ? "Aerolínea / Compañía de ferry (Obligatorio) *"
-                        : "Airline / Ferry Company (Required) *"}
+                          ? "Aerolínea / Compañía de ferry (Obligatorio) *"
+                          : "Airline / Ferry Company (Required) *"}
                     </label>
                     <input
                       type="text"
@@ -995,8 +1231,12 @@ export function PackBookingModal({
                       onChange={(e) => setTransportCompany(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? (lang === "fr" ? "Ex: Ryanair, Royal Air Maroc, Air Arabia..." : "Ex: Ryanair, Iberia, Royal Air Maroc...")
-                          : (lang === "fr" ? "Ex: FRS Ferries, Balearia, AML..." : "Ex: FRS Ferries, Balearia, AML...")
+                          ? lang === "fr"
+                            ? "Ex: Ryanair, Royal Air Maroc, Air Arabia..."
+                            : "Ex: Ryanair, Iberia, Royal Air Maroc..."
+                          : lang === "fr"
+                            ? "Ex: FRS Ferries, Balearia, AML..."
+                            : "Ex: FRS Ferries, Balearia, AML..."
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -1011,12 +1251,12 @@ export function PackBookingModal({
                             ? "Heure d'arrivée (Optionnel)"
                             : "Heure d'arrivée (Obligatoire) *"
                           : lang === "es"
-                          ? transferOption === "one_way_departure"
-                            ? "Hora de llegada (Opcional)"
-                            : "Hora de llegada (Obligatorio) *"
-                          : transferOption === "one_way_departure"
-                          ? "Arrival Time (Optional)"
-                          : "Arrival Time (Required) *"}
+                            ? transferOption === "one_way_departure"
+                              ? "Hora de llegada (Opcional)"
+                              : "Hora de llegada (Obligatorio) *"
+                            : transferOption === "one_way_departure"
+                              ? "Arrival Time (Optional)"
+                              : "Arrival Time (Required) *"}
                       </label>
                       <input
                         type="time"
@@ -1033,12 +1273,12 @@ export function PackBookingModal({
                             ? "Heure de départ (Optionnel)"
                             : "Heure de départ (Obligatoire) *"
                           : lang === "es"
-                          ? transferOption === "one_way_arrival"
-                            ? "Hora de salida (Opcional)"
-                            : "Hora de salida (Obligatorio) *"
-                          : transferOption === "one_way_arrival"
-                          ? "Departure Time (Optional)"
-                          : "Departure Time (Required) *"}
+                            ? transferOption === "one_way_arrival"
+                              ? "Hora de salida (Opcional)"
+                              : "Hora de salida (Obligatorio) *"
+                            : transferOption === "one_way_arrival"
+                              ? "Departure Time (Optional)"
+                              : "Departure Time (Required) *"}
                       </label>
                       <input
                         type="time"
@@ -1056,8 +1296,8 @@ export function PackBookingModal({
                       {lang === "fr"
                         ? "N° de vol / ferry (Optionnel)"
                         : lang === "es"
-                        ? "N° de vuelo / ferry (Opcional)"
-                        : "Flight / Ferry # (Optional)"}
+                          ? "N° de vuelo / ferry (Opcional)"
+                          : "Flight / Ferry # (Optional)"}
                     </label>
                     <input
                       type="text"
@@ -1065,8 +1305,12 @@ export function PackBookingModal({
                       onChange={(e) => setTransferDetails(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? (lang === "fr" ? "Ex: Vol AT123" : "Ex: Flight AT123")
-                          : (lang === "fr" ? "Ex: Ferry Tanger-Tarifa" : "Ex: Ferry Tanger-Tarifa")
+                          ? lang === "fr"
+                            ? "Ex: Vol AT123"
+                            : "Ex: Flight AT123"
+                          : lang === "fr"
+                            ? "Ex: Ferry Tanger-Tarifa"
+                            : "Ex: Ferry Tanger-Tarifa"
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -1075,9 +1319,21 @@ export function PackBookingModal({
                   {/* Calculated Shuttle Subtotal */}
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-100/70 text-xs font-bold text-blue-900">
                     <span>
-                      {lang === "fr" ? "Total transfert navette :" : lang === "es" ? "Total traslado:" : "Shuttle Transfer Total:"}
+                      {lang === "fr"
+                        ? "Total transfert navette :"
+                        : lang === "es"
+                          ? "Total traslado:"
+                          : "Shuttle Transfer Total:"}
                       <span className="font-normal text-blue-800 ml-1">
-                        ({transferPassengersCount} {transferPassengersCount > 1 ? (lang === "fr" ? "participants" : "guests") : (lang === "fr" ? "participant" : "guest")})
+                        ({transferPassengersCount}{" "}
+                        {transferPassengersCount > 1
+                          ? lang === "fr"
+                            ? "participants"
+                            : "guests"
+                          : lang === "fr"
+                            ? "participant"
+                            : "guest"}
+                        )
                       </span>
                     </span>
                     <span className="text-sm font-extrabold text-blue-700">
@@ -1097,8 +1353,8 @@ export function PackBookingModal({
                     {lang === "fr"
                       ? "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école."
                       : lang === "es"
-                      ? "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
-                      : "Will you make a show with your dance school? Enter your school’s confidential code."}
+                        ? "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
+                        : "Will you make a show with your dance school? Enter your school’s confidential code."}
                   </p>
                 </div>
               </div>
@@ -1111,8 +1367,8 @@ export function PackBookingModal({
                     lang === "fr"
                       ? "Code confidentiel"
                       : lang === "es"
-                      ? "Código confidencial"
-                      : "Confidential code"
+                        ? "Código confidencial"
+                        : "Confidential code"
                   }
                   className="flex-1 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 font-mono text-sm uppercase text-gray-900 focus:outline-none focus:border-amber-500 transition placeholder:text-gray-400"
                 />
@@ -1122,7 +1378,13 @@ export function PackBookingModal({
                   disabled={validatingCode || !discountInput.trim()}
                   className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs tracking-wider uppercase transition cursor-pointer disabled:opacity-50"
                 >
-                  {validatingCode ? "..." : lang === "fr" ? "Appliquer" : lang === "es" ? "Aplicar" : "Apply"}
+                  {validatingCode
+                    ? "..."
+                    : lang === "fr"
+                      ? "Appliquer"
+                      : lang === "es"
+                        ? "Aplicar"
+                        : "Apply"}
                 </button>
               </div>
               {discountMsg && (
@@ -1152,12 +1414,10 @@ export function PackBookingModal({
               {isSubmitting
                 ? t("packFormSubmitting")
                 : lang === "fr"
-                ? "CONFIRMER LA RÉSERVATION"
-                : lang === "es"
-                ? "CONFIRMAR RESERVA"
-                : "CONFIRM RESERVATION"}
-
-
+                  ? "CONFIRMER LA RÉSERVATION"
+                  : lang === "es"
+                    ? "CONFIRMAR RESERVA"
+                    : "CONFIRM RESERVATION"}
             </button>
 
             {error && (

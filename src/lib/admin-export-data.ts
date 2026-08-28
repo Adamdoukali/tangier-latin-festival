@@ -3,6 +3,7 @@ import {
   commissionLabel,
   getClients,
   getTourismPrice,
+  isTransferBooking,
   isTourismBooking,
   moneyIn,
   packPrice,
@@ -290,9 +291,6 @@ const categoryOf = (booking: Booking, packs: Pack[]): PackRoomCategory =>
     booking.numPeople,
   );
 
-const hasTransfer = (booking: Booking): boolean =>
-  !!booking.needsTransfer || !!booking.transferType || (booking.transferCost ?? 0) > 0;
-
 export function buildCollaboratorSummarySpreadsheet(
   visibleStats: CollaboratorStats[],
   bookings: Booking[],
@@ -303,25 +301,17 @@ export function buildCollaboratorSummarySpreadsheet(
       (booking) => booking.collaboratorId === collaborator.id && booking.status !== "declined",
     );
     const festival = mine.filter(
-      (booking) =>
-        !isTourismBooking(booking) && !/navette|shuttle\s*transfer/i.test(booking.packName),
+      (booking) => !isTourismBooking(booking) && !isTransferBooking(booking),
     );
     const excursions = mine
       .filter(isTourismBooking)
       .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
-    const transfers = mine
-      .filter(hasTransfer)
-      .reduce(
-        (sum, booking) => sum + selectedTransferGuests(booking, packs, [collaborator]).length,
-        0,
-      );
     const participants = festival.reduce(
       (sum, booking) => sum + bookingPeopleCount(booking, packs),
       0,
     );
     const currency = partnerCurrency(collaborator);
-    const transferSales = mine.reduce((sum, booking) => sum + (booking.transferCost ?? 0), 0);
-    const sales = moneyIn(revenue, currency) + moneyIn({ eur: transferSales, mad: 0 }, currency);
+    const sales = moneyIn(revenue, currency);
     const earned = moneyIn(commission, currency);
     const missionAchieved = !!collaborator.missionGoal && participants >= collaborator.missionGoal;
     const reward = missionAchieved
@@ -340,7 +330,7 @@ export function buildCollaboratorSummarySpreadsheet(
       festival.filter((booking) => categoryOf(booking, packs) === "double").length,
       festival.filter((booking) => categoryOf(booking, packs) === "fullpass").length,
       excursions,
-      transfers,
+      0,
       participants,
       roundMoney(sales),
       roundMoney(earned),
@@ -374,7 +364,6 @@ export function buildCollaboratorSummarySpreadsheet(
 interface AddOnTotals {
   excursions: number;
   excursionCommission: number;
-  transfers: number;
 }
 
 const convertedAmount = (
@@ -397,12 +386,10 @@ const collaboratorAddOns = (
     const current = totals.get(key) ?? {
       excursions: 0,
       excursionCommission: 0,
-      transfers: 0,
     };
     totals.set(key, {
       excursions: current.excursions + (values.excursions ?? 0),
       excursionCommission: current.excursionCommission + (values.excursionCommission ?? 0),
-      transfers: current.transfers + (values.transfers ?? 0),
     });
   };
 
@@ -419,16 +406,6 @@ const collaboratorAddOns = (
             collaborator,
           ),
           excursionCommission: convertedAmount(5, "EUR", collaborator),
-        });
-      }
-    }
-
-    if (hasTransfer(booking)) {
-      const guests = selectedTransferGuests(booking, packs, collaborators);
-      const perGuest = guests.length ? (booking.transferCost ?? 0) / guests.length : 0;
-      for (const guest of guests) {
-        add(guestKey(collaborator.id, guest.fullName), {
-          transfers: convertedAmount(perGuest, "EUR", collaborator),
         });
       }
     }
@@ -470,7 +447,7 @@ export function buildCollaboratorDetailsSpreadsheet(
         booking.status !== "declined" &&
         !!booking.collaboratorId &&
         !isTourismBooking(booking) &&
-        !/navette|shuttle\s*transfer/i.test(booking.packName),
+        !isTransferBooking(booking),
     )
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
@@ -503,11 +480,10 @@ export function buildCollaboratorDetailsSpreadsheet(
             : roundMoney(packTotal * ((collaborator.commission ?? 0) / 100));
       const key = guestKey(collaborator.id, guest.fullName);
       const addOn = claimedAddOns.has(key)
-        ? { excursions: 0, excursionCommission: 0, transfers: 0 }
-        : (addOns.get(key) ?? { excursions: 0, excursionCommission: 0, transfers: 0 });
+        ? { excursions: 0, excursionCommission: 0 }
+        : (addOns.get(key) ?? { excursions: 0, excursionCommission: 0 });
       claimedAddOns.add(key);
-      const due =
-        packTotal - packCommission + addOn.excursions - addOn.excursionCommission + addOn.transfers;
+      const due = packTotal - packCommission + addOn.excursions - addOn.excursionCommission;
 
       rows.push([
         packId,
@@ -525,7 +501,7 @@ export function buildCollaboratorDetailsSpreadsheet(
         roundMoney(packCommission),
         addOn.excursions ? roundMoney(addOn.excursions) : "",
         addOn.excursionCommission ? roundMoney(addOn.excursionCommission) : "",
-        addOn.transfers ? roundMoney(addOn.transfers) : "",
+        "",
         roundMoney(due),
       ]);
     }

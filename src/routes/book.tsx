@@ -60,8 +60,7 @@ export const Route = createFileRoute("/book")({
 function BookPage() {
   const { lang } = useLanguage();
   const L = lang as Language;
-  const tr = (en: string, fr: string, es: string) =>
-    lang === "fr" ? fr : lang === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
   const [packs, setPacks] = useState<Pack[]>([]);
   const [selected, setSelected] = useState<Pack | null>(null);
@@ -74,11 +73,12 @@ function BookPage() {
   const displayRate = isMadReferral ? EUR_TO_MAD : 1;
   const displayCurrency = isMadReferral ? "MAD" : "€";
 
-  // Shuttle Transfer State
+  // Legacy transfer controls remain non-rendered while existing pack records
+  // continue to load safely. New transfers use the standalone /book-transfer form.
   const [needsTransfer, setNeedsTransfer] = useState(false);
   const [transferType, setTransferType] = useState<TransferType>("port");
   const [transferOption, setTransferOption] = useState<TransferOption>("round_trip");
-  const [transferLocation, setTransferLocation] = useState<string>("Port of Tangier (Tanger Ville)");
+  const [transferLocation, setTransferLocation] = useState("Port of Tangier (Tanger Ville)");
   const [selectedTransferGuests, setSelectedTransferGuests] = useState<number[]>([0, 1]);
   const [departureAirport, setDepartureAirport] = useState("");
   const [transportCompany, setTransportCompany] = useState("");
@@ -153,7 +153,14 @@ function BookPage() {
         const singleP = parseInt(selected.price, 10) || 0;
         const totalP = singleP * count;
         const cur = selected.currency || "€";
-        const amt = calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur, selected.id);
+        const amt = calculateDiscountAmount(
+          appliedDiscount,
+          totalP,
+          count,
+          singleP,
+          cur,
+          selected.id,
+        );
         setDiscountAmount(amt);
       }
     }
@@ -176,7 +183,7 @@ function BookPage() {
             text: tr(
               `Discount code "${res.discount.code}" active! Select your pack below.`,
               `Code promo "${res.discount.code}" actif ! Choisissez votre pack ci-dessous.`,
-              `¡Código "${res.discount.code}" activo! Elige tu paquete a continuación.`
+              `¡Código "${res.discount.code}" activo! Elige tu paquete a continuación.`,
             ),
           });
         }
@@ -189,10 +196,17 @@ function BookPage() {
     setValidatingCode(true);
     setDiscountMsg(null);
     const count = selected ? getGuestCount(selected) : 1;
-    const singleP = selected ? (parseInt(selected.price, 10) || 0) : 0;
+    const singleP = selected ? parseInt(selected.price, 10) || 0 : 0;
     const totalP = singleP * count;
     const cur = selected?.currency || "€";
-    const result = await validateDiscountCode(discountInput, totalP, selected?.id, count, singleP, cur);
+    const result = await validateDiscountCode(
+      discountInput,
+      totalP,
+      selected?.id,
+      count,
+      singleP,
+      cur,
+    );
     if (result.valid && result.discount) {
       setAppliedDiscount(result.discount);
       const isMad = /mad|dh/i.test(cur);
@@ -201,10 +215,10 @@ function BookPage() {
         result.discount.applyScope === "fixed_price"
           ? `Special rate: ${isMad ? `${(result.discount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${result.discount.overridePrice ?? 0}`}`
           : result.discount.applyScope === "per_person"
-          ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
-          : result.discount.discountType === "percent"
-          ? `-${result.discount.discountAmount}%`
-          : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
+            ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
+            : result.discount.discountType === "percent"
+              ? `-${result.discount.discountAmount}%`
+              : `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discountAmount}`}`;
 
       if (selected && result.discountAmount != null) {
         setDiscountAmount(result.discountAmount);
@@ -216,12 +230,12 @@ function BookPage() {
           ? tr(
               `Discount code "${result.discount.code}" applied (${scopeText})!`,
               `Code promo "${result.discount.code}" appliqué (${scopeText}) !`,
-              `¡Código "${result.discount.code}" aplicado (${scopeText})!`
+              `¡Código "${result.discount.code}" aplicado (${scopeText})!`,
             )
           : tr(
               `Discount code "${result.discount.code}" active! Select your pack below.`,
               `Code promo "${result.discount.code}" actif ! Choisissez votre pack ci-dessous.`,
-              `¡Código "${result.discount.code}" activo! Elige tu paquete a continuación.`
+              `¡Código "${result.discount.code}" activo! Elige tu paquete a continuación.`,
             ),
       });
 
@@ -236,13 +250,12 @@ function BookPage() {
       }
       setDiscountMsg({
         success: false,
-        text: result.error || tr("Invalid discount code", "Code promo invalide", "Código no válido"),
+        text:
+          result.error || tr("Invalid discount code", "Code promo invalide", "Código no válido"),
       });
     }
     setValidatingCode(false);
   };
-
-
 
   const clearDiscount = () => {
     setAppliedDiscount(null);
@@ -259,7 +272,6 @@ function BookPage() {
   const choosePack = (p: Pack) => {
     setSelected(p);
     const count = packGuestCount(p);
-    setSelectedTransferGuests(Array.from({ length: count }, (_, i) => i));
     setForm((f) => ({
       ...f,
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
@@ -271,13 +283,13 @@ function BookPage() {
         const singleP = parseInt(p.price, 10) || 0;
         const totalP = singleP * count;
         const cur = p.currency || "€";
-        setDiscountAmount(calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur, p.id));
+        setDiscountAmount(
+          calculateDiscountAmount(appliedDiscount, totalP, count, singleP, cur, p.id),
+        );
       }
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-
 
   const setGuestField = (idx: number, field: "firstName" | "lastName", value: string) =>
     setForm((f) => ({
@@ -297,26 +309,6 @@ function BookPage() {
     )
       return;
 
-    if (needsTransfer) {
-      const missingTimes =
-        transferOption === "round_trip"
-          ? !arrivalTime.trim() || !departureTime.trim()
-          : transferOption === "one_way_arrival"
-          ? !arrivalTime.trim()
-          : !departureTime.trim();
-
-      if (!departureAirport.trim() || !transportCompany.trim() || missingTimes) {
-        setError(
-          tr(
-            "Please fill in departure airport/port, company, and required times for your transfer.",
-            "Veuillez renseigner l'aéroport/port de départ, la compagnie et les horaires requis pour le transfert.",
-            "Por favor complete el aeropuerto/puerto de salida, la compañía y los horarios requeridos para el traslado."
-          )
-        );
-        return;
-      }
-    }
-
     setSubmitting(true);
     setError("");
 
@@ -334,18 +326,6 @@ function BookPage() {
     const isApplicable = isDiscountApplicableToPack(appliedDiscount, selected.id);
     const finalDiscount = isApplicable ? appliedDiscount : null;
     const finalDiscountAmt = isApplicable ? discountAmount : 0;
-    const transferPassengersCount = (selected && getGuestCount(selected) > 1) ? selectedTransferGuests.length : 1;
-    const transferCost = needsTransfer
-      ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
-      : 0;
-
-    const selectedGuestsLabel =
-      form.guests.length > 1
-        ? selectedTransferGuests
-            .map((idx) => (form.guests[idx]?.firstName ? `${form.guests[idx].firstName} ${form.guests[idx].lastName}` : `Participant ${idx + 1}`))
-            .join(", ")
-        : customerName || "Participant 1";
-
     try {
       created = await addBooking({
         packId: selected.id,
@@ -354,14 +334,11 @@ function BookPage() {
         email: form.email,
         phone: form.phone,
         country: form.country,
-        company: transportCompany.trim() || null,
-        numPeople: form.guests.length > 0 ? form.guests.length : (getGuestCount(selected) || 1),
+        numPeople: form.guests.length > 0 ? form.guests.length : getGuestCount(selected) || 1,
         danceLevel: "",
         notes: form.notes,
         arrivalDate: form.arrival || null,
-        arrivalTime: arrivalTime.trim() || null,
         departureDate: form.departure || null,
-        departureTime: departureTime.trim() || null,
         lang,
         status: "pending",
         source: collaborator ? "referral" : "website",
@@ -369,42 +346,19 @@ function BookPage() {
         discountCode: finalDiscount?.code ?? null,
         discountAmount: finalDiscountAmt,
         discountCodeId: finalDiscount?.id ?? null,
-        needsTransfer,
-        transferType: needsTransfer ? transferType : null,
-        transferOption: needsTransfer ? transferOption : null,
-        transferLocation: needsTransfer ? transferLocation : null,
-        departureAirport: needsTransfer ? (departureAirport.trim() || null) : null,
-        transferDetails: needsTransfer
-          ? [
-              form.guests.length > 1 ? `Transfer Passengers: ${selectedGuestsLabel}` : "",
-              departureAirport ? `Departure ${transferType === "airport" ? "Airport" : "Port"}: ${departureAirport}` : "",
-              transportCompany ? `Company: ${transportCompany}` : "",
-              arrivalTime ? `Arrival Time: ${arrivalTime}` : "",
-              departureTime ? `Departure Time: ${departureTime}` : "",
-              transferDetails ? `Flight/Ferry: ${transferDetails}` : "",
-            ]
-              .filter(Boolean)
-              .join(" | ") || null
-          : null,
-        transferCost: needsTransfer ? transferCost : 0,
       });
-
     } catch (dbErr) {
       console.warn("Could not record booking:", dbErr);
     }
 
     try {
-      const transferSummary = needsTransfer
-        ? `${transferType === "port" ? "Port" : "Airport"} (${transferLocation}) - ${formatTransferOptionLabel(transferOption, lang)} - €${transferCost}${departureAirport ? ` - Origin: ${departureAirport}` : ""}${transportCompany ? ` - Company: ${transportCompany}` : ""}${arrivalTime ? ` - Arr Time: ${arrivalTime}` : ""}${departureTime ? ` - Dep Time: ${departureTime}` : ""}${transferDetails ? ` - Details: ${transferDetails}` : ""}`
-        : "No transfer";
-
       // Notify the festival team + automatic reply to the customer
       const sent = await sendFormNotification({
         subject: `New Booking Request: ${selected.name} (${selected.sub})`,
         guestSubject: tr(
           "Your reservation request — Tangier International Latin Festival",
           "Votre demande de réservation — Tangier International Latin Festival",
-          "Tu solicitud de reserva — Tangier International Latin Festival"
+          "Tu solicitud de reserva — Tangier International Latin Festival",
         ),
         lang,
         fields: {
@@ -413,9 +367,8 @@ function BookPage() {
           Pack: `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`,
           Phone: form.phone,
           Country: form.country,
-          Arrival: `${form.arrival}${arrivalTime ? " " + arrivalTime : ""}`,
-          Departure: `${form.departure}${departureTime ? " " + departureTime : ""}`,
-          shuttleTransfer: transferSummary,
+          Arrival: form.arrival,
+          Departure: form.departure,
           ticketCode: created?.ticketCode ?? "",
           Notes: form.notes,
           ...(created ? { Reservation: created.ticketCode } : {}),
@@ -423,9 +376,7 @@ function BookPage() {
         },
         autoresponse: bookingAutoResponse(
           lang,
-          created
-            ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) }
-            : undefined
+          created ? { code: created.ticketCode, url: ticketUrl(created.ticketCode) } : undefined,
         ),
       });
       // The booking is safely recorded — an email hiccup shouldn't make the
@@ -441,8 +392,8 @@ function BookPage() {
         tr(
           "Something went wrong. Please try again or contact us at contact@tangierlatinfestival.com",
           "Une erreur est survenue. Veuillez réessayer ou nous écrire à contact@tangierlatinfestival.com",
-          "Ocurrió un error. Inténtalo de nuevo o escríbenos a contact@tangierlatinfestival.com"
-        )
+          "Ocurrió un error. Inténtalo de nuevo o escríbenos a contact@tangierlatinfestival.com",
+        ),
       );
     }
     setSubmitting(false);
@@ -468,7 +419,7 @@ function BookPage() {
                 {tr(
                   "Your Reservation Number",
                   "Votre numéro de réservation",
-                  "Tu número de reserva"
+                  "Tu número de reserva",
                 )}
               </p>
               <code className="mt-1.5 inline-block font-mono text-2xl font-bold text-amber-600">
@@ -478,7 +429,7 @@ function BookPage() {
                 {tr(
                   "Keep this number — you can follow your booking at any time:",
                   "Gardez ce numéro — suivez votre réservation à tout moment :",
-                  "Guarda este número — sigue tu reserva en cualquier momento:"
+                  "Guarda este número — sigue tu reserva en cualquier momento:",
                 )}
               </p>
               <a
@@ -493,7 +444,7 @@ function BookPage() {
             {tr(
               "Please check your email box to track your booking. Our team will respond within 48 hours to confirm your booking.",
               "Veuillez consulter votre boîte e-mail pour suivre votre réservation. Notre équipe vous répondra sous 48 heures pour confirmer votre réservation.",
-              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva."
+              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva.",
             )}
           </p>
 
@@ -501,7 +452,11 @@ function BookPage() {
             to="/"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition"
           >
-            {tr("Visit the Festival Website", "Visiter le site du festival", "Visitar el sitio del festival")}
+            {tr(
+              "Visit the Festival Website",
+              "Visiter le site du festival",
+              "Visitar el sitio del festival",
+            )}
           </Link>
         </div>
       </Shell>
@@ -516,12 +471,15 @@ function BookPage() {
     const totalBasePrice = singlePrice * guestCount;
     const currency = displayCurrency;
     const transferPassengersCount = guestCount > 1 ? selectedTransferGuests.length : 1;
-    const transferCost = needsTransfer
-      ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
-      : 0;
-    const displayDiscountAmount = discountAmount * displayRate;
+    const transferCost = calculateTransferCost(
+      transferType,
+      transferOption,
+      transferPassengersCount,
+      transferLocation,
+    );
     const displayTransferCost = transferCost * displayRate;
-    const finalTotalPrice = Math.max(0, totalBasePrice - displayDiscountAmount) + displayTransferCost;
+    const displayDiscountAmount = discountAmount * displayRate;
+    const finalTotalPrice = Math.max(0, totalBasePrice - displayDiscountAmount);
 
     return (
       <Shell>
@@ -544,7 +502,9 @@ function BookPage() {
             </div>
             <div className="text-right">
               <span className="text-xs font-semibold text-amber-600 block">
-                {singlePrice > 0 ? `${singlePrice} ${currency} / ${L === "fr" ? "pers." : L === "es" ? "pers." : "person"}` : selected.price}
+                {singlePrice > 0
+                  ? `${singlePrice} ${currency} / ${L === "fr" ? "pers." : L === "es" ? "pers." : "person"}`
+                  : selected.price}
               </span>
             </div>
           </div>
@@ -552,16 +512,35 @@ function BookPage() {
           {/* Detailed Per-Person & Total Breakdown */}
           <div className="pt-3 border-t border-amber-200/80 space-y-1.5 text-xs text-gray-700 font-medium">
             <div className="flex justify-between items-center text-gray-600">
-              <span>{L === "fr" ? "Prix par personne :" : L === "es" ? "Precio por persona:" : "Price per person:"}</span>
-              <span className="font-semibold text-gray-900">{singlePrice} {currency}</span>
+              <span>
+                {L === "fr"
+                  ? "Prix par personne :"
+                  : L === "es"
+                    ? "Precio por persona:"
+                    : "Price per person:"}
+              </span>
+              <span className="font-semibold text-gray-900">
+                {singlePrice} {currency}
+              </span>
             </div>
 
             {guestCount > 1 && (
               <div className="space-y-1 py-1">
                 {Array.from({ length: guestCount }).map((_, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400">
-                    <span>{L === "fr" ? `Participant ${idx + 1}` : L === "es" ? `Participante ${idx + 1}` : `Participant ${idx + 1}`}</span>
-                    <span>{singlePrice} {currency}</span>
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center text-gray-600 pl-2 border-l-2 border-amber-400"
+                  >
+                    <span>
+                      {L === "fr"
+                        ? `Participant ${idx + 1}`
+                        : L === "es"
+                          ? `Participante ${idx + 1}`
+                          : `Participant ${idx + 1}`}
+                    </span>
+                    <span>
+                      {singlePrice} {currency}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -569,29 +548,35 @@ function BookPage() {
 
             {discountAmount > 0 && (
               <div className="flex justify-between items-center text-emerald-700 font-semibold">
-                <span>{L === "fr" ? "Réduction appliquée :" : L === "es" ? "Descuento aplicado:" : "Discount applied:"}</span>
-                <span>-{appliedDiscount?.discountType === "percent" ? `${appliedDiscount.discountAmount}%` : `${displayDiscountAmount} ${currency}`}</span>
-              </div>
-            )}
-
-            {needsTransfer && transferCost > 0 && (
-              <div className="flex justify-between items-center text-blue-700 font-semibold">
                 <span>
-                  {tr(
-                    `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, L)}):`,
-                    `Navette (${transferType === "port" ? "Port" : "Aéroport"} · ${formatTransferOptionLabel(transferOption, L)}) :`,
-                    `Traslado (${transferType === "port" ? "Puerto" : "Aeropuerto"} · ${formatTransferOptionLabel(transferOption, L)}):`
-                  )}
+                  {L === "fr"
+                    ? "Réduction appliquée :"
+                    : L === "es"
+                      ? "Descuento aplicado:"
+                      : "Discount applied:"}
                 </span>
-                <span>+{displayTransferCost} {currency}</span>
+                <span>
+                  -
+                  {appliedDiscount?.discountType === "percent"
+                    ? `${appliedDiscount.discountAmount}%`
+                    : `${displayDiscountAmount} ${currency}`}
+                </span>
               </div>
             )}
 
             <div className="flex justify-between items-center pt-2 border-t border-amber-300 font-bold text-sm text-gray-900">
               <span>
                 {guestCount > 1
-                  ? (L === "fr" ? `Montant Total (${guestCount} personnes)` : L === "es" ? `Monto Total (${guestCount} personas)` : `Total Amount (${guestCount} guests)`)
-                  : (L === "fr" ? "Montant Total" : L === "es" ? "Monto Total" : "Total Amount")}
+                  ? L === "fr"
+                    ? `Montant Total (${guestCount} personnes)`
+                    : L === "es"
+                      ? `Monto Total (${guestCount} personas)`
+                      : `Total Amount (${guestCount} guests)`
+                  : L === "fr"
+                    ? "Montant Total"
+                    : L === "es"
+                      ? "Monto Total"
+                      : "Total Amount"}
               </span>
               <span className="font-extrabold text-lg text-amber-600">
                 {finalTotalPrice} {currency}
@@ -599,7 +584,6 @@ function BookPage() {
             </div>
           </div>
         </div>
-
 
         <form
           onSubmit={handleSubmit}
@@ -612,7 +596,7 @@ function BookPage() {
             {tr(
               "Send your booking request — we confirm within 24 hours.",
               "Envoyez votre demande de réservation — nous confirmons sous 24 heures.",
-              "Envía tu solicitud de reserva — confirmamos en 24 horas."
+              "Envía tu solicitud de reserva — confirmamos en 24 horas.",
             )}
           </p>
 
@@ -732,7 +716,8 @@ function BookPage() {
                   min={form.arrival || "2027-01-01"}
                   max="2027-01-30"
                   onFocus={() => {
-                    if (!form.departure) setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                    if (!form.departure)
+                      setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
                   }}
                   onChange={(e) => setForm({ ...form, departure: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
@@ -741,7 +726,7 @@ function BookPage() {
             </div>
 
             {/* Shuttle Transfer Section */}
-            <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 to-indigo-50/40 p-4 space-y-3.5">
+            <div className="hidden" aria-hidden="true">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-lg bg-blue-600 text-white grid place-items-center shadow-xs">
@@ -755,7 +740,7 @@ function BookPage() {
                       {tr(
                         "Transfer to/from port or airport to hotel",
                         "Transfert depuis/vers le port ou l'aéroport",
-                        "Traslado desde/hacia el puerto o aeropuerto"
+                        "Traslado desde/hacia el puerto o aeropuerto",
                       )}
                     </p>
                   </div>
@@ -806,7 +791,9 @@ function BookPage() {
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Ship className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`} />
+                        <Ship
+                          className={`h-4 w-4 ${transferType === "port" ? "text-blue-600" : "text-gray-500"}`}
+                        />
                         <span className="text-xs font-bold text-gray-900">
                           {tr("Tangier Port", "Port de Tanger", "Puerto de Tánger")}
                         </span>
@@ -830,7 +817,9 @@ function BookPage() {
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Plane className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`} />
+                        <Plane
+                          className={`h-4 w-4 ${transferType === "airport" ? "text-blue-600" : "text-gray-500"}`}
+                        />
                         <span className="text-xs font-bold text-gray-900">
                           {tr("Airport", "Aéroport", "Aeropuerto")}
                         </span>
@@ -854,15 +843,27 @@ function BookPage() {
                       >
                         {transferType === "port" ? (
                           <option value="Port of Tangier (Tanger Ville)">
-                            {tr("Port of Tangier (Tanger Ville)", "Port de Tanger Ville", "Puerto de Tánger Ciudad")}
+                            {tr(
+                              "Port of Tangier (Tanger Ville)",
+                              "Port de Tanger Ville",
+                              "Puerto de Tánger Ciudad",
+                            )}
                           </option>
                         ) : (
                           <>
                             <option value="Tangier Ibn Battouta Airport (TNG)">
-                              {tr("Tangier Ibn Battouta Airport (TNG)", "Aéroport Tanger Ibn Battouta (TNG)", "Aeropuerto Tánger Ibn Battouta (TNG)")}
+                              {tr(
+                                "Tangier Ibn Battouta Airport (TNG)",
+                                "Aéroport Tanger Ibn Battouta (TNG)",
+                                "Aeropuerto Tánger Ibn Battouta (TNG)",
+                              )}
                             </option>
                             <option value="Tetouan Sania Ramel Airport (TTU)">
-                              {tr("Tetouan Sania Ramel Airport (TTU)", "Aéroport Tétouan Sania Ramel (TTU)", "Aeropuerto Tetuán Sania Ramel (TTU)")}
+                              {tr(
+                                "Tetouan Sania Ramel Airport (TTU)",
+                                "Aéroport Tétouan Sania Ramel (TTU)",
+                                "Aeropuerto Tetuán Sania Ramel (TTU)",
+                              )}
                             </option>
                           </>
                         )}
@@ -879,13 +880,25 @@ function BookPage() {
                         className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="round_trip">
-                          {tr("Round Trip (Arrival & Return)", "Aller-Retour (A/R)", "Ida y Vuelta")}
+                          {tr(
+                            "Round Trip (Arrival & Return)",
+                            "Aller-Retour (A/R)",
+                            "Ida y Vuelta",
+                          )}
                         </option>
                         <option value="one_way_arrival">
-                          {tr("One-Way (Arrival only)", "Aller simple (Arrivée)", "Solo ida (Llegada)")}
+                          {tr(
+                            "One-Way (Arrival only)",
+                            "Aller simple (Arrivée)",
+                            "Solo ida (Llegada)",
+                          )}
                         </option>
                         <option value="one_way_departure">
-                          {tr("One-Way (Return only)", "Retour simple (Départ)", "Solo vuelta (Salida)")}
+                          {tr(
+                            "One-Way (Return only)",
+                            "Retour simple (Départ)",
+                            "Solo vuelta (Salida)",
+                          )}
                         </option>
                       </select>
                     </div>
@@ -898,7 +911,7 @@ function BookPage() {
                         {tr(
                           "Select participants included in transfer:",
                           "Sélectionnez les participants pour le transfert :",
-                          "Seleccione los participantes para el traslado:"
+                          "Seleccione los participantes para el traslado:",
                         )}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -929,7 +942,9 @@ function BookPage() {
                               </span>
                               <div
                                 className={`h-4 w-4 rounded-md border flex items-center justify-center ${
-                                  isSelected ? "bg-white text-blue-600 border-white" : "border-gray-300"
+                                  isSelected
+                                    ? "bg-white text-blue-600 border-white"
+                                    : "border-gray-300"
                                 }`}
                               >
                                 {isSelected && <Check className="h-3 w-3" />}
@@ -948,12 +963,12 @@ function BookPage() {
                         ? tr(
                             "Departure Airport (Required) *",
                             "Aéroport de départ (Obligatoire) *",
-                            "Aeropuerto de salida (Obligatorio) *"
+                            "Aeropuerto de salida (Obligatorio) *",
                           )
                         : tr(
                             "Departure Port (Required) *",
                             "Port de départ (Obligatoire) *",
-                            "Puerto de salida (Obligatorio) *"
+                            "Puerto de salida (Obligatorio) *",
                           )}
                     </label>
                     <input
@@ -963,8 +978,16 @@ function BookPage() {
                       onChange={(e) => setDepartureAirport(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? tr("Ex: Paris CDG / Orly, Madrid, Brussels, London...", "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London...", "Ej: Madrid Barajas, Barcelona, Paris...")
-                          : tr("Ex: Tarifa, Algeciras, Barcelona...", "Ex: Tarifa, Algésiras, Barcelone...", "Ej: Tarifa, Algeciras, Barcelona...")
+                          ? tr(
+                              "Ex: Paris CDG / Orly, Madrid, Brussels, London...",
+                              "Ex: Paris Orly (ORY), CDG, Madrid, Bruxelles, London...",
+                              "Ej: Madrid Barajas, Barcelona, Paris...",
+                            )
+                          : tr(
+                              "Ex: Tarifa, Algeciras, Barcelona...",
+                              "Ex: Tarifa, Algésiras, Barcelone...",
+                              "Ej: Tarifa, Algeciras, Barcelona...",
+                            )
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -976,7 +999,7 @@ function BookPage() {
                       {tr(
                         "Airline / Ferry Company (Required) *",
                         "Compagnie aérienne / Ferry (Obligatoire) *",
-                        "Aerolínea / Compañía de ferry (Obligatorio) *"
+                        "Aerolínea / Compañía de ferry (Obligatorio) *",
                       )}
                     </label>
                     <input
@@ -986,8 +1009,16 @@ function BookPage() {
                       onChange={(e) => setTransportCompany(e.target.value)}
                       placeholder={
                         transferType === "airport"
-                          ? tr("Ex: Ryanair, Royal Air Maroc, Air Arabia...", "Ex: Ryanair, Royal Air Maroc, Air Arabia...", "Ej: Ryanair, Iberia, Royal Air Maroc...")
-                          : tr("Ex: FRS Ferries, Balearia, AML...", "Ex: FRS Ferries, Balearia, AML...", "Ej: FRS Ferries, Balearia, AML...")
+                          ? tr(
+                              "Ex: Ryanair, Royal Air Maroc, Air Arabia...",
+                              "Ex: Ryanair, Royal Air Maroc, Air Arabia...",
+                              "Ej: Ryanair, Iberia, Royal Air Maroc...",
+                            )
+                          : tr(
+                              "Ex: FRS Ferries, Balearia, AML...",
+                              "Ex: FRS Ferries, Balearia, AML...",
+                              "Ej: FRS Ferries, Balearia, AML...",
+                            )
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -998,8 +1029,16 @@ function BookPage() {
                     <div>
                       <label className="text-[11px] font-bold text-gray-800 block mb-1">
                         {transferOption === "one_way_departure"
-                          ? tr("Arrival Time (Optional)", "Heure d'arrivée (Optionnel)", "Hora de llegada (Opcional)")
-                          : tr("Arrival Time (Required) *", "Heure d'arrivée (Obligatoire) *", "Hora de llegada (Obligatorio) *")}
+                          ? tr(
+                              "Arrival Time (Optional)",
+                              "Heure d'arrivée (Optionnel)",
+                              "Hora de llegada (Opcional)",
+                            )
+                          : tr(
+                              "Arrival Time (Required) *",
+                              "Heure d'arrivée (Obligatoire) *",
+                              "Hora de llegada (Obligatorio) *",
+                            )}
                       </label>
                       <input
                         type="time"
@@ -1012,8 +1051,16 @@ function BookPage() {
                     <div>
                       <label className="text-[11px] font-bold text-gray-800 block mb-1">
                         {transferOption === "one_way_arrival"
-                          ? tr("Departure Time (Optional)", "Heure de départ (Optionnel)", "Hora de salida (Opcional)")
-                          : tr("Departure Time (Required) *", "Heure de départ (Obligatoire) *", "Hora de salida (Obligatorio) *")}
+                          ? tr(
+                              "Departure Time (Optional)",
+                              "Heure de départ (Optionnel)",
+                              "Hora de salida (Opcional)",
+                            )
+                          : tr(
+                              "Departure Time (Required) *",
+                              "Heure de départ (Obligatoire) *",
+                              "Hora de salida (Obligatorio) *",
+                            )}
                       </label>
                       <input
                         type="time"
@@ -1031,7 +1078,7 @@ function BookPage() {
                       {tr(
                         "Flight / Ferry # (Optional)",
                         "N° de vol / ferry (Optionnel)",
-                        "N° de vuelo / ferry (Opcional)"
+                        "N° de vuelo / ferry (Opcional)",
                       )}
                     </label>
                     <input
@@ -1041,7 +1088,11 @@ function BookPage() {
                       placeholder={
                         transferType === "airport"
                           ? tr("Ex: Flight AT123", "Ex: Vol AT123", "Ej: Vuelo AT123")
-                          : tr("Ex: Ferry Tanger-Tarifa", "Ex: Ferry Tanger-Tarifa", "Ej: Ferry Tanger-Tarifa")
+                          : tr(
+                              "Ex: Ferry Tanger-Tarifa",
+                              "Ex: Ferry Tanger-Tarifa",
+                              "Ej: Ferry Tanger-Tarifa",
+                            )
                       }
                       className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
                     />
@@ -1050,9 +1101,17 @@ function BookPage() {
                   {/* Calculated Shuttle Subtotal */}
                   <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-100/70 text-xs font-bold text-blue-900">
                     <span>
-                      {tr("Shuttle Transfer Total:", "Total transfert navette :", "Total traslado:")}
+                      {tr(
+                        "Shuttle Transfer Total:",
+                        "Total transfert navette :",
+                        "Total traslado:",
+                      )}
                       <span className="font-normal text-blue-800 ml-1">
-                        ({transferPassengersCount} {transferPassengersCount > 1 ? tr("guests", "participants", "participantes") : tr("guest", "participant", "participante")})
+                        ({transferPassengersCount}{" "}
+                        {transferPassengersCount > 1
+                          ? tr("guests", "participants", "participantes")
+                          : tr("guest", "participant", "participante")}
+                        )
                       </span>
                     </span>
                     <span className="text-sm font-extrabold text-blue-700">
@@ -1063,7 +1122,7 @@ function BookPage() {
               )}
             </div>
 
-{/* Promo / School Code */}
+            {/* Promo / School Code */}
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 space-y-2.5">
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-amber-500 shrink-0" />
@@ -1072,7 +1131,7 @@ function BookPage() {
                     {tr(
                       "Will you make a show with your dance school? Enter your school's confidential code.",
                       "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école.",
-                      "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
+                      "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela.",
                     )}
                   </p>
                 </div>
@@ -1111,11 +1170,7 @@ function BookPage() {
                 </div>
               )}
             </div>
-
-
-
           </div>
-
 
           {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
@@ -1128,9 +1183,9 @@ function BookPage() {
               !form.phone.trim() ||
               !form.arrival.trim() ||
               !form.departure.trim() ||
-              (needsTransfer && (!departureAirport.trim() || !transportCompany.trim() || !departureTime.trim()))
+              (needsTransfer &&
+                (!departureAirport.trim() || !transportCompany.trim() || !departureTime.trim()))
             }
-
             className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3.5 text-sm font-bold text-zinc-950 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-amber-200"
           >
             {submitting ? (
@@ -1149,10 +1204,9 @@ function BookPage() {
             {tr(
               "Please check your email box to track your booking. Our team will respond within 48 hours to confirm your booking.",
               "Veuillez consulter votre boîte e-mail pour suivre votre réservation. Notre équipe vous répondra sous 48 heures pour confirmer votre réservation.",
-              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva."
+              "Por favor revise su bandeja de entrada de correo electrónico para realizar el seguimiento de su reserva. Nuestro equipo le responderá en un plazo de 48 horas para confirmar su reserva.",
             )}
           </p>
-
         </form>
       </Shell>
     );
@@ -1169,7 +1223,7 @@ function BookPage() {
           {tr(
             "Choose the pack that best suits your needs. Once your booking is completed, you will automatically receive a confirmation email with the status 'Pending'.",
             "Choisissez le pack le plus adapté à vos besoins. Une fois votre réservation effectuée, vous recevrez automatiquement un e-mail de confirmation avec le statut « En attente ».",
-            "Elige el paquete que mejor se adapte a tus necesidades. Una vez realizada tu reserva, recibirás automáticamente un correo electrónico de confirmación con el estado «Pendiente»."
+            "Elige el paquete que mejor se adapte a tus necesidades. Una vez realizada tu reserva, recibirás automáticamente un correo electrónico de confirmación con el estado «Pendiente».",
           )}
         </p>
       </div>
@@ -1182,7 +1236,7 @@ function BookPage() {
             {tr(
               "Will you make a show with your dance school? Enter your school's confidential code.",
               "Vous ferez un show avec votre école de danse ? Saisissez le code confidentiel de votre école.",
-              "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela."
+              "¿Harás un show con tu escuela de baile? Introduce el código confidencial de tu escuela.",
             )}
           </p>
         </div>
@@ -1233,16 +1287,26 @@ function BookPage() {
       </div>
 
       {packs.length === 0 ? (
-        <p className="text-center text-sm text-gray-400 py-16">{tr("Loading…", "Chargement…", "Cargando…")}</p>
+        <p className="text-center text-sm text-gray-400 py-16">
+          {tr("Loading…", "Chargement…", "Cargando…")}
+        </p>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {packs.map((p) => {
             const unit = priceUnitLabel(p, L);
             const baseP = parseInt(p.price, 10) || 0;
             const isApplicable = isDiscountApplicableToPack(appliedDiscount, p.id);
-            const discAmt = isApplicable && appliedDiscount
-              ? calculateDiscountAmount(appliedDiscount, baseP, packGuestCount(p), baseP, p.currency || "€", p.id)
-              : 0;
+            const discAmt =
+              isApplicable && appliedDiscount
+                ? calculateDiscountAmount(
+                    appliedDiscount,
+                    baseP,
+                    packGuestCount(p),
+                    baseP,
+                    p.currency || "€",
+                    p.id,
+                  )
+                : 0;
             const displayBaseP = baseP * displayRate;
             const displayDiscAmt = discAmt * displayRate;
             const finalP = Math.max(0, displayBaseP - displayDiscAmt);
@@ -1268,8 +1332,8 @@ function BookPage() {
                 {/* RED DISCOUNT GRAPHIC BADGE */}
                 {hasDiscount && (
                   <span className="absolute top-3 right-3 inline-flex items-center gap-1 bg-gradient-to-r from-red-600 to-rose-600 text-white text-[10px] font-black tracking-wider uppercase px-2.5 py-1 rounded-full shadow-md animate-pulse">
-                    <Tag className="h-3 w-3" />
-                    -{appliedDiscount?.discountType === "percent"
+                    <Tag className="h-3 w-3" />-
+                    {appliedDiscount?.discountType === "percent"
                       ? `${appliedDiscount.discountAmount}%`
                       : `${displayDiscAmt} ${displayCurrency}`}
                   </span>
@@ -1322,7 +1386,9 @@ function BookPage() {
                 <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
                   <Ticket className="h-3.5 w-3.5" />
                   {tr("Choose this pack →", "Choisir ce pack →", "Elegir este pack →")}
-                  {hasDiscount ? ` (${tr("Save", "Économisez", "Ahorra")} ${displayDiscAmt} ${displayCurrency})` : ""}
+                  {hasDiscount
+                    ? ` (${tr("Save", "Économisez", "Ahorra")} ${displayDiscAmt} ${displayCurrency})`
+                    : ""}
                 </span>
               </button>
             );
@@ -1344,9 +1410,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
       {/* Banner — swap for a custom image anytime */}
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-8 px-6 text-center shadow-md">
-        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
-          Tangier International
-        </p>
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
         <h1 className="mt-1 text-white text-3xl font-bold tracking-wide">LATIN FESTIVAL</h1>
         <p className="mt-2 text-slate-300 text-sm flex items-center justify-center gap-2">
           <Calendar className="h-3.5 w-3.5 text-amber-400/80" />
@@ -1370,14 +1434,14 @@ function TrackReservation({ tr }: { tr: (en: string, fr: string, es: string) => 
         {tr(
           "Already booked? Track your reservation",
           "Déjà réservé ? Suivez votre réservation",
-          "¿Ya reservaste? Sigue tu reserva"
+          "¿Ya reservaste? Sigue tu reserva",
         )}
       </p>
       <p className="mt-1 text-xs text-gray-500">
         {tr(
           "Enter the reservation number from your confirmation email (TLF-…).",
           "Entrez le numéro de réservation de votre email de confirmation (TLF-…).",
-          "Introduce el número de reserva de tu correo de confirmación (TLF-…)."
+          "Introduce el número de reserva de tu correo de confirmación (TLF-…).",
         )}
       </p>
       <form

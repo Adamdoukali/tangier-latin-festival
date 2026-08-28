@@ -56,7 +56,7 @@ export function calculateTransferCost(
   type: TransferType | null | undefined,
   option: TransferOption | null | undefined,
   numGuests: number = 1,
-  location?: string | null | undefined
+  location?: string | null | undefined,
 ): number {
   if (!type || !option) return 0;
   const locLower = (location || "").toLowerCase();
@@ -79,28 +79,28 @@ export function calculateTransferCost(
 
 export function formatTransferOptionLabel(
   option: TransferOption | null | undefined,
-  lang: string = "en"
+  lang: string = "en",
 ): string {
   if (!option) return "";
   if (option === "one_way_arrival") {
     return lang === "fr"
       ? "Aller simple (Arrivée)"
       : lang === "es"
-      ? "Solo ida (Llegada)"
-      : "One-Way (Arrival)";
+        ? "Solo ida (Llegada)"
+        : "One-Way (Arrival)";
   }
   if (option === "one_way_departure") {
     return lang === "fr"
       ? "Retour simple (Départ)"
       : lang === "es"
-      ? "Solo vuelta (Salida)"
-      : "One-Way (Return / Departure)";
+        ? "Solo vuelta (Salida)"
+        : "One-Way (Return / Departure)";
   }
   return lang === "fr"
     ? "Aller-Retour"
     : lang === "es"
-    ? "Ida y vuelta"
-    : "Round Trip (Arrival & Return)";
+      ? "Ida y vuelta"
+      : "Round Trip (Arrival & Return)";
 }
 
 export interface Booking {
@@ -188,7 +188,6 @@ export interface DiscountCode {
   notes?: string;
   createdAt: string;
 }
-
 
 export interface Invite {
   id: string;
@@ -296,8 +295,6 @@ export async function createPartnerAccount({
   }
 }
 
-
-
 // ─── Keys (localStorage fallback) ───────────────────────────────────
 
 const PACKS_KEY = "tlf_admin_packs";
@@ -318,7 +315,7 @@ function generateId(): string {
  *  bookings/invites always say exactly which pack was chosen. */
 export function packLabel(
   pack: { name: string; sub?: string } | null | undefined,
-  fallback = "Unknown"
+  fallback = "Unknown",
 ): string {
   if (!pack) return fallback;
   return pack.sub ? `${pack.name} — ${pack.sub}` : pack.name;
@@ -413,7 +410,7 @@ function warn(op: string, error: unknown) {
     console.warn(
       `[admin-store] Database writes are blocked by row-level security — ` +
         `run supabase/schema.sql in the Supabase SQL Editor to fix. ` +
-        `Falling back to localStorage for this session.`
+        `Falling back to localStorage for this session.`,
     );
   }
   console.warn(`[admin-store] ${op} failed, using local fallback:`, error);
@@ -477,9 +474,16 @@ const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
 export function getTourIdFromName(packName?: string | null): string | null {
   if (!packName) return null;
   const s = packName.toLowerCase();
-  if (s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen")) return "tour-chefchaouen";
+  if (s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen"))
+    return "tour-chefchaouen";
   if (s.includes("asilah") || s.includes("asella")) return "tour-asilah";
-  if (s.includes("tangier") && !s.includes("solazur") && !s.includes("hotel") && !s.includes("room")) return "tour-tangier";
+  if (
+    s.includes("tangier") &&
+    !s.includes("solazur") &&
+    !s.includes("hotel") &&
+    !s.includes("room")
+  )
+    return "tour-tangier";
   if (s.includes("tourism") || s.includes("excursion")) return "tour-tangier";
   return null;
 }
@@ -506,7 +510,12 @@ const bookingFromRow = (r: any): Booking => ({
   braceletGiven: r.bracelet_given ?? null,
   roomNumber: r.room_number ?? null,
   roomType: r.room_type ?? null,
-  guestDetails: typeof r.guest_details === "string" ? r.guest_details : r.guest_details ? JSON.stringify(r.guest_details) : null,
+  guestDetails:
+    typeof r.guest_details === "string"
+      ? r.guest_details
+      : r.guest_details
+        ? JSON.stringify(r.guest_details)
+        : null,
   lang: r.lang ?? null,
   status: (r.status as BookingStatus) ?? "pending",
   source: (r.source as BookingSource) ?? undefined,
@@ -535,8 +544,8 @@ const discountFromRow = (r: any): DiscountCode => ({
   applicablePackIds: Array.isArray(r.applicable_pack_ids)
     ? r.applicable_pack_ids
     : r.applicable_pack_ids
-    ? JSON.parse(r.applicable_pack_ids)
-    : null,
+      ? JSON.parse(r.applicable_pack_ids)
+      : null,
   maxGuestsDiscounted: r.max_guests_discounted != null ? Number(r.max_guests_discounted) : null,
   commissionOverride: r.commission_override != null ? Number(r.commission_override) : null,
   commissionType: (r.commission_type as CommissionType) || "fixed",
@@ -564,8 +573,6 @@ const discountToRow = (d: Partial<DiscountCode>): Record<string, any> => {
   if (d.notes !== undefined) row.notes = d.notes;
   return row;
 };
-
-
 
 const inviteFromRow = (r: any): Invite => ({
   id: r.id,
@@ -616,7 +623,7 @@ const collabFromRow = (r: any): Collaborator => ({
 async function insertRow(
   table: string,
   row: Record<string, unknown>,
-  optionalCols: string[] = []
+  optionalCols: string[] = [],
 ): Promise<Record<string, unknown>> {
   const attempt = { ...row };
   let { data, error } = await supabase!.from(table).insert(attempt).select().single();
@@ -864,7 +871,7 @@ export async function addPack(pack: Omit<Pack, "id" | "createdAt">): Promise<Pac
 
 export async function updatePack(
   id: string,
-  updates: Partial<Omit<Pack, "id" | "createdAt">>
+  updates: Partial<Omit<Pack, "id" | "createdAt">>,
 ): Promise<Pack | null> {
   if (useDb()) {
     try {
@@ -967,14 +974,12 @@ export async function getBookingByTicketCode(code: string): Promise<Booking | un
       warn("getBookingByTicketCode", e);
     }
   }
-  return readStore<Booking>(BOOKINGS_KEY).find(
-    (b) => b.ticketCode.toUpperCase() === wanted
-  );
+  return readStore<Booking>(BOOKINGS_KEY).find((b) => b.ticketCode.toUpperCase() === wanted);
 }
 
 export async function addBooking(
   booking: Omit<Booking, "id" | "ticketCode" | "createdAt"> & { ticketCode?: string },
-  options: { allowLocalFallback?: boolean } = {}
+  options: { allowLocalFallback?: boolean } = {},
 ): Promise<Booking> {
   const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
   if (booking.discountCode) {
@@ -990,7 +995,7 @@ export async function addBooking(
         (c) =>
           c.id === resolvedCollabId ||
           c.code?.toUpperCase() === resolvedCollabId?.toUpperCase() ||
-          c.name?.toUpperCase() === resolvedCollabId?.toUpperCase()
+          c.name?.toUpperCase() === resolvedCollabId?.toUpperCase(),
       );
       if (found && isValidUuid(found.id)) {
         resolvedCollabId = found.id;
@@ -1056,7 +1061,7 @@ export async function addBooking(
           "transfer_location",
           "transfer_details",
           "transfer_cost",
-        ]
+        ],
       );
       return bookingFromRow(data);
     } catch (e) {
@@ -1085,7 +1090,7 @@ export async function updateBookingTransfer(
     transferLocation?: string | null;
     transferDetails?: string | null;
     transferCost?: number | null;
-  }
+  },
 ): Promise<Booking | null> {
   if (useDb() && !isLocalId(id)) {
     try {
@@ -1093,8 +1098,10 @@ export async function updateBookingTransfer(
       if (transfer.needsTransfer !== undefined) updates.needs_transfer = transfer.needsTransfer;
       if (transfer.transferType !== undefined) updates.transfer_type = transfer.transferType;
       if (transfer.transferOption !== undefined) updates.transfer_option = transfer.transferOption;
-      if (transfer.transferLocation !== undefined) updates.transfer_location = transfer.transferLocation;
-      if (transfer.transferDetails !== undefined) updates.transfer_details = transfer.transferDetails;
+      if (transfer.transferLocation !== undefined)
+        updates.transfer_location = transfer.transferLocation;
+      if (transfer.transferDetails !== undefined)
+        updates.transfer_details = transfer.transferDetails;
       if (transfer.transferCost !== undefined) updates.transfer_cost = transfer.transferCost;
 
       const { data, error } = await supabase!
@@ -1119,13 +1126,14 @@ export async function updateBookingTransfer(
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Booking>
+  updates: Partial<Booking>,
 ): Promise<Booking | null> {
   if (useDb() && !isLocalId(id)) {
     try {
       const rowUpdates: Record<string, any> = {};
       if (updates.customerName !== undefined) rowUpdates.customer_name = updates.customerName;
-      if (updates.packId !== undefined) rowUpdates.pack_id = isValidUuid(updates.packId) ? updates.packId : null;
+      if (updates.packId !== undefined)
+        rowUpdates.pack_id = isValidUuid(updates.packId) ? updates.packId : null;
       if (updates.packName !== undefined) rowUpdates.pack_name = updates.packName;
       if (updates.numPeople !== undefined) rowUpdates.num_people = updates.numPeople;
       if (updates.email !== undefined) rowUpdates.email = updates.email;
@@ -1138,7 +1146,10 @@ export async function updateBooking(
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
       if (updates.departureDate !== undefined) rowUpdates.departure_date = updates.departureDate;
       if (updates.guestDetails !== undefined) rowUpdates.guest_details = updates.guestDetails;
-      if (updates.collaboratorId !== undefined) rowUpdates.collaborator_id = isValidUuid(updates.collaboratorId) ? updates.collaboratorId : null;
+      if (updates.collaboratorId !== undefined)
+        rowUpdates.collaborator_id = isValidUuid(updates.collaboratorId)
+          ? updates.collaboratorId
+          : null;
 
       const { data, error } = await supabase!
         .from("bookings")
@@ -1162,7 +1173,7 @@ export async function updateBooking(
 
 export async function updateBookingStatus(
   id: string,
-  status: BookingStatus
+  status: BookingStatus,
 ): Promise<Booking | null> {
   if (useDb() && !isLocalId(id)) {
     const { data, error } = await supabase!
@@ -1179,7 +1190,7 @@ export async function updateBookingStatus(
       if (/check constraint|bookings_status/i.test(error.message ?? "")) {
         throw new Error(
           `The database still rejects the "${status}" status. ` +
-            `Run supabase/booking-status.sql in the Supabase SQL Editor to fix it.`
+            `Run supabase/booking-status.sql in the Supabase SQL Editor to fix it.`,
         );
       }
       throw new Error(error.message || "Could not update the booking status.");
@@ -1244,13 +1255,11 @@ export async function getDiscountCodeByCode(code: string): Promise<DiscountCode 
       warn("getDiscountCodeByCode", e);
     }
   }
-  return readStore<DiscountCode>(DISCOUNTS_KEY).find(
-    (d) => d.code.toUpperCase() === wanted
-  );
+  return readStore<DiscountCode>(DISCOUNTS_KEY).find((d) => d.code.toUpperCase() === wanted);
 }
 
 export async function addDiscountCode(
-  discount: Omit<DiscountCode, "id" | "createdAt" | "usedCount">
+  discount: Omit<DiscountCode, "id" | "createdAt" | "usedCount">,
 ): Promise<DiscountCode> {
   const cleanCode = discount.code.trim().toUpperCase();
   if (useDb()) {
@@ -1291,7 +1300,7 @@ export async function addDiscountCode(
 
 export async function updateDiscountCode(
   id: string,
-  updates: Partial<Omit<DiscountCode, "id" | "createdAt">>
+  updates: Partial<Omit<DiscountCode, "id" | "createdAt">>,
 ): Promise<DiscountCode | null> {
   if (useDb() && !isLocalId(id)) {
     try {
@@ -1342,7 +1351,7 @@ export async function incrementDiscountUsage(code: string): Promise<void> {
 
 export function isDiscountApplicableToPack(
   discount: DiscountCode | null | undefined,
-  packId?: string | null
+  packId?: string | null,
 ): boolean {
   if (!discount || !discount.active) return false;
   if (!discount.applicablePackIds || discount.applicablePackIds.length === 0) {
@@ -1358,7 +1367,7 @@ export function calculateDiscountAmount(
   numGuests: number = 1,
   singlePrice: number = 0,
   currency: string = "EUR",
-  packId?: string
+  packId?: string,
 ): number {
   if (!discount || !discount.active) return 0;
 
@@ -1404,7 +1413,7 @@ export function calculateDiscountAmount(
 
   // per_booking (default)
   if (discount.discountType === "percent") {
-    return Math.round((basePrice * (discount.discountAmount / 100)) * 100) / 100;
+    return Math.round(basePrice * (discount.discountAmount / 100) * 100) / 100;
   }
   const discountInPackCurrency = discount.discountAmount * rateMultiplier;
   return Math.min(basePrice, discountInPackCurrency);
@@ -1416,7 +1425,7 @@ export async function validateDiscountCode(
   packId?: string,
   numGuests: number = 1,
   singlePrice: number = 0,
-  currency: string = "EUR"
+  currency: string = "EUR",
 ): Promise<{ valid: boolean; error?: string; discount?: DiscountCode; discountAmount?: number }> {
   if (!code || !code.trim()) {
     return { valid: false, error: "Empty code" };
@@ -1439,11 +1448,16 @@ export async function validateDiscountCode(
     }
   }
 
-  const discountAmount = calculateDiscountAmount(d, basePrice, numGuests, singlePrice, currency, packId);
+  const discountAmount = calculateDiscountAmount(
+    d,
+    basePrice,
+    numGuests,
+    singlePrice,
+    currency,
+    packId,
+  );
   return { valid: true, discount: d, discountAmount };
 }
-
-
 
 // ─── Invites CRUD ───────────────────────────────────────────────────
 
@@ -1467,7 +1481,7 @@ export async function generateInvite(
   packId: string,
   packName: string,
   assignee?: string,
-  collaboratorId?: string
+  collaboratorId?: string,
 ): Promise<Invite> {
   const code = generateTicketCode();
   if (useDb()) {
@@ -1482,7 +1496,7 @@ export async function generateInvite(
           assignee: assignee || null,
           collaborator_id: collaboratorId || null,
         },
-        ["collaborator_id"]
+        ["collaborator_id"],
       );
       return inviteFromRow(data);
     } catch (e) {
@@ -1510,7 +1524,7 @@ export async function generateBulkInvites(
   packName: string,
   count: number,
   assignee?: string,
-  collaboratorId?: string
+  collaboratorId?: string,
 ): Promise<Invite[]> {
   const out: Invite[] = [];
   for (let i = 0; i < count; i++) {
@@ -1597,7 +1611,7 @@ export interface RedeemData {
 
 export async function redeemInvite(
   inviteCode: string,
-  data: RedeemData
+  data: RedeemData,
 ): Promise<{ success: true; booking: Booking } | { success: false; error: string }> {
   const invite = await getInviteByCode(inviteCode);
   if (!invite) return { success: false, error: "Invite code not found." };
@@ -1686,10 +1700,7 @@ export async function collaboratorsReady(): Promise<boolean> {
  *  per-person / MAD choices can't be saved. */
 export async function commissionColumnsReady(): Promise<boolean> {
   if (!useDb()) return true;
-  const { error } = await supabase!
-    .from("collaborators")
-    .select("commission_type")
-    .limit(1);
+  const { error } = await supabase!.from("collaborators").select("commission_type").limit(1);
   return !error;
 }
 
@@ -1710,10 +1721,7 @@ export async function missionColumnsReady(): Promise<boolean> {
 /** True when the split-rate columns exist (supabase/commission-rates.sql). */
 export async function commissionRatesReady(): Promise<boolean> {
   if (!useDb()) return true;
-  const { error } = await supabase!
-    .from("collaborators")
-    .select("commission_double")
-    .limit(1);
+  const { error } = await supabase!.from("collaborators").select("commission_double").limit(1);
   return !error;
 }
 
@@ -1765,15 +1773,14 @@ export async function countInvitesByCollaborator(collaboratorId: string): Promis
 /** Partner Portal login: email (or username) + password against collaborators. */
 export async function partnerLogin(
   identifier: string,
-  password: string
+  password: string,
 ): Promise<{ success: true; collaborator: Collaborator } | { success: false; error: string }> {
   const cleanId = identifier.trim().toLowerCase();
   const cleanPass = password.trim();
   const all = await getCollaborators();
   const found = all.find(
     (c) =>
-      (c.email ?? "").toLowerCase() === cleanId ||
-      (c.username ?? "").toLowerCase() === cleanId
+      (c.email ?? "").toLowerCase() === cleanId || (c.username ?? "").toLowerCase() === cleanId,
   );
   if (!found) {
     return { success: false, error: "No account found with this email." };
@@ -1783,7 +1790,8 @@ export async function partnerLogin(
   if (!found.active) {
     return {
       success: false,
-      error: "Your account is not activated yet. Please wait for an administrator to activate your account.",
+      error:
+        "Your account is not activated yet. Please wait for an administrator to activate your account.",
     };
   }
 
@@ -1800,7 +1808,8 @@ export async function partnerLogin(
     if (!found.passwordHash && !found.accessCode) {
       return {
         success: false,
-        error: "Password has not been set yet. Please click 'Forgot / Set Password' to create your password.",
+        error:
+          "Password has not been set yet. Please click 'Forgot / Set Password' to create your password.",
       };
     }
     return { success: false, error: "Incorrect password." };
@@ -1814,7 +1823,7 @@ export async function partnerLogin(
 /** Request password reset / setup link via email. */
 export async function requestPasswordReset(
   email: string,
-  userLang?: string
+  userLang?: string,
 ): Promise<{ success: boolean; error?: string; resetUrl?: string }> {
   const cleanEmail = email.trim().toLowerCase();
   const all = await getCollaborators();
@@ -1898,7 +1907,7 @@ export async function requestPasswordReset(
 /** Reset or set partner password using reset token. */
 export async function resetPartnerPassword(
   token: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<{ success: boolean; error?: string }> {
   const cleanPass = newPassword.trim();
   if (!cleanPass || cleanPass.length < 6) {
@@ -1918,7 +1927,9 @@ export async function resetPartnerPassword(
       if (!error && data) {
         found = collabFromRow(data);
       }
-    } catch (_) { /* fall through to getCollaborators */ }
+    } catch (_) {
+      /* fall through to getCollaborators */
+    }
   }
 
   // Fallback: search all collaborators (covers localStorage path)
@@ -1962,7 +1973,7 @@ export async function resetPartnerPassword(
 }
 
 export async function addCollaborator(
-  c: Omit<Collaborator, "id" | "createdAt">
+  c: Omit<Collaborator, "id" | "createdAt">,
 ): Promise<Collaborator> {
   if (useDb()) {
     try {
@@ -2008,7 +2019,7 @@ export async function addCollaborator(
           "mission_goal",
           "mission_reward",
           "mission_currency",
-        ]
+        ],
       );
       return collabFromRow(data);
     } catch (e) {
@@ -2030,7 +2041,7 @@ export async function addCollaborator(
 
 export async function updateCollaborator(
   id: string,
-  updates: Partial<Omit<Collaborator, "id" | "createdAt">>
+  updates: Partial<Omit<Collaborator, "id" | "createdAt">>,
 ): Promise<Collaborator | null> {
   if (useDb()) {
     try {
@@ -2043,17 +2054,14 @@ export async function updateCollaborator(
       if (updates.commissionType !== undefined) row.commission_type = updates.commissionType;
       if (updates.commissionCurrency !== undefined)
         row.commission_currency = updates.commissionCurrency;
-      if (updates.commissionDouble !== undefined)
-        row.commission_double = updates.commissionDouble;
-      if (updates.commissionSingle !== undefined)
-        row.commission_single = updates.commissionSingle;
+      if (updates.commissionDouble !== undefined) row.commission_double = updates.commissionDouble;
+      if (updates.commissionSingle !== undefined) row.commission_single = updates.commissionSingle;
       if (updates.commissionFullpass !== undefined)
         row.commission_fullpass = updates.commissionFullpass;
       if (updates.language !== undefined) row.language = updates.language;
       if (updates.missionGoal !== undefined) row.mission_goal = updates.missionGoal;
       if (updates.missionReward !== undefined) row.mission_reward = updates.missionReward;
-      if (updates.missionCurrency !== undefined)
-        row.mission_currency = updates.missionCurrency;
+      if (updates.missionCurrency !== undefined) row.mission_currency = updates.missionCurrency;
       if (updates.active !== undefined) row.active = updates.active;
       if (updates.notes !== undefined) row.notes = updates.notes || null;
       if (updates.username !== undefined)
@@ -2061,7 +2069,8 @@ export async function updateCollaborator(
       if (updates.accessCode !== undefined) row.access_code = updates.accessCode || null;
       if (updates.passwordHash !== undefined) row.password_hash = updates.passwordHash || null;
       if (updates.resetToken !== undefined) row.reset_token = updates.resetToken || null;
-      if (updates.resetTokenExpires !== undefined) row.reset_token_expires = updates.resetTokenExpires || null;
+      if (updates.resetTokenExpires !== undefined)
+        row.reset_token_expires = updates.resetTokenExpires || null;
       if (updates.inviteQuota !== undefined) row.invite_quota = updates.inviteQuota;
       if (updates.lastSeenAt !== undefined) row.last_seen_at = updates.lastSeenAt;
       const optionalCols = [
@@ -2170,7 +2179,12 @@ export function packGuestCount(p?: Pack | null): number {
   const combined = `${p.name} ${p.sub} ${p.category || ""}`.toLowerCase();
   if (/triple|3\s*pers|3\s*guests|3\s*personnes|3\s*people/.test(combined)) return 3;
   if (/quad|4\s*pers|4\s*guests|4\s*personnes|4\s*people/.test(combined)) return 4;
-  if (/double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/.test(combined)) return 2;
+  if (
+    /double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/.test(
+      combined,
+    )
+  )
+    return 2;
   return 1;
 }
 
@@ -2182,7 +2196,7 @@ export function packGuestCount(p?: Pack | null): number {
  */
 export function packRoomCategory(
   packOrName?: string | Pack | null,
-  numGuests?: number
+  numGuests?: number,
 ): PackRoomCategory {
   if (!packOrName) {
     if (numGuests === 2) return "double";
@@ -2221,7 +2235,9 @@ export function packRoomCategory(
   // 2. 2 guests or double room / couple / chambre double
   if (
     guests === 2 ||
-    /double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/i.test(combined) ||
+    /double|doble|couple|pareja|chambre\s*double|2\s*pers|2\s*guests|2\s*personnes|2\s*people/i.test(
+      combined,
+    ) ||
     /double\s*room|chambre\s*double/i.test(category)
   ) {
     return "double";
@@ -2267,7 +2283,9 @@ export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategor
   const count = Math.max(bookingPeopleCount(booking, packs), booking.numPeople || 1);
   const pack = packs.find((p) => p.id === booking.packId);
   const def: BraceletCategory =
-    packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass" ? "fullpass" : "hotel";
+    packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
+      ? "fullpass"
+      : "hotel";
 
   let overrides: Array<BraceletCategory | null> = [];
   if (booking.bracelet) {
@@ -2287,7 +2305,7 @@ export async function setGuestBracelet(
   booking: Booking,
   guestIndex: number,
   value: BraceletCategory,
-  packs: Pack[]
+  packs: Pack[],
 ): Promise<void> {
   const arr = guestBracelets(booking, packs);
   arr[guestIndex] = value;
@@ -2326,19 +2344,16 @@ export async function roomNumberColumnReady(): Promise<boolean> {
 /** Set (or clear) the real hotel room number of a booking. */
 export async function updateBookingRoomNumber(
   id: string,
-  roomNumber: string | null
+  roomNumber: string | null,
 ): Promise<void> {
   const value = roomNumber?.trim() || null;
   if (useDb() && !isLocalId(id)) {
-    const { error } = await supabase!
-      .from("bookings")
-      .update({ room_number: value })
-      .eq("id", id);
+    const { error } = await supabase!.from("bookings").update({ room_number: value }).eq("id", id);
     if (error) {
       warn("updateBookingRoomNumber", error);
       if (/room_number/i.test(error.message ?? "")) {
         throw new Error(
-          "The room_number column doesn't exist yet — run supabase/room-number.sql in the Supabase SQL Editor."
+          "The room_number column doesn't exist yet — run supabase/room-number.sql in the Supabase SQL Editor.",
         );
       }
       throw new Error(error.message || "Could not save the room number.");
@@ -2378,21 +2393,15 @@ export async function roomTypeColumnReady(): Promise<boolean> {
 }
 
 /** Set (or clear) the hotel room type of a booking. */
-export async function updateBookingRoomType(
-  id: string,
-  roomType: string | null
-): Promise<void> {
+export async function updateBookingRoomType(id: string, roomType: string | null): Promise<void> {
   const value = roomType?.trim() || null;
   if (useDb() && !isLocalId(id)) {
-    const { error } = await supabase!
-      .from("bookings")
-      .update({ room_type: value })
-      .eq("id", id);
+    const { error } = await supabase!.from("bookings").update({ room_type: value }).eq("id", id);
     if (error) {
       warn("updateBookingRoomType", error);
       if (/room_type/i.test(error.message ?? "")) {
         throw new Error(
-          "The room_type column doesn't exist yet — run supabase/room-type.sql in the Supabase SQL Editor."
+          "The room_type column doesn't exist yet — run supabase/room-type.sql in the Supabase SQL Editor.",
         );
       }
       throw new Error(error.message || "Could not save the room type.");
@@ -2447,7 +2456,7 @@ export async function guestDetailsColumnReady(): Promise<boolean> {
 /** Set (or update) the per-guest details JSON of a booking. */
 export async function updateBookingGuestDetails(
   id: string,
-  guestDetails: string | null
+  guestDetails: string | null,
 ): Promise<void> {
   const value = guestDetails?.trim() || null;
   if (useDb() && !isLocalId(id)) {
@@ -2459,7 +2468,7 @@ export async function updateBookingGuestDetails(
       warn("updateBookingGuestDetails", error);
       if (/guest_details/i.test(error.message ?? "")) {
         throw new Error(
-          "The guest_details column doesn't exist yet — run supabase/guest-details.sql in the Supabase SQL Editor."
+          "The guest_details column doesn't exist yet — run supabase/guest-details.sql in the Supabase SQL Editor.",
         );
       }
       throw new Error(error.message || "Could not save guest details.");
@@ -2489,7 +2498,7 @@ export function parseGuestDetails(raw?: string | null): GuestDetail[] {
 export function getClients(
   bookings: Booking[],
   packs: Pack[] = [],
-  collaborators: Collaborator[] = []
+  collaborators: Collaborator[] = [],
 ): ClientGuest[] {
   const clients: ClientGuest[] = [];
 
@@ -2513,15 +2522,17 @@ export function getClients(
       const parts = rawName.split(/\s+/);
 
       const firstName = ov.firstName !== undefined ? ov.firstName : (parts[0] ?? "");
-      const lastName =
-        ov.lastName !== undefined ? ov.lastName : parts.slice(1).join(" ");
+      const lastName = ov.lastName !== undefined ? ov.lastName : parts.slice(1).join(" ");
       const fullName = `${firstName} ${lastName}`.trim() || rawName;
 
-      const email = ov.email !== undefined ? ov.email : (gi === 0 ? b.email : "");
-      const phone = ov.phone !== undefined ? ov.phone : (gi === 0 ? b.phone : "");
-      const origin: "morocco" | "international" =
-        ov.origin ? ov.origin : defaultOrigin === "international" ? "international" : "morocco";
-      const notes = ov.notes !== undefined ? ov.notes : (gi === 0 ? b.notes : "");
+      const email = ov.email !== undefined ? ov.email : gi === 0 ? b.email : "";
+      const phone = ov.phone !== undefined ? ov.phone : gi === 0 ? b.phone : "";
+      const origin: "morocco" | "international" = ov.origin
+        ? ov.origin
+        : defaultOrigin === "international"
+          ? "international"
+          : "morocco";
+      const notes = ov.notes !== undefined ? ov.notes : gi === 0 ? b.notes : "";
 
       clients.push({
         id: `${b.id}-${gi}`,
@@ -2546,16 +2557,14 @@ export function getClients(
     }
   }
 
-  return clients.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return clients.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 /** Toggle one guest's "bracelet received" flag. */
 export async function setGuestBraceletGiven(
   booking: Booking,
   guestIndex: number,
-  given: boolean
+  given: boolean,
 ): Promise<void> {
   const arr = guestBraceletsGiven(booking);
   arr[guestIndex] = given;
@@ -2569,7 +2578,7 @@ export async function setGuestBraceletGiven(
       warn("setGuestBraceletGiven", error);
       if (/bracelet_given/i.test(error.message ?? "")) {
         throw new Error(
-          "The bracelet_given column doesn't exist yet — run supabase/bracelet-given.sql in the Supabase SQL Editor."
+          "The bracelet_given column doesn't exist yet — run supabase/bracelet-given.sql in the Supabase SQL Editor.",
         );
       }
       throw new Error(error.message || "Could not save the bracelet status.");
@@ -2592,17 +2601,14 @@ export async function braceletColumnReady(): Promise<boolean> {
 }
 
 /** Set (or clear with null) a booking's raw bracelet value. */
-export async function updateBookingBracelet(
-  id: string,
-  bracelet: string | null
-): Promise<void> {
+export async function updateBookingBracelet(id: string, bracelet: string | null): Promise<void> {
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!.from("bookings").update({ bracelet }).eq("id", id);
     if (error) {
       warn("updateBookingBracelet", error);
       if (/bracelet/i.test(error.message ?? "")) {
         throw new Error(
-          "The bracelet column doesn't exist yet — run supabase/bracelets.sql in the Supabase SQL Editor."
+          "The bracelet column doesn't exist yet — run supabase/bracelets.sql in the Supabase SQL Editor.",
         );
       }
       throw new Error(error.message || "Could not save the bracelet category.");
@@ -2671,8 +2677,7 @@ export function partnerCurrency(c: Collaborator): CommissionCurrency {
 
 /** Express a per-currency amount as a single figure in one currency. */
 export function moneyIn(m: Money, currency: CommissionCurrency): number {
-  const value =
-    currency === "MAD" ? m.mad + m.eur * EUR_TO_MAD : m.eur + m.mad / EUR_TO_MAD;
+  const value = currency === "MAD" ? m.mad + m.eur * EUR_TO_MAD : m.eur + m.mad / EUR_TO_MAD;
   return Math.round(value * 100) / 100;
 }
 
@@ -2722,20 +2727,53 @@ export function commissionLabel(c: Collaborator): string {
 export function isTourismBooking(b: Booking): boolean {
   if (!b) return false;
   const pid = (b.packId || "").toLowerCase();
-  if (pid.startsWith("tour-") || pid.includes("tour") || pid.includes("excursion") || pid.includes("tourism")) return true;
+  if (
+    pid.startsWith("tour-") ||
+    pid.includes("tour") ||
+    pid.includes("excursion") ||
+    pid.includes("tourism")
+  )
+    return true;
   if (pid.includes("asilah") || pid.includes("asella")) return true;
   if (pid.includes("chefchaouen") || pid.includes("chaouen") || pid.includes("chawan")) return true;
 
   const name = (b.packName || "").toLowerCase();
-  if (name.includes("tourism") || name.includes("excursion") || name.includes("tourisme") || name.includes("visite")) return true;
+  if (
+    name.includes("tourism") ||
+    name.includes("excursion") ||
+    name.includes("tourisme") ||
+    name.includes("visite")
+  )
+    return true;
   if (name.includes("asilah") || name.includes("asella")) return true;
-  if (name.includes("chefchaouen") || name.includes("chawan") || name.includes("chaouen")) return true;
+  if (name.includes("chefchaouen") || name.includes("chawan") || name.includes("chaouen"))
+    return true;
   if (name.includes("tangier") || name.includes("tanger")) {
-    if (!name.includes("solazur") && !name.includes("hotel") && !name.includes("room") && !name.includes("chambre") && !name.includes("pack") && !name.includes("pass") && !name.includes("festival")) {
+    if (
+      !name.includes("solazur") &&
+      !name.includes("hotel") &&
+      !name.includes("room") &&
+      !name.includes("chambre") &&
+      !name.includes("pack") &&
+      !name.includes("pass") &&
+      !name.includes("festival")
+    ) {
       return true;
     }
   }
   return false;
+}
+
+/** A standalone transfer request. Pack reservations that historically included
+ * a transfer are deliberately not classified here so their festival pack still
+ * counts normally; only the transfer add-on is ignored by partner accounting. */
+export function isTransferBooking(b: Booking): boolean {
+  if (!b) return false;
+  const value = `${b.packId || ""} ${b.packName || ""}`.toLowerCase();
+  return (
+    /navette|shuttle\s*transfer|transfer\s*shuttle|transfert\s*(seul|standalone)/i.test(value) ||
+    (!b.packId && !!(b.needsTransfer || b.transferType) && /transfer|navette|shuttle/i.test(value))
+  );
 }
 
 export function getTourismPrice(tourIdOrName: string | null | undefined): number {
@@ -2765,7 +2803,9 @@ export async function findMatchingFestivalBooking(query: {
   name?: string | null;
 }): Promise<Booking | undefined> {
   const bookings = await getBookings();
-  const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && b.status !== "declined");
+  const festivalBookings = bookings.filter(
+    (b) => !isTourismBooking(b) && !isTransferBooking(b) && b.status !== "declined",
+  );
 
   const cleanCode = (query.ticketCode || "").trim().toUpperCase().replace(/^#/, "");
   const cleanPhone = normalizePhone(query.phone);
@@ -2795,7 +2835,7 @@ export async function findMatchingFestivalBooking(query: {
   // 2. Match by email
   if (cleanEmail && cleanEmail.includes("@")) {
     const byEmail = festivalBookings.find(
-      (b) => (b.email || "").trim().toLowerCase() === cleanEmail
+      (b) => (b.email || "").trim().toLowerCase() === cleanEmail,
     );
     if (byEmail) return byEmail;
   }
@@ -2842,11 +2882,15 @@ export function collaboratorCommission(
   c: Collaborator,
   bookings: Booking[],
   packs: Pack[],
-  discountCodes: DiscountCode[] = []
+  discountCodes: DiscountCode[] = [],
 ): Money {
   const mine = bookings
     .filter(
-      (b) => b.collaboratorId === c.id && b.status !== "declined" && b.source !== "invite"
+      (b) =>
+        b.collaboratorId === c.id &&
+        b.status !== "declined" &&
+        b.source !== "invite" &&
+        !isTransferBooking(b),
     )
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
@@ -2880,8 +2924,7 @@ export function collaboratorCommission(
     const disc = b.discountCode
       ? discountCodes.find(
           (d) =>
-            d.code.toUpperCase() === b.discountCode?.toUpperCase() ||
-            d.id === b.discountCodeId
+            d.code.toUpperCase() === b.discountCode?.toUpperCase() || d.id === b.discountCodeId,
         )
       : undefined;
 
@@ -2914,9 +2957,7 @@ export function collaboratorCommission(
       const cat = packRoomCategory(pack?.name ?? b.packName);
       const rate = perPersonRate(c, cat);
       const amount = Math.round(rate * commissionablePeople * 100) / 100;
-      return cur === "MAD"
-        ? { ...acc, mad: acc.mad + amount }
-        : { ...acc, eur: acc.eur + amount };
+      return cur === "MAD" ? { ...acc, mad: acc.mad + amount } : { ...acc, eur: acc.eur + amount };
     } else {
       const pct = (c.commission ?? 0) / 100;
       const pack = packs.find((x) => x.id === b.packId);
@@ -2933,31 +2974,19 @@ export function collaboratorCommission(
 }
 
 /** Separate Tourism commission (€5/person in EUR) */
-export function collaboratorTourismCommission(
-  collaboratorId: string,
-  bookings: Booking[]
-): number {
+export function collaboratorTourismCommission(collaboratorId: string, bookings: Booking[]): number {
   return bookings
     .filter(
-      (b) =>
-        b.collaboratorId === collaboratorId &&
-        b.status !== "declined" &&
-        isTourismBooking(b)
+      (b) => b.collaboratorId === collaboratorId && b.status !== "declined" && isTourismBooking(b),
     )
     .reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
 }
 
 /** Separate Tourism revenue in EUR */
-export function collaboratorTourismRevenue(
-  collaboratorId: string,
-  bookings: Booking[]
-): number {
+export function collaboratorTourismRevenue(collaboratorId: string, bookings: Booking[]): number {
   return bookings
     .filter(
-      (b) =>
-        b.collaboratorId === collaboratorId &&
-        b.status !== "declined" &&
-        isTourismBooking(b)
+      (b) => b.collaboratorId === collaboratorId && b.status !== "declined" && isTourismBooking(b),
     )
     .reduce((sum, b) => {
       const unitPrice = getTourismPrice(b.packId || b.packName);
@@ -2970,9 +2999,9 @@ export function collaboratorFestivalCommission(
   c: Collaborator,
   bookings: Booking[],
   packs: Pack[],
-  discountCodes: DiscountCode[] = []
+  discountCodes: DiscountCode[] = [],
 ): Money {
-  const festivalBookings = bookings.filter((b) => !isTourismBooking(b));
+  const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
   return collaboratorCommission(c, festivalBookings, packs, discountCodes);
 }
 
@@ -2987,9 +3016,7 @@ function salesOf(bookings: Booking[], packs: Pack[]): Money {
     const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
     const grossValue = amount * (b.numPeople || 1);
     const value = Math.max(0, grossValue - (b.discountAmount || 0));
-    return currency === "MAD"
-      ? { ...acc, mad: acc.mad + value }
-      : { ...acc, eur: acc.eur + value };
+    return currency === "MAD" ? { ...acc, mad: acc.mad + value } : { ...acc, eur: acc.eur + value };
   }, emptyMoney());
 }
 
@@ -2998,16 +3025,17 @@ function salesOf(bookings: Booking[], packs: Pack[]): Money {
 export function collaboratorRevenue(
   collaboratorId: string,
   bookings: Booking[],
-  packs: Pack[]
+  packs: Pack[],
 ): Money {
   return salesOf(
     bookings.filter(
       (b) =>
         b.collaboratorId === collaboratorId &&
         b.status !== "declined" &&
-        b.source !== "invite"
+        b.source !== "invite" &&
+        !isTransferBooking(b),
     ),
-    packs
+    packs,
   );
 }
 
@@ -3022,11 +3050,11 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
     const myBookings = bookings.filter(
-      (b) => b.collaboratorId === c.id && b.status !== "declined"
+      (b) => b.collaboratorId === c.id && b.status !== "declined" && !isTransferBooking(b),
     );
     const revenue = salesOf(
       myBookings.filter((b) => b.source !== "invite"),
-      packs
+      packs,
     );
     const earned = collaboratorCommission(c, bookings, packs, discountCodes);
     const catOf = (b: Booking) => {
@@ -3076,7 +3104,7 @@ export async function getStats() {
   // Split by the currency each pack is priced in — never converted.
   const totalRevenue = salesOf(
     bookings.filter((b) => b.status !== "declined"),
-    packs
+    packs,
   );
 
   const totalPacks = packs.length;

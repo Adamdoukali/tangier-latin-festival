@@ -21,6 +21,7 @@ import { Route as PacksRouteImport } from './routes/packs'
 import { Route as HotelRouteImport } from './routes/hotel'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as CompetitionRouteImport } from './routes/competition'
+import { Route as BookTransferRouteImport } from './routes/book-transfer'
 import { Route as BookTourismRouteImport } from './routes/book-tourism'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as ArtistsRouteImport } from './routes/artists'
@@ -97,6 +98,11 @@ const GalleryRoute = GalleryRouteImport.update({
 const CompetitionRoute = CompetitionRouteImport.update({
   id: '/competition',
   path: '/competition',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookTransferRoute = BookTransferRouteImport.update({
+  id: '/book-transfer',
+  path: '/book-transfer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookTourismRoute = BookTourismRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
   '/book-tourism': typeof BookTourismRoute
+  '/book-transfer': typeof BookTransferRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
   '/book-tourism': typeof BookTourismRoute
+  '/book-transfer': typeof BookTransferRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/artists': typeof ArtistsRoute
   '/book': typeof BookRoute
   '/book-tourism': typeof BookTourismRoute
+  '/book-transfer': typeof BookTransferRoute
   '/competition': typeof CompetitionRoute
   '/gallery': typeof GalleryRoute
   '/hotel': typeof HotelRoute
@@ -286,6 +295,7 @@ export interface FileRouteTypes {
     | '/artists'
     | '/book'
     | '/book-tourism'
+    | '/book-transfer'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -316,6 +326,7 @@ export interface FileRouteTypes {
     | '/artists'
     | '/book'
     | '/book-tourism'
+    | '/book-transfer'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -347,6 +358,7 @@ export interface FileRouteTypes {
     | '/artists'
     | '/book'
     | '/book-tourism'
+    | '/book-transfer'
     | '/competition'
     | '/gallery'
     | '/hotel'
@@ -379,6 +391,7 @@ export interface RootRouteChildren {
   ArtistsRoute: typeof ArtistsRoute
   BookRoute: typeof BookRoute
   BookTourismRoute: typeof BookTourismRoute
+  BookTransferRoute: typeof BookTransferRoute
   CompetitionRoute: typeof CompetitionRoute
   GalleryRoute: typeof GalleryRoute
   HotelRoute: typeof HotelRoute
@@ -477,6 +490,13 @@ declare module '@tanstack/react-router' {
       path: '/competition'
       fullPath: '/competition'
       preLoaderRoute: typeof CompetitionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book-transfer': {
+      id: '/book-transfer'
+      path: '/book-transfer'
+      fullPath: '/book-transfer'
+      preLoaderRoute: typeof BookTransferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/book-tourism': {
@@ -639,6 +659,7 @@ const rootRouteChildren: RootRouteChildren = {
   ArtistsRoute: ArtistsRoute,
   BookRoute: BookRoute,
   BookTourismRoute: BookTourismRoute,
+  BookTransferRoute: BookTransferRoute,
   CompetitionRoute: CompetitionRoute,
   GalleryRoute: GalleryRoute,
   HotelRoute: HotelRoute,

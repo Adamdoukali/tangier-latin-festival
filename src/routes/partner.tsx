@@ -17,9 +17,6 @@ import {
   Compass,
   MapPin,
   ExternalLink,
-  Bus,
-  Plane,
-  Ship,
   Calendar,
   Clock,
   ChevronDown,
@@ -48,6 +45,7 @@ import {
   collaboratorFestivalCommission,
   collaboratorTourismRevenue,
   isTourismBooking,
+  isTransferBooking,
   getTourismPrice,
   commissionLabel,
   formatMoney,
@@ -61,23 +59,16 @@ import {
   partnerShareLink,
   partnerTourismShareLink,
   packRoomCategory,
-  formatTransferOptionLabel,
   partnerCurrency,
   type Collaborator,
   type Pack,
   type Booking,
   type BookingStatus,
   type DiscountCode,
-  type TransferType,
-  type TransferOption,
   createPartnerAccount,
   normalizePhone,
 } from "@/lib/admin-store";
-import {
-  savePartnerSession,
-  clearPartnerSession,
-  restorePartnerSession,
-} from "@/lib/partner-auth";
+import { savePartnerSession, clearPartnerSession, restorePartnerSession } from "@/lib/partner-auth";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
 
@@ -133,7 +124,12 @@ function PartnerPortal() {
   }
 
   if (partner) {
-    return <Portal partner={{ ...partner, language: partner.language ?? lang }} onSignOut={() => setPartner(null)} />;
+    return (
+      <Portal
+        partner={{ ...partner, language: partner.language ?? lang }}
+        onSignOut={() => setPartner(null)}
+      />
+    );
   }
 
   if (view === "reset" && resetToken) {
@@ -154,11 +150,20 @@ function PartnerPortal() {
   }
 
   if (view === "forgot") {
-    return <RequestResetScreen lang={lang} setLang={setLang} onBackToLogin={() => setView("login")} />;
+    return (
+      <RequestResetScreen lang={lang} setLang={setLang} onBackToLogin={() => setView("login")} />
+    );
   }
 
   if (view === "signup") {
-    return <SignUpScreen lang={lang} setLang={setLang} onSuccess={() => setView("login")} onCancel={() => setView("login")} />;
+    return (
+      <SignUpScreen
+        lang={lang}
+        setLang={setLang}
+        onSuccess={() => setView("login")}
+        onCancel={() => setView("login")}
+      />
+    );
   }
 
   return (
@@ -228,8 +233,7 @@ function LoginScreen({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const tr = (en: string, fr: string, es: string) =>
-    lang === "fr" ? fr : lang === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,9 +258,7 @@ function LoginScreen({
 
       {/* Banner */}
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-8 px-6 text-center shadow-md">
-        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
-          Tangier International
-        </p>
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
         <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
           LATIN FESTIVAL
         </h1>
@@ -286,7 +288,7 @@ function LoginScreen({
                 {tr(
                   "Please enter your registered email and password",
                   "Veuillez entrer votre e-mail enregistré et votre mot de passe",
-                  "Por favor, introduce tu correo electrónico registrado y contraseña"
+                  "Por favor, introduce tu correo electrónico registrado y contraseña",
                 )}
               </p>
               {error && (
@@ -336,8 +338,17 @@ function LoginScreen({
             </form>
           </div>
           <div className="mt-6 text-center">
-            <Link to="/" search={lang && lang !== "en" ? { lang } : undefined} className="text-xs text-gray-400 hover:text-gray-600 transition">
-              ← {tr("Back to the festival website", "Retour au site du festival", "Volver al sitio web del festival")}
+            <Link
+              to="/"
+              search={lang && lang !== "en" ? { lang } : undefined}
+              className="text-xs text-gray-400 hover:text-gray-600 transition"
+            >
+              ←{" "}
+              {tr(
+                "Back to the festival website",
+                "Retour au site du festival",
+                "Volver al sitio web del festival",
+              )}
             </Link>
           </div>
         </div>
@@ -362,8 +373,7 @@ function RequestResetScreen({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const tr = (en: string, fr: string, es: string) =>
-    lang === "fr" ? fr : lang === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,8 +389,8 @@ function RequestResetScreen({
           tr(
             "Failed to send password setup email.",
             "Échec de l'envoi de l'e-mail de réinitialisation.",
-            "Error al enviar el correo de restablecimiento."
-          )
+            "Error al enviar el correo de restablecimiento.",
+          ),
       );
     }
   };
@@ -392,7 +402,11 @@ function RequestResetScreen({
     >
       <div className="w-full bg-[#13234d] py-8 px-6 text-center shadow-md">
         <h1 className="text-white text-3xl font-bold tracking-wide">
-          {tr("Set / Reset Password", "Créer / Réinitialiser le mot de passe", "Establecer / Restablecer Contraseña")}
+          {tr(
+            "Set / Reset Password",
+            "Créer / Réinitialiser le mot de passe",
+            "Establecer / Restablecer Contraseña",
+          )}
         </h1>
         <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
@@ -416,7 +430,7 @@ function RequestResetScreen({
                   {tr(
                     `If an account exists for ${email}, we have emailed you a link to create or reset your password.`,
                     `Si un compte existe pour ${email}, nous vous avons envoyé par e-mail un lien pour créer ou réinitialiser votre mot de passe.`,
-                    `Si existe una cuenta para ${email}, te hemos enviado un enlace para crear o restablecer tu contraseña.`
+                    `Si existe una cuenta para ${email}, te hemos enviado un enlace para crear o restablecer tu contraseña.`,
                   )}
                 </p>
                 <button
@@ -432,7 +446,7 @@ function RequestResetScreen({
                   {tr(
                     "Enter your registered partner email to receive a password creation or reset link.",
                     "Entrez votre adresse e-mail partenaire enregistrée pour recevoir un lien de création ou de réinitialisation de mot de passe.",
-                    "Introduce tu correo electrónico registrado de colaborador para recibir un enlace de creación o restablecimiento de contraseña."
+                    "Introduce tu correo electrónico registrado de colaborador para recibir un enlace de creación o restablecimiento de contraseña.",
                   )}
                 </p>
                 {error && (
@@ -455,7 +469,11 @@ function RequestResetScreen({
                 >
                   {busy
                     ? tr("Sending link…", "Envoi en cours…", "Enviando enlace…")
-                    : tr("Send Password Setup Email", "Envoyer le lien de réinitialisation", "Enviar correo de restablecimiento")}
+                    : tr(
+                        "Send Password Setup Email",
+                        "Envoyer le lien de réinitialisation",
+                        "Enviar correo de restablecimiento",
+                      )}
                 </button>
                 <div className="text-center pt-2">
                   <button
@@ -496,13 +514,18 @@ function SetPasswordScreen({
   const [success, setSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const tr = (en: string, fr: string, es: string) =>
-    lang === "fr" ? fr : lang === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError(tr("Passwords do not match.", "Les mots de passe ne correspondent pas.", "Las contraseñas no coinciden."));
+      setError(
+        tr(
+          "Passwords do not match.",
+          "Les mots de passe ne correspondent pas.",
+          "Las contraseñas no coinciden.",
+        ),
+      );
       return;
     }
     setBusy(true);
@@ -520,8 +543,8 @@ function SetPasswordScreen({
           tr(
             "Failed to reset password.",
             "Échec de la réinitialisation du mot de passe.",
-            "Error al restablecer la contraseña."
-          )
+            "Error al restablecer la contraseña.",
+          ),
       );
     }
   };
@@ -557,7 +580,7 @@ function SetPasswordScreen({
                   {tr(
                     "Your password has been saved. Redirecting to login…",
                     "Votre mot de passe a été enregistré. Redirection vers la connexion…",
-                    "Tu contraseña ha sido guardada. Redirigiendo al inicio de sesión…"
+                    "Tu contraseña ha sido guardada. Redirigiendo al inicio de sesión…",
                   )}
                 </p>
               </div>
@@ -567,7 +590,7 @@ function SetPasswordScreen({
                   {tr(
                     "Please choose a password for your Partner Portal account (min 6 characters).",
                     "Veuillez choisir un mot de passe pour votre compte Partenaire (min 6 caractères).",
-                    "Por favor, elige una contraseña para tu cuenta de Colaborador (mínimo 6 caracteres)."
+                    "Por favor, elige una contraseña para tu cuenta de Colaborador (mínimo 6 caracteres).",
                   )}
                 </p>
                 {error && (
@@ -590,7 +613,11 @@ function SetPasswordScreen({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  placeholder={tr("Confirm New Password", "Confirmer le mot de passe", "Confirmar nueva contraseña")}
+                  placeholder={tr(
+                    "Confirm New Password",
+                    "Confirmer le mot de passe",
+                    "Confirmar nueva contraseña",
+                  )}
                   className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
                 <button
@@ -638,8 +665,7 @@ function SignUpScreen({
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const tr = (en: string, fr: string, es: string) =>
-    lang === "fr" ? fr : lang === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -652,8 +678,8 @@ function SignUpScreen({
         tr(
           "Account created successfully. Please wait for admin activation.",
           "Compte créé avec succès. En attente d'activation par l'administrateur.",
-          "Cuenta creada con éxito. En espera de activación por el administrador."
-        )
+          "Cuenta creada con éxito. En espera de activación por el administrador.",
+        ),
       );
       setTimeout(() => {
         onSuccess();
@@ -664,21 +690,28 @@ function SignUpScreen({
           tr(
             "Failed to create account.",
             "Échec de la création du compte.",
-            "Error al crear la cuenta."
-          )
+            "Error al crear la cuenta.",
+          ),
       );
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col" style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}>
+    <div
+      className="min-h-screen bg-slate-100 flex flex-col"
+      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+    >
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-8 px-6 text-center shadow-md">
         <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
         <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
           {tr("Partner Sign-Up", "Inscription Partenaire", "Registro de Colaborador")}
         </h1>
         <p className="mt-2 text-slate-300 text-sm">
-          {tr("Create your partner account – activation pending.", "Créez votre compte partenaire – en attente d'activation.", "Crea tu cuenta de colaborador – pendiente de activación.")}
+          {tr(
+            "Create your partner account – activation pending.",
+            "Créez votre compte partenaire – en attente d'activation.",
+            "Crea tu cuenta de colaborador – pendiente de activación.",
+          )}
         </p>
         <AuthLangSwitcher lang={lang} setLang={setLang} />
       </div>
@@ -687,7 +720,11 @@ function SignUpScreen({
           <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             <div className="bg-[#333a45] px-6 py-4 text-center">
               <h2 className="text-white text-lg font-semibold">
-                {tr("Create Partner Account", "Créer un compte partenaire", "Crear cuenta de colaborador")}
+                {tr(
+                  "Create Partner Account",
+                  "Créer un compte partenaire",
+                  "Crear cuenta de colaborador",
+                )}
               </h2>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-5">
@@ -704,7 +741,7 @@ function SignUpScreen({
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder={tr("Partner Email", "E-mail Partenaire", "Correo del Colaborador")}
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
@@ -712,30 +749,47 @@ function SignUpScreen({
               <input
                 type="text"
                 value={brandName}
-                onChange={e => setBrandName(e.target.value)}
+                onChange={(e) => setBrandName(e.target.value)}
                 required
-                placeholder={tr("Full Brand Name", "Nom de la marque / Nom complet", "Nombre de marca / Nombre completo")}
+                placeholder={tr(
+                  "Full Brand Name",
+                  "Nom de la marque / Nom complet",
+                  "Nombre de marca / Nombre completo",
+                )}
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                placeholder={tr("Password (min 6 chars)", "Mot de passe (min 6 caract.)", "Contraseña (mínimo 6 caract.)")}
+                placeholder={tr(
+                  "Password (min 6 chars)",
+                  "Mot de passe (min 6 caract.)",
+                  "Contraseña (mínimo 6 caract.)",
+                )}
                 className="w-full rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
               />
 
               <div>
-                <button type="submit" disabled={busy} className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full">
-                  {busy ? tr("Creating…", "Création…", "Creando…") : tr("Create Account", "Créer un compte", "Crear Cuenta")}
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all cursor-pointer disabled:opacity-50 w-full"
+                >
+                  {busy
+                    ? tr("Creating…", "Création…", "Creando…")
+                    : tr("Create Account", "Créer un compte", "Crear Cuenta")}
                 </button>
               </div>
             </form>
           </div>
           <div className="mt-6 text-center">
-            <button onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 transition cursor-pointer">
+            <button
+              onClick={onCancel}
+              className="text-xs text-gray-400 hover:text-gray-600 transition cursor-pointer"
+            >
               ← {tr("Back to Login", "Retour à la connexion", "Volver al inicio de sesión")}
             </button>
           </div>
@@ -781,7 +835,8 @@ function getNights(b: Booking, pack?: Pack): number | null {
   }
   if (b.arrivalDate && b.departureDate) {
     const diff = Math.round(
-      (new Date(b.departureDate).getTime() - new Date(b.arrivalDate).getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(b.departureDate).getTime() - new Date(b.arrivalDate).getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     if (diff > 0 && diff < 30) return diff;
   }
@@ -827,16 +882,6 @@ interface UnifiedClientBooking {
   totalTourismPrice: number;
   totalTourismCommission: number;
 
-  shuttle: {
-    needsTransfer: boolean;
-    type: TransferType | null;
-    option: TransferOption | null;
-    location: string | null;
-    details: string | null;
-    cost: number;
-    numPeople: number;
-  } | null;
-
   totalAmount: number;
   totalCommission: number;
   allNotes: string[];
@@ -857,7 +902,8 @@ function tourismFestivalMatchScore(festival: Booking, tourism: Booking): number 
   if (
     festivalCode &&
     ((tourismCode && festivalCode === tourismCode) || tourismNotes.includes(festivalCode))
-  ) return 100;
+  )
+    return 100;
 
   const festivalEmail = (festival.email || "").toLowerCase().trim();
   const tourismEmail = (tourism.email || "").toLowerCase().trim();
@@ -869,7 +915,8 @@ function tourismFestivalMatchScore(festival: Booking, tourism: Booking): number 
     festivalPhone.length >= 8 &&
     tourismPhone.length >= 8 &&
     festivalPhone.slice(-8) === tourismPhone.slice(-8)
-  ) return 70;
+  )
+    return 70;
 
   let bestNameScore = 0;
   for (const festivalName of bookingMatchNames(festival)) {
@@ -894,11 +941,11 @@ function buildUnifiedReservations(
   packs: Pack[],
   partner: Collaborator,
   discounts: DiscountCode[],
-  L: Language
+  L: Language,
 ): UnifiedClientBooking[] {
   const displayCurrency = partnerCurrency(partner);
   const fromEur = (value: number) => moneyIn({ eur: value, mad: 0 }, displayCurrency);
-  const festivalBookings = bookings.filter((b) => !isTourismBooking(b));
+  const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
   const tourismBookings = bookings.filter(isTourismBooking);
 
   const attachedTourIds = new Set<string>();
@@ -928,7 +975,7 @@ function buildUnifiedReservations(
       rawFestCurrency === "MAD"
         ? { eur: 0, mad: rawFestUnitPrice }
         : { eur: rawFestUnitPrice, mad: 0 },
-      displayCurrency
+      displayCurrency,
     );
     const festGuests = fb.numPeople || 1;
     const festGross = festUnitPrice * festGuests;
@@ -954,7 +1001,10 @@ function buildUnifiedReservations(
       return {
         booking: tb,
         tourName: tb.packName,
-        city: tb.packName.replace(/tourism:\s*/i, "").split("(")[0].trim(),
+        city: tb.packName
+          .replace(/tourism:\s*/i, "")
+          .split("(")[0]
+          .trim(),
         date: tb.arrivalDate || "2027-01-09",
         numPeople,
         pricePerPerson: unitPrice,
@@ -967,30 +1017,12 @@ function buildUnifiedReservations(
     const totalTourismPrice = tours.reduce((sum, t) => sum + t.totalPrice, 0);
     const totalTourismCommission = tours.reduce((sum, t) => sum + t.commission, 0);
 
-    const shuttleSource = fb.needsTransfer || fb.transferType || (fb.transferCost && fb.transferCost > 0)
-      ? fb
-      : matchingTours.find((b) => b.needsTransfer || b.transferType || (b.transferCost && b.transferCost > 0));
-
-    const shuttle = shuttleSource
-      ? {
-          needsTransfer: true,
-          type: shuttleSource.transferType || null,
-          option: shuttleSource.transferOption || null,
-          location:
-            shuttleSource.transferLocation ||
-            (shuttleSource.transferType === "port" ? "Port of Tangier" : "Tangier Airport"),
-          details: shuttleSource.transferDetails || null,
-          cost: fromEur(shuttleSource.transferCost || 0),
-          numPeople: shuttleSource.numPeople || 1,
-        }
-      : null;
-
-    const shuttleCost = shuttle?.cost || 0;
-    const totalAmount = festNet + totalTourismPrice + shuttleCost;
+    const totalAmount = festNet + totalTourismPrice;
     const totalCommission = festCommission + totalTourismCommission;
 
-    const allNotes = [fb.notes, ...matchingTours.map((t) => t.notes)]
-      .filter((n): n is string => !!n && n.trim().length > 0);
+    const allNotes = [fb.notes, ...matchingTours.map((t) => t.notes)].filter(
+      (n): n is string => !!n && n.trim().length > 0,
+    );
 
     const roomNumber = fb.roomNumber || matchingTours.find((b) => b.roomNumber)?.roomNumber || null;
 
@@ -1020,7 +1052,6 @@ function buildUnifiedReservations(
       tours,
       totalTourismPrice,
       totalTourismCommission,
-      shuttle,
       totalAmount,
       totalCommission,
       allNotes,
@@ -1041,7 +1072,10 @@ function buildUnifiedReservations(
         {
           booking: tb,
           tourName: tb.packName,
-          city: tb.packName.replace(/tourism:\s*/i, "").split("(")[0].trim(),
+          city: tb.packName
+            .replace(/tourism:\s*/i, "")
+            .split("(")[0]
+            .trim(),
           date: tb.arrivalDate || "2027-01-09",
           numPeople,
           pricePerPerson: unitPrice,
@@ -1079,7 +1113,6 @@ function buildUnifiedReservations(
         tours,
         totalTourismPrice: gross,
         totalTourismCommission: comm,
-        shuttle: null,
         totalAmount: gross,
         totalCommission: comm,
         allNotes,
@@ -1088,14 +1121,13 @@ function buildUnifiedReservations(
 
   // Combine all reservations and sort by creation date descending
   return [...festivalReservations, ...standaloneTours].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
 }
 
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const L = partner.language ?? "en";
-  const tr = (en: string, fr: string, es: string) =>
-    L === "fr" ? fr : L === "es" ? es : en;
+  const tr = (en: string, fr: string, es: string) => (L === "fr" ? fr : L === "es" ? es : en);
 
   const isMadPartner = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
   const accountCurrency = partnerCurrency(partner);
@@ -1127,7 +1159,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     ]);
     setAllPacks(packs);
     setAllDiscounts(discounts);
-    const festBookings = allBookings.filter((b) => !isTourismBooking(b));
+    const festBookings = allBookings.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
     setAllFestivalBookings(festBookings);
 
     const isAssigned = (b: Booking) => {
@@ -1139,13 +1171,19 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
       if (cId) {
         if (cId === pId || cId.toLowerCase() === pId.toLowerCase()) return true;
-        if (pCode && (cId.toUpperCase() === pCode || cId.toUpperCase().includes(pCode))) return true;
-        if (pName && (cId.toUpperCase() === pName || cId.toUpperCase().includes(pName))) return true;
+        if (pCode && (cId.toUpperCase() === pCode || cId.toUpperCase().includes(pCode)))
+          return true;
+        if (pName && (cId.toUpperCase() === pName || cId.toUpperCase().includes(pName)))
+          return true;
       }
       if (b.inviteCode && pCode && b.inviteCode.toUpperCase() === pCode) return true;
       if (b.notes) {
         const n = b.notes.toUpperCase();
-        if (pCode && (n.includes(`REFERRAL: ${pCode}`) || n.includes(`REF: ${pCode}`) || n.includes(pCode))) return true;
+        if (
+          pCode &&
+          (n.includes(`REFERRAL: ${pCode}`) || n.includes(`REF: ${pCode}`) || n.includes(pCode))
+        )
+          return true;
         if (pName && n.includes(pName)) return true;
       }
       return false;
@@ -1153,6 +1191,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
     const mine = allBookings
       .filter((b) => {
+        if (isTransferBooking(b)) return false;
         if (isAssigned(b)) return true;
         if (isTourismBooking(b)) {
           const matchedFestival = festBookings.find((fb) => {
@@ -1170,7 +1209,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               (fbPhone.endsWith(bPhone.slice(-8)) || bPhone.endsWith(fbPhone.slice(-8)))
             )
               return true;
-            if (fb.email && b.email && fb.email.toLowerCase().trim() === b.email.toLowerCase().trim())
+            if (
+              fb.email &&
+              b.email &&
+              fb.email.toLowerCase().trim() === b.email.toLowerCase().trim()
+            )
               return true;
             if (fb.customerName && b.customerName) {
               const fbName = fb.customerName.toLowerCase().trim();
@@ -1191,11 +1234,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     setMyBookings(mine);
 
-    const festivalOnly = mine.filter((b) => !isTourismBooking(b));
+    const festivalOnly = mine.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
     setTicketsSold(
       festivalOnly
         .filter((b) => b.status !== "declined")
-        .reduce((s, b) => s + (b.numPeople || 1), 0)
+        .reduce((s, b) => s + (b.numPeople || 1), 0),
     );
   }, [partner]);
 
@@ -1206,8 +1249,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         tr(
           "Status for MAD partner reservations is managed exclusively by the festival administrator.",
           "Le statut des réservations en Dirhams est géré exclusivement par l'administrateur du festival.",
-          "El estado de las reservas en Dirhams se gestiona exclusivamente por el administrador."
-        )
+          "El estado de las reservas en Dirhams se gestiona exclusivamente por el administrador.",
+        ),
       );
       return;
     }
@@ -1291,15 +1334,38 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     declined: "bg-red-100 text-red-700 border-red-300",
   };
 
-  const unifiedReservations = buildUnifiedReservations(myBookings, allPacks, partner, allDiscounts, L as Language);
+  const unifiedReservations = buildUnifiedReservations(
+    myBookings,
+    allPacks,
+    partner,
+    allDiscounts,
+    L as Language,
+  );
 
   // Festival metrics
-  const liveFestival = myBookings.filter((b) => !isTourismBooking(b) && b.status !== "declined");
-  const doubleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "double").length;
-  const singleRoomCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "single").length;
-  const fullPassCount = liveFestival.filter((b) => packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) === "fullpass").length;
+  const liveFestival = myBookings.filter(
+    (b) => !isTourismBooking(b) && !isTransferBooking(b) && b.status !== "declined",
+  );
+  const doubleRoomCount = liveFestival.filter(
+    (b) =>
+      packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) ===
+      "double",
+  ).length;
+  const singleRoomCount = liveFestival.filter(
+    (b) =>
+      packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) ===
+      "single",
+  ).length;
+  const fullPassCount = liveFestival.filter(
+    (b) =>
+      packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) ===
+      "fullpass",
+  ).length;
   const festSales = liveFestival.reduce((acc, b) => {
-    const pack = allPacks.find((p) => p.id === b.packId || p.name === b.packName || (b.packName && b.packName.includes(p.name)));
+    const pack = allPacks.find(
+      (p) =>
+        p.id === b.packId || p.name === b.packName || (b.packName && b.packName.includes(p.name)),
+    );
     let { amount, currency } = packPrice(pack);
     if (amount === 0 && b.packName) {
       const match = b.packName.match(/(\d+)\s*(€|eur|mad|dh)/i) || b.packName.match(/(\d+)/);
@@ -1308,9 +1374,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     }
     const grossValue = amount * (b.numPeople || 1);
     const value = Math.max(0, grossValue - (b.discountAmount || 0));
-    return currency === "MAD"
-      ? { ...acc, mad: acc.mad + value }
-      : { ...acc, eur: acc.eur + value };
+    return currency === "MAD" ? { ...acc, mad: acc.mad + value } : { ...acc, eur: acc.eur + value };
   }, emptyMoney());
   const festEarned = collaboratorFestivalCommission(partner, myBookings, allPacks, allDiscounts);
 
@@ -1321,21 +1385,45 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const asilahTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
+      const s = (
+        t.city +
+        " " +
+        t.tourName +
+        " " +
+        (t.booking?.packId || "") +
+        " " +
+        (t.booking?.packName || "")
+      ).toLowerCase();
       return s.includes("asilah") || s.includes("asella");
     })
     .reduce((s, t) => s + (t.numPeople || 1), 0);
 
   const tangierTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
+      const s = (
+        t.city +
+        " " +
+        t.tourName +
+        " " +
+        (t.booking?.packId || "") +
+        " " +
+        (t.booking?.packName || "")
+      ).toLowerCase();
       return s.includes("tangier") || s.includes("tanger");
     })
     .reduce((s, t) => s + (t.numPeople || 1), 0);
 
   const chefchaouenTourCount = allLiveTours
     .filter((t) => {
-      const s = (t.city + " " + t.tourName + " " + (t.booking?.packId || "") + " " + (t.booking?.packName || "")).toLowerCase();
+      const s = (
+        t.city +
+        " " +
+        t.tourName +
+        " " +
+        (t.booking?.packId || "") +
+        " " +
+        (t.booking?.packName || "")
+      ).toLowerCase();
       return s.includes("chefchaouen") || s.includes("chawan") || s.includes("chaouen");
     })
     .reduce((s, t) => s + (t.numPeople || 1), 0);
@@ -1344,19 +1432,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const totalTourCommission = allLiveTours.reduce((sum, t) => sum + t.commission, 0);
   const totalExcursionPassengers = allLiveTours.reduce((sum, t) => sum + (t.numPeople || 1), 0);
 
-  // Shuttle metrics
-  const liveShuttle = myBookings.filter((b) => (b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0)) && b.status !== "declined");
-  const portShuttleCount = liveShuttle.filter((b) => b.transferType === "port").reduce((s, b) => s + (b.numPeople || 1), 0);
-  const airportShuttleCount = liveShuttle.filter((b) => b.transferType === "airport" || !b.transferType).reduce((s, b) => s + (b.numPeople || 1), 0);
-  const totalShuttlePassengers = liveShuttle.reduce((s, b) => s + (b.numPeople || 1), 0);
-  const totalShuttleRevenue = moneyIn(
-    { eur: liveShuttle.reduce((s, b) => s + (b.transferCost || 0), 0), mad: 0 },
-    accountCurrency
-  );
-
   // Combined totals
   const totalFestivalSales = moneyIn(festSales, accountCurrency);
-  const totalGrossSales = totalFestivalSales + totalTourRevenue + totalShuttleRevenue;
+  const totalGrossSales = totalFestivalSales + totalTourRevenue;
 
   const totalFestivalCommission = moneyIn(festEarned, accountCurrency);
   const totalCombinedEarnings = totalFestivalCommission + totalTourCommission;
@@ -1367,7 +1445,17 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const totalParticipantsCount = unifiedReservations
     .filter((r) => r.status !== "declined")
-    .reduce((sum, r) => sum + Math.max(1, r.allGuests.length, r.festivalBooking?.numPeople || 0, r.tours.reduce((ts, t) => ts + (t.numPeople || 1), 0)), 0);
+    .reduce(
+      (sum, r) =>
+        sum +
+        Math.max(
+          1,
+          r.allGuests.length,
+          r.festivalBooking?.numPeople || 0,
+          r.tours.reduce((ts, t) => ts + (t.numPeople || 1), 0),
+        ),
+      0,
+    );
   const totalDisplayParticipants = totalParticipantsCount;
 
   const filteredReservations = unifiedReservations.filter((res) => {
@@ -1422,7 +1510,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       </header>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 py-8 space-y-8">
-
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* TOP SUMMARY BAR (Total Participants, Total Sales, Total Commission & Total Due) */}
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -1452,7 +1539,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalGrossSales} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-blue-200/80 font-medium mt-0.5">
-                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourRevenue} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} {accountCurrencyLabel} ({tr("Transfers", "Transferts", "Traslados")})
+                {formatForPartner(festSales, partner)} ({tr("Festival", "Festival", "Festival")}) +{" "}
+                {totalTourRevenue} {accountCurrencyLabel} (
+                {tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
@@ -1470,11 +1559,17 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalCombinedEarnings} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-emerald-100 font-medium mt-0.5">
-                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) + {totalTourCommission} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")})
+                {formatForPartner(festEarned, partner)} ({tr("Festival", "Festival", "Festival")}) +{" "}
+                {totalTourCommission} {accountCurrencyLabel} (
+                {tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
-              {isMadPartner ? <span className="text-sm font-black text-white">MAD</span> : <Euro className="h-6 w-6 text-white" />}
+              {isMadPartner ? (
+                <span className="text-sm font-black text-white">MAD</span>
+              ) : (
+                <Euro className="h-6 w-6 text-white" />
+              )}
             </div>
           </div>
 
@@ -1482,13 +1577,18 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <div className="rounded-2xl border border-rose-300 bg-gradient-to-br from-red-600 via-rose-600 to-red-700 text-white p-5 shadow-md flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-black text-rose-100">
-                {tr("Total Due to Festival", "Total à verser au Festival", "Total a pagar al Festival")}
+                {tr(
+                  "Total Due to Festival",
+                  "Total à verser au Festival",
+                  "Total a pagar al Festival",
+                )}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
                 {totalDueToFestival} {accountCurrencyLabel}
               </p>
               <p className="text-xs text-rose-100 font-medium mt-0.5">
-                {festDue} {accountCurrencyLabel} ({tr("Festival", "Festival", "Festival")}) + {tourDue} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")}) + {totalShuttleRevenue} {accountCurrencyLabel} ({tr("Transfers", "Transferts", "Traslados")})
+                {festDue} {accountCurrencyLabel} ({tr("Festival", "Festival", "Festival")}) +{" "}
+                {tourDue} {accountCurrencyLabel} ({tr("Excursions", "Excursions", "Excursiones")})
               </p>
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/20 grid place-items-center">
@@ -1511,13 +1611,17 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 </span>
                 <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-amber-600" />
-                  {tr("Your Main Pack Booking Link", "Votre lien de réservation des packs", "Tu enlace de reserva de packs")}
+                  {tr(
+                    "Your Main Pack Booking Link",
+                    "Votre lien de réservation des packs",
+                    "Tu enlace de reserva de packs",
+                  )}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500 leading-relaxed">
                   {tr(
                     "Send this link to your community for Hotel & Full Pass bookings. They choose their pack and receive their reservation confirmation.",
                     "Envoyez ce lien à votre communauté pour les réservations Hôtel & Full Pass.",
-                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass."
+                    "Envía este enlace a tu comunidad para reservas de Hotel y Full Pass.",
                   )}
                 </p>
                 <div className="mt-3 flex items-center gap-2 flex-wrap">
@@ -1574,14 +1678,14 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   {tr(
                     "Your Cultural Excursions Referral Link",
                     "Votre lien pour les excursions culturelles",
-                    "Tu enlace para excursiones culturales"
+                    "Tu enlace para excursiones culturales",
                   )}
                 </h3>
                 <p className="mt-1 text-xs text-blue-100/80 leading-relaxed">
                   {tr(
                     "Share with your clients so they can book their guided day trips to Asilah, Tangier & Chefchaouen. All excursion reservations are automatically linked with their festival pass.",
                     "Partagez avec vos clients pour qu'ils réservent leurs visites guidées à Asilah, Tanger et Chefchaouen.",
-                    "Comparte con tus clientes para que reserven sus excursiones guiadas a Asilah, Tánger y Chefchaouen."
+                    "Comparte con tus clientes para que reserven sus excursiones guiadas a Asilah, Tánger y Chefchaouen.",
                   )}
                 </p>
 
@@ -1646,18 +1750,32 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 <Info className="h-4 w-4 text-white" />
                 <span>
                   {showMobileStats
-                    ? tr("Hide Details of your Sales", "Masquer le détail de vos ventes", "Ocultar detalle de tus ventas")
-                    : tr("View Details of your Sales", "Voir le détail de vos ventes", "Ver detalle de tus ventas")}
+                    ? tr(
+                        "Hide Details of your Sales",
+                        "Masquer le détail de vos ventes",
+                        "Ocultar detalle de tus ventas",
+                      )
+                    : tr(
+                        "View Details of your Sales",
+                        "Voir le détail de vos ventes",
+                        "Ver detalle de tus ventas",
+                      )}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {showMobileStats ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {showMobileStats ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
               </div>
             </button>
           </div>
 
           {/* 2 COLOR-CODED RECTANGLES (Rooms & Passes + Tours) */}
-          <div className={`${showMobileStats ? "block space-y-4" : "hidden sm:block sm:space-y-5"}`}>
+          <div
+            className={`${showMobileStats ? "block space-y-4" : "hidden sm:block sm:space-y-5"}`}
+          >
             {/* 1. YELLOWISH RECTANGLE — FESTIVAL ROOMS & PASSES */}
             <div className="rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-yellow-50/70 to-amber-100/50 p-5 sm:p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap border-b border-amber-200/80 pb-3">
@@ -1667,7 +1785,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </div>
                   <div>
                     <h3 className="font-display text-base font-black text-amber-950">
-                      {tr("Festival Rooms & Passes", "Chambres & Pass Festival", "Habitaciones y Pases de Festival")}
+                      {tr(
+                        "Festival Rooms & Passes",
+                        "Chambres & Pass Festival",
+                        "Habitaciones y Pases de Festival",
+                      )}
                     </h3>
                   </div>
                 </div>
@@ -1725,7 +1847,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <span className="text-[10px] font-black uppercase tracking-wider">
                       {tr("Festival Sales", "Ventes Festival", "Ventas Festival")}
                     </span>
-                    {isMadPartner ? <span className="text-[10px] font-black text-white">MAD</span> : <Euro className="h-4 w-4 text-white" />}
+                    {isMadPartner ? (
+                      <span className="text-[10px] font-black text-white">MAD</span>
+                    ) : (
+                      <Euro className="h-4 w-4 text-white" />
+                    )}
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-white">
                     {formatForPartner(festSales, partner)}
@@ -1743,7 +1869,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </div>
                   <div>
                     <h3 className="font-display text-base font-black text-blue-950">
-                      {tr("Cultural Excursions", "Excursions Culturelles", "Excursiones Culturales")}
+                      {tr(
+                        "Cultural Excursions",
+                        "Excursions Culturelles",
+                        "Excursiones Culturales",
+                      )}
                     </h3>
                   </div>
                 </div>
@@ -1759,9 +1889,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {/* Asilah Excursion */}
                 <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
                   <div className="flex items-center justify-between text-blue-700">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      Asilah
-                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider">Asilah</span>
                     <MapPin className="h-4 w-4 text-cyan-600" />
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-blue-950">
@@ -1772,9 +1900,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {/* Tangier Excursion */}
                 <div className="bg-white/95 rounded-2xl border-2 border-blue-200 p-4 shadow-2xs">
                   <div className="flex items-center justify-between text-blue-700">
-                    <span className="text-[10px] font-black uppercase tracking-wider">
-                      Tangier
-                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider">Tangier</span>
                     <MapPin className="h-4 w-4 text-blue-600" />
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-blue-950">
@@ -1801,7 +1927,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     <span className="text-[10px] font-black uppercase tracking-wider">
                       {tr("Excursions Revenue", "Total Excursions", "Total Excursiones")}
                     </span>
-                    {isMadPartner ? <span className="text-[10px] font-black text-white">MAD</span> : <Euro className="h-4 w-4 text-white" />}
+                    {isMadPartner ? (
+                      <span className="text-[10px] font-black text-white">MAD</span>
+                    ) : (
+                      <Euro className="h-4 w-4 text-white" />
+                    )}
                   </div>
                   <p className="mt-2 font-display text-2xl font-black text-white">
                     {totalTourRevenue} {accountCurrencyLabel}
@@ -1824,7 +1954,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   {tr(
                     "All Client Reservations",
                     "Toutes les Réservations Clients",
-                    "Todas las Reservas de Clientes"
+                    "Todas las Reservas de Clientes",
                   )}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-amber-100 text-amber-900 font-bold border border-amber-300">
@@ -1844,7 +1974,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               placeholder={tr(
                 "Search by participant name, reservation code (#TLF-...), phone, email, or room number...",
                 "Rechercher par nom de participant, code réservation (#TLF-...), tél, email, ou N° de chambre...",
-                "Buscar por nombre de participante, código de reserva (#TLF-...), teléfono, email o habitación..."
+                "Buscar por nombre de participante, código de reserva (#TLF-...), teléfono, email o habitación...",
               )}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 bg-white text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 shadow-2xs"
             />
@@ -1865,7 +1995,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {tr(
                   "Note: Booking validation and confirmation for MAD accounts are managed directly by Festival Administration.",
                   "La validation et confirmation des réservations sont gérées directement par l'Administration du festival.",
-                  "Nota: La validación y confirmación de reservas en Dirhams son gestionadas directamente por la Administración del festival."
+                  "Nota: La validación y confirmación de reservas en Dirhams son gestionadas directamente por la Administración del festival.",
                 )}
               </span>
             </div>
@@ -1882,7 +2012,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
               {tr(
                 "No client reservations found matching your criteria.",
                 "Aucune réservation client trouvée avec ces critères.",
-                "No se encontraron reservas de clientes que coincidan con estos criterios."
+                "No se encontraron reservas de clientes que coincidan con estos criterios.",
               )}
             </div>
           ) : (
@@ -1906,12 +2036,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     label: tr("excursion", "excursion", "excursión"),
                     isPack: false,
                     className: "text-slate-700",
-                  },
-                  {
-                    amount: res.shuttle?.cost ?? 0,
-                    label: tr("transfer", "navette", "traslado"),
-                    isPack: false,
-                    className: "text-blue-700",
                   },
                 ].filter((part) => part.amount > 0);
 
@@ -1945,15 +2069,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         {/* Combined Total Amount with Sub-Breakdown Detail */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="inline-flex items-center px-3 py-1.5 rounded-xl font-black text-sm sm:text-base bg-slate-900 text-amber-400 shadow-2xs shrink-0">
-                            {tr("Total:", "Total :", "Total:")} {res.totalAmount} {accountCurrencyLabel}
+                            {tr("Total:", "Total :", "Total:")} {res.totalAmount}{" "}
+                            {accountCurrencyLabel}
                           </span>
                           {priceBreakdown.length > 0 && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl shadow-2xs">
                               {priceBreakdown.map((part, index) => (
-                                <span
-                                  key={part.label || "pack"}
-                                  className={part.className}
-                                >
+                                <span key={part.label || "pack"} className={part.className}>
                                   {index > 0 ? "+ " : ""}
                                   {part.isPack
                                     ? `${part.label} ${part.amount} ${accountCurrencyLabel}`
@@ -1982,7 +2104,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               ? tr("Hide details", "Masquer détails", "Ocultar")
                               : tr("View details", "Voir détails", "Ver detalles")}
                           </span>
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
                         </button>
 
                         {res.status === "checked-in" ? (
@@ -1997,7 +2123,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             title={tr(
                               "Status is verified and managed exclusively by Festival Admin",
                               "Le statut est vérifié et géré exclusivement par l'administration du festival",
-                              "El estado es verificado y gestionado exclusivamente por el administrador"
+                              "El estado es verificado y gestionado exclusivamente por el administrador",
                             )}
                           >
                             <Lock className="h-3 w-3 opacity-60" />
@@ -2005,8 +2131,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               {res.status === "confirmed"
                                 ? tr("Confirmed", "Confirmé", "Confirmada")
                                 : res.status === "declined"
-                                ? tr("Declined", "Refusé", "Rechazada")
-                                : tr("Pending", "En attente", "Pendiente")}
+                                  ? tr("Declined", "Refusé", "Rechazada")
+                                  : tr("Pending", "En attente", "Pendiente")}
                             </span>
                           </span>
                         ) : (
@@ -2042,13 +2168,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               <span>#{res.ticketCode}</span>
                             </span>
                           </div>
-
                         </div>
                         <div className="grid sm:grid-cols-2 gap-3.5">
                           {/* 1. Yellowish Box — Hotel & Room Accommodation */}
                           <div className="bg-amber-50/90 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-1.5">
                             <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block">
-                              {tr("Hotel & Accommodation", "Hébergement & Chambre", "Alojamiento y Habitación")}
+                              {tr(
+                                "Hotel & Accommodation",
+                                "Hébergement & Chambre",
+                                "Alojamiento y Habitación",
+                              )}
                             </span>
                             {res.festivalLabel ? (
                               <>
@@ -2056,27 +2185,48 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                                   <Bed className="h-4 w-4 text-amber-600 shrink-0" />
                                   <span>{res.festivalLabel}</span>
                                 </p>
-                                {packRoomCategory(res.festivalPack?.name || res.festivalLabel, 1) !== "fullpass" &&
+                                {packRoomCategory(
+                                  res.festivalPack?.name || res.festivalLabel,
+                                  1,
+                                ) !== "fullpass" &&
                                   !res.festivalLabel?.toLowerCase().includes("sans") &&
                                   res.nights && (
                                     <p className="text-amber-900 font-medium">
                                       {`${res.nights} ${tr("Nights Stay", "Nuits", "Noches")}`}
-                                      {res.arrivalDate && res.departureDate ? ` · ${new Date(res.arrivalDate).toLocaleDateString()} → ${new Date(res.departureDate).toLocaleDateString()}` : ""}
+                                      {res.arrivalDate && res.departureDate
+                                        ? ` · ${new Date(res.arrivalDate).toLocaleDateString()} → ${new Date(res.departureDate).toLocaleDateString()}`
+                                        : ""}
                                     </p>
                                   )}
                                 <p className="text-amber-800">
-                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")} <strong className="text-amber-950 font-black">{res.festivalNetPrice} {accountCurrencyLabel}</strong>
-                                  {res.festivalDiscount > 0 && <span className="ml-1 text-emerald-700 font-bold">(-{res.festivalDiscount} {accountCurrencyLabel})</span>}
+                                  {tr("Pass Price:", "Prix Pass :", "Precio Pase:")}{" "}
+                                  <strong className="text-amber-950 font-black">
+                                    {res.festivalNetPrice} {accountCurrencyLabel}
+                                  </strong>
+                                  {res.festivalDiscount > 0 && (
+                                    <span className="ml-1 text-emerald-700 font-bold">
+                                      (-{res.festivalDiscount} {accountCurrencyLabel})
+                                    </span>
+                                  )}
                                 </p>
                                 {res.roomNumber && (
                                   <p className="font-bold text-amber-950 inline-block bg-amber-100 px-2 py-0.5 rounded border border-amber-300 text-[11px]">
-                                    {tr("Assigned Room:", "Chambre assignée :", "Habitación asignada:")} #{res.roomNumber}
+                                    {tr(
+                                      "Assigned Room:",
+                                      "Chambre assignée :",
+                                      "Habitación asignada:",
+                                    )}{" "}
+                                    #{res.roomNumber}
                                   </p>
                                 )}
                               </>
                             ) : (
                               <p className="text-gray-400 italic mt-2">
-                                {tr("No hotel pack booked", "Aucun pack hôtel sélectionné", "Sin pack de hotel seleccionado")}
+                                {tr(
+                                  "No hotel pack booked",
+                                  "Aucun pack hôtel sélectionné",
+                                  "Sin pack de hotel seleccionado",
+                                )}
                               </p>
                             )}
                           </div>
@@ -2084,52 +2234,47 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                           {/* 2. Blue Box — Cultural Excursions Breakdown */}
                           <div className="bg-blue-50/90 p-4 rounded-2xl border-2 border-blue-300 shadow-2xs space-y-1.5">
                             <span className="text-[10px] font-black uppercase tracking-wider text-blue-900 block">
-                              {tr("Cultural Excursions", "Excursions Culturelles", "Excursiones Culturales")}
+                              {tr(
+                                "Cultural Excursions",
+                                "Excursions Culturelles",
+                                "Excursiones Culturales",
+                              )}
                             </span>
                             {res.tours.length > 0 ? (
                               <div className="space-y-2">
                                 {res.tours.map((t, tIdx) => (
-                                  <div key={tIdx} className="bg-white/90 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between gap-3 font-bold text-blue-950">
+                                  <div
+                                    key={tIdx}
+                                    className="bg-white/90 p-2.5 rounded-xl border border-blue-200 flex items-center justify-between gap-3 font-bold text-blue-950"
+                                  >
                                     <span>{t.tourName}</span>
                                     <span className="text-blue-900 font-extrabold shrink-0">
-                                      {tr("Total:", "Total :", "Total:")} {t.totalPrice} {accountCurrencyLabel}
+                                      {tr("Total:", "Total :", "Total:")} {t.totalPrice}{" "}
+                                      {accountCurrencyLabel}
                                     </span>
                                   </div>
                                 ))}
                                 <p className="text-[11px] text-blue-900 font-semibold flex items-center gap-1">
                                   <MapPin className="h-3.5 w-3.5 text-blue-600" />
-                                  <span>{tr("Pickup: Kenzi Solazur Lobby", "Départ : Hall Kenzi Solazur", "Salida: Lobby Kenzi Solazur")}</span>
+                                  <span>
+                                    {tr(
+                                      "Pickup: Kenzi Solazur Lobby",
+                                      "Départ : Hall Kenzi Solazur",
+                                      "Salida: Lobby Kenzi Solazur",
+                                    )}
+                                  </span>
                                 </p>
                               </div>
                             ) : (
                               <p className="text-gray-400 italic mt-2">
-                                {tr("No excursions booked", "Aucune excursion réservée", "Sin excursions reservadas")}
+                                {tr(
+                                  "No excursions booked",
+                                  "Aucune excursion réservée",
+                                  "Sin excursions reservadas",
+                                )}
                               </p>
                             )}
                           </div>
-
-                          {/* 3. Violet/Indigo Box — Shuttle Transfer */}
-                          {res.shuttle && res.shuttle.cost > 0 && (
-                            <div className="bg-indigo-50/90 p-4 rounded-2xl border-2 border-indigo-300 shadow-2xs space-y-1.5 sm:col-span-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                                  <Bus className="h-3.5 w-3.5 text-indigo-600" />
-                                  <span>{tr("Shuttle Transfer", "Navette & Transfert", "Traslado y Transporte")}</span>
-                                </span>
-                                <span className="text-xs font-black text-indigo-950 bg-indigo-100 px-2.5 py-0.5 rounded-lg border border-indigo-200">
-                                  +{res.shuttle.cost} {accountCurrencyLabel}
-                                </span>
-                              </div>
-                              <p className="font-bold text-indigo-950 text-xs">
-                                {res.shuttle.location} · {formatTransferOptionLabel(res.shuttle.option, L)}
-                              </p>
-                              {res.shuttle.details && (
-                                <p className="text-[11px] text-indigo-800 font-medium whitespace-pre-wrap">
-                                  {res.shuttle.details}
-                                </p>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
                     )}
@@ -2139,7 +2284,6 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </div>
           )}
         </div>
-
       </main>
     </div>
   );

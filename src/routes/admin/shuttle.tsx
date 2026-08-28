@@ -35,6 +35,8 @@ import {
   updateBookingTransfer,
   calculateTransferCost,
   formatTransferOptionLabel,
+  isTourismBooking,
+  isTransferBooking,
   ticketUrl,
   type Booking,
   type Pack,
@@ -51,6 +53,31 @@ export const Route = createFileRoute("/admin/shuttle")({
 
 type TabView = "arrivals" | "departures" | "all";
 
+function FestivalTicketBadge({ booking }: { booking: Booking }) {
+  const linkedCode = booking.notes?.match(/\[Linked Festival Ticket #([^\]]+)\]/i)?.[1];
+  const noTicket = /festival ticket:\s*(none|not found|no)/i.test(booking.notes || "");
+  const verifiedCode = linkedCode || (!isTransferBooking(booking) ? booking.ticketCode : "");
+
+  if (verifiedCode) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-800">
+        <CheckCircle2 className="h-3 w-3" /> Festival ticket: {verifiedCode}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold ${
+        noTicket
+          ? "border-slate-200 bg-slate-100 text-slate-600"
+          : "border-amber-200 bg-amber-50 text-amber-800"
+      }`}
+    >
+      <AlertCircle className="h-3 w-3" /> {noTicket ? "No festival ticket" : "Ticket not checked"}
+    </span>
+  );
+}
+
 function AdminShuttlePage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
@@ -59,7 +86,9 @@ function AdminShuttlePage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<TabView>("arrivals");
   const [typeFilter, setTypeFilter] = useState<"all" | "port" | "airport">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "declined">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "declined">(
+    "all",
+  );
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Add Transfer Modal State
@@ -115,7 +144,8 @@ function AdminShuttlePage() {
   const shuttleBookings = useMemo(() => {
     return bookings.filter((b) => {
       // Considered shuttle booking if needsTransfer is true or transferType/Cost exists
-      const hasTransfer = b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0);
+      const hasTransfer =
+        b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0);
       if (!hasTransfer) return false;
 
       if (typeFilter !== "all" && b.transferType !== typeFilter) return false;
@@ -130,7 +160,15 @@ function AdminShuttlePage() {
         const matchDetails = (b.transferDetails || "").toLowerCase().includes(q);
         const matchLoc = (b.transferLocation || "").toLowerCase().includes(q);
         const matchPack = (b.packName || "").toLowerCase().includes(q);
-        return matchName || matchEmail || matchPhone || matchCode || matchDetails || matchLoc || matchPack;
+        return (
+          matchName ||
+          matchEmail ||
+          matchPhone ||
+          matchCode ||
+          matchDetails ||
+          matchLoc ||
+          matchPack
+        );
       }
       return true;
     });
@@ -145,11 +183,14 @@ function AdminShuttlePage() {
     const totalRevenue = shuttleBookings.reduce((sum, b) => sum + (b.transferCost || 0), 0);
 
     const arrivalsCount = shuttleBookings.filter(
-      (b) => b.transferOption === "round_trip" || b.transferOption === "one_way_arrival" || !b.transferOption
+      (b) =>
+        b.transferOption === "round_trip" ||
+        b.transferOption === "one_way_arrival" ||
+        !b.transferOption,
     ).length;
 
     const departuresCount = shuttleBookings.filter(
-      (b) => b.transferOption === "round_trip" || b.transferOption === "one_way_departure"
+      (b) => b.transferOption === "round_trip" || b.transferOption === "one_way_departure",
     ).length;
 
     return {
@@ -167,7 +208,12 @@ function AdminShuttlePage() {
   const arrivalGroups = useMemo(() => {
     const groups: Record<string, Booking[]> = {};
     shuttleBookings
-      .filter((b) => b.transferOption === "round_trip" || b.transferOption === "one_way_arrival" || !b.transferOption)
+      .filter(
+        (b) =>
+          b.transferOption === "round_trip" ||
+          b.transferOption === "one_way_arrival" ||
+          !b.transferOption,
+      )
       .forEach((b) => {
         const dateKey = b.arrivalDate || "No Arrival Date";
         if (!groups[dateKey]) groups[dateKey] = [];
@@ -199,7 +245,7 @@ function AdminShuttlePage() {
     downloadXlsx(
       `${filename}.xlsx`,
       buildTransferSpreadsheet(dataToExport, packs, collaborators),
-      "Transferts"
+      "Transferts",
     );
   };
 
@@ -209,12 +255,17 @@ function AdminShuttlePage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const transferFormUrl = () =>
+    typeof window === "undefined" ? "/book-transfer" : `${window.location.origin}/book-transfer`;
+
   const openWhatsApp = (b: Booking, type: "arrival" | "departure") => {
     const rawDigits = (b.phone || "").replace(/\D/g, "");
     if (!rawDigits) return;
     const firstName = (b.customerName || "").split(/\s|&/)[0] || b.customerName;
     const date = type === "arrival" ? b.arrivalDate : b.departureDate;
-    const location = b.transferLocation || (b.transferType === "port" ? "Tanger Ville Port" : "Tangier Airport (TNG)");
+    const location =
+      b.transferLocation ||
+      (b.transferType === "port" ? "Tanger Ville Port" : "Tangier Airport (TNG)");
 
     const text = `Hello ${firstName}! 🎉 This is the Tangier International Latin Festival Transfer Team.\n\nWe have your ${type === "arrival" ? "arrival shuttle pickup" : "departure shuttle dropoff"} scheduled for ${date} at ${location}.\n\nFlight/Boat info: ${b.transferDetails || "Not specified yet"}\nTicket Code: ${b.ticketCode}\n\nPlease let us know if your arrival time or flight/boat number changes. See you soon in Tangier!`;
 
@@ -222,15 +273,18 @@ function AdminShuttlePage() {
   };
 
   const existingClients = useMemo(() => {
-    if (!clientSearch.trim()) return bookings.slice(0, 50);
+    const festivalBookings = bookings.filter(
+      (booking) => !isTourismBooking(booking) && !isTransferBooking(booking),
+    );
+    if (!clientSearch.trim()) return festivalBookings.slice(0, 50);
     const q = clientSearch.toLowerCase().trim();
-    return bookings.filter(
+    return festivalBookings.filter(
       (b) =>
         (b.customerName || "").toLowerCase().includes(q) ||
         (b.email || "").toLowerCase().includes(q) ||
         (b.phone || "").toLowerCase().includes(q) ||
         (b.ticketCode || "").toLowerCase().includes(q) ||
-        (b.packName || "").toLowerCase().includes(q)
+        (b.packName || "").toLowerCase().includes(q),
     );
   }, [bookings, clientSearch]);
 
@@ -303,18 +357,43 @@ function AdminShuttlePage() {
       }
       setSavingAdd(true);
       try {
-        await updateBookingTransfer(selectedExistingBookingId, {
+        const festivalBooking = bookings.find(
+          (booking) => booking.id === selectedExistingBookingId,
+        );
+        if (!festivalBooking) throw new Error("Festival ticket not found.");
+        await addBooking({
+          customerName: addForm.customerName.trim(),
+          email: addForm.email.trim(),
+          phone: addForm.phone.trim(),
+          country: addForm.country.trim() || festivalBooking.country || "Morocco",
+          numPeople: Math.max(1, addForm.numPeople || 1),
+          danceLevel: "",
+          packId: "",
+          packName: "Navette / Shuttle Transfer",
+          arrivalDate: addForm.arrivalDate || null,
+          departureDate: addForm.departureDate || null,
+          guestDetails: festivalBooking.guestDetails || null,
           needsTransfer: true,
           transferType: addForm.transferType,
           transferOption: addForm.transferOption,
           transferLocation: addForm.transferLocation,
           transferDetails: addForm.transferDetails,
           transferCost: addForm.transferCost,
+          status: addForm.status,
+          source: "manual",
+          collaboratorId: null,
+          notes: [
+            `[Linked Festival Ticket #${festivalBooking.ticketCode}]`,
+            `Festival ticket verified (${festivalBooking.status})`,
+            addForm.notes,
+          ]
+            .filter(Boolean)
+            .join(" | "),
         });
         setIsAddModalOpen(false);
         await reload();
       } catch (err: any) {
-        setAddError(err?.message || "Failed to attach transfer to booking.");
+        setAddError(err?.message || "Failed to create the linked transfer request.");
       } finally {
         setSavingAdd(false);
       }
@@ -357,7 +436,10 @@ function AdminShuttlePage() {
   };
 
   const handleOpenEdit = (b: Booking) => {
-    const defaultLoc = b.transferType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Port of Tangier (Tanger Ville)";
+    const defaultLoc =
+      b.transferType === "airport"
+        ? "Tangier Ibn Battouta Airport (TNG)"
+        : "Port of Tangier (Tanger Ville)";
     setEditingBooking(b);
     setEditForm({
       needsTransfer: b.needsTransfer ?? true,
@@ -365,7 +447,14 @@ function AdminShuttlePage() {
       transferOption: b.transferOption ?? "round_trip",
       transferLocation: b.transferLocation ?? defaultLoc,
       transferDetails: b.transferDetails ?? "",
-      transferCost: b.transferCost ?? calculateTransferCost(b.transferType, b.transferOption, b.numPeople || 1, b.transferLocation),
+      transferCost:
+        b.transferCost ??
+        calculateTransferCost(
+          b.transferType,
+          b.transferOption,
+          b.numPeople || 1,
+          b.transferLocation,
+        ),
     });
   };
 
@@ -413,6 +502,31 @@ function AdminShuttlePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
+            onClick={() => copyToClipboard(transferFormUrl(), "transfer-form")}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+          >
+            {copiedId === "transfer-form" ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+            <span>
+              {copiedId === "transfer-form" ? "Form Link Copied" : "Copy Transfer Form Link"}
+            </span>
+          </button>
+
+          <a
+            href="/book-transfer"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl transition"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Open Form
+          </a>
+
+          <button
+            type="button"
             onClick={handleOpenAddModal}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
           >
@@ -421,7 +535,12 @@ function AdminShuttlePage() {
           </button>
 
           <button
-            onClick={() => exportToXlsx(shuttleBookings, `tableau-transferts-${new Date().toISOString().slice(0, 10)}`)}
+            onClick={() =>
+              exportToXlsx(
+                shuttleBookings,
+                `tableau-transferts-${new Date().toISOString().slice(0, 10)}`,
+              )
+            }
             disabled={!shuttleBookings.length}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
@@ -435,7 +554,9 @@ function AdminShuttlePage() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Passengers</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+              Passengers
+            </p>
             <Users className="h-4 w-4 text-blue-600" />
           </div>
           <p className="font-display text-2xl font-bold text-gray-900 mt-1">
@@ -446,40 +567,53 @@ function AdminShuttlePage() {
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Arrivals</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+              Arrivals
+            </p>
             <Calendar className="h-4 w-4 text-emerald-600" />
           </div>
           <p className="font-display text-2xl font-bold text-emerald-950 mt-1">
             {stats.arrivalsCount}
           </p>
-          <p className="text-[10px] text-emerald-700 mt-0.5">{arrivalGroups.length} arrival dates</p>
+          <p className="text-[10px] text-emerald-700 mt-0.5">
+            {arrivalGroups.length} arrival dates
+          </p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">Departures</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">
+              Departures
+            </p>
             <Calendar className="h-4 w-4 text-purple-600" />
           </div>
           <p className="font-display text-2xl font-bold text-purple-950 mt-1">
             {stats.departuresCount}
           </p>
-          <p className="text-[10px] text-purple-700 mt-0.5">{departureGroups.length} departure dates</p>
+          <p className="text-[10px] text-purple-700 mt-0.5">
+            {departureGroups.length} departure dates
+          </p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Port vs Airport</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+              Port vs Airport
+            </p>
             <Ship className="h-4 w-4 text-amber-600" />
           </div>
           <p className="font-display text-lg font-bold text-gray-900 mt-1">
-            {stats.portCount} <span className="text-xs font-normal text-gray-500">Port</span> · {stats.airportCount} <span className="text-xs font-normal text-gray-500">Air</span>
+            {stats.portCount} <span className="text-xs font-normal text-gray-500">Port</span> ·{" "}
+            {stats.airportCount} <span className="text-xs font-normal text-gray-500">Air</span>
           </p>
           <p className="text-[10px] text-gray-500 mt-0.5">Split by hub</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">Shuttle Revenue</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
+              Shuttle Revenue
+            </p>
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </div>
           <p className="font-display text-2xl font-bold text-amber-700 mt-1">
@@ -577,17 +711,17 @@ function AdminShuttlePage() {
 
       {/* Main Content Areas */}
       {loading ? (
-        <div className="p-12 text-center text-gray-500 text-sm">
-          Loading shuttle bookings...
-        </div>
+        <div className="p-12 text-center text-gray-500 text-sm">Loading shuttle bookings...</div>
       ) : shuttleBookings.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
           <Bus className="mx-auto h-10 w-10 text-gray-300 mb-3" />
-          <h3 className="font-display text-lg font-bold text-gray-900">No Shuttle Bookings Found</h3>
+          <h3 className="font-display text-lg font-bold text-gray-900">
+            No Shuttle Bookings Found
+          </h3>
           <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
             {search || typeFilter !== "all" || statusFilter !== "all"
               ? "Try adjusting your filters or search keywords."
-              : "When clients choose an airport or port transfer during booking, they will appear here grouped by arrival and departure dates."}
+              : "Standalone airport and port transfer requests will appear here, grouped by arrival and departure dates."}
           </p>
         </div>
       ) : tab === "arrivals" ? (
@@ -611,7 +745,11 @@ function AdminShuttlePage() {
                         Arrival Date: <span className="text-emerald-800">{date}</span>
                       </h3>
                       <p className="text-[11px] text-gray-500">
-                        {groupBookings.length} bookings · <span className="font-bold text-emerald-800">{passengersInGroup} passengers</span> to pick up
+                        {groupBookings.length} bookings ·{" "}
+                        <span className="font-bold text-emerald-800">
+                          {passengersInGroup} passengers
+                        </span>{" "}
+                        to pick up
                       </p>
                     </div>
                   </div>
@@ -621,7 +759,7 @@ function AdminShuttlePage() {
                       onClick={() =>
                         exportToXlsx(
                           groupBookings,
-                          `tableau-transferts-arrivees-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
+                          `tableau-transferts-arrivees-${date.replace(/[^a-zA-Z0-9]/g, "-")}`,
                         )
                       }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
@@ -635,7 +773,10 @@ function AdminShuttlePage() {
                 {/* Group Passenger Cards Table */}
                 <div className="divide-y divide-gray-100">
                   {groupBookings.map((b) => (
-                    <div key={b.id} className="p-4 hover:bg-gray-50/60 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                      key={b.id}
+                      className="p-4 hover:bg-gray-50/60 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
                       {/* Client info */}
                       <div className="flex items-start gap-3 min-w-[260px]">
                         <div className="h-9 w-9 rounded-full bg-blue-100 text-blue-700 grid place-items-center font-bold text-xs shrink-0 mt-0.5">
@@ -643,10 +784,13 @@ function AdminShuttlePage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-gray-900">{b.customerName}</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              {b.customerName}
+                            </span>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-gray-100 text-gray-700 font-semibold border border-gray-200">
                               {b.ticketCode}
                             </span>
+                            <FestivalTicketBadge booking={b} />
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">{b.packName}</p>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mt-1.5">
@@ -670,7 +814,10 @@ function AdminShuttlePage() {
                               <Plane className="h-4 w-4 text-blue-600" />
                             )}
                             <span className="text-xs font-bold text-gray-900">
-                              {b.transferLocation || (b.transferType === "port" ? "Tanger Ville Port" : "Tangier Airport (TNG)")}
+                              {b.transferLocation ||
+                                (b.transferType === "port"
+                                  ? "Tanger Ville Port"
+                                  : "Tangier Airport (TNG)")}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-blue-100 text-blue-800 font-semibold">
                               {formatTransferOptionLabel(b.transferOption, "en")}
@@ -678,13 +825,19 @@ function AdminShuttlePage() {
                           </div>
                           <p className="text-xs text-gray-600 mt-1">
                             <span className="font-semibold text-gray-800">Flight/Ferry:</span>{" "}
-                            {b.transferDetails || <span className="italic text-gray-400">Not provided yet</span>}
+                            {b.transferDetails || (
+                              <span className="italic text-gray-400">Not provided yet</span>
+                            )}
                           </p>
                         </div>
 
                         <div className="sm:border-l sm:border-gray-200 sm:pl-3 shrink-0">
-                          <p className="text-[10px] uppercase font-bold text-gray-500">Shuttle Fee</p>
-                          <p className="text-sm font-extrabold text-blue-700">€{b.transferCost || 0}</p>
+                          <p className="text-[10px] uppercase font-bold text-gray-500">
+                            Shuttle Fee
+                          </p>
+                          <p className="text-sm font-extrabold text-blue-700">
+                            €{b.transferCost || 0}
+                          </p>
                         </div>
                       </div>
 
@@ -734,7 +887,11 @@ function AdminShuttlePage() {
                         Departure Date: <span className="text-purple-800">{date}</span>
                       </h3>
                       <p className="text-[11px] text-gray-500">
-                        {groupBookings.length} bookings · <span className="font-bold text-purple-800">{passengersInGroup} passengers</span> for return dropoff
+                        {groupBookings.length} bookings ·{" "}
+                        <span className="font-bold text-purple-800">
+                          {passengersInGroup} passengers
+                        </span>{" "}
+                        for return dropoff
                       </p>
                     </div>
                   </div>
@@ -744,7 +901,7 @@ function AdminShuttlePage() {
                       onClick={() =>
                         exportToXlsx(
                           groupBookings,
-                          `tableau-transferts-departs-${date.replace(/[^a-zA-Z0-9]/g, "-")}`
+                          `tableau-transferts-departs-${date.replace(/[^a-zA-Z0-9]/g, "-")}`,
                         )
                       }
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
@@ -758,7 +915,10 @@ function AdminShuttlePage() {
                 {/* Group Passenger Cards Table */}
                 <div className="divide-y divide-gray-100">
                   {groupBookings.map((b) => (
-                    <div key={b.id} className="p-4 hover:bg-gray-50/60 transition flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div
+                      key={b.id}
+                      className="p-4 hover:bg-gray-50/60 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
                       {/* Client info */}
                       <div className="flex items-start gap-3 min-w-[260px]">
                         <div className="h-9 w-9 rounded-full bg-purple-100 text-purple-700 grid place-items-center font-bold text-xs shrink-0 mt-0.5">
@@ -766,10 +926,13 @@ function AdminShuttlePage() {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm text-gray-900">{b.customerName}</span>
+                            <span className="font-bold text-sm text-gray-900">
+                              {b.customerName}
+                            </span>
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-gray-100 text-gray-700 font-semibold border border-gray-200">
                               {b.ticketCode}
                             </span>
+                            <FestivalTicketBadge booking={b} />
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">{b.packName}</p>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mt-1.5">
@@ -793,7 +956,10 @@ function AdminShuttlePage() {
                               <Plane className="h-4 w-4 text-purple-600" />
                             )}
                             <span className="text-xs font-bold text-gray-900">
-                              {b.transferLocation || (b.transferType === "port" ? "Tanger Ville Port" : "Tangier Airport (TNG)")}
+                              {b.transferLocation ||
+                                (b.transferType === "port"
+                                  ? "Tanger Ville Port"
+                                  : "Tangier Airport (TNG)")}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-purple-100 text-purple-800 font-semibold">
                               {formatTransferOptionLabel(b.transferOption, "en")}
@@ -801,13 +967,19 @@ function AdminShuttlePage() {
                           </div>
                           <p className="text-xs text-gray-600 mt-1">
                             <span className="font-semibold text-gray-800">Flight/Ferry:</span>{" "}
-                            {b.transferDetails || <span className="italic text-gray-400">Not provided yet</span>}
+                            {b.transferDetails || (
+                              <span className="italic text-gray-400">Not provided yet</span>
+                            )}
                           </p>
                         </div>
 
                         <div className="sm:border-l sm:border-gray-200 sm:pl-3 shrink-0">
-                          <p className="text-[10px] uppercase font-bold text-gray-500">Shuttle Fee</p>
-                          <p className="text-sm font-extrabold text-purple-700">€{b.transferCost || 0}</p>
+                          <p className="text-[10px] uppercase font-bold text-gray-500">
+                            Shuttle Fee
+                          </p>
+                          <p className="text-sm font-extrabold text-purple-700">
+                            €{b.transferCost || 0}
+                          </p>
                         </div>
                       </div>
 
@@ -859,7 +1031,12 @@ function AdminShuttlePage() {
                   <tr key={b.id} className="hover:bg-gray-50/70 transition">
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-gray-900">{b.customerName}</div>
-                      <div className="font-mono text-[10px] text-gray-500">{b.ticketCode} ({b.numPeople} pers.)</div>
+                      <div className="font-mono text-[10px] text-gray-500">
+                        {b.ticketCode} ({b.numPeople} pers.)
+                      </div>
+                      <div className="mt-1">
+                        <FestivalTicketBadge booking={b} />
+                      </div>
                       <div className="text-[10px] text-gray-400">{b.phone}</div>
                     </td>
 
@@ -892,12 +1069,12 @@ function AdminShuttlePage() {
                     </td>
 
                     <td className="px-4 py-3.5">
-                      <span className="text-gray-600">{b.transferDetails || <span className="text-gray-400 italic">None</span>}</span>
+                      <span className="text-gray-600">
+                        {b.transferDetails || <span className="text-gray-400 italic">None</span>}
+                      </span>
                     </td>
 
-                    <td className="px-4 py-3.5 font-bold text-blue-700">
-                      €{b.transferCost || 0}
-                    </td>
+                    <td className="px-4 py-3.5 font-bold text-blue-700">€{b.transferCost || 0}</td>
 
                     <td className="px-4 py-3.5">
                       <span
@@ -905,8 +1082,8 @@ function AdminShuttlePage() {
                           b.status === "confirmed"
                             ? "bg-emerald-100 text-emerald-800"
                             : b.status === "declined"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-amber-100 text-amber-800"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-amber-100 text-amber-800"
                         }`}
                       >
                         {b.status}
@@ -981,8 +1158,16 @@ function AdminShuttlePage() {
                         onChange={(e) => {
                           const val = e.target.value as TransferType;
                           const nextType = val;
-                          const nextLoc = nextType === "airport" ? "Tangier Ibn Battouta Airport (TNG)" : "Port of Tangier (Tanger Ville)";
-                          const nextCost = calculateTransferCost(nextType, editForm.transferOption, editingBooking?.numPeople || 1, nextLoc);
+                          const nextLoc =
+                            nextType === "airport"
+                              ? "Tangier Ibn Battouta Airport (TNG)"
+                              : "Port of Tangier (Tanger Ville)";
+                          const nextCost = calculateTransferCost(
+                            nextType,
+                            editForm.transferOption,
+                            editingBooking?.numPeople || 1,
+                            nextLoc,
+                          );
                           setEditForm({
                             ...editForm,
                             transferType: nextType,
@@ -1005,8 +1190,17 @@ function AdminShuttlePage() {
                         value={editForm.transferOption}
                         onChange={(e) => {
                           const nextOpt = e.target.value as TransferOption;
-                          const nextCost = calculateTransferCost(editForm.transferType, nextOpt, editingBooking?.numPeople || 1, editForm.transferLocation);
-                          setEditForm({ ...editForm, transferOption: nextOpt, transferCost: nextCost });
+                          const nextCost = calculateTransferCost(
+                            editForm.transferType,
+                            nextOpt,
+                            editingBooking?.numPeople || 1,
+                            editForm.transferLocation,
+                          );
+                          setEditForm({
+                            ...editForm,
+                            transferOption: nextOpt,
+                            transferCost: nextCost,
+                          });
                         }}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
@@ -1025,8 +1219,17 @@ function AdminShuttlePage() {
                       value={editForm.transferLocation}
                       onChange={(e) => {
                         const nextLoc = e.target.value;
-                        const nextCost = calculateTransferCost(editForm.transferType, editForm.transferOption, editingBooking?.numPeople || 1, nextLoc);
-                        setEditForm({ ...editForm, transferLocation: nextLoc, transferCost: nextCost });
+                        const nextCost = calculateTransferCost(
+                          editForm.transferType,
+                          editForm.transferOption,
+                          editingBooking?.numPeople || 1,
+                          nextLoc,
+                        );
+                        setEditForm({
+                          ...editForm,
+                          transferLocation: nextLoc,
+                          transferCost: nextCost,
+                        });
                       }}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-medium"
                     >
@@ -1054,7 +1257,9 @@ function AdminShuttlePage() {
                     <input
                       type="text"
                       value={editForm.transferDetails}
-                      onChange={(e) => setEditForm({ ...editForm, transferDetails: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, transferDetails: e.target.value })
+                      }
                       placeholder="e.g. Flight AT123 at 14:30"
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                     />
@@ -1067,7 +1272,9 @@ function AdminShuttlePage() {
                     <input
                       type="number"
                       value={editForm.transferCost}
-                      onChange={(e) => setEditForm({ ...editForm, transferCost: Number(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, transferCost: Number(e.target.value) || 0 })
+                      }
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-bold text-blue-700"
                     />
                   </div>
@@ -1201,7 +1408,9 @@ function AdminShuttlePage() {
                               <span>{b.customerName}</span>
                               <span
                                 className={`text-[10px] font-mono px-1.5 py-0.2 rounded ${
-                                  isSelected ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+                                  isSelected
+                                    ? "bg-white/20 text-white"
+                                    : "bg-gray-100 text-gray-700"
                                 }`}
                               >
                                 #{b.ticketCode}
@@ -1212,7 +1421,8 @@ function AdminShuttlePage() {
                                 isSelected ? "text-blue-100" : "text-gray-500"
                               }`}
                             >
-                              {b.packName || "Pass"} · {b.numPeople || 1} pax {b.phone ? `· ${b.phone}` : ""}
+                              {b.packName || "Pass"} · {b.numPeople || 1} pax{" "}
+                              {b.phone ? `· ${b.phone}` : ""}
                             </p>
                           </div>
 
@@ -1261,17 +1471,13 @@ function AdminShuttlePage() {
                         type="text"
                         required
                         value={addForm.customerName}
-                        onChange={(e) =>
-                          setAddForm({ ...addForm, customerName: e.target.value })
-                        }
+                        onChange={(e) => setAddForm({ ...addForm, customerName: e.target.value })}
                         placeholder="e.g. John Doe"
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">
-                        Passengers Count
-                      </label>
+                      <label className="font-bold text-gray-700 block mb-1">Passengers Count</label>
                       <input
                         type="number"
                         min="1"
@@ -1282,7 +1488,7 @@ function AdminShuttlePage() {
                             addForm.transferType,
                             addForm.transferOption,
                             num,
-                            addForm.transferLocation
+                            addForm.transferLocation,
                           );
                           setAddForm({
                             ...addForm,
@@ -1297,9 +1503,7 @@ function AdminShuttlePage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">
-                        Phone (WhatsApp)
-                      </label>
+                      <label className="font-bold text-gray-700 block mb-1">Phone (WhatsApp)</label>
                       <input
                         type="tel"
                         value={addForm.phone}
@@ -1322,28 +1526,20 @@ function AdminShuttlePage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">
-                        Arrival Date
-                      </label>
+                      <label className="font-bold text-gray-700 block mb-1">Arrival Date</label>
                       <input
                         type="date"
                         value={addForm.arrivalDate}
-                        onChange={(e) =>
-                          setAddForm({ ...addForm, arrivalDate: e.target.value })
-                        }
+                        onChange={(e) => setAddForm({ ...addForm, arrivalDate: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">
-                        Departure Date
-                      </label>
+                      <label className="font-bold text-gray-700 block mb-1">Departure Date</label>
                       <input
                         type="date"
                         value={addForm.departureDate}
-                        onChange={(e) =>
-                          setAddForm({ ...addForm, departureDate: e.target.value })
-                        }
+                        onChange={(e) => setAddForm({ ...addForm, departureDate: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                       />
                     </div>
@@ -1359,9 +1555,7 @@ function AdminShuttlePage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">
-                      Transfer Type
-                    </label>
+                    <label className="font-bold text-gray-700 block mb-1">Transfer Type</label>
                     <select
                       value={addForm.transferType}
                       onChange={(e) => {
@@ -1374,7 +1568,7 @@ function AdminShuttlePage() {
                           nextType,
                           addForm.transferOption,
                           addForm.numPeople || 1,
-                          nextLoc
+                          nextLoc,
                         );
                         setAddForm({
                           ...addForm,
@@ -1391,9 +1585,7 @@ function AdminShuttlePage() {
                   </div>
 
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">
-                      Direction
-                    </label>
+                    <label className="font-bold text-gray-700 block mb-1">Direction</label>
                     <select
                       value={addForm.transferOption}
                       onChange={(e) => {
@@ -1402,7 +1594,7 @@ function AdminShuttlePage() {
                           addForm.transferType,
                           nextOpt,
                           addForm.numPeople || 1,
-                          addForm.transferLocation
+                          addForm.transferLocation,
                         );
                         setAddForm({
                           ...addForm,
@@ -1431,7 +1623,7 @@ function AdminShuttlePage() {
                         addForm.transferType,
                         addForm.transferOption,
                         addForm.numPeople || 1,
-                        nextLoc
+                        nextLoc,
                       );
                       setAddForm({
                         ...addForm,
@@ -1465,9 +1657,7 @@ function AdminShuttlePage() {
                   <input
                     type="text"
                     value={addForm.transferDetails}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, transferDetails: e.target.value })
-                    }
+                    onChange={(e) => setAddForm({ ...addForm, transferDetails: e.target.value })}
                     placeholder="e.g. Flight AT123 arriving at 14:30 / Ferry Balearia 11:00"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
                   />
@@ -1509,9 +1699,7 @@ function AdminShuttlePage() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">
-                    Notes / Remarks
-                  </label>
+                  <label className="font-bold text-gray-700 block mb-1">Notes / Remarks</label>
                   <input
                     type="text"
                     value={addForm.notes}
