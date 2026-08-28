@@ -1367,9 +1367,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
         p.id === b.packId || p.name === b.packName || (b.packName && b.packName.includes(p.name)),
     );
     let { amount, currency } = packPrice(pack);
-    if (amount === 0 && b.packName) {
-      const match = b.packName.match(/(\d+)\s*(€|eur|mad|dh)/i) || b.packName.match(/(\d+)/);
-      if (match) amount = parseInt(match[1], 10);
+    // Only recover an explicitly written historical price when the pack no
+    // longer exists. A real zero-priced pack must remain zero: its title may
+    // contain unrelated numbers such as "3 nights".
+    if (!pack && b.packName) {
+      const match = b.packName.match(/(\d+(?:[.,]\d+)?)\s*(€|eur|mad|dh)\b/i);
+      if (match) amount = Number(match[1].replace(",", "."));
       if (/mad|dh/i.test(b.packName)) currency = "MAD";
     }
     const grossValue = amount * (b.numPeople || 1);

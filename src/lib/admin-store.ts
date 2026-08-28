@@ -360,14 +360,14 @@ export function packDepartureDate(
   return nights ? dateAfterDays(arrivalDate, nights) : null;
 }
 
-/** Selectable checkout range: at least one night, never beyond the pack duration. */
+/** The checkout date required by a hotel pack. A two-night or three-night
+ * pack must use its full included stay on every booking form. */
 export function packDepartureDateLimits(
   arrivalDate: string,
   pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
 ): { min: string; max: string } | null {
-  const min = dateAfterDays(arrivalDate, 1);
-  const max = packDepartureDate(arrivalDate, pack);
-  return min && max ? { min, max } : null;
+  const departure = packDepartureDate(arrivalDate, pack);
+  return departure ? { min: departure, max: departure } : null;
 }
 
 /** Keep a submitted checkout inside the hotel pack's selectable range. */
