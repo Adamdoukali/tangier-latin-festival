@@ -434,7 +434,7 @@ function BookTransferPage() {
 
   return (
     <TransferShell lang={lang} changeLanguage={changeLanguage}>
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
+      <main className="mx-auto max-w-3xl overflow-x-clip px-4 pt-8 pb-28 sm:py-12">
         <div className="text-center">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-700 text-white shadow-lg shadow-blue-200">
             <Bus className="h-7 w-7" />
@@ -686,7 +686,7 @@ function BookTransferPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-blue-200 bg-blue-50/60 p-5 shadow-sm sm:p-6">
+          <section className="min-w-0 overflow-x-hidden rounded-3xl border border-blue-200 bg-blue-50/60 p-5 shadow-sm sm:p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-slate-950">
               <CalendarDays className="h-5 w-5 text-blue-700" />
               {tr(
@@ -963,7 +963,7 @@ function TransferShell({
 }) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <style>{`.form-input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;border-radius:.75rem;border:1px solid rgb(203 213 225);background:white;padding:.625rem .75rem;font-size:.875rem;color:rgb(15 23 42);outline:none}.form-input:focus{border-color:rgb(37 99 235)}`}</style>
+      <style>{`.form-input{box-sizing:border-box;display:block;width:100%;min-width:0;max-width:100%;inline-size:100%;min-inline-size:0;max-inline-size:100%;border-radius:.75rem;border:1px solid rgb(203 213 225);background:white;padding:.625rem .75rem;font-size:.875rem;color:rgb(15 23 42);outline:none}.form-input[type="date"],.form-input[type="time"]{-webkit-min-logical-width:0}.form-input:focus{border-color:rgb(37 99 235)}`}</style>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4">
           <Link
