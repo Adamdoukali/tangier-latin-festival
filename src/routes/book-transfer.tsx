@@ -768,7 +768,7 @@ function BookTransferPage() {
               <Field
                 label={tr(
                   "Tangier arrival/departure hub",
-                  "Lieu d'arrivée/départ à Tanger",
+                  "Lieu d'arrivée et de départ",
                   "Lugar de llegada/salida en Tánger",
                 )}
                 required
