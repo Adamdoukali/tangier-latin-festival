@@ -45,6 +45,7 @@ export const TRANSFER_EXPORT_HEADER: SpreadsheetCell[] = [
   "Origine / Pays",
   "collaborateur",
   "Lieu du transfert",
+  "Aeroport de départ",
   "Date et heure d'arrivée",
   "compagnie d'arrivée",
   "Date et heure de départ",
@@ -186,6 +187,12 @@ export function buildTransferSpreadsheet(
     const departureTime =
       booking.departureTime || transferDetail(booking.transferDetails, "Departure Time");
     const company = booking.company || transferDetail(booking.transferDetails, "Company") || "";
+    const departureAirport =
+      booking.departureAirport ||
+      transferDetail(booking.transferDetails, "Departure Airport") ||
+      transferDetail(booking.transferDetails, "Departure Port") ||
+      transferDetail(booking.transferDetails, "Origin") ||
+      "";
 
     for (const guest of guests) {
       rows.push([
@@ -194,6 +201,7 @@ export function buildTransferSpreadsheet(
         formatSpreadsheetOrigin(guest.country, guest.origin === "morocco"),
         collaborator?.name || "Direct",
         booking.transferLocation || "",
+        departureAirport,
         formatSpreadsheetDateTime(booking.arrivalDate, arrivalTime),
         company,
         formatSpreadsheetDateTime(booking.departureDate, departureTime),
