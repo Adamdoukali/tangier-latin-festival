@@ -18,6 +18,7 @@ import {
   KeyRound,
   ShieldAlert,
   ShieldCheck,
+  Bus,
 } from "lucide-react";
 import {
   getCollaboratorStats,
@@ -36,6 +37,7 @@ import {
   formatForPartner,
   commissionLabel,
   partnerShareLink,
+  partnerTransferShareLink,
   type Collaborator,
   type CollaboratorStats,
   type Booking,
@@ -124,6 +126,10 @@ function suggestCode(name: string): string {
 // (tickets.tangierlatinfestival.com/CODE), /book?ref locally.
 function referralUrl(code: string, lang?: PartnerLanguage): string {
   return partnerShareLink(code, lang);
+}
+
+function transferReferralUrl(code: string, lang?: PartnerLanguage): string {
+  return partnerTransferShareLink(code, lang);
 }
 
 function AdminCollaborators() {
@@ -277,6 +283,12 @@ function AdminCollaborators() {
   const copyLink = (c: Collaborator) => {
     navigator.clipboard.writeText(referralUrl(c.code, c.language));
     setCopiedId(c.id);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const copyTransferLink = (c: Collaborator) => {
+    navigator.clipboard.writeText(transferReferralUrl(c.code, c.language));
+    setCopiedId(`transfer-${c.id}`);
     setTimeout(() => setCopiedId(null), 1500);
   };
 
@@ -521,6 +533,21 @@ function AdminCollaborators() {
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           ) : (
                             <Link2 className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => copyTransferLink(c)}
+                          className={`p-1 rounded transition cursor-pointer ${
+                            copiedId === `transfer-${c.id}`
+                              ? "text-emerald-600"
+                              : "text-blue-500 hover:text-blue-800"
+                          }`}
+                          title={`Copy transfer referral link: ${transferReferralUrl(c.code, c.language)}`}
+                        >
+                          {copiedId === `transfer-${c.id}` ? (
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          ) : (
+                            <Bus className="h-3.5 w-3.5" />
                           )}
                         </button>
                       </div>

@@ -351,6 +351,19 @@ export function partnerTourismShareLink(code: string, lang?: string): string {
   return `${base}/book-tourism?ref=${code}${lang ? `&lang=${lang}` : ""}`;
 }
 
+/** A partner-attributed standalone transfer form. Transfer reservations remain
+ * excluded from partner sales and commissions; the referral is for admin
+ * filtering and partner-specific manifests only. */
+export function partnerTransferShareLink(code: string, lang?: string): string {
+  const query = `ref=${encodeURIComponent(code)}${lang ? `&lang=${encodeURIComponent(lang)}` : ""}`;
+  const host = typeof window !== "undefined" ? window.location.host : "";
+  if (host.endsWith("tangierlatinfestival.com")) {
+    return `https://www.tangierlatinfestival.com/book-transfer?${query}`;
+  }
+  const base = typeof window !== "undefined" ? window.location.origin : "";
+  return `${base}/book-transfer?${query}`;
+}
+
 export function generateTicketCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "TLF-";

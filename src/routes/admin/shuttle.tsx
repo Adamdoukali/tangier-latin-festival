@@ -32,12 +32,14 @@ import {
   getPacks,
   getCollaborators,
   addBooking,
+  updateBooking,
   updateBookingTransfer,
   calculateTransferCost,
   formatTransferOptionLabel,
   isTourismBooking,
   isTransferBooking,
   ticketUrl,
+  partnerTransferShareLink,
   EUR_TO_MAD,
   type Booking,
   type Pack,
@@ -79,6 +81,27 @@ function FestivalTicketBadge({ booking }: { booking: Booking }) {
   );
 }
 
+function TransferPartnerBadge({
+  booking,
+  collaborators,
+}: {
+  booking: Booking;
+  collaborators: Collaborator[];
+}) {
+  const partner = booking.collaboratorId
+    ? collaborators.find((collaborator) => collaborator.id === booking.collaboratorId)
+    : undefined;
+  return partner ? (
+    <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-800">
+      {partner.name} · {partner.code}
+    </span>
+  ) : (
+    <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-500">
+      Direct
+    </span>
+  );
+}
+
 function AdminShuttlePage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
@@ -90,6 +113,7 @@ function AdminShuttlePage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "declined">(
     "all",
   );
+  const [partnerFilter, setPartnerFilter] = useState("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Add Transfer Modal State
@@ -111,6 +135,7 @@ function AdminShuttlePage() {
     transferDetails: "",
     transferCost: 10,
     status: "confirmed" as "confirmed" | "pending",
+    collaboratorId: "",
     notes: "",
   });
   const [savingAdd, setSavingAdd] = useState(false);
@@ -125,6 +150,7 @@ function AdminShuttlePage() {
     transferLocation: "Port of Tangier (Tanger Ville)",
     transferDetails: "",
     transferCost: 10,
+    collaboratorId: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -143,17 +169,52 @@ function AdminShuttlePage() {
 
   // Filter bookings that requested shuttle transfer or have transfer fields
   const shuttleBookings = useMemo(() => {
-    return bookings.filter((b) => {
+    const partnerByFestivalTicket = new Map<string, string>();
+    for (const booking of bookings) {
+      if (!isTransferBooking(booking) && booking.collaboratorId && booking.ticketCode) {
+        partnerByFestivalTicket.set(
+          booking.ticketCode.trim().toUpperCase(),
+          booking.collaboratorId,
+        );
+      }
+    }
+
+    return bookings.flatMap((originalBooking) => {
       // Considered shuttle booking if needsTransfer is true or transferType/Cost exists
       const hasTransfer =
-        b.needsTransfer || !!b.transferType || (b.transferCost && b.transferCost > 0);
-      if (!hasTransfer) return false;
+        originalBooking.needsTransfer ||
+        !!originalBooking.transferType ||
+        (originalBooking.transferCost && originalBooking.transferCost > 0);
+      if (!hasTransfer) return [];
 
-      if (typeFilter !== "all" && b.transferType !== typeFilter) return false;
-      if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      const linkedTicket = originalBooking.notes
+        ?.match(/\[Linked Festival Ticket #([^\]]+)\]/i)?.[1]
+        ?.trim()
+        .toUpperCase();
+      const inheritedPartnerId = linkedTicket
+        ? partnerByFestivalTicket.get(linkedTicket) || null
+        : null;
+      const effectivePartnerId = originalBooking.collaboratorId || inheritedPartnerId;
+      const b =
+        effectivePartnerId && !originalBooking.collaboratorId
+          ? { ...originalBooking, collaboratorId: effectivePartnerId }
+          : originalBooking;
+
+      if (typeFilter !== "all" && b.transferType !== typeFilter) return [];
+      if (statusFilter !== "all" && b.status !== statusFilter) return [];
+      if (partnerFilter === "direct" && effectivePartnerId) return [];
+      if (
+        partnerFilter !== "all" &&
+        partnerFilter !== "direct" &&
+        effectivePartnerId !== partnerFilter
+      )
+        return [];
 
       if (search.trim()) {
         const q = search.toLowerCase().trim();
+        const partner = effectivePartnerId
+          ? collaborators.find((collaborator) => collaborator.id === effectivePartnerId)
+          : undefined;
         const matchName = (b.customerName || "").toLowerCase().includes(q);
         const matchEmail = (b.email || "").toLowerCase().includes(q);
         const matchPhone = (b.phone || "").toLowerCase().includes(q);
@@ -161,19 +222,36 @@ function AdminShuttlePage() {
         const matchDetails = (b.transferDetails || "").toLowerCase().includes(q);
         const matchLoc = (b.transferLocation || "").toLowerCase().includes(q);
         const matchPack = (b.packName || "").toLowerCase().includes(q);
-        return (
-          matchName ||
-          matchEmail ||
-          matchPhone ||
-          matchCode ||
-          matchDetails ||
-          matchLoc ||
-          matchPack
-        );
+        const matchPartner =
+          (partner?.name || "").toLowerCase().includes(q) ||
+          (partner?.code || "").toLowerCase().includes(q);
+        if (
+          !(
+            matchName ||
+            matchEmail ||
+            matchPhone ||
+            matchCode ||
+            matchDetails ||
+            matchLoc ||
+            matchPack ||
+            matchPartner
+          )
+        )
+          return [];
       }
-      return true;
+      return [b];
     });
-  }, [bookings, typeFilter, statusFilter, search]);
+  }, [bookings, collaborators, typeFilter, statusFilter, partnerFilter, search]);
+
+  const selectedPartner = useMemo(
+    () => collaborators.find((collaborator) => collaborator.id === partnerFilter),
+    [collaborators, partnerFilter],
+  );
+  const partnerExportSlug = selectedPartner
+    ? selectedPartner.code.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    : partnerFilter === "direct"
+      ? "direct"
+      : "all-partners";
 
   // KPIs
   const stats = useMemo(() => {
@@ -256,8 +334,12 @@ function AdminShuttlePage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const transferFormUrl = () =>
-    typeof window === "undefined" ? "/book-transfer" : `${window.location.origin}/book-transfer`;
+  const transferFormUrl = (partner?: Collaborator) => {
+    if (partner) return partnerTransferShareLink(partner.code, partner.language);
+    return typeof window === "undefined"
+      ? "/book-transfer"
+      : `${window.location.origin}/book-transfer`;
+  };
 
   const openWhatsApp = (b: Booking, type: "arrival" | "departure") => {
     const rawDigits = (b.phone || "").replace(/\D/g, "");
@@ -307,6 +389,7 @@ function AdminShuttlePage() {
       transferDetails: "",
       transferCost: 10,
       status: "confirmed",
+      collaboratorId: "",
       notes: "",
     });
     setIsAddModalOpen(true);
@@ -343,6 +426,7 @@ function AdminShuttlePage() {
         transferDetails: b.transferDetails || "",
         transferCost: cost,
         status: b.status === "declined" ? "confirmed" : (b.status as any) || "confirmed",
+        collaboratorId: b.collaboratorId || "",
         notes: b.notes || "",
       }));
     }
@@ -362,6 +446,7 @@ function AdminShuttlePage() {
           (booking) => booking.id === selectedExistingBookingId,
         );
         if (!festivalBooking) throw new Error("Festival ticket not found.");
+        const assignedPartnerId = addForm.collaboratorId || festivalBooking.collaboratorId || null;
         await addBooking({
           customerName: addForm.customerName.trim(),
           email: addForm.email.trim(),
@@ -381,8 +466,8 @@ function AdminShuttlePage() {
           transferDetails: addForm.transferDetails,
           transferCost: addForm.transferCost,
           status: addForm.status,
-          source: "manual",
-          collaboratorId: null,
+          source: assignedPartnerId ? "referral" : "manual",
+          collaboratorId: assignedPartnerId,
           notes: [
             `[Linked Festival Ticket #${festivalBooking.ticketCode}]`,
             `Festival ticket verified (${festivalBooking.status})`,
@@ -423,7 +508,8 @@ function AdminShuttlePage() {
           transferDetails: addForm.transferDetails,
           transferCost: addForm.transferCost,
           status: addForm.status,
-          source: "manual",
+          source: addForm.collaboratorId ? "referral" : "manual",
+          collaboratorId: addForm.collaboratorId || null,
           notes: addForm.notes,
         });
         setIsAddModalOpen(false);
@@ -456,6 +542,7 @@ function AdminShuttlePage() {
           b.numPeople || 1,
           b.transferLocation,
         ),
+      collaboratorId: b.collaboratorId || "",
     });
   };
 
@@ -470,6 +557,9 @@ function AdminShuttlePage() {
         transferLocation: editForm.needsTransfer ? editForm.transferLocation : null,
         transferDetails: editForm.needsTransfer ? editForm.transferDetails : null,
         transferCost: editForm.needsTransfer ? editForm.transferCost : 0,
+      });
+      await updateBooking(editingBooking.id, {
+        collaboratorId: editForm.collaboratorId || null,
       });
       setEditingBooking(null);
       await reload();
@@ -503,21 +593,32 @@ function AdminShuttlePage() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={() => copyToClipboard(transferFormUrl(), "transfer-form")}
+            onClick={() =>
+              copyToClipboard(
+                transferFormUrl(selectedPartner),
+                selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form",
+              )
+            }
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
           >
-            {copiedId === "transfer-form" ? (
+            {copiedId ===
+            (selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form") ? (
               <Check className="h-4 w-4" />
             ) : (
               <Copy className="h-4 w-4" />
             )}
             <span>
-              {copiedId === "transfer-form" ? "Form Link Copied" : "Copy Transfer Form Link"}
+              {copiedId ===
+              (selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form")
+                ? "Form Link Copied"
+                : selectedPartner
+                  ? `Copy ${selectedPartner.name} Link`
+                  : "Copy Transfer Form Link"}
             </span>
           </button>
 
           <a
-            href="/book-transfer"
+            href={transferFormUrl(selectedPartner)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl transition"
@@ -539,14 +640,14 @@ function AdminShuttlePage() {
             onClick={() =>
               exportToXlsx(
                 shuttleBookings,
-                `tableau-transferts-${new Date().toISOString().slice(0, 10)}`,
+                `tableau-transferts-${partnerExportSlug}-${new Date().toISOString().slice(0, 10)}`,
               )
             }
             disabled={!shuttleBookings.length}
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export All XLSX ({shuttleBookings.length})
+            Export Filtered XLSX ({shuttleBookings.length})
           </button>
         </div>
       </div>
@@ -667,6 +768,22 @@ function AdminShuttlePage() {
 
         {/* Filters & Search */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Partner referral filter */}
+          <select
+            value={partnerFilter}
+            onChange={(e) => setPartnerFilter(e.target.value)}
+            className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-900 focus:outline-none focus:border-blue-600 cursor-pointer"
+            title="Filter transfers by the partner referral link used"
+          >
+            <option value="all">All Partner Links</option>
+            <option value="direct">Direct / No Partner</option>
+            {collaborators.map((collaborator) => (
+              <option key={collaborator.id} value={collaborator.id}>
+                {collaborator.name} ({collaborator.code})
+              </option>
+            ))}
+          </select>
+
           {/* Hub Type filter */}
           <select
             value={typeFilter}
@@ -722,7 +839,7 @@ function AdminShuttlePage() {
             No Shuttle Bookings Found
           </h3>
           <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
-            {search || typeFilter !== "all" || statusFilter !== "all"
+            {search || typeFilter !== "all" || statusFilter !== "all" || partnerFilter !== "all"
               ? "Try adjusting your filters or search keywords."
               : "Standalone airport and port transfer requests will appear here, grouped by arrival and departure dates."}
           </p>
@@ -794,6 +911,7 @@ function AdminShuttlePage() {
                               {b.ticketCode}
                             </span>
                             <FestivalTicketBadge booking={b} />
+                            <TransferPartnerBadge booking={b} collaborators={collaborators} />
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">{b.packName}</p>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mt-1.5">
@@ -936,6 +1054,7 @@ function AdminShuttlePage() {
                               {b.ticketCode}
                             </span>
                             <FestivalTicketBadge booking={b} />
+                            <TransferPartnerBadge booking={b} collaborators={collaborators} />
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">{b.packName}</p>
                           <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 mt-1.5">
@@ -1019,6 +1138,7 @@ function AdminShuttlePage() {
               <thead className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-4 py-3.5">Code / Client</th>
+                  <th className="px-4 py-3.5">Partner Link</th>
                   <th className="px-4 py-3.5">Hub & Type</th>
                   <th className="px-4 py-3.5">Direction</th>
                   <th className="px-4 py-3.5">Arrival Date</th>
@@ -1041,6 +1161,10 @@ function AdminShuttlePage() {
                         <FestivalTicketBadge booking={b} />
                       </div>
                       <div className="text-[10px] text-gray-400">{b.phone}</div>
+                    </td>
+
+                    <td className="px-4 py-3.5">
+                      <TransferPartnerBadge booking={b} collaborators={collaborators} />
                     </td>
 
                     <td className="px-4 py-3.5">
@@ -1147,6 +1271,24 @@ function AdminShuttlePage() {
                   onChange={(e) => setEditForm({ ...editForm, needsTransfer: e.target.checked })}
                   className="h-4 w-4 text-blue-600 rounded cursor-pointer"
                 />
+              </div>
+
+              <div>
+                <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
+                  Partner Referral Link
+                </label>
+                <select
+                  value={editForm.collaboratorId}
+                  onChange={(e) => setEditForm({ ...editForm, collaboratorId: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="">Direct / No Partner</option>
+                  {collaborators.map((collaborator) => (
+                    <option key={collaborator.id} value={collaborator.id}>
+                      {collaborator.name} ({collaborator.code})
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {editForm.needsTransfer && (
@@ -1549,6 +1691,28 @@ function AdminShuttlePage() {
                   </div>
                 </div>
               )}
+
+              <div className="space-y-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-blue-950">
+                  Partner Referral Link (optional)
+                </label>
+                <select
+                  value={addForm.collaboratorId}
+                  onChange={(e) => setAddForm({ ...addForm, collaboratorId: e.target.value })}
+                  className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-600 cursor-pointer"
+                >
+                  <option value="">Direct / No Partner</option>
+                  {collaborators.map((collaborator) => (
+                    <option key={collaborator.id} value={collaborator.id}>
+                      {collaborator.name} ({collaborator.code})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-blue-800">
+                  Used only for admin filtering and partner-specific Excel manifests. Transfer
+                  revenue is not added to partner commissions.
+                </p>
+              </div>
 
               {/* 2. Transfer Details */}
               <div className="space-y-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">

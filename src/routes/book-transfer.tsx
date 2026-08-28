@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Bus,
@@ -20,7 +20,10 @@ import {
   calculateTransferCost,
   findMatchingFestivalBooking,
   formatTransferOptionLabel,
+  getCollaboratorByCode,
+  getRememberedReferral,
   type Booking,
+  type Collaborator,
   type TransferOption,
   type TransferType,
 } from "@/lib/admin-store";
@@ -75,6 +78,37 @@ function BookTransferPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<Booking | null>(null);
+  const [partnerCode, setPartnerCode] = useState<string | null>(null);
+  const [referralPartner, setReferralPartner] = useState<Collaborator | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref") || getRememberedReferral();
+    if (!ref) return;
+
+    let active = true;
+    setPartnerCode(ref.trim().toUpperCase());
+    getCollaboratorByCode(ref)
+      .then((partner) => {
+        if (!active) return;
+        setReferralPartner(partner ?? null);
+        if (
+          !params.get("lang") &&
+          partner?.language &&
+          (partner.language === "en" || partner.language === "fr" || partner.language === "es")
+        ) {
+          changeLanguage(partner.language);
+        }
+      })
+      .catch(() => {
+        if (active) setReferralPartner(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [changeLanguage]);
 
   const transferCost = calculateTransferCost(
     form.transferType,
@@ -169,9 +203,16 @@ function BookTransferPage() {
       );
       const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
       const linkedTicket = matchedTicket?.ticketCode || "";
+      const params = new URLSearchParams(window.location.search);
+      const referralCode = params.get("ref") || partnerCode || getRememberedReferral();
+      const explicitPartner = referralCode
+        ? await getCollaboratorByCode(referralCode).catch(() => undefined)
+        : undefined;
+      const finalCollaboratorId = explicitPartner?.id ?? matchedTicket?.collaboratorId ?? null;
       const ticketNote = linkedTicket
         ? `[Linked Festival Ticket #${linkedTicket}] | Festival ticket verified (${matchedTicket?.status})`
         : "Festival ticket: none declared";
+      const referralNote = explicitPartner?.code ? `Referral: ${explicitPartner.code}` : "";
       const transferDetails = [
         `Departure ${form.transferType === "airport" ? "Airport" : "Port"}: ${form.departureAirport.trim()}`,
         `Company: ${form.company.trim()}`,
@@ -193,7 +234,7 @@ function BookTransferPage() {
           company: form.company.trim() || null,
           numPeople: Math.max(1, form.passengers),
           danceLevel: "",
-          notes: [ticketNote, form.notes.trim()].filter(Boolean).join(" | "),
+          notes: [referralNote, ticketNote, form.notes.trim()].filter(Boolean).join(" | "),
           arrivalDate: form.arrivalDate || null,
           arrivalTime: form.arrivalTime || null,
           departureDate: form.departureDate || null,
@@ -201,8 +242,8 @@ function BookTransferPage() {
           guestDetails: matchedTicket?.guestDetails || null,
           lang,
           status: "pending",
-          source: "website",
-          collaboratorId: null,
+          source: finalCollaboratorId ? "referral" : "website",
+          collaboratorId: finalCollaboratorId,
           needsTransfer: true,
           transferType: form.transferType,
           transferOption: form.transferOption,
@@ -233,6 +274,8 @@ function BookTransferPage() {
           Company: form.company,
           "Flight / Ferry": form.flightDetails || "N/A",
           Price: `€${transferCost}`,
+          Partner:
+            explicitPartner?.name || (finalCollaboratorId ? "Inherited from ticket" : "Direct"),
           Reference: booking.ticketCode,
           Notes: form.notes || "N/A",
         },
@@ -320,6 +363,18 @@ function BookTransferPage() {
             )}
           </p>
         </div>
+
+        {referralPartner && (
+          <div className="mt-6 flex items-center justify-between gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-950">
+            <span>
+              {tr("Partner referral", "Partenaire de référence", "Socio de referencia")}:{" "}
+              <strong>{referralPartner.name}</strong>
+            </span>
+            <code className="rounded-md bg-white px-2 py-1 font-mono font-bold text-blue-800">
+              {referralPartner.code}
+            </code>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
