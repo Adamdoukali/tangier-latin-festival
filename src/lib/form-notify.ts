@@ -19,6 +19,8 @@ export interface FormNotification {
   fields: Record<string, string>;
   /** Message automatically emailed back to the customer */
   autoresponse: string;
+  /** Set to false when only the festival team should receive the notification. */
+  sendGuest?: boolean;
   /** Subject of the customer's email (Resend); defaults to `subject` */
   guestSubject?: string;
   /** Guest's language ('en' | 'fr' | 'es') for the HTML email chrome */
@@ -48,6 +50,7 @@ export async function sendFormNotification(n: FormNotification): Promise<boolean
           guestSubject: n.guestSubject ?? n.subject,
           lang: n.lang ?? "en",
           ticket: n.ticket ?? null,
+          sendGuest: n.sendGuest,
         },
       });
       if (res.sent) return true;
@@ -69,7 +72,7 @@ export async function sendFormNotification(n: FormNotification): Promise<boolean
         _subject: n.subject,
         _template: "table",
         _captcha: "false",
-        _autoresponse: n.autoresponse,
+        ...(n.sendGuest === false ? {} : { _autoresponse: n.autoresponse }),
       }),
     });
     const data = await res.json().catch(() => null);

@@ -33,6 +33,8 @@ export interface EmailPayload {
   lang?: string;
   /** When set, the QR code is attached and a ticket button is shown */
   ticket?: { code: string; url: string } | null;
+  /** Set to false to send only the internal team notification. */
+  sendGuest?: boolean;
 }
 
 const esc = (s: string) =>
@@ -120,9 +122,11 @@ export const sendEmailViaResend = createServerFn({ method: "POST" })
       return { sent: false, reason: "not-configured" as const };
     }
 
+    const shouldSendGuest = data.sendGuest !== false;
+
     // QR attachment for confirmed tickets
     let attachments: Array<{ filename: string; content: string }> | undefined;
-    if (data.ticket) {
+    if (data.ticket && shouldSendGuest) {
       try {
         const dataUrl = await QRCode.toDataURL(data.ticket.url, {
           width: 480,
@@ -140,24 +144,26 @@ export const sendEmailViaResend = createServerFn({ method: "POST" })
       }
     }
 
-    const guestOk = await resendSend(apiKey, {
-      from: FROM,
-      to: [data.guestEmail],
-      reply_to: TEAM_EMAIL,
-      subject: data.guestSubject,
-      html: guestHtml(data),
-      text: data.message,
-      ...(attachments ? { attachments } : {}),
-    });
+    const guestOk = shouldSendGuest
+      ? await resendSend(apiKey, {
+          from: FROM,
+          to: [data.guestEmail],
+          reply_to: TEAM_EMAIL,
+          subject: data.guestSubject,
+          html: guestHtml(data),
+          text: data.message,
+          ...(attachments ? { attachments } : {}),
+        })
+      : true;
 
-    // Internal notification — best effort, don't fail the guest email
-    resendSend(apiKey, {
+    const teamOk = await resendSend(apiKey, {
       from: FROM,
       to: [TEAM_EMAIL],
       reply_to: data.guestEmail,
       subject: data.subject,
       html: teamHtml(data),
-    }).catch(() => {});
+    }).catch(() => false);
 
-    return { sent: guestOk, reason: guestOk ? ("ok" as const) : ("send-failed" as const) };
+    const sent = shouldSendGuest ? guestOk : teamOk;
+    return { sent, reason: sent ? ("ok" as const) : ("send-failed" as const) };
   });

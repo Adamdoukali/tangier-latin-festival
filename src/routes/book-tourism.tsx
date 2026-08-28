@@ -554,6 +554,7 @@ function BookTourismPage() {
           ...(explicitCollaborator ? { "Partner Referral": `${explicitCollaborator.name} (${explicitCollaborator.code})` } : {}),
         },
         autoresponse: "",
+        sendGuest: false,
       });
 
       setReservation(created);
@@ -659,9 +660,9 @@ function BookTourismPage() {
 
           <p className="mt-6 text-sm text-gray-600 leading-relaxed font-medium">
             {tr(
-              "An automated confirmation has been sent to your email. Our team will contact you within 24-48 hours with departure details and payment confirmation.",
-              "Un e-mail récapitulatif a été envoyé à votre adresse. Notre équipe vous contactera sous 24 à 48 heures pour les détails de départ et le règlement.",
-              "Se ha enviado un correo electrónico de confirmación. Nuestro equipo se comunicará contigo en 24-48 horas con los detalles de salida y pago."
+              "Our team will contact you by WhatsApp or phone within 24-48 hours with departure details and payment confirmation.",
+              "Notre équipe vous contactera par WhatsApp ou téléphone sous 24 à 48 heures pour les détails de départ et le règlement.",
+              "Nuestro equipo se comunicará contigo por WhatsApp o teléfono en 24-48 horas con los detalles de salida y pago."
             )}
           </p>
 
