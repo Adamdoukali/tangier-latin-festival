@@ -26,6 +26,7 @@ import {
   calculateTransferCost,
   formatTransferOptionLabel,
   ticketUrl,
+  EUR_TO_MAD,
   type Booking,
   type DiscountCode,
   type TransferType,
@@ -178,10 +179,10 @@ export function PackBookingModal({
       currency,
       pack.id,
     );
-    const madAmt = initialDiscount.discountAmount * 11;
+    const madAmt = initialDiscount.discountAmount * EUR_TO_MAD;
     const scopeText =
       initialDiscount.applyScope === "fixed_price"
-        ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * 11} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
+        ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
         : initialDiscount.applyScope === "per_person"
           ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
           : initialDiscount.discountType === "percent"
@@ -209,10 +210,10 @@ export function PackBookingModal({
         setDiscountAmount(amt);
         setDiscountInput(initialDiscount.code);
         const isMad = /mad|dh/i.test(currency);
-        const madAmt = initialDiscount.discountAmount * 11;
+        const madAmt = initialDiscount.discountAmount * EUR_TO_MAD;
         const scopeText =
           initialDiscount.applyScope === "fixed_price"
-            ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * 11} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
+            ? `Special rate: ${isMad ? `${(initialDiscount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${initialDiscount.overridePrice ?? 0}`}`
             : initialDiscount.applyScope === "per_person"
               ? `${isMad ? `-${madAmt} MAD (-€${initialDiscount.discountAmount})` : `-€${initialDiscount.discountAmount}`}/person`
               : initialDiscount.discountType === "percent"
@@ -242,10 +243,10 @@ export function PackBookingModal({
           setDiscountAmount(res.discountAmount);
           setDiscountInput(res.discount.code);
           const isMad = /mad|dh/i.test(currency);
-          const madAmt = res.discount.discountAmount * 11;
+          const madAmt = res.discount.discountAmount * EUR_TO_MAD;
           const scopeText =
             res.discount.applyScope === "fixed_price"
-              ? `Special rate: ${isMad ? `${(res.discount.overridePrice ?? 0) * 11} MAD` : `€${res.discount.overridePrice ?? 0}`}`
+              ? `Special rate: ${isMad ? `${(res.discount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${res.discount.overridePrice ?? 0}`}`
               : res.discount.applyScope === "per_person"
                 ? `${isMad ? `-${madAmt} MAD (-€${res.discount.discountAmount})` : `-€${res.discount.discountAmount}`}/person`
                 : res.discount.discountType === "percent"
@@ -290,10 +291,10 @@ export function PackBookingModal({
       setAppliedDiscount(result.discount);
       setDiscountAmount(result.discountAmount);
       const isMad = /mad|dh/i.test(currency);
-      const madAmt = result.discount.discountAmount * 11;
+      const madAmt = result.discount.discountAmount * EUR_TO_MAD;
       const scopeText =
         result.discount.applyScope === "fixed_price"
-          ? `Special rate: ${isMad ? `${(result.discount.overridePrice ?? 0) * 11} MAD` : `€${result.discount.overridePrice ?? 0}`}`
+          ? `Special rate: ${isMad ? `${(result.discount.overridePrice ?? 0) * EUR_TO_MAD} MAD` : `€${result.discount.overridePrice ?? 0}`}`
           : result.discount.applyScope === "per_person"
             ? `${isMad ? `-${madAmt} MAD (-€${result.discount.discountAmount})` : `-€${result.discount.discountAmount}`}/person`
             : result.discount.discountType === "percent"

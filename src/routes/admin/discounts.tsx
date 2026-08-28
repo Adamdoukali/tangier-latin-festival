@@ -553,7 +553,7 @@ function AdminDiscounts() {
                         min="0"
                         step="any"
                         required
-                        placeholder="e.g. 250 (Sets price to €250 / 2,750 MAD)"
+                        placeholder="e.g. 250 (Sets price to €250 / 2,500 MAD)"
                         value={form.overridePrice}
                         onChange={(e) => setForm({ ...form, overridePrice: e.target.value })}
                         className="w-full px-3.5 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 font-bold text-sm"

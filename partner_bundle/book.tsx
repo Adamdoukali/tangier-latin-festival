@@ -30,6 +30,7 @@ import {
   packGuestCount,
   packLabel,
   ticketUrl,
+  EUR_TO_MAD,
   type Pack,
   type Booking,
   type DiscountCode,
@@ -53,8 +54,6 @@ export const Route = createFileRoute("/book")({
   }),
   component: BookPage,
 });
-
-const EUR_TO_MAD = 11;
 
 function BookPage() {
   const { lang } = useLanguage();

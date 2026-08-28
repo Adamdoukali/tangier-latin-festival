@@ -38,6 +38,7 @@ import {
   isTourismBooking,
   isTransferBooking,
   ticketUrl,
+  EUR_TO_MAD,
   type Booking,
   type Pack,
   type Collaborator,
@@ -619,7 +620,9 @@ function AdminShuttlePage() {
           <p className="font-display text-2xl font-bold text-amber-700 mt-1">
             €{stats.totalRevenue}
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Approx. {stats.totalRevenue * 11} MAD</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">
+            Approx. {stats.totalRevenue * EUR_TO_MAD} MAD
+          </p>
         </div>
       </div>
 
