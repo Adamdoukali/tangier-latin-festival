@@ -880,7 +880,16 @@ function AdminBookings() {
                     value={form.departure}
                     min={formDepartureLimits?.min || form.arrival || "2027-01-01"}
                     max={formDepartureLimits?.max || "2027-01-30"}
-                    onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                    onChange={(e) => {
+                      const departure = selectedFormPack
+                        ? constrainPackDepartureDate(
+                            form.arrival,
+                            e.target.value,
+                            selectedFormPack,
+                          )
+                        : e.target.value;
+                      setForm({ ...form, departure });
+                    }}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>

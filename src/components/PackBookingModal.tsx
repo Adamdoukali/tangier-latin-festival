@@ -946,7 +946,11 @@ export function PackBookingModal({
                   value={departureDate}
                   min={departureLimits?.min || arrivalDate || "2027-01-01"}
                   max={departureLimits?.max || "2027-01-30"}
-                  onChange={(event) => setDepartureDate(event.target.value)}
+                  onChange={(event) =>
+                    setDepartureDate(
+                      constrainPackDepartureDate(arrivalDate, event.target.value, pack),
+                    )
+                  }
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>

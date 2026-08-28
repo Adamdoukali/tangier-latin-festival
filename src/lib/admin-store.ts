@@ -378,7 +378,9 @@ export function constrainPackDepartureDate(
 ): string {
   const limits = packDepartureDateLimits(arrivalDate, pack);
   if (!limits) return departureDate;
-  if (!departureDate || departureDate < limits.min || departureDate > limits.max) return limits.max;
+  if (!departureDate) return limits.max;
+  if (departureDate < limits.min) return limits.min;
+  if (departureDate > limits.max) return limits.max;
   return departureDate;
 }
 
