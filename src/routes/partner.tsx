@@ -1346,6 +1346,20 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const liveFestival = myBookings.filter(
     (b) => !isTourismBooking(b) && !isTransferBooking(b) && b.status !== "declined",
   );
+  const missionGoal = Math.max(0, Number(partner.missionGoal) || 0);
+  const missionParticipants = liveFestival
+    .filter((booking) => booking.source !== "invite")
+    .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
+  const missionCreditedParticipants = Math.min(missionGoal, missionParticipants);
+  const missionRemaining = Math.max(0, missionGoal - missionParticipants);
+  const missionPercent = missionGoal
+    ? Math.min(100, Math.round((missionCreditedParticipants / missionGoal) * 100))
+    : 0;
+  const missionComplete = missionGoal > 0 && missionParticipants >= missionGoal;
+  const missionReward = formatMoney(
+    partner.missionReward ?? 0,
+    partner.missionCurrency ?? accountCurrency,
+  );
   const doubleRoomCount = liveFestival.filter(
     (b) =>
       packRoomCategory(allPacks.find((x) => x.id === b.packId) || b.packName, b.numPeople) ===
@@ -1599,6 +1613,138 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             </div>
           </div>
         </div>
+
+        {missionGoal > 0 && (
+          <section
+            className={`relative overflow-hidden rounded-3xl border shadow-xl ${
+              missionComplete
+                ? "border-emerald-300 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800"
+                : "border-blue-300 bg-gradient-to-br from-[#13234d] via-blue-900 to-indigo-800"
+            } text-white`}
+          >
+            <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-cyan-300/10 blur-3xl" />
+
+            <div className="relative p-6 sm:p-8">
+              <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+                      <Trophy className={`h-4 w-4 ${missionComplete ? "text-emerald-300" : "text-amber-300"}`} />
+                      {tr("Partner Mission", "Mission Partenaire", "Misión del Socio")}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider ${
+                        missionComplete
+                          ? "bg-emerald-300 text-emerald-950"
+                          : "bg-amber-300 text-amber-950"
+                      }`}
+                    >
+                      {missionComplete && <CheckCircle2 className="h-3.5 w-3.5" />}
+                      {missionComplete
+                        ? tr("Complete", "Terminée", "Completada")
+                        : tr("In progress", "En cours", "En progreso")}
+                    </span>
+                  </div>
+
+                  <h2 className="mt-4 font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
+                    {missionComplete
+                      ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
+                      : tr("Your mission is underway", "Votre mission est en cours", "Tu misión está en marcha")}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+                    {missionComplete
+                      ? tr(
+                          `You reached the target of ${missionGoal} participants and unlocked the ${missionReward} reward.`,
+                          `Vous avez atteint l'objectif de ${missionGoal} participants et débloqué la récompense de ${missionReward}.`,
+                          `Alcanzaste el objetivo de ${missionGoal} participantes y desbloqueaste la recompensa de ${missionReward}.`,
+                        )
+                      : tr(
+                          `${missionRemaining} more ${missionRemaining === 1 ? "participant" : "participants"} to unlock your ${missionReward} reward.`,
+                          `Encore ${missionRemaining} participant${missionRemaining === 1 ? "" : "s"} pour débloquer votre récompense de ${missionReward}.`,
+                          `Faltan ${missionRemaining} participante${missionRemaining === 1 ? "" : "s"} para desbloquear tu recompensa de ${missionReward}.`,
+                        )}
+                  </p>
+
+                  <div className="mt-6">
+                    <div className="mb-2 flex items-end justify-between gap-4 text-xs font-bold">
+                      <span className="text-blue-100">
+                        {tr("Mission progress", "Progression de la mission", "Progreso de la misión")}
+                      </span>
+                      <span className="text-white">
+                        {missionCreditedParticipants} / {missionGoal} · {missionPercent}%
+                      </span>
+                    </div>
+                    <div
+                      className="h-3 overflow-hidden rounded-full border border-white/15 bg-black/25 p-0.5"
+                      role="progressbar"
+                      aria-label={tr("Mission progress", "Progression de la mission", "Progreso de la misión")}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={missionPercent}
+                    >
+                      <div
+                        className={`h-full rounded-full transition-[width] duration-700 ${
+                          missionComplete
+                            ? "bg-gradient-to-r from-emerald-300 to-cyan-300"
+                            : "bg-gradient-to-r from-amber-300 via-yellow-300 to-cyan-300"
+                        }`}
+                        style={{ width: `${missionPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {[
+                      {
+                        label: tr("Qualified", "Qualifiés", "Calificados"),
+                        value: missionParticipants,
+                      },
+                      { label: tr("Goal", "Objectif", "Objetivo"), value: missionGoal },
+                      {
+                        label: tr("Remaining", "Restants", "Restantes"),
+                        value: missionRemaining,
+                      },
+                      { label: tr("Reward", "Récompense", "Recompensa"), value: missionReward },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm"
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                          {item.label}
+                        </p>
+                        <p className="mt-1 truncate text-lg font-black text-white" title={String(item.value)}>
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mx-auto shrink-0 lg:mx-4">
+                  <div
+                    className="grid h-36 w-36 place-items-center rounded-full p-2 shadow-2xl"
+                    style={{
+                      background: `conic-gradient(${missionComplete ? "#6ee7b7" : "#fcd34d"} ${missionPercent * 3.6}deg, rgba(255,255,255,.14) 0deg)`,
+                    }}
+                  >
+                    <div className="grid h-full w-full place-items-center rounded-full border border-white/15 bg-[#102044]/95 text-center shadow-inner">
+                      <div>
+                        <p className="font-display text-3xl font-black text-white">{missionPercent}%</p>
+                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-blue-200">
+                          {missionComplete
+                            ? tr("Completed", "Terminée", "Completada")
+                            : tr("Completed", "Accomplie", "Completado")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* SELLING REFERRAL LINKS                                          */}
