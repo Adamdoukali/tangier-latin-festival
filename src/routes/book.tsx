@@ -29,6 +29,8 @@ import {
   formatTransferOptionLabel,
   packGuestCount,
   packLabel,
+  packNightCount,
+  packDepartureDate,
   ticketUrl,
   EUR_TO_MAD,
   partnerCurrency,
@@ -102,6 +104,8 @@ function BookPage() {
     departure: "2027-01-11",
     notes: "",
   });
+  const selectedNightCount = packNightCount(selected);
+  const requiredDepartureDate = selected ? packDepartureDate(form.arrival, selected) : null;
 
   useEffect(() => {
     getActivePacks().then((loaded) => {
@@ -117,6 +121,7 @@ function BookPage() {
               setForm((f) => ({
                 ...f,
                 guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
+                departure: packDepartureDate(f.arrival, p) ?? f.departure,
               }));
             }
           });
@@ -275,6 +280,7 @@ function BookPage() {
     setForm((f) => ({
       ...f,
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
+      departure: packDepartureDate(f.arrival, p) ?? f.departure,
     }));
     if (appliedDiscount) {
       if (!isDiscountApplicableToPack(appliedDiscount, p.id)) {
@@ -299,13 +305,16 @@ function BookPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const departureDate = selected
+      ? (packDepartureDate(form.arrival, selected) ?? form.departure)
+      : form.departure;
     if (
       !selected ||
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
       !form.email.trim() ||
       !form.phone.trim() ||
       !form.arrival.trim() ||
-      !form.departure.trim()
+      !departureDate.trim()
     )
       return;
 
@@ -338,7 +347,7 @@ function BookPage() {
         danceLevel: "",
         notes: form.notes,
         arrivalDate: form.arrival || null,
-        departureDate: form.departure || null,
+        departureDate: departureDate || null,
         lang,
         status: "pending",
         source: collaborator ? "referral" : "website",
@@ -368,7 +377,7 @@ function BookPage() {
           Phone: form.phone,
           Country: form.country,
           Arrival: form.arrival,
-          Departure: form.departure,
+          Departure: departureDate,
           ticketCode: created?.ticketCode ?? "",
           Notes: form.notes,
           ...(created ? { Reservation: created.ticketCode } : {}),
@@ -700,7 +709,11 @@ function BookPage() {
                   onFocus={() => {
                     if (!form.arrival) setForm((f) => ({ ...f, arrival: "2027-01-01" }));
                   }}
-                  onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+                  onChange={(e) => {
+                    const arrival = e.target.value;
+                    const departure = selected ? packDepartureDate(arrival, selected) : null;
+                    setForm({ ...form, arrival, departure: departure ?? form.departure });
+                  }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -713,17 +726,34 @@ function BookPage() {
                   type="date"
                   required
                   value={form.departure}
-                  min={form.arrival || "2027-01-01"}
-                  max="2027-01-30"
+                  min={requiredDepartureDate || form.arrival || "2027-01-01"}
+                  max={requiredDepartureDate || "2027-01-30"}
+                  readOnly={!!requiredDepartureDate}
                   onFocus={() => {
-                    if (!form.departure)
+                    if (requiredDepartureDate) {
+                      setForm((f) => ({ ...f, departure: requiredDepartureDate }));
+                    } else if (!form.departure) {
                       setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                    }
                   }}
-                  onChange={(e) => setForm({ ...form, departure: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  onChange={(e) => {
+                    if (!requiredDepartureDate) setForm({ ...form, departure: e.target.value });
+                  }}
+                  className={`w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition ${
+                    requiredDepartureDate ? "bg-amber-50 cursor-not-allowed" : "bg-white"
+                  }`}
                 />
               </div>
             </div>
+            {selectedNightCount && requiredDepartureDate && (
+              <p className="-mt-1 text-[11px] font-medium text-amber-800">
+                {tr(
+                  `${selectedNightCount}-night pack: checkout is automatically set to ${requiredDepartureDate}.`,
+                  `Pack de ${selectedNightCount} nuits : le départ est automatiquement fixé au ${requiredDepartureDate}.`,
+                  `Pack de ${selectedNightCount} noches: la salida se fija automáticamente para ${requiredDepartureDate}.`,
+                )}
+              </p>
+            )}
 
             {/* Shuttle Transfer Section */}
             <div className="hidden" aria-hidden="true">

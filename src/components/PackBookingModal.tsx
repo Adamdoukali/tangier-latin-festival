@@ -27,6 +27,8 @@ import {
   formatTransferOptionLabel,
   ticketUrl,
   EUR_TO_MAD,
+  packNightCount,
+  packDepartureDate,
   type Booking,
   type DiscountCode,
   type TransferType,
@@ -124,6 +126,11 @@ export function PackBookingModal({
   const singlePrice = parseInt(pack.price, 10) || 0;
   const totalBasePrice = singlePrice * numGuests;
   const currency = pack.currency || "€";
+  const [arrivalDate, setArrivalDate] = useState("2027-01-07");
+  const [flexibleDepartureDate, setFlexibleDepartureDate] = useState("2027-01-11");
+  const includedNights = packNightCount(pack);
+  const requiredDepartureDate = packDepartureDate(arrivalDate, pack);
+  const departureDate = requiredDepartureDate ?? flexibleDepartureDate;
 
   // Shuttle Transfer State
   const [needsTransfer, setNeedsTransfer] = useState(false);
@@ -905,9 +912,10 @@ export function PackBookingModal({
                   type="date"
                   name="Arrival Date"
                   required
-                  defaultValue="2027-01-07"
+                  value={arrivalDate}
                   min="2027-01-01"
                   max="2027-01-30"
+                  onChange={(event) => setArrivalDate(event.target.value)}
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
@@ -924,13 +932,28 @@ export function PackBookingModal({
                   type="date"
                   name="Departure Date"
                   required
-                  defaultValue="2027-01-11"
-                  min="2027-01-01"
-                  max="2027-01-30"
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                  value={departureDate}
+                  min={requiredDepartureDate || arrivalDate || "2027-01-01"}
+                  max={requiredDepartureDate || "2027-01-30"}
+                  readOnly={!!requiredDepartureDate}
+                  onChange={(event) => {
+                    if (!requiredDepartureDate) setFlexibleDepartureDate(event.target.value);
+                  }}
+                  className={`w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition ${
+                    requiredDepartureDate ? "bg-amber-50 cursor-not-allowed" : "bg-white"
+                  }`}
                 />
               </div>
             </div>
+            {includedNights && requiredDepartureDate && (
+              <p className="-mt-2 text-[11px] font-medium text-amber-800">
+                {lang === "fr"
+                  ? `Pack de ${includedNights} nuits : départ automatique le ${requiredDepartureDate}.`
+                  : lang === "es"
+                    ? `Pack de ${includedNights} noches: salida automática el ${requiredDepartureDate}.`
+                    : `${includedNights}-night pack: checkout is automatically ${requiredDepartureDate}.`}
+              </p>
+            )}
 
             {/* Transfers now use the standalone /book-transfer form. */}
             <div className="hidden" aria-hidden="true">

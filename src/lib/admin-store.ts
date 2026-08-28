@@ -321,6 +321,41 @@ export function packLabel(
   return pack.sub ? `${pack.name} — ${pack.sub}` : pack.name;
 }
 
+/** Number of hotel nights included in a pack, derived from its title,
+ * subtitle, category, or features. Non-hotel passes return null. */
+export function packNightCount(
+  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
+): number | null {
+  if (!pack) return null;
+  const text = [pack.name, pack.sub, pack.category, ...(pack.features ?? [])]
+    .filter(Boolean)
+    .join(" ");
+  const match = text.match(/(\d+)\s*(?:night|nuit|noche)s?/i);
+  if (!match) return null;
+  const nights = Number(match[1]);
+  return Number.isInteger(nights) && nights > 0 ? nights : null;
+}
+
+/** Exact checkout date required by a hotel pack. */
+export function packDepartureDate(
+  arrivalDate: string,
+  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
+): string | null {
+  const nights = packNightCount(pack);
+  const parts = arrivalDate.split("-").map(Number);
+  if (!nights || parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
+  const [year, month, day] = parts;
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  )
+    return null;
+  date.setUTCDate(date.getUTCDate() + nights);
+  return date.toISOString().slice(0, 10);
+}
+
 /** Public verification page for a ticket — this is what ticket QRs encode,
  *  so any phone camera opens it and shows valid / pending / already used. */
 export function ticketUrl(code: string): string {

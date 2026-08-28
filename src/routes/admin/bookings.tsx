@@ -24,6 +24,8 @@ import {
   getCollaborators,
   packLabel,
   packGuestCount,
+  packNightCount,
+  packDepartureDate,
   packPrice,
   ROOM_TYPES,
   ticketUrl,
@@ -86,6 +88,11 @@ function AdminBookings() {
     notes: "",
     status: "pending" as BookingStatus,
   });
+  const selectedFormPack = packs.find((pack) => pack.id === form.packId);
+  const selectedFormNights = packNightCount(selectedFormPack);
+  const requiredFormDeparture = selectedFormPack
+    ? packDepartureDate(form.arrival, selectedFormPack)
+    : null;
 
   const resetForm = () => {
     const initialPack = packs[0];
@@ -104,7 +111,7 @@ function AdminBookings() {
       danceLevel: "Beginner",
       arrival: "2027-01-08",
       arrivalTime: "",
-      departure: "2027-01-11",
+      departure: packDepartureDate("2027-01-08", initialPack) ?? "2027-01-11",
       departureTime: "",
       roomNumber: "",
       roomType: "",
@@ -120,12 +127,25 @@ function AdminBookings() {
       ...prev,
       packId,
       numPeople: guests > 0 ? guests : prev.numPeople,
+      departure: packDepartureDate(prev.arrival, p) ?? prev.departure,
     }));
   };
 
   const handleCreate = async () => {
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.email.trim() || !form.phone.trim() || !form.arrival.trim() || !form.departure.trim() || !form.packId) return;
+    if (
+      !form.firstName.trim() ||
+      !form.lastName.trim() ||
+      !form.email.trim() ||
+      !form.phone.trim() ||
+      !form.arrival.trim() ||
+      !form.departure.trim() ||
+      !form.packId
+    )
+      return;
     const pack = packs.find((p) => p.id === form.packId);
+    const departureDate = pack
+      ? (packDepartureDate(form.arrival, pack) ?? form.departure)
+      : form.departure;
 
     const leadName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     const extraNames = form.additionalGuests
@@ -141,7 +161,7 @@ function AdminBookings() {
       packName: packLabel(pack),
       arrivalDate: form.arrival || null,
       arrivalTime: form.arrivalTime.trim() || null,
-      departureDate: form.departure || null,
+      departureDate: departureDate || null,
       departureTime: form.departureTime.trim() || null,
       roomNumber: form.roomNumber.trim() || null,
       roomType: form.roomType.trim() || null,
@@ -151,7 +171,6 @@ function AdminBookings() {
     setShowForm(false);
     await reload();
   };
-
 
   const handleStatusChange = async (id: string, status: BookingStatus) => {
     setStatusError("");
@@ -826,7 +845,13 @@ function AdminBookings() {
                     value={form.arrival}
                     min="2027-01-01"
                     max="2027-01-30"
-                    onChange={(e) => setForm({ ...form, arrival: e.target.value })}
+                    onChange={(e) => {
+                      const arrival = e.target.value;
+                      const departure = selectedFormPack
+                        ? packDepartureDate(arrival, selectedFormPack)
+                        : null;
+                      setForm({ ...form, arrival, departure: departure ?? form.departure });
+                    }}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
@@ -854,11 +879,22 @@ function AdminBookings() {
                     type="date"
                     required
                     value={form.departure}
-                    min={form.arrival || "2027-01-01"}
-                    max="2027-01-30"
-                    onChange={(e) => setForm({ ...form, departure: e.target.value })}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                    min={requiredFormDeparture || form.arrival || "2027-01-01"}
+                    max={requiredFormDeparture || "2027-01-30"}
+                    readOnly={!!requiredFormDeparture}
+                    onChange={(e) => {
+                      if (!requiredFormDeparture)
+                        setForm({ ...form, departure: e.target.value });
+                    }}
+                    className={`w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition ${
+                      requiredFormDeparture ? "bg-amber-50 cursor-not-allowed" : "bg-white"
+                    }`}
                   />
+                  {selectedFormNights && requiredFormDeparture && (
+                    <p className="mt-1 text-[10px] font-medium text-amber-700">
+                      {selectedFormNights} nights · automatic checkout
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
