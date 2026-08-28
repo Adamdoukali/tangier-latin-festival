@@ -544,7 +544,7 @@ function BookTransferPage() {
                   </div>
 
                   {passenger.going && (
-                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
                       <Field label={tr("First name", "Prénom", "Nombre")} required>
                         <input
                           required
@@ -578,17 +578,17 @@ function BookTransferPage() {
                         )}
                         required
                       >
-                        <div className="flex">
+                        <div className="flex w-full min-w-0">
                           <PhoneCountrySelect
                             name={`Phone Country Code ${passenger.id}`}
-                            className="rounded-l-xl border border-slate-300 border-r-0 bg-white text-xs"
+                            className="w-[96px] shrink-0 rounded-l-xl border border-slate-300 border-r-0 bg-white px-2 text-xs sm:w-[110px] sm:px-3"
                           />
                           <input
                             type="tel"
                             required
                             value={passenger.phone}
                             onChange={(e) => setPassenger(passenger.id, "phone", e.target.value)}
-                            className="min-w-0 flex-1 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600"
+                            className="w-0 min-w-0 flex-1 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600"
                           />
                         </div>
                       </Field>
@@ -725,7 +725,7 @@ function BookTransferPage() {
               </button>
             </div>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
               <Field
                 label={tr(
                   "Tangier arrival/departure hub",
@@ -943,7 +943,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block">
+    <label className="block min-w-0 max-w-full">
       <span className="mb-1.5 block text-xs font-bold text-slate-700">
         {label} {required && <span className="text-red-600">*</span>}
       </span>
@@ -963,7 +963,7 @@ function TransferShell({
 }) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">
-      <style>{`.form-input{width:100%;border-radius:.75rem;border:1px solid rgb(203 213 225);background:white;padding:.625rem .75rem;font-size:.875rem;color:rgb(15 23 42);outline:none}.form-input:focus{border-color:rgb(37 99 235)}`}</style>
+      <style>{`.form-input{box-sizing:border-box;width:100%;min-width:0;max-width:100%;border-radius:.75rem;border:1px solid rgb(203 213 225);background:white;padding:.625rem .75rem;font-size:.875rem;color:rgb(15 23 42);outline:none}.form-input:focus{border-color:rgb(37 99 235)}`}</style>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-4">
           <Link
