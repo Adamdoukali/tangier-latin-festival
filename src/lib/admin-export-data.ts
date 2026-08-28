@@ -325,9 +325,13 @@ export function buildCollaboratorSummarySpreadsheet(
     );
     const currency = partnerCurrency(collaborator);
     const sales = moneyIn(revenue, currency) + moneyIn({ eur: transferSales, mad: 0 }, currency);
-    const earned = moneyIn(commission, currency);
     const mission = collaboratorMissionProgress(collaborator, bookings);
     const reward = moneyIn(mission.reward, currency);
+    // The shared commission total already contains the unlocked mission reward.
+    // Keep the Excel columns separate so the workbook follows:
+    // festival due = sales - (sales commission + mission reward).
+    const earnedIncludingMission = moneyIn(commission, currency);
+    const salesCommission = Math.max(0, earnedIncludingMission - reward);
 
     return [
       collaborator.name,
@@ -339,8 +343,8 @@ export function buildCollaboratorSummarySpreadsheet(
       transfers,
       participants,
       roundMoney(sales),
-      roundMoney(earned),
-      roundMoney(Math.max(0, sales - earned)),
+      roundMoney(salesCommission),
+      roundMoney(sales - (salesCommission + reward)),
       commissionLabel(collaborator),
       mission.goal ? `${mission.creditedParticipants}/${mission.goal}` : "",
       roundMoney(reward),
@@ -361,6 +365,7 @@ export function buildCollaboratorSummarySpreadsheet(
   total[13] = roundMoney(
     rows.reduce((sum, row) => sum + (typeof row[13] === "number" ? row[13] : 0), 0),
   );
+  total[10] = roundMoney(Number(total[8] || 0) - (Number(total[9] || 0) + Number(total[13] || 0)));
 
   return [COLLABORATOR_SUMMARY_HEADER, ...rows, total];
 }
