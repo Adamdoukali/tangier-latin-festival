@@ -29,7 +29,6 @@ import {
   formatTransferOptionLabel,
   packGuestCount,
   packLabel,
-  packNightCount,
   packDepartureDateLimits,
   constrainPackDepartureDate,
   ticketUrl,
@@ -105,7 +104,6 @@ function BookPage() {
     departure: "2027-01-11",
     notes: "",
   });
-  const selectedNightCount = packNightCount(selected);
   const departureLimits = selected ? packDepartureDateLimits(form.arrival, selected) : null;
 
   useEffect(() => {
@@ -744,16 +742,6 @@ function BookPage() {
                 />
               </div>
             </div>
-            {selectedNightCount && departureLimits && (
-              <p className="-mt-1 text-[11px] font-medium text-amber-800">
-                {tr(
-                  `Choose up to ${selectedNightCount} nights. The latest checkout is ${departureLimits.max}.`,
-                  `Choisissez jusqu'à ${selectedNightCount} nuits. Le dernier départ possible est le ${departureLimits.max}.`,
-                  `Elige hasta ${selectedNightCount} noches. La última salida posible es el ${departureLimits.max}.`,
-                )}
-              </p>
-            )}
-
             {/* Shuttle Transfer Section */}
             <div className="hidden" aria-hidden="true">
               <div className="flex items-center justify-between">

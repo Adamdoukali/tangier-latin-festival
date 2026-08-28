@@ -22,7 +22,6 @@ import {
   getPackById,
   redeemInvite,
   packGuestCount,
-  packNightCount,
   packDepartureDateLimits,
   constrainPackDepartureDate,
   ticketUrl,
@@ -61,7 +60,6 @@ function RedeemPage() {
     departure: "2027-01-11",
     notes: "",
   });
-  const includedNights = packNightCount(pack);
   const departureLimits = pack ? packDepartureDateLimits(form.arrival, pack) : null;
 
   // Look up invite on load
@@ -607,11 +605,6 @@ function RedeemPage() {
                 />
               </div>
             </div>
-            {includedNights && departureLimits && (
-              <p className="-mt-1 text-[11px] font-medium text-amber-800">
-                Choose up to {includedNights} nights. Latest checkout: {departureLimits.max}.
-              </p>
-            )}
           </div>
 
 

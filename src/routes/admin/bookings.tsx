@@ -24,7 +24,6 @@ import {
   getCollaborators,
   packLabel,
   packGuestCount,
-  packNightCount,
   packDepartureDateLimits,
   constrainPackDepartureDate,
   packPrice,
@@ -90,7 +89,6 @@ function AdminBookings() {
     status: "pending" as BookingStatus,
   });
   const selectedFormPack = packs.find((pack) => pack.id === form.packId);
-  const selectedFormNights = packNightCount(selectedFormPack);
   const formDepartureLimits = selectedFormPack
     ? packDepartureDateLimits(form.arrival, selectedFormPack)
     : null;
@@ -885,11 +883,6 @@ function AdminBookings() {
                     onChange={(e) => setForm({ ...form, departure: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
-                  {selectedFormNights && formDepartureLimits && (
-                    <p className="mt-1 text-[10px] font-medium text-amber-700">
-                      Up to {selectedFormNights} nights · latest checkout {formDepartureLimits.max}
-                    </p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">

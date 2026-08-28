@@ -27,7 +27,6 @@ import {
   formatTransferOptionLabel,
   ticketUrl,
   EUR_TO_MAD,
-  packNightCount,
   packDepartureDateLimits,
   constrainPackDepartureDate,
   type Booking,
@@ -131,7 +130,6 @@ export function PackBookingModal({
   const [departureDate, setDepartureDate] = useState(() =>
     constrainPackDepartureDate("2027-01-07", "2027-01-11", pack),
   );
-  const includedNights = packNightCount(pack);
   const departureLimits = packDepartureDateLimits(arrivalDate, pack);
 
   // Shuttle Transfer State
@@ -953,16 +951,6 @@ export function PackBookingModal({
                 />
               </div>
             </div>
-            {includedNights && departureLimits && (
-              <p className="-mt-2 text-[11px] font-medium text-amber-800">
-                {lang === "fr"
-                  ? `Choisissez jusqu'à ${includedNights} nuits. Dernier départ : ${departureLimits.max}.`
-                  : lang === "es"
-                    ? `Elige hasta ${includedNights} noches. Última salida: ${departureLimits.max}.`
-                    : `Choose up to ${includedNights} nights. Latest checkout: ${departureLimits.max}.`}
-              </p>
-            )}
-
             {/* Transfers now use the standalone /book-transfer form. */}
             <div className="hidden" aria-hidden="true">
               <div className="flex items-center justify-between">
