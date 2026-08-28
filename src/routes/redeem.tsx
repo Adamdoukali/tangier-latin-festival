@@ -23,7 +23,8 @@ import {
   redeemInvite,
   packGuestCount,
   packNightCount,
-  packDepartureDate,
+  packDepartureDateLimits,
+  constrainPackDepartureDate,
   ticketUrl,
   type Invite,
   type Pack,
@@ -61,7 +62,7 @@ function RedeemPage() {
     notes: "",
   });
   const includedNights = packNightCount(pack);
-  const requiredDepartureDate = pack ? packDepartureDate(form.arrival, pack) : null;
+  const departureLimits = pack ? packDepartureDateLimits(form.arrival, pack) : null;
 
   // Look up invite on load
   useEffect(() => {
@@ -96,7 +97,7 @@ function RedeemPage() {
           firstName: "",
           lastName: "",
         })),
-        departure: packDepartureDate(f.arrival, foundPack) ?? f.departure,
+        departure: constrainPackDepartureDate(f.arrival, f.departure, foundPack),
       }));
     })();
     return () => {
@@ -114,7 +115,7 @@ function RedeemPage() {
     e.preventDefault();
     if (!code || !invite) return;
     const departureDate = pack
-      ? (packDepartureDate(form.arrival, pack) ?? form.departure)
+      ? constrainPackDepartureDate(form.arrival, form.departure, pack)
       : form.departure;
     if (
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
@@ -575,8 +576,10 @@ function RedeemPage() {
                   }}
                   onChange={(e) => {
                     const arrival = e.target.value;
-                    const departure = pack ? packDepartureDate(arrival, pack) : null;
-                    setForm({ ...form, arrival, departure: departure ?? form.departure });
+                    const departure = pack
+                      ? constrainPackDepartureDate(arrival, form.departure, pack)
+                      : form.departure;
+                    setForm({ ...form, arrival, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
@@ -589,28 +592,24 @@ function RedeemPage() {
                   type="date"
                   required
                   value={form.departure}
-                  min={requiredDepartureDate || form.arrival || "2027-01-01"}
-                  max={requiredDepartureDate || "2027-01-30"}
-                  readOnly={!!requiredDepartureDate}
+                  min={departureLimits?.min || form.arrival || "2027-01-01"}
+                  max={departureLimits?.max || "2027-01-30"}
                   onFocus={() => {
-                    if (requiredDepartureDate) {
-                      setForm((f) => ({ ...f, departure: requiredDepartureDate }));
-                    } else if (!form.departure) {
-                      setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                    if (!form.departure) {
+                      setForm((f) => ({
+                        ...f,
+                        departure: departureLimits?.max || form.arrival || "2027-01-11",
+                      }));
                     }
                   }}
-                  onChange={(e) => {
-                    if (!requiredDepartureDate) setForm({ ...form, departure: e.target.value });
-                  }}
-                  className={`w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition ${
-                    requiredDepartureDate ? "bg-amber-50 cursor-not-allowed" : "bg-white"
-                  }`}
+                  onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
-            {includedNights && requiredDepartureDate && (
+            {includedNights && departureLimits && (
               <p className="-mt-1 text-[11px] font-medium text-amber-800">
-                {includedNights}-night pack: checkout is automatically set to {requiredDepartureDate}.
+                Choose up to {includedNights} nights. Latest checkout: {departureLimits.max}.
               </p>
             )}
           </div>

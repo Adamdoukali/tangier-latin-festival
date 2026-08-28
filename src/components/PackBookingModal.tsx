@@ -28,7 +28,8 @@ import {
   ticketUrl,
   EUR_TO_MAD,
   packNightCount,
-  packDepartureDate,
+  packDepartureDateLimits,
+  constrainPackDepartureDate,
   type Booking,
   type DiscountCode,
   type TransferType,
@@ -127,10 +128,11 @@ export function PackBookingModal({
   const totalBasePrice = singlePrice * numGuests;
   const currency = pack.currency || "€";
   const [arrivalDate, setArrivalDate] = useState("2027-01-07");
-  const [flexibleDepartureDate, setFlexibleDepartureDate] = useState("2027-01-11");
+  const [departureDate, setDepartureDate] = useState(() =>
+    constrainPackDepartureDate("2027-01-07", "2027-01-11", pack),
+  );
   const includedNights = packNightCount(pack);
-  const requiredDepartureDate = packDepartureDate(arrivalDate, pack);
-  const departureDate = requiredDepartureDate ?? flexibleDepartureDate;
+  const departureLimits = packDepartureDateLimits(arrivalDate, pack);
 
   // Shuttle Transfer State
   const [needsTransfer, setNeedsTransfer] = useState(false);
@@ -575,6 +577,11 @@ export function PackBookingModal({
               setIsSubmitting(true);
               setError(false);
               const formData = new FormData(e.currentTarget);
+              const savedDepartureDate = constrainPackDepartureDate(
+                arrivalDate,
+                departureDate,
+                pack,
+              );
 
               // Attribute the booking to a collaborator if the visitor
               // arrived via a referral link (/packs?ref=CODE).
@@ -655,9 +662,9 @@ export function PackBookingModal({
                   phone,
                   country: String(formData.get("Country") ?? ""),
                   company: transportCompany.trim() || null,
-                  arrivalDate: String(formData.get("Arrival Date") ?? "") || null,
+                  arrivalDate: arrivalDate || null,
                   arrivalTime: arrivalTime.trim() || null,
-                  departureDate: String(formData.get("Departure Date") ?? "") || null,
+                  departureDate: savedDepartureDate || null,
                   departureTime: departureTime.trim() || null,
                   numPeople: numGuests,
                   guestDetails: JSON.stringify(guestsStructured),
@@ -717,8 +724,8 @@ export function PackBookingModal({
                     pack: pack.sub ? `${pack.name} — ${pack.sub}` : pack.name,
                     price: `${finalTotalPrice} ${currency}`,
                     guests: String(numGuests),
-                    arrival: `${String(formData.get("Arrival Date") ?? "")}${arrivalTime ? " " + arrivalTime : ""}`,
-                    departure: `${String(formData.get("Departure Date") ?? "")}${departureTime ? " " + departureTime : ""}`,
+                    arrival: `${arrivalDate}${arrivalTime ? " " + arrivalTime : ""}`,
+                    departure: `${savedDepartureDate}${departureTime ? " " + departureTime : ""}`,
                     shuttleTransfer: transferSummary,
                     ticketCode: created?.ticketCode ?? "",
                     Notes: String(formData.get("Notes") ?? ""),
@@ -915,7 +922,13 @@ export function PackBookingModal({
                   value={arrivalDate}
                   min="2027-01-01"
                   max="2027-01-30"
-                  onChange={(event) => setArrivalDate(event.target.value)}
+                  onChange={(event) => {
+                    const arrival = event.target.value;
+                    setArrivalDate(arrival);
+                    setDepartureDate((current) =>
+                      constrainPackDepartureDate(arrival, current, pack),
+                    );
+                  }}
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
@@ -933,25 +946,20 @@ export function PackBookingModal({
                   name="Departure Date"
                   required
                   value={departureDate}
-                  min={requiredDepartureDate || arrivalDate || "2027-01-01"}
-                  max={requiredDepartureDate || "2027-01-30"}
-                  readOnly={!!requiredDepartureDate}
-                  onChange={(event) => {
-                    if (!requiredDepartureDate) setFlexibleDepartureDate(event.target.value);
-                  }}
-                  className={`w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition ${
-                    requiredDepartureDate ? "bg-amber-50 cursor-not-allowed" : "bg-white"
-                  }`}
+                  min={departureLimits?.min || arrivalDate || "2027-01-01"}
+                  max={departureLimits?.max || "2027-01-30"}
+                  onChange={(event) => setDepartureDate(event.target.value)}
+                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>
             </div>
-            {includedNights && requiredDepartureDate && (
+            {includedNights && departureLimits && (
               <p className="-mt-2 text-[11px] font-medium text-amber-800">
                 {lang === "fr"
-                  ? `Pack de ${includedNights} nuits : départ automatique le ${requiredDepartureDate}.`
+                  ? `Choisissez jusqu'à ${includedNights} nuits. Dernier départ : ${departureLimits.max}.`
                   : lang === "es"
-                    ? `Pack de ${includedNights} noches: salida automática el ${requiredDepartureDate}.`
-                    : `${includedNights}-night pack: checkout is automatically ${requiredDepartureDate}.`}
+                    ? `Elige hasta ${includedNights} noches. Última salida: ${departureLimits.max}.`
+                    : `Choose up to ${includedNights} nights. Latest checkout: ${departureLimits.max}.`}
               </p>
             )}
 

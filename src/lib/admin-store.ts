@@ -336,14 +336,9 @@ export function packNightCount(
   return Number.isInteger(nights) && nights > 0 ? nights : null;
 }
 
-/** Exact checkout date required by a hotel pack. */
-export function packDepartureDate(
-  arrivalDate: string,
-  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
-): string | null {
-  const nights = packNightCount(pack);
-  const parts = arrivalDate.split("-").map(Number);
-  if (!nights || parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
+function dateAfterDays(dateValue: string, days: number): string | null {
+  const parts = dateValue.split("-").map(Number);
+  if (!days || parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
   const [year, month, day] = parts;
   const date = new Date(Date.UTC(year, month - 1, day));
   if (
@@ -352,8 +347,39 @@ export function packDepartureDate(
     date.getUTCDate() !== day
   )
     return null;
-  date.setUTCDate(date.getUTCDate() + nights);
+  date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+/** Latest checkout date allowed by a hotel pack. */
+export function packDepartureDate(
+  arrivalDate: string,
+  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
+): string | null {
+  const nights = packNightCount(pack);
+  return nights ? dateAfterDays(arrivalDate, nights) : null;
+}
+
+/** Selectable checkout range: at least one night, never beyond the pack duration. */
+export function packDepartureDateLimits(
+  arrivalDate: string,
+  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
+): { min: string; max: string } | null {
+  const min = dateAfterDays(arrivalDate, 1);
+  const max = packDepartureDate(arrivalDate, pack);
+  return min && max ? { min, max } : null;
+}
+
+/** Keep a submitted checkout inside the hotel pack's selectable range. */
+export function constrainPackDepartureDate(
+  arrivalDate: string,
+  departureDate: string,
+  pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
+): string {
+  const limits = packDepartureDateLimits(arrivalDate, pack);
+  if (!limits) return departureDate;
+  if (!departureDate || departureDate < limits.min || departureDate > limits.max) return limits.max;
+  return departureDate;
 }
 
 /** Public verification page for a ticket — this is what ticket QRs encode,

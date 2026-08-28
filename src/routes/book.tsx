@@ -30,7 +30,8 @@ import {
   packGuestCount,
   packLabel,
   packNightCount,
-  packDepartureDate,
+  packDepartureDateLimits,
+  constrainPackDepartureDate,
   ticketUrl,
   EUR_TO_MAD,
   partnerCurrency,
@@ -105,7 +106,7 @@ function BookPage() {
     notes: "",
   });
   const selectedNightCount = packNightCount(selected);
-  const requiredDepartureDate = selected ? packDepartureDate(form.arrival, selected) : null;
+  const departureLimits = selected ? packDepartureDateLimits(form.arrival, selected) : null;
 
   useEffect(() => {
     getActivePacks().then((loaded) => {
@@ -121,7 +122,7 @@ function BookPage() {
               setForm((f) => ({
                 ...f,
                 guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
-                departure: packDepartureDate(f.arrival, p) ?? f.departure,
+                departure: constrainPackDepartureDate(f.arrival, f.departure, p),
               }));
             }
           });
@@ -280,7 +281,7 @@ function BookPage() {
     setForm((f) => ({
       ...f,
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
-      departure: packDepartureDate(f.arrival, p) ?? f.departure,
+      departure: constrainPackDepartureDate(f.arrival, f.departure, p),
     }));
     if (appliedDiscount) {
       if (!isDiscountApplicableToPack(appliedDiscount, p.id)) {
@@ -306,7 +307,7 @@ function BookPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const departureDate = selected
-      ? (packDepartureDate(form.arrival, selected) ?? form.departure)
+      ? constrainPackDepartureDate(form.arrival, form.departure, selected)
       : form.departure;
     if (
       !selected ||
@@ -711,8 +712,10 @@ function BookPage() {
                   }}
                   onChange={(e) => {
                     const arrival = e.target.value;
-                    const departure = selected ? packDepartureDate(arrival, selected) : null;
-                    setForm({ ...form, arrival, departure: departure ?? form.departure });
+                    const departure = selected
+                      ? constrainPackDepartureDate(arrival, form.departure, selected)
+                      : form.departure;
+                    setForm({ ...form, arrival, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
@@ -726,31 +729,27 @@ function BookPage() {
                   type="date"
                   required
                   value={form.departure}
-                  min={requiredDepartureDate || form.arrival || "2027-01-01"}
-                  max={requiredDepartureDate || "2027-01-30"}
-                  readOnly={!!requiredDepartureDate}
+                  min={departureLimits?.min || form.arrival || "2027-01-01"}
+                  max={departureLimits?.max || "2027-01-30"}
                   onFocus={() => {
-                    if (requiredDepartureDate) {
-                      setForm((f) => ({ ...f, departure: requiredDepartureDate }));
-                    } else if (!form.departure) {
-                      setForm((f) => ({ ...f, departure: form.arrival || "2027-01-11" }));
+                    if (!form.departure) {
+                      setForm((f) => ({
+                        ...f,
+                        departure: departureLimits?.max || form.arrival || "2027-01-11",
+                      }));
                     }
                   }}
-                  onChange={(e) => {
-                    if (!requiredDepartureDate) setForm({ ...form, departure: e.target.value });
-                  }}
-                  className={`w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition ${
-                    requiredDepartureDate ? "bg-amber-50 cursor-not-allowed" : "bg-white"
-                  }`}
+                  onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
             </div>
-            {selectedNightCount && requiredDepartureDate && (
+            {selectedNightCount && departureLimits && (
               <p className="-mt-1 text-[11px] font-medium text-amber-800">
                 {tr(
-                  `${selectedNightCount}-night pack: checkout is automatically set to ${requiredDepartureDate}.`,
-                  `Pack de ${selectedNightCount} nuits : le départ est automatiquement fixé au ${requiredDepartureDate}.`,
-                  `Pack de ${selectedNightCount} noches: la salida se fija automáticamente para ${requiredDepartureDate}.`,
+                  `Choose up to ${selectedNightCount} nights. The latest checkout is ${departureLimits.max}.`,
+                  `Choisissez jusqu'à ${selectedNightCount} nuits. Le dernier départ possible est le ${departureLimits.max}.`,
+                  `Elige hasta ${selectedNightCount} noches. La última salida posible es el ${departureLimits.max}.`,
                 )}
               </p>
             )}

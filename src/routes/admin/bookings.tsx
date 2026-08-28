@@ -25,7 +25,8 @@ import {
   packLabel,
   packGuestCount,
   packNightCount,
-  packDepartureDate,
+  packDepartureDateLimits,
+  constrainPackDepartureDate,
   packPrice,
   ROOM_TYPES,
   ticketUrl,
@@ -90,8 +91,8 @@ function AdminBookings() {
   });
   const selectedFormPack = packs.find((pack) => pack.id === form.packId);
   const selectedFormNights = packNightCount(selectedFormPack);
-  const requiredFormDeparture = selectedFormPack
-    ? packDepartureDate(form.arrival, selectedFormPack)
+  const formDepartureLimits = selectedFormPack
+    ? packDepartureDateLimits(form.arrival, selectedFormPack)
     : null;
 
   const resetForm = () => {
@@ -111,7 +112,7 @@ function AdminBookings() {
       danceLevel: "Beginner",
       arrival: "2027-01-08",
       arrivalTime: "",
-      departure: packDepartureDate("2027-01-08", initialPack) ?? "2027-01-11",
+      departure: constrainPackDepartureDate("2027-01-08", "2027-01-11", initialPack),
       departureTime: "",
       roomNumber: "",
       roomType: "",
@@ -127,7 +128,7 @@ function AdminBookings() {
       ...prev,
       packId,
       numPeople: guests > 0 ? guests : prev.numPeople,
-      departure: packDepartureDate(prev.arrival, p) ?? prev.departure,
+      departure: constrainPackDepartureDate(prev.arrival, prev.departure, p),
     }));
   };
 
@@ -144,7 +145,7 @@ function AdminBookings() {
       return;
     const pack = packs.find((p) => p.id === form.packId);
     const departureDate = pack
-      ? (packDepartureDate(form.arrival, pack) ?? form.departure)
+      ? constrainPackDepartureDate(form.arrival, form.departure, pack)
       : form.departure;
 
     const leadName = `${form.firstName.trim()} ${form.lastName.trim()}`;
@@ -848,9 +849,9 @@ function AdminBookings() {
                     onChange={(e) => {
                       const arrival = e.target.value;
                       const departure = selectedFormPack
-                        ? packDepartureDate(arrival, selectedFormPack)
-                        : null;
-                      setForm({ ...form, arrival, departure: departure ?? form.departure });
+                        ? constrainPackDepartureDate(arrival, form.departure, selectedFormPack)
+                        : form.departure;
+                      setForm({ ...form, arrival, departure });
                     }}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
@@ -879,20 +880,14 @@ function AdminBookings() {
                     type="date"
                     required
                     value={form.departure}
-                    min={requiredFormDeparture || form.arrival || "2027-01-01"}
-                    max={requiredFormDeparture || "2027-01-30"}
-                    readOnly={!!requiredFormDeparture}
-                    onChange={(e) => {
-                      if (!requiredFormDeparture)
-                        setForm({ ...form, departure: e.target.value });
-                    }}
-                    className={`w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition ${
-                      requiredFormDeparture ? "bg-amber-50 cursor-not-allowed" : "bg-white"
-                    }`}
+                    min={formDepartureLimits?.min || form.arrival || "2027-01-01"}
+                    max={formDepartureLimits?.max || "2027-01-30"}
+                    onChange={(e) => setForm({ ...form, departure: e.target.value })}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
-                  {selectedFormNights && requiredFormDeparture && (
+                  {selectedFormNights && formDepartureLimits && (
                     <p className="mt-1 text-[10px] font-medium text-amber-700">
-                      {selectedFormNights} nights · automatic checkout
+                      Up to {selectedFormNights} nights · latest checkout {formDepartureLimits.max}
                     </p>
                   )}
                 </div>
