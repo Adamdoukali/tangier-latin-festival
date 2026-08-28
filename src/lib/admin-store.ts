@@ -2859,6 +2859,59 @@ export function isTransferBooking(b: Booking): boolean {
   );
 }
 
+export interface CollaboratorMissionProgress {
+  goal: number;
+  participants: number;
+  creditedParticipants: number;
+  remaining: number;
+  percent: number;
+  complete: boolean;
+  reward: Money;
+}
+
+/** Mission progress and the reward unlocked by qualifying festival sales.
+ * Invites, excursions, transfers and declined bookings never advance a mission. */
+export function collaboratorMissionProgress(
+  collaborator: Collaborator,
+  bookings: Booking[],
+): CollaboratorMissionProgress {
+  const goal = Math.max(0, Number(collaborator.missionGoal) || 0);
+  const participants = bookings
+    .filter(
+      (booking) =>
+        booking.collaboratorId === collaborator.id &&
+        booking.status !== "declined" &&
+        booking.source !== "invite" &&
+        !isTourismBooking(booking) &&
+        !isTransferBooking(booking),
+    )
+    .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
+  const creditedParticipants = Math.min(goal, participants);
+  const remaining = Math.max(0, goal - participants);
+  const percent = goal ? Math.min(100, Math.round((creditedParticipants / goal) * 100)) : 0;
+  const complete = goal > 0 && participants >= goal;
+  const rewardAmount = complete ? Math.max(0, Number(collaborator.missionReward) || 0) : 0;
+  const reward: Money =
+    collaborator.missionCurrency === "MAD"
+      ? { eur: 0, mad: rewardAmount }
+      : { eur: rewardAmount, mad: 0 };
+
+  return {
+    goal,
+    participants,
+    creditedParticipants,
+    remaining,
+    percent,
+    complete,
+    reward,
+  };
+}
+
+export interface CollaboratorCommissionOptions {
+  /** Disable only for per-reservation display rows; the reward belongs to the overall account. */
+  includeMissionReward?: boolean;
+}
+
 export function getTourismPrice(tourIdOrName: string | null | undefined): number {
   if (!tourIdOrName) return 15;
   const s = tourIdOrName.toLowerCase();
@@ -3017,6 +3070,7 @@ export function collaboratorCommission(
   bookings: Booking[],
   packs: Pack[],
   discountCodes: DiscountCode[] = [],
+  options: CollaboratorCommissionOptions = {},
 ): Money {
   const mine = bookings
     .filter(
@@ -3032,7 +3086,7 @@ export function collaboratorCommission(
   let missionPeopleConsumed = 0;
   const cur = c.commissionCurrency ?? "EUR";
 
-  return mine.reduce((acc, b) => {
+  const baseCommission = mine.reduce((acc, b) => {
     const totalPeopleInBooking = b.numPeople || 1;
 
     // Special rule for Tourism Excursions: fixed €5 per person commission
@@ -3105,6 +3159,9 @@ export function collaboratorCommission(
         : { ...acc, eur: acc.eur + commValue };
     }
   }, emptyMoney());
+
+  if (options.includeMissionReward === false) return baseCommission;
+  return addMoney(baseCommission, collaboratorMissionProgress(c, bookings).reward);
 }
 
 /** Separate Tourism commission (€5/person in EUR) */
@@ -3134,9 +3191,10 @@ export function collaboratorFestivalCommission(
   bookings: Booking[],
   packs: Pack[],
   discountCodes: DiscountCode[] = [],
+  options: CollaboratorCommissionOptions = {},
 ): Money {
   const festivalBookings = bookings.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
-  return collaboratorCommission(c, festivalBookings, packs, discountCodes);
+  return collaboratorCommission(c, festivalBookings, packs, discountCodes, options);
 }
 
 /** Sum bookings by the currency their pack is actually priced in. */

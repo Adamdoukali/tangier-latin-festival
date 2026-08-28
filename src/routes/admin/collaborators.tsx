@@ -36,6 +36,7 @@ import {
   formatMoney,
   formatForPartner,
   commissionLabel,
+  collaboratorMissionProgress,
   partnerShareLink,
   partnerTransferShareLink,
   type Collaborator,
@@ -502,8 +503,10 @@ function AdminCollaborators() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {visibleStats.map(({ collaborator: c, ...s }) => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition">
+                {visibleStats.map(({ collaborator: c, ...s }) => {
+                  const mission = collaboratorMissionProgress(c, bookings);
+                  return (
+                    <tr key={c.id} className="hover:bg-gray-50 transition">
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-800">{c.name}</p>
                       <p className="text-xs text-gray-500">
@@ -566,21 +569,21 @@ function AdminCollaborators() {
                         {formatForPartner(s.commission, c)}
                       </span>
                       <span className="ml-1.5 text-[10px] text-gray-500">
-                        ({commissionLabel(c)})
+                        ({commissionLabel(c)}{mission.complete ? " + mission reward" : ""})
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right whitespace-nowrap">
-                      {c.missionGoal ? (
+                      {mission.goal ? (
                         <span
                           className={
-                            s.ticketsSold >= c.missionGoal
+                            mission.complete
                               ? "text-emerald-600"
                               : "text-gray-700"
                           }
-                          title={`Bring ${c.missionGoal} people → win ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
+                          title={`Bring ${mission.goal} people → win ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
                         >
-                          {s.ticketsSold >= c.missionGoal ? "✓ " : ""}
-                          {Math.min(s.ticketsSold, c.missionGoal)}/{c.missionGoal}
+                          {mission.complete ? "✓ " : ""}
+                          {mission.creditedParticipants}/{mission.goal}
                           <span className="ml-1.5 text-[10px] text-gray-500">
                             ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
                           </span>
@@ -648,8 +651,9 @@ function AdminCollaborators() {
                         </button>
                       </div>
                     </td>
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

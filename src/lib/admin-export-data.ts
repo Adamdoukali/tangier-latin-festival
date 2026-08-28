@@ -1,5 +1,6 @@
 import {
   bookingPeopleCount,
+  collaboratorMissionProgress,
   commissionLabel,
   getClients,
   getTourismPrice,
@@ -313,15 +314,8 @@ export function buildCollaboratorSummarySpreadsheet(
     const currency = partnerCurrency(collaborator);
     const sales = moneyIn(revenue, currency);
     const earned = moneyIn(commission, currency);
-    const missionAchieved = !!collaborator.missionGoal && participants >= collaborator.missionGoal;
-    const reward = missionAchieved
-      ? moneyIn(
-          collaborator.missionCurrency === "MAD"
-            ? { eur: 0, mad: collaborator.missionReward ?? 0 }
-            : { eur: collaborator.missionReward ?? 0, mad: 0 },
-          currency,
-        )
-      : 0;
+    const mission = collaboratorMissionProgress(collaborator, bookings);
+    const reward = moneyIn(mission.reward, currency);
 
     return [
       collaborator.name,
@@ -334,11 +328,9 @@ export function buildCollaboratorSummarySpreadsheet(
       participants,
       roundMoney(sales),
       roundMoney(earned),
-      roundMoney(sales - earned - reward),
+      roundMoney(Math.max(0, sales - earned)),
       commissionLabel(collaborator),
-      collaborator.missionGoal
-        ? `${Math.min(participants, collaborator.missionGoal)}/${collaborator.missionGoal}`
-        : "",
+      mission.goal ? `${mission.creditedParticipants}/${mission.goal}` : "",
       roundMoney(reward),
       collaborator.active ? "yes" : "no",
     ];

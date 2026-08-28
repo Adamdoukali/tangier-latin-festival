@@ -43,6 +43,7 @@ import {
   collaboratorCommission,
   collaboratorTourismCommission,
   collaboratorFestivalCommission,
+  collaboratorMissionProgress,
   collaboratorTourismRevenue,
   isTourismBooking,
   isTransferBooking,
@@ -984,7 +985,9 @@ function buildUnifiedReservations(
 
     let festCommission = 0;
     if (fb.status !== "declined") {
-      const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts);
+      const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts, {
+        includeMissionReward: false,
+      });
       festCommission = moneyIn(commMoney, displayCurrency);
     }
 
@@ -1346,16 +1349,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const liveFestival = myBookings.filter(
     (b) => !isTourismBooking(b) && !isTransferBooking(b) && b.status !== "declined",
   );
-  const missionGoal = Math.max(0, Number(partner.missionGoal) || 0);
-  const missionParticipants = liveFestival
-    .filter((booking) => booking.source !== "invite")
-    .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
-  const missionCreditedParticipants = Math.min(missionGoal, missionParticipants);
-  const missionRemaining = Math.max(0, missionGoal - missionParticipants);
-  const missionPercent = missionGoal
-    ? Math.min(100, Math.round((missionCreditedParticipants / missionGoal) * 100))
-    : 0;
-  const missionComplete = missionGoal > 0 && missionParticipants >= missionGoal;
+  const mission = collaboratorMissionProgress(partner, myBookings);
+  const missionGoal = mission.goal;
+  const missionParticipants = mission.participants;
+  const missionCreditedParticipants = mission.creditedParticipants;
+  const missionRemaining = mission.remaining;
+  const missionPercent = mission.percent;
+  const missionComplete = mission.complete;
   const missionReward = formatMoney(
     partner.missionReward ?? 0,
     partner.missionCurrency ?? accountCurrency,
@@ -1655,9 +1655,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
                     {missionComplete
                       ? tr(
-                          `You reached the target of ${missionGoal} participants and unlocked the ${missionReward} reward.`,
-                          `Vous avez atteint l'objectif de ${missionGoal} participants et débloqué la récompense de ${missionReward}.`,
-                          `Alcanzaste el objetivo de ${missionGoal} participantes y desbloqueaste la recompensa de ${missionReward}.`,
+                          `You reached the target of ${missionGoal} participants and unlocked the ${missionReward} reward. It is included in your earnings and deducted from the amount due to the festival.`,
+                          `Vous avez atteint l'objectif de ${missionGoal} participants et débloqué la récompense de ${missionReward}. Elle est incluse dans vos gains et déduite du montant dû au festival.`,
+                          `Alcanzaste el objetivo de ${missionGoal} participantes y desbloqueaste la recompensa de ${missionReward}. Está incluida en tus ganancias y se descuenta del importe adeudado al festival.`,
                         )
                       : tr(
                           `${missionRemaining} more ${missionRemaining === 1 ? "participant" : "participants"} to unlock your ${missionReward} reward.`,
