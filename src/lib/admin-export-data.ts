@@ -81,7 +81,7 @@ export const COLLABORATOR_SUMMARY_HEADER: SpreadsheetCell[] = [
   "Total a verser au Festival",
   "Commission Deal",
   "Mission",
-  "Mission Reward",
+  "Total Mission",
   "Active",
 ];
 
@@ -102,6 +102,7 @@ export const COLLABORATOR_DETAILS_HEADER: SpreadsheetCell[] = [
   "Total des excursions",
   "Commission/ excursion",
   "Total des Transferts",
+  "Total Mission",
   "Montant à payer au Festival",
 ];
 
@@ -307,12 +308,23 @@ export function buildCollaboratorSummarySpreadsheet(
     const excursions = mine
       .filter(isTourismBooking)
       .reduce((sum, booking) => sum + (booking.numPeople || 1), 0);
+    const transferBookings = mine.filter(
+      (booking) => isTransferBooking(booking) || !!booking.needsTransfer,
+    );
+    const transfers = transferBookings.reduce(
+      (sum, booking) => sum + selectedTransferGuests(booking, packs, [collaborator]).length,
+      0,
+    );
+    const transferSales = transferBookings.reduce(
+      (sum, booking) => sum + Math.max(0, booking.transferCost ?? 0),
+      0,
+    );
     const participants = festival.reduce(
       (sum, booking) => sum + bookingPeopleCount(booking, packs),
       0,
     );
     const currency = partnerCurrency(collaborator);
-    const sales = moneyIn(revenue, currency);
+    const sales = moneyIn(revenue, currency) + moneyIn({ eur: transferSales, mad: 0 }, currency);
     const earned = moneyIn(commission, currency);
     const mission = collaboratorMissionProgress(collaborator, bookings);
     const reward = moneyIn(mission.reward, currency);
@@ -324,7 +336,7 @@ export function buildCollaboratorSummarySpreadsheet(
       festival.filter((booking) => categoryOf(booking, packs) === "double").length,
       festival.filter((booking) => categoryOf(booking, packs) === "fullpass").length,
       excursions,
-      0,
+      transfers,
       participants,
       roundMoney(sales),
       roundMoney(earned),
@@ -356,6 +368,7 @@ export function buildCollaboratorSummarySpreadsheet(
 interface AddOnTotals {
   excursions: number;
   excursionCommission: number;
+  transfers: number;
 }
 
 const convertedAmount = (
@@ -378,10 +391,12 @@ const collaboratorAddOns = (
     const current = totals.get(key) ?? {
       excursions: 0,
       excursionCommission: 0,
+      transfers: 0,
     };
     totals.set(key, {
       excursions: current.excursions + (values.excursions ?? 0),
       excursionCommission: current.excursionCommission + (values.excursionCommission ?? 0),
+      transfers: current.transfers + (values.transfers ?? 0),
     });
   };
 
@@ -398,6 +413,16 @@ const collaboratorAddOns = (
             collaborator,
           ),
           excursionCommission: convertedAmount(5, "EUR", collaborator),
+        });
+      }
+    }
+
+    if ((isTransferBooking(booking) || booking.needsTransfer) && (booking.transferCost ?? 0) > 0) {
+      const guests = selectedTransferGuests(booking, packs, collaborators);
+      const perGuestCost = guests.length ? (booking.transferCost ?? 0) / guests.length : 0;
+      for (const guest of guests) {
+        add(guestKey(collaborator.id, guest.fullName), {
+          transfers: convertedAmount(perGuestCost, "EUR", collaborator),
         });
       }
     }
@@ -427,9 +452,19 @@ export function buildCollaboratorDetailsSpreadsheet(
 ): SpreadsheetRows {
   const addOns = collaboratorAddOns(bookings, packs, collaborators);
   const claimedAddOns = new Set<string>();
+  const claimedMissionRewards = new Set<string>();
   const roomCounts = new Map<string, number>();
   const missionRemaining = new Map(
     collaborators.map((collaborator) => [collaborator.id, collaborator.missionGoal ?? 0]),
+  );
+  const missionRewards = new Map(
+    collaborators.map((collaborator) => [
+      collaborator.id,
+      moneyIn(
+        collaboratorMissionProgress(collaborator, bookings).reward,
+        partnerCurrency(collaborator),
+      ),
+    ]),
   );
   const rows: SpreadsheetRows = [];
 
@@ -462,7 +497,7 @@ export function buildCollaboratorDetailsSpreadsheet(
 
     for (const guest of guests) {
       const remaining = missionRemaining.get(collaborator.id) ?? 0;
-      const missionConsumesGuest = remaining > 0;
+      const missionConsumesGuest = booking.source !== "invite" && remaining > 0;
       if (missionConsumesGuest) missionRemaining.set(collaborator.id, remaining - 1);
       const packCommission =
         booking.source === "invite" || missionConsumesGuest
@@ -472,10 +507,20 @@ export function buildCollaboratorDetailsSpreadsheet(
             : roundMoney(packTotal * ((collaborator.commission ?? 0) / 100));
       const key = guestKey(collaborator.id, guest.fullName);
       const addOn = claimedAddOns.has(key)
-        ? { excursions: 0, excursionCommission: 0 }
-        : (addOns.get(key) ?? { excursions: 0, excursionCommission: 0 });
+        ? { excursions: 0, excursionCommission: 0, transfers: 0 }
+        : (addOns.get(key) ?? { excursions: 0, excursionCommission: 0, transfers: 0 });
       claimedAddOns.add(key);
-      const due = packTotal - packCommission + addOn.excursions - addOn.excursionCommission;
+      const missionReward = claimedMissionRewards.has(collaborator.id)
+        ? 0
+        : (missionRewards.get(collaborator.id) ?? 0);
+      if (missionReward) claimedMissionRewards.add(collaborator.id);
+      const due =
+        packTotal -
+        packCommission +
+        addOn.excursions -
+        addOn.excursionCommission +
+        addOn.transfers -
+        missionReward;
 
       rows.push([
         packId,
@@ -493,6 +538,47 @@ export function buildCollaboratorDetailsSpreadsheet(
         roundMoney(packCommission),
         addOn.excursions ? roundMoney(addOn.excursions) : "",
         addOn.excursionCommission ? roundMoney(addOn.excursionCommission) : "",
+        addOn.transfers ? roundMoney(addOn.transfers) : "",
+        missionReward ? roundMoney(missionReward) : "",
+        roundMoney(due),
+      ]);
+    }
+  }
+
+  // Keep transfer-only referrals in the partner details even when the passenger
+  // does not have a matching festival-pack row under the same partner.
+  const transferBookings = bookings.filter(
+    (booking) =>
+      booking.status !== "declined" &&
+      !!booking.collaboratorId &&
+      (isTransferBooking(booking) || !!booking.needsTransfer),
+  );
+  for (const booking of transferBookings) {
+    const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
+    if (!collaborator) continue;
+    for (const guest of selectedTransferGuests(booking, packs, collaborators)) {
+      const key = guestKey(collaborator.id, guest.fullName);
+      if (claimedAddOns.has(key)) continue;
+      const addOn = addOns.get(key) ?? { excursions: 0, excursionCommission: 0, transfers: 0 };
+      claimedAddOns.add(key);
+      const due = addOn.excursions - addOn.excursionCommission + addOn.transfers;
+      rows.push([
+        `Transfert / ${collaborator.name}`,
+        guest.firstName,
+        guest.lastName.toUpperCase(),
+        formatSpreadsheetOrigin(guest.country, guest.origin === "morocco"),
+        formatSpreadsheetDate(booking.arrivalDate),
+        formatSpreadsheetDate(booking.departureDate),
+        "Transfert",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        addOn.excursions ? roundMoney(addOn.excursions) : "",
+        addOn.excursionCommission ? roundMoney(addOn.excursionCommission) : "",
+        addOn.transfers ? roundMoney(addOn.transfers) : "",
         "",
         roundMoney(due),
       ]);
