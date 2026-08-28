@@ -1616,43 +1616,43 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
         {missionGoal > 0 && (
           <section
-            className={`relative overflow-hidden rounded-3xl border shadow-xl ${
+            className={`relative overflow-hidden rounded-2xl border shadow-lg ${
               missionComplete
                 ? "border-emerald-300 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-800"
                 : "border-blue-300 bg-gradient-to-br from-[#13234d] via-blue-900 to-indigo-800"
             } text-white`}
           >
-            <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-24 left-1/3 h-52 w-52 rounded-full bg-cyan-300/10 blur-3xl" />
+            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-20 left-1/3 h-36 w-36 rounded-full bg-cyan-300/10 blur-3xl" />
 
-            <div className="relative p-6 sm:p-8">
-              <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
+            <div className="relative p-4 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                      <Trophy className={`h-4 w-4 ${missionComplete ? "text-emerald-300" : "text-amber-300"}`} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white backdrop-blur-sm">
+                      <Trophy className={`h-3 w-3 ${missionComplete ? "text-emerald-300" : "text-amber-300"}`} />
                       {tr("Partner Mission", "Mission Partenaire", "Misión del Socio")}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-wider ${
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${
                         missionComplete
                           ? "bg-emerald-300 text-emerald-950"
                           : "bg-amber-300 text-amber-950"
                       }`}
                     >
-                      {missionComplete && <CheckCircle2 className="h-3.5 w-3.5" />}
+                      {missionComplete && <CheckCircle2 className="h-3 w-3" />}
                       {missionComplete
                         ? tr("Complete", "Terminée", "Completada")
                         : tr("In progress", "En cours", "En progreso")}
                     </span>
                   </div>
 
-                  <h2 className="mt-4 font-display text-2xl font-black tracking-tight text-white sm:text-3xl">
+                  <h2 className="mt-3 font-display text-lg font-black tracking-tight text-white sm:text-xl">
                     {missionComplete
                       ? tr("Mission accomplished!", "Mission accomplie !", "¡Misión cumplida!")
                       : tr("Your mission is underway", "Votre mission est en cours", "Tu misión está en marcha")}
                   </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-100">
+                  <p className="mt-1 max-w-2xl text-[11px] leading-5 text-blue-100 sm:text-xs">
                     {missionComplete
                       ? tr(
                           `You reached the target of ${missionGoal} participants and unlocked the ${missionReward} reward. It is included in your earnings and deducted from the amount due to the festival.`,
@@ -1666,8 +1666,8 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                         )}
                   </p>
 
-                  <div className="mt-6">
-                    <div className="mb-2 flex items-end justify-between gap-4 text-xs font-bold">
+                  <div className="mt-3">
+                    <div className="mb-1.5 flex items-end justify-between gap-4 text-[10px] font-bold">
                       <span className="text-blue-100">
                         {tr("Mission progress", "Progression de la mission", "Progreso de la misión")}
                       </span>
@@ -1676,7 +1676,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                       </span>
                     </div>
                     <div
-                      className="h-3 overflow-hidden rounded-full border border-white/15 bg-black/25 p-0.5"
+                      className="h-2 overflow-hidden rounded-full border border-white/15 bg-black/25 p-px"
                       role="progressbar"
                       aria-label={tr("Mission progress", "Progression de la mission", "Progreso de la misión")}
                       aria-valuemin={0}
@@ -1694,7 +1694,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     </div>
                   </div>
 
-                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {[
                       {
                         label: tr("Qualified", "Qualifiés", "Calificados"),
@@ -1709,12 +1709,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm"
+                        className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-sm"
                       >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                        <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200">
                           {item.label}
                         </p>
-                        <p className="mt-1 truncate text-lg font-black text-white" title={String(item.value)}>
+                        <p className="mt-0.5 truncate text-sm font-black text-white" title={String(item.value)}>
                           {item.value}
                         </p>
                       </div>
@@ -1722,17 +1722,17 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                   </div>
                 </div>
 
-                <div className="mx-auto shrink-0 lg:mx-4">
+                <div className="mx-auto hidden shrink-0 sm:block sm:mx-2">
                   <div
-                    className="grid h-36 w-36 place-items-center rounded-full p-2 shadow-2xl"
+                    className="grid h-24 w-24 place-items-center rounded-full p-1.5 shadow-xl"
                     style={{
                       background: `conic-gradient(${missionComplete ? "#6ee7b7" : "#fcd34d"} ${missionPercent * 3.6}deg, rgba(255,255,255,.14) 0deg)`,
                     }}
                   >
                     <div className="grid h-full w-full place-items-center rounded-full border border-white/15 bg-[#102044]/95 text-center shadow-inner">
                       <div>
-                        <p className="font-display text-3xl font-black text-white">{missionPercent}%</p>
-                        <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-blue-200">
+                        <p className="font-display text-xl font-black text-white">{missionPercent}%</p>
+                        <p className="mt-0.5 text-[7px] font-bold uppercase tracking-widest text-blue-200">
                           {missionComplete
                             ? tr("Completed", "Terminée", "Completada")
                             : tr("Completed", "Accomplie", "Completado")}
