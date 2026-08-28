@@ -725,7 +725,7 @@ function AdminDiscounts() {
                   </label>
                 </div>
                 <p className="text-xs text-purple-700 leading-relaxed">
-                  When a guest uses this discount code via a partner&apos;s link, set a custom lowered commission for that partner (e.g. €10 instead of standard rate). Leave empty to use standard partner rates.
+                  Attention la commission doit etre partagé sur 2 , Exemple : 15 euro /2 = 7,5
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
