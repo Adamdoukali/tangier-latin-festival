@@ -20,7 +20,7 @@ import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import {
   addBooking,
   calculateTransferCost,
-  findMatchingFestivalBooking,
+  findFestivalBookingByIdentity,
   formatTransferOptionLabel,
   getCollaboratorByCode,
   getRememberedReferral,
@@ -46,7 +46,6 @@ export const Route = createFileRoute("/book-transfer")({
   component: BookTransferPage,
 });
 
-type TicketChoice = "yes" | "no";
 type TicketState = "idle" | "checking" | "found" | "not-found";
 
 type TransferPassenger = {
@@ -87,8 +86,6 @@ function BookTransferPage() {
   const { lang, changeLanguage } = useLanguage();
   const tr = (en: string, fr: string, es: string) => (lang === "fr" ? fr : lang === "es" ? es : en);
 
-  const [ticketChoice, setTicketChoice] = useState<TicketChoice>("yes");
-  const [ticketCode, setTicketCode] = useState("");
   const [ticketState, setTicketState] = useState<TicketState>("idle");
   const [matchedTicket, setMatchedTicket] = useState<Booking | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -144,22 +141,46 @@ function BookTransferPage() {
     id: string,
     field: K,
     value: TransferPassenger[K],
-  ) =>
+  ) => {
+    if (
+      id === passengers[0]?.id &&
+      (field === "firstName" || field === "lastName" || field === "email")
+    ) {
+      setMatchedTicket(null);
+      setTicketState("idle");
+    }
     setPassengers((current) =>
       current.map((passenger) =>
         passenger.id === id ? { ...passenger, [field]: value } : passenger,
       ),
     );
+  };
 
   const verifyTicket = async () => {
-    const code = ticketCode.trim();
-    if (!code) {
+    const leadPassenger = passengers[0];
+    if (
+      !leadPassenger?.firstName.trim() ||
+      !leadPassenger.lastName.trim() ||
+      !leadPassenger.email.trim()
+    ) {
       setTicketState("not-found");
       setMatchedTicket(null);
+      setError(
+        tr(
+          "Enter the first passenger's first name, last name, and email before checking.",
+          "Saisissez le prénom, le nom et l'e-mail du premier passager avant la vérification.",
+          "Introduce el nombre, apellido y correo del primer pasajero antes de verificar.",
+        ),
+      );
       return;
     }
+    setError("");
     setTicketState("checking");
-    const match = await findMatchingFestivalBooking({ ticketCode: code }).catch(() => undefined);
+    const match = await findFestivalBookingByIdentity({
+      firstName: leadPassenger.firstName,
+      lastName: leadPassenger.lastName,
+      email: leadPassenger.email,
+    }).catch(() => undefined);
     if (!match) {
       setTicketState("not-found");
       setMatchedTicket(null);
@@ -197,31 +218,9 @@ function BookTransferPage() {
     }));
   };
 
-  const selectTicketChoice = (choice: TicketChoice) => {
-    setTicketChoice(choice);
-    setError("");
-    if (choice === "no") {
-      setTicketState("idle");
-      setMatchedTicket(null);
-      setTicketCode("");
-      setPassengers([emptyPassenger()]);
-    }
-  };
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-
-    if (ticketChoice === "yes" && ticketState !== "found") {
-      setError(
-        tr(
-          "Please verify your festival ticket before sending the transfer request.",
-          "Veuillez vérifier votre billet festival avant d'envoyer la demande de transfert.",
-          "Verifica tu entrada del festival antes de enviar la solicitud de traslado.",
-        ),
-      );
-      return;
-    }
 
     if (
       passengerCount === 0 ||
@@ -421,7 +420,6 @@ function BookTransferPage() {
               setCreated(null);
               setMatchedTicket(null);
               setTicketState("idle");
-              setTicketCode("");
               setForm(initialForm);
               setPassengers([emptyPassenger()]);
             }}
@@ -466,106 +464,6 @@ function BookTransferPage() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center gap-3">
-              <TicketCheck className="h-5 w-5 text-blue-700" />
-              <div>
-                <h2 className="font-display text-lg font-bold text-slate-950">
-                  {tr(
-                    "Do you have a festival ticket?",
-                    "Avez-vous un billet festival ?",
-                    "¿Tienes entrada del festival?",
-                  )}
-                </h2>
-                <p className="text-xs text-slate-500">
-                  {tr(
-                    "We will link it to this request when found.",
-                    "Nous le lierons à cette demande s'il est trouvé.",
-                    "Lo vincularemos a esta solicitud si se encuentra.",
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => selectTicketChoice("yes")}
-                className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition cursor-pointer ${
-                  ticketChoice === "yes"
-                    ? "border-blue-700 bg-blue-700 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-blue-300"
-                }`}
-              >
-                {tr("Yes, verify it", "Oui, le vérifier", "Sí, verificarla")}
-              </button>
-              <button
-                type="button"
-                onClick={() => selectTicketChoice("no")}
-                className={`rounded-xl border px-3 py-2.5 text-xs font-bold transition cursor-pointer ${
-                  ticketChoice === "no"
-                    ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:border-slate-400"
-                }`}
-              >
-                {tr("No ticket", "Pas de billet", "Sin entrada")}
-              </button>
-            </div>
-
-            {ticketChoice === "yes" && (
-              <div className="mt-4">
-                <label className="mb-1.5 block text-xs font-bold text-slate-700">
-                  {tr("Festival ticket code", "Code du billet festival", "Código de la entrada")}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    value={ticketCode}
-                    onChange={(event) => {
-                      setTicketCode(event.target.value.toUpperCase());
-                      setTicketState("idle");
-                      setMatchedTicket(null);
-                      setPassengers([emptyPassenger()]);
-                    }}
-                    placeholder="TLF-..."
-                    className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3.5 py-2.5 font-mono text-sm uppercase text-slate-950 outline-none focus:border-blue-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={verifyTicket}
-                    disabled={ticketState === "checking"}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-blue-800 disabled:opacity-60 cursor-pointer"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    {ticketState === "checking"
-                      ? tr("Checking...", "Vérification...", "Verificando...")
-                      : tr("Check", "Vérifier", "Verificar")}
-                  </button>
-                </div>
-                {ticketState === "found" && matchedTicket && (
-                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
-                    <span>
-                      <strong>{tr("Ticket found", "Billet trouvé", "Entrada encontrada")}</strong>
-                      {` — ${matchedTicket.customerName} (${matchedTicket.status})`}
-                    </span>
-                  </div>
-                )}
-                {ticketState === "not-found" && (
-                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
-                    <TicketX className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>
-                      {tr(
-                        "No festival ticket was found with this code. Check the code or select “No ticket”.",
-                        "Aucun billet festival n'a été trouvé avec ce code. Vérifiez le code ou choisissez « Pas de billet ».",
-                        "No se encontró una entrada con este código. Revisa el código o selecciona « Sin entrada ».",
-                      )}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-slate-950">
               <Users className="h-5 w-5 text-blue-700" />
@@ -628,7 +526,7 @@ function BookTransferPage() {
                           </button>
                         </div>
                       )}
-                      {ticketChoice === "no" && passengers.length > 1 && (
+                      {!matchedTicket && passengers.length > 1 && (
                         <button
                           type="button"
                           onClick={() =>
@@ -708,7 +606,7 @@ function BookTransferPage() {
               ))}
             </div>
 
-            {ticketChoice === "no" && (
+            {!matchedTicket && (
               <button
                 type="button"
                 onClick={() =>
@@ -723,6 +621,69 @@ function BookTransferPage() {
                 {tr("Add another passenger", "Ajouter un autre passager", "Añadir otro pasajero")}
               </button>
             )}
+
+            <div className="mt-4 rounded-2xl border border-blue-200 bg-white p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-2.5">
+                  <TicketCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">
+                      {tr(
+                        "Check festival reservation",
+                        "Vérifier la réservation festival",
+                        "Verificar la reserva del festival",
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-5 text-slate-500">
+                      {tr(
+                        "Uses passenger 1's first name, last name, and email. All three must match the same ticket.",
+                        "Utilise le prénom, le nom et l'e-mail du passager 1. Les trois doivent correspondre au même billet.",
+                        "Usa el nombre, apellido y correo del pasajero 1. Los tres deben coincidir con la misma entrada.",
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={verifyTicket}
+                  disabled={ticketState === "checking" || ticketState === "found"}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                >
+                  {ticketState === "found" ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Search className="h-3.5 w-3.5" />
+                  )}
+                  {ticketState === "checking"
+                    ? tr("Checking...", "Vérification...", "Verificando...")
+                    : ticketState === "found"
+                      ? tr("Verified", "Vérifié", "Verificado")
+                      : tr("Check ticket", "Vérifier le billet", "Verificar entrada")}
+                </button>
+              </div>
+
+              {ticketState === "found" && matchedTicket && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-xs text-emerald-900">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-700" />
+                  <span>
+                    <strong>{tr("Ticket found", "Billet trouvé", "Entrada encontrada")}</strong>
+                    {` — ${matchedTicket.customerName} (${matchedTicket.status})`}
+                  </span>
+                </div>
+              )}
+              {ticketState === "not-found" && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
+                  <TicketX className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    {tr(
+                      "No ticket matches this first name, last name, and email. You can still continue without linking a ticket.",
+                      "Aucun billet ne correspond à ce prénom, ce nom et cet e-mail. Vous pouvez continuer sans lier de billet.",
+                      "Ninguna entrada coincide con este nombre, apellido y correo. Puedes continuar sin vincular una entrada.",
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
           </section>
 
           <section className="rounded-3xl border border-blue-200 bg-blue-50/60 p-5 shadow-sm sm:p-6">

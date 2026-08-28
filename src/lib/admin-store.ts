@@ -2878,6 +2878,57 @@ export function normalizePhone(phone: string | null | undefined): string {
   return phone.replace(/\D/g, "");
 }
 
+const normalizeIdentityPart = (value: string | null | undefined): string =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+/** Strict festival-ticket lookup for public forms. All three identity fields
+ * must belong to the same guest; email-only or partial-name matches are rejected. */
+export async function findFestivalBookingByIdentity(query: {
+  firstName: string;
+  lastName: string;
+  email: string;
+}): Promise<Booking | undefined> {
+  const firstName = normalizeIdentityPart(query.firstName);
+  const lastName = normalizeIdentityPart(query.lastName);
+  const email = normalizeIdentityPart(query.email);
+  if (!firstName || !lastName || !email.includes("@")) return undefined;
+
+  const bookings = await getBookings();
+  const festivalBookings = bookings.filter(
+    (booking) =>
+      !isTourismBooking(booking) && !isTransferBooking(booking) && booking.status !== "declined",
+  );
+
+  return festivalBookings.find((booking) => {
+    const names = booking.customerName
+      .split(/\s*&\s*/)
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const details = parseGuestDetails(booking.guestDetails);
+    const count = Math.max(1, booking.numPeople || 1, names.length, details.length);
+
+    return Array.from({ length: count }).some((_, index) => {
+      const detail = details[index] ?? {};
+      const rawName = names[index] || names[0] || "";
+      const parts = rawName.split(/\s+/);
+      const candidateFirstName = detail.firstName ?? parts[0] ?? "";
+      const candidateLastName = detail.lastName ?? parts.slice(1).join(" ");
+      const candidateEmail = detail.email ?? (index === 0 ? booking.email : "");
+
+      return (
+        normalizeIdentityPart(candidateFirstName) === firstName &&
+        normalizeIdentityPart(candidateLastName) === lastName &&
+        normalizeIdentityPart(candidateEmail) === email
+      );
+    });
+  });
+}
+
 export async function findMatchingFestivalBooking(query: {
   ticketCode?: string | null;
   phone?: string | null;
