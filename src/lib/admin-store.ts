@@ -330,7 +330,8 @@ export function packNightCount(
   const text = [pack.name, pack.sub, pack.category, ...(pack.features ?? [])]
     .filter(Boolean)
     .join(" ");
-  const match = text.match(/(\d+)\s*(?:night|nuit|noche)s?/i);
+  // Accept the historical "NUIGHT" spelling used by some saved packs too.
+  const match = text.match(/(\d+)\s*(?:n(?:u?ight)|nuit|noche)s?/i);
   if (!match) return null;
   const nights = Number(match[1]);
   return Number.isInteger(nights) && nights > 0 ? nights : null;
