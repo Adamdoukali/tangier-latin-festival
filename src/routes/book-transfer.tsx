@@ -8,11 +8,13 @@ import {
   CheckCircle2,
   Clock3,
   Plane,
+  Plus,
   Search,
   Ship,
   TicketCheck,
   TicketX,
   Users,
+  X,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import {
@@ -22,6 +24,7 @@ import {
   formatTransferOptionLabel,
   getCollaboratorByCode,
   getRememberedReferral,
+  parseGuestDetails,
   type Booking,
   type Collaborator,
   type TransferOption,
@@ -46,13 +49,27 @@ export const Route = createFileRoute("/book-transfer")({
 type TicketChoice = "yes" | "no";
 type TicketState = "idle" | "checking" | "found" | "not-found";
 
-const initialForm = {
+type TransferPassenger = {
+  id: string;
+  going: boolean;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  country: string;
+};
+
+const emptyPassenger = (id = "manual-1"): TransferPassenger => ({
+  id,
+  going: true,
   firstName: "",
   lastName: "",
   email: "",
   phone: "",
   country: "",
-  passengers: 1,
+});
+
+const initialForm = {
   arrivalDate: "2027-01-07",
   departureDate: "2027-01-11",
   transferType: "airport" as TransferType,
@@ -75,6 +92,7 @@ function BookTransferPage() {
   const [ticketState, setTicketState] = useState<TicketState>("idle");
   const [matchedTicket, setMatchedTicket] = useState<Booking | null>(null);
   const [form, setForm] = useState(initialForm);
+  const [passengers, setPassengers] = useState<TransferPassenger[]>(() => [emptyPassenger()]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [created, setCreated] = useState<Booking | null>(null);
@@ -110,15 +128,28 @@ function BookTransferPage() {
     };
   }, [changeLanguage]);
 
+  const selectedPassengers = passengers.filter((passenger) => passenger.going);
+  const passengerCount = selectedPassengers.length;
   const transferCost = calculateTransferCost(
     form.transferType,
     form.transferOption,
-    Math.max(1, form.passengers),
+    Math.max(1, passengerCount),
     form.transferLocation,
   );
 
   const setField = <K extends keyof typeof initialForm>(field: K, value: (typeof initialForm)[K]) =>
     setForm((current) => ({ ...current, [field]: value }));
+
+  const setPassenger = <K extends keyof TransferPassenger>(
+    id: string,
+    field: K,
+    value: TransferPassenger[K],
+  ) =>
+    setPassengers((current) =>
+      current.map((passenger) =>
+        passenger.id === id ? { ...passenger, [field]: value } : passenger,
+      ),
+    );
 
   const verifyTicket = async () => {
     const code = ticketCode.trim();
@@ -137,16 +168,30 @@ function BookTransferPage() {
 
     setMatchedTicket(match);
     setTicketState("found");
-    const leadName = match.customerName.split(/\s*&\s*/)[0]?.trim() || "";
-    const parts = leadName.split(/\s+/);
+    const names = match.customerName
+      .split(/\s*&\s*/)
+      .map((name) => name.trim())
+      .filter(Boolean);
+    const details = parseGuestDetails(match.guestDetails);
+    const count = Math.max(1, match.numPeople || 1, names.length, details.length);
+    setPassengers(
+      Array.from({ length: count }, (_, index) => {
+        const detail = details[index] ?? {};
+        const rawName = names[index] || names[0] || "";
+        const parts = rawName.split(/\s+/);
+        return {
+          id: `ticket-${index + 1}`,
+          going: true,
+          firstName: detail.firstName ?? parts[0] ?? "",
+          lastName: detail.lastName ?? parts.slice(1).join(" "),
+          email: detail.email ?? (index === 0 ? match.email || "" : ""),
+          phone: detail.phone ?? (index === 0 ? match.phone || "" : ""),
+          country: match.country || "",
+        };
+      }),
+    );
     setForm((current) => ({
       ...current,
-      firstName: parts[0] || current.firstName,
-      lastName: parts.slice(1).join(" ") || current.lastName,
-      email: match.email || current.email,
-      phone: match.phone || current.phone,
-      country: match.country || current.country,
-      passengers: Math.max(1, match.numPeople || current.passengers),
       arrivalDate: match.arrivalDate || current.arrivalDate,
       departureDate: match.departureDate || current.departureDate,
     }));
@@ -159,6 +204,7 @@ function BookTransferPage() {
       setTicketState("idle");
       setMatchedTicket(null);
       setTicketCode("");
+      setPassengers([emptyPassenger()]);
     }
   };
 
@@ -172,6 +218,27 @@ function BookTransferPage() {
           "Please verify your festival ticket before sending the transfer request.",
           "Veuillez vérifier votre billet festival avant d'envoyer la demande de transfert.",
           "Verifica tu entrada del festival antes de enviar la solicitud de traslado.",
+        ),
+      );
+      return;
+    }
+
+    if (
+      passengerCount === 0 ||
+      selectedPassengers.some(
+        (passenger) =>
+          !passenger.firstName.trim() ||
+          !passenger.lastName.trim() ||
+          !passenger.email.trim() ||
+          !passenger.phone.trim() ||
+          !passenger.country.trim(),
+      )
+    ) {
+      setError(
+        tr(
+          "Select at least one passenger and complete every selected passenger's details.",
+          "Sélectionnez au moins un passager et complétez les informations de chaque passager sélectionné.",
+          "Selecciona al menos un pasajero y completa los datos de cada pasajero seleccionado.",
         ),
       );
       return;
@@ -195,13 +262,25 @@ function BookTransferPage() {
     setSubmitting(true);
     try {
       const data = new FormData(event.currentTarget);
-      const dialCode = String(data.get("Phone Country Code") || "");
-      const rawPhone = form.phone.trim();
-      const phone = (rawPhone.startsWith("+") ? rawPhone : `${dialCode}${rawPhone}`).replace(
-        /\s+/g,
-        "",
-      );
-      const customerName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+      const passengerRecords = selectedPassengers.map((passenger) => {
+        const dialCode = String(data.get(`Phone Country Code ${passenger.id}`) || "");
+        const rawPhone = passenger.phone.trim();
+        return {
+          ...passenger,
+          firstName: passenger.firstName.trim(),
+          lastName: passenger.lastName.trim(),
+          email: passenger.email.trim(),
+          phone: (rawPhone.startsWith("+") ? rawPhone : `${dialCode}${rawPhone}`).replace(
+            /\s+/g,
+            "",
+          ),
+          country: passenger.country.trim(),
+        };
+      });
+      const primaryPassenger = passengerRecords[0];
+      const customerName = passengerRecords
+        .map((passenger) => `${passenger.firstName} ${passenger.lastName}`.trim())
+        .join(" & ");
       const linkedTicket = matchedTicket?.ticketCode || "";
       const params = new URLSearchParams(window.location.search);
       const referralCode = params.get("ref") || partnerCode || getRememberedReferral();
@@ -214,6 +293,7 @@ function BookTransferPage() {
         : "Festival ticket: none declared";
       const referralNote = explicitPartner?.code ? `Referral: ${explicitPartner.code}` : "";
       const transferDetails = [
+        `Transfer Passengers: ${customerName}`,
         `Departure ${form.transferType === "airport" ? "Airport" : "Port"}: ${form.departureAirport.trim()}`,
         `Company: ${form.company.trim()}`,
         form.arrivalTime ? `Arrival Time: ${form.arrivalTime}` : "",
@@ -228,18 +308,26 @@ function BookTransferPage() {
           packId: "",
           packName: "Navette / Shuttle Transfer",
           customerName,
-          email: form.email.trim(),
-          phone,
-          country: form.country.trim() || matchedTicket?.country || "Morocco",
+          email: primaryPassenger.email,
+          phone: primaryPassenger.phone,
+          country: primaryPassenger.country || matchedTicket?.country || "Morocco",
           company: form.company.trim() || null,
-          numPeople: Math.max(1, form.passengers),
+          numPeople: passengerCount,
           danceLevel: "",
           notes: [referralNote, ticketNote, form.notes.trim()].filter(Boolean).join(" | "),
           arrivalDate: form.arrivalDate || null,
           arrivalTime: form.arrivalTime || null,
           departureDate: form.departureDate || null,
           departureTime: form.departureTime || null,
-          guestDetails: matchedTicket?.guestDetails || null,
+          guestDetails: JSON.stringify(
+            passengerRecords.map(({ firstName, lastName, email, phone, country }) => ({
+              firstName,
+              lastName,
+              email,
+              phone,
+              country,
+            })),
+          ),
           lang,
           status: "pending",
           source: finalCollaboratorId ? "referral" : "website",
@@ -260,12 +348,12 @@ function BookTransferPage() {
         lang,
         fields: {
           name: customerName,
-          email: form.email.trim(),
-          Phone: phone,
+          email: primaryPassenger.email,
+          Phone: primaryPassenger.phone,
           "Festival ticket": linkedTicket
             ? `${linkedTicket} (${matchedTicket?.status})`
             : "No festival ticket",
-          Passengers: String(form.passengers),
+          Passengers: `${passengerCount} — ${customerName}`,
           Route: formatTransferOptionLabel(form.transferOption, lang),
           Hub: form.transferLocation,
           Origin: form.departureAirport,
@@ -335,6 +423,7 @@ function BookTransferPage() {
               setTicketState("idle");
               setTicketCode("");
               setForm(initialForm);
+              setPassengers([emptyPassenger()]);
             }}
             className="mt-7 rounded-xl bg-blue-700 px-6 py-3 text-sm font-bold text-white transition hover:bg-blue-800 cursor-pointer"
           >
@@ -435,6 +524,7 @@ function BookTransferPage() {
                       setTicketCode(event.target.value.toUpperCase());
                       setTicketState("idle");
                       setMatchedTicket(null);
+                      setPassengers([emptyPassenger()]);
                     }}
                     placeholder="TLF-..."
                     className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3.5 py-2.5 font-mono text-sm uppercase text-slate-950 outline-none focus:border-blue-600"
@@ -479,72 +569,160 @@ function BookTransferPage() {
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="flex items-center gap-2 font-display text-lg font-bold text-slate-950">
               <Users className="h-5 w-5 text-blue-700" />
-              {tr("Traveler details", "Informations du voyageur", "Datos del viajero")}
+              {tr("Passenger details", "Informations des passagers", "Datos de los pasajeros")}
             </h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <Field label={tr("First name", "Prénom", "Nombre")} required>
-                <input
-                  required
-                  value={form.firstName}
-                  onChange={(e) => setField("firstName", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
-              <Field label={tr("Last name", "Nom", "Apellido")} required>
-                <input
-                  required
-                  value={form.lastName}
-                  onChange={(e) => setField("lastName", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
-              <Field label={tr("Email", "E-mail", "Correo electrónico")} required>
-                <input
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => setField("email", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
-              <Field
-                label={tr("WhatsApp / Phone", "WhatsApp / Téléphone", "WhatsApp / Teléfono")}
-                required
-              >
-                <div className="flex">
-                  <PhoneCountrySelect className="rounded-l-xl border border-slate-300 border-r-0 bg-white text-xs" />
-                  <input
-                    type="tel"
-                    required
-                    value={form.phone}
-                    onChange={(e) => setField("phone", e.target.value)}
-                    className="min-w-0 flex-1 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600"
-                  />
+            <p className="mt-1 text-xs text-slate-500">
+              {tr(
+                "Choose who needs the transfer, then complete the full details for every selected passenger.",
+                "Choisissez les passagers qui prennent le transfert, puis complétez toutes leurs informations.",
+                "Elige quién necesita el traslado y completa todos los datos de cada pasajero seleccionado.",
+              )}
+            </p>
+
+            <div className="mt-4 space-y-4">
+              {passengers.map((passenger, index) => (
+                <div
+                  key={passenger.id}
+                  className={`rounded-2xl border p-4 transition ${
+                    passenger.going
+                      ? "border-blue-200 bg-blue-50/40"
+                      : "border-slate-200 bg-slate-50 opacity-80"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-950">
+                        {tr("Passenger", "Passager", "Pasajero")} {index + 1}
+                      </p>
+                      {(passenger.firstName || passenger.lastName) && (
+                        <p className="text-xs text-slate-500">
+                          {`${passenger.firstName} ${passenger.lastName}`.trim()}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {(matchedTicket || passengers.length > 1) && (
+                        <div className="flex items-center rounded-xl border border-slate-200 bg-white p-1">
+                          <button
+                            type="button"
+                            onClick={() => setPassenger(passenger.id, "going", true)}
+                            className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition cursor-pointer ${
+                              passenger.going
+                                ? "bg-emerald-600 text-white"
+                                : "text-slate-500 hover:bg-slate-100"
+                            }`}
+                          >
+                            {tr("Going", "Participe", "Va")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPassenger(passenger.id, "going", false)}
+                            className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition cursor-pointer ${
+                              !passenger.going
+                                ? "bg-slate-700 text-white"
+                                : "text-slate-500 hover:bg-slate-100"
+                            }`}
+                          >
+                            {tr("Not going", "Ne participe pas", "No va")}
+                          </button>
+                        </div>
+                      )}
+                      {ticketChoice === "no" && passengers.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setPassengers((current) =>
+                              current.filter((item) => item.id !== passenger.id),
+                            )
+                          }
+                          aria-label={tr("Remove passenger", "Supprimer le passager", "Eliminar pasajero")}
+                          className="rounded-lg border border-red-200 bg-white p-2 text-red-600 transition hover:bg-red-50 cursor-pointer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {passenger.going && (
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <Field label={tr("First name", "Prénom", "Nombre")} required>
+                        <input
+                          required
+                          value={passenger.firstName}
+                          onChange={(e) => setPassenger(passenger.id, "firstName", e.target.value)}
+                          className="form-input"
+                        />
+                      </Field>
+                      <Field label={tr("Last name", "Nom", "Apellido")} required>
+                        <input
+                          required
+                          value={passenger.lastName}
+                          onChange={(e) => setPassenger(passenger.id, "lastName", e.target.value)}
+                          className="form-input"
+                        />
+                      </Field>
+                      <Field label={tr("Email", "E-mail", "Correo electrónico")} required>
+                        <input
+                          type="email"
+                          required
+                          value={passenger.email}
+                          onChange={(e) => setPassenger(passenger.id, "email", e.target.value)}
+                          className="form-input"
+                        />
+                      </Field>
+                      <Field
+                        label={tr(
+                          "WhatsApp / Phone",
+                          "WhatsApp / Téléphone",
+                          "WhatsApp / Teléfono",
+                        )}
+                        required
+                      >
+                        <div className="flex">
+                          <PhoneCountrySelect
+                            name={`Phone Country Code ${passenger.id}`}
+                            className="rounded-l-xl border border-slate-300 border-r-0 bg-white text-xs"
+                          />
+                          <input
+                            type="tel"
+                            required
+                            value={passenger.phone}
+                            onChange={(e) => setPassenger(passenger.id, "phone", e.target.value)}
+                            className="min-w-0 flex-1 rounded-r-xl border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-600"
+                          />
+                        </div>
+                      </Field>
+                      <Field label={tr("Country", "Pays", "País")} required>
+                        <input
+                          required
+                          value={passenger.country}
+                          onChange={(e) => setPassenger(passenger.id, "country", e.target.value)}
+                          className="form-input"
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
-              </Field>
-              <Field label={tr("Country", "Pays", "País")} required>
-                <input
-                  required
-                  value={form.country}
-                  onChange={(e) => setField("country", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
-              <Field
-                label={tr("Number of passengers", "Nombre de passagers", "Número de pasajeros")}
-                required
-              >
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  required
-                  value={form.passengers}
-                  onChange={(e) => setField("passengers", Math.max(1, Number(e.target.value) || 1))}
-                  className="form-input"
-                />
-              </Field>
+              ))}
             </div>
+
+            {ticketChoice === "no" && (
+              <button
+                type="button"
+                onClick={() =>
+                  setPassengers((current) => [
+                    ...current,
+                    emptyPassenger(`manual-${Date.now()}`),
+                  ])
+                }
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-xs font-bold text-blue-800 transition hover:bg-blue-50 cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                {tr("Add another passenger", "Ajouter un autre passager", "Añadir otro pasajero")}
+              </button>
+            )}
           </section>
 
           <section className="rounded-3xl border border-blue-200 bg-blue-50/60 p-5 shadow-sm sm:p-6">
@@ -757,7 +935,7 @@ function BookTransferPage() {
                   )}
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  {form.passengers} × {formatTransferOptionLabel(form.transferOption, lang)}
+                  {passengerCount} × {formatTransferOptionLabel(form.transferOption, lang)}
                 </p>
               </div>
               <span className="text-xl font-black text-blue-800">€{transferCost}</span>

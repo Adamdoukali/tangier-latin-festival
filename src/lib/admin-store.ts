@@ -2497,6 +2497,7 @@ export interface GuestDetail {
   lastName?: string;
   email?: string;
   phone?: string;
+  country?: string;
   origin?: "morocco" | "international";
   notes?: string;
 }
@@ -2603,11 +2604,16 @@ export function getClients(
 
       const email = ov.email !== undefined ? ov.email : gi === 0 ? b.email : "";
       const phone = ov.phone !== undefined ? ov.phone : gi === 0 ? b.phone : "";
+      const country = ov.country !== undefined ? ov.country : b.country || "";
       const origin: "morocco" | "international" = ov.origin
         ? ov.origin
-        : defaultOrigin === "international"
-          ? "international"
-          : "morocco";
+        : country
+          ? /morocco|maroc|المغرب/i.test(country)
+            ? "morocco"
+            : "international"
+          : defaultOrigin === "international"
+            ? "international"
+            : "morocco";
       const notes = ov.notes !== undefined ? ov.notes : gi === 0 ? b.notes : "";
 
       clients.push({
@@ -2620,7 +2626,7 @@ export function getClients(
         email,
         phone,
         origin,
-        country: b.country || (origin === "morocco" ? "Morocco" : "Étranger"),
+        country: country || (origin === "morocco" ? "Morocco" : "Étranger"),
         ticketCode: b.ticketCode,
         packName: b.packName,
         roomNumber: b.roomNumber,
