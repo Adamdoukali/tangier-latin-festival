@@ -108,10 +108,14 @@ function AdminLayout() {
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center">
-              <span className="font-display text-sm text-white font-bold">T</span>
+              <span className="font-display text-sm text-white font-bold">
+                {currentAdmin?.name.trim().charAt(0).toUpperCase() || "T"}
+              </span>
             </div>
-            <div className="leading-tight">
-              <div className="font-display text-sm tracking-wide text-white">TLF Admin</div>
+            <div className="min-w-0 leading-tight">
+              <div className="max-w-36 truncate font-display text-sm tracking-wide text-white">
+                {currentAdmin?.name || "TLF Admin"}
+              </div>
               <div className="text-[10px] tracking-widest text-slate-400 uppercase">
                 Back Office
               </div>
