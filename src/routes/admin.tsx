@@ -17,7 +17,12 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getAuthStatus, getCurrentAdmin, logoutAdmin } from "@/lib/auth-store";
+import {
+  clearStaleLocalAdminData,
+  getAuthStatus,
+  getCurrentAdmin,
+  logoutAdmin,
+} from "@/lib/auth-store";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -51,6 +56,7 @@ function AdminLayout() {
   const currentAdmin = mounted ? getCurrentAdmin() : null;
 
   useEffect(() => {
+    clearStaleLocalAdminData();
     setMounted(true);
   }, []);
 

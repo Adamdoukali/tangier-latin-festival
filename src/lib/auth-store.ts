@@ -2,9 +2,27 @@
 // admin's identity so back-office changes can be attributed in activity logs.
 
 import { verifyAdminCredentials } from "./admin-auth-server";
+import { supabase } from "./supabase";
 
 const AUTH_KEY = "tlf_admin_auth_token";
 const SESSION_KEY = "tlf_admin_session";
+const REMOTE_ONLY_CLEANUP_KEY = "tlf_remote_only_cleanup_v1";
+
+/** Clear browser-only records created before production was connected to
+ * Supabase. The cached pack catalog is intentionally preserved. */
+export function clearStaleLocalAdminData(): void {
+  if (typeof window === "undefined" || !supabase) return;
+  if (localStorage.getItem(REMOTE_ONLY_CLEANUP_KEY) === "done") return;
+  [
+    "tlf_admin_bookings",
+    "tlf_admin_invites",
+    "tlf_admin_collaborators",
+    "tlf_admin_discounts",
+    "tlf_admin_audit_logs",
+  ].forEach((key) => localStorage.removeItem(key));
+  sessionStorage.removeItem("tlf_db_write_blocked");
+  localStorage.setItem(REMOTE_ONLY_CLEANUP_KEY, "done");
+}
 
 export interface AdminIdentity {
   id: string;

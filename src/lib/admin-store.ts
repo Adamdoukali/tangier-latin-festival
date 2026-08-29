@@ -477,7 +477,8 @@ function setDbBlocked(): void {
   }
 }
 
-const useDb = () => supabase !== null && typeof window !== "undefined" && !isDbBlocked();
+const hasConfiguredDb = () => supabase !== null && typeof window !== "undefined";
+const useDb = () => hasConfiguredDb() && !isDbBlocked();
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function warn(op: string, error: unknown) {
@@ -845,18 +846,18 @@ function getLocalPacks(): Pack[] {
 }
 
 export async function getPacks(): Promise<Pack[]> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
     try {
       const { data, error } = await supabase!
         .from("packs")
         .select("*")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      if (data && data.length > 0) return sortPacks(data.map(packFromRow));
-      // Empty DB: fall back to defaults so the public site never shows nothing.
-      return sortPacks(getLocalPacks());
+      return sortPacks((data ?? []).map(packFromRow));
     } catch (e) {
       warn("getPacks", e);
+      return [];
     }
   }
   return sortPacks(getLocalPacks());
@@ -1116,7 +1117,8 @@ function bookingAuditLabel(booking: Pick<Booking, "customerName" | "ticketCode">
 }
 
 export async function getBookings(): Promise<Booking[]> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
     try {
       const { data, error } = await supabase!
         .from("bookings")
@@ -1126,6 +1128,7 @@ export async function getBookings(): Promise<Booking[]> {
       return (data ?? []).map(bookingFromRow);
     } catch (e) {
       warn("getBookings", e);
+      return [];
     }
   }
   return readStore<Booking>(BOOKINGS_KEY);
@@ -1138,7 +1141,8 @@ export async function getBookingById(id: string): Promise<Booking | undefined> {
 /** Look up a booking by its ticket code (used by the public /ticket page). */
 export async function getBookingByTicketCode(code: string): Promise<Booking | undefined> {
   const wanted = code.trim().toUpperCase();
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return undefined;
     try {
       const { data, error } = await supabase!
         .from("bookings")
@@ -1147,8 +1151,10 @@ export async function getBookingByTicketCode(code: string): Promise<Booking | un
         .maybeSingle();
       if (error) throw error;
       if (data) return bookingFromRow(data);
+      return undefined;
     } catch (e) {
       warn("getBookingByTicketCode", e);
+      return undefined;
     }
   }
   return readStore<Booking>(BOOKINGS_KEY).find((b) => b.ticketCode.toUpperCase() === wanted);
@@ -1186,7 +1192,8 @@ export async function assertFestivalBookingEmailAvailable(email: string): Promis
   const normalizedEmail = normalizeBookingEmail(email);
   if (!normalizedEmail) return;
 
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) throw new Error("The booking database is temporarily unavailable.");
     const { data, error } = await supabase!
       .from("bookings")
       .select("id, pack_id, pack_name, needs_transfer, transfer_type")
@@ -1332,8 +1339,11 @@ export async function addBooking(
       return created;
     } catch (e) {
       warn("addBooking", e);
-      if (options.allowLocalFallback === false) throw e;
+      if (hasConfiguredDb() || options.allowLocalFallback === false) throw e;
     }
+  }
+  if (hasConfiguredDb() || options.allowLocalFallback === false) {
+    throw new Error("The booking database is temporarily unavailable. Please try again.");
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
   const newBooking: Booking = {
@@ -1591,7 +1601,8 @@ export async function deleteBooking(id: string): Promise<boolean> {
 // ─── Discount Codes CRUD ─────────────────────────────────────────────
 
 export async function getDiscountCodes(): Promise<DiscountCode[]> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
     try {
       const { data, error } = await supabase!
         .from("discount_codes")
@@ -1601,6 +1612,7 @@ export async function getDiscountCodes(): Promise<DiscountCode[]> {
       return (data ?? []).map(discountFromRow);
     } catch (e) {
       warn("getDiscountCodes", e);
+      return [];
     }
   }
   return readStore<DiscountCode>(DISCOUNTS_KEY);
@@ -1608,7 +1620,8 @@ export async function getDiscountCodes(): Promise<DiscountCode[]> {
 
 export async function getDiscountCodeByCode(code: string): Promise<DiscountCode | undefined> {
   const wanted = code.trim().toUpperCase();
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return undefined;
     try {
       const { data, error } = await supabase!
         .from("discount_codes")
@@ -1617,8 +1630,10 @@ export async function getDiscountCodeByCode(code: string): Promise<DiscountCode 
         .maybeSingle();
       if (error) throw error;
       if (data) return discountFromRow(data);
+      return undefined;
     } catch (e) {
       warn("getDiscountCodeByCode", e);
+      return undefined;
     }
   }
   return readStore<DiscountCode>(DISCOUNTS_KEY).find((d) => d.code.toUpperCase() === wanted);
@@ -1887,7 +1902,8 @@ export async function validateDiscountCode(
 // ─── Invites CRUD ───────────────────────────────────────────────────
 
 export async function getInvites(): Promise<Invite[]> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
     try {
       const { data, error } = await supabase!
         .from("invites")
@@ -1897,6 +1913,7 @@ export async function getInvites(): Promise<Invite[]> {
       return (data ?? []).map(inviteFromRow);
     } catch (e) {
       warn("getInvites", e);
+      return [];
     }
   }
   return readStore<Invite>(INVITES_KEY);
@@ -2057,7 +2074,8 @@ export async function deleteInvite(id: string): Promise<boolean> {
 // ─── Invite Lookup & Redeem ─────────────────────────────────────────
 
 export async function getInviteByCode(code: string): Promise<Invite | undefined> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return undefined;
     try {
       const { data, error } = await supabase!
         .from("invites")
@@ -2066,10 +2084,10 @@ export async function getInviteByCode(code: string): Promise<Invite | undefined>
         .maybeSingle();
       if (error) throw error;
       if (data) return inviteFromRow(data);
-      // Not in the database — fall through and check localStorage too
-      // (covers invites created while database writes were blocked).
+      return undefined;
     } catch (e) {
       warn("getInviteByCode", e);
+      return undefined;
     }
   }
   return readStore<Invite>(INVITES_KEY).find((i) => i.code === code);
@@ -2220,7 +2238,8 @@ export async function commissionRatesReady(): Promise<boolean> {
 }
 
 export async function getCollaborators(): Promise<Collaborator[]> {
-  if (useDb()) {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
     try {
       const { data, error } = await supabase!
         .from("collaborators")
@@ -2230,6 +2249,7 @@ export async function getCollaborators(): Promise<Collaborator[]> {
       return (data ?? []).map(collabFromRow);
     } catch (e) {
       warn("getCollaborators", e);
+      return [];
     }
   }
   return readStore<Collaborator>(COLLABS_KEY);
