@@ -328,7 +328,7 @@ function BookTransferPage() {
             })),
           ),
           lang,
-          status: "pending",
+          status: "confirmed",
           source: finalCollaboratorId ? "referral" : "website",
           collaboratorId: finalCollaboratorId,
           needsTransfer: true,

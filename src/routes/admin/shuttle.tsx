@@ -141,7 +141,6 @@ function AdminShuttlePage() {
     transferLocation: "Port of Tangier (Tanger Ville)",
     transferDetails: "",
     transferCost: 10,
-    status: "confirmed" as "confirmed" | "pending",
     collaboratorId: "",
     notes: "",
   });
@@ -396,7 +395,6 @@ function AdminShuttlePage() {
       transferLocation: "Port of Tangier (Tanger Ville)",
       transferDetails: "",
       transferCost: 10,
-      status: "confirmed",
       collaboratorId: "",
       notes: "",
     });
@@ -433,7 +431,6 @@ function AdminShuttlePage() {
         transferLocation: loc,
         transferDetails: b.transferDetails || "",
         transferCost: cost,
-        status: b.status === "declined" ? "confirmed" : (b.status as any) || "confirmed",
         collaboratorId: b.collaboratorId || "",
         notes: b.notes || "",
       }));
@@ -473,7 +470,7 @@ function AdminShuttlePage() {
           transferLocation: addForm.transferLocation,
           transferDetails: addForm.transferDetails,
           transferCost: addForm.transferCost,
-          status: addForm.status,
+          status: "confirmed",
           source: assignedPartnerId ? "referral" : "manual",
           collaboratorId: assignedPartnerId,
           notes: [
@@ -515,7 +512,7 @@ function AdminShuttlePage() {
           transferLocation: addForm.transferLocation,
           transferDetails: addForm.transferDetails,
           transferCost: addForm.transferCost,
-          status: addForm.status,
+          status: "confirmed",
           source: addForm.collaboratorId ? "referral" : "manual",
           collaboratorId: addForm.collaboratorId || null,
           notes: addForm.notes,
@@ -1985,19 +1982,9 @@ function AdminShuttlePage() {
                   </div>
                   <div>
                     <label className="font-bold text-gray-700 block mb-1">Status</label>
-                    <select
-                      value={addForm.status}
-                      onChange={(e) =>
-                        setAddForm({
-                          ...addForm,
-                          status: e.target.value as "confirmed" | "pending",
-                        })
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
-                    >
-                      <option value="confirmed">Confirmed</option>
-                      <option value="pending">Pending</option>
-                    </select>
+                    <div className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                      Confirmed automatically
+                    </div>
                   </div>
                 </div>
 

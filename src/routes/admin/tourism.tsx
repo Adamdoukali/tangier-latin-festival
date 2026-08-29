@@ -155,7 +155,6 @@ function AdminTourismPage() {
     roomNumber: "",
     collaboratorId: "",
     notes: "",
-    status: "pending" as BookingStatus,
   });
 
   // Edit Modal
@@ -235,7 +234,7 @@ function AdminTourismPage() {
             };
           })
         ),
-        status: newForm.status,
+        status: "confirmed",
         collaboratorId: newForm.collaboratorId.trim() || null,
         source: newForm.collaboratorId.trim() ? "referral" : "manual",
       });
@@ -251,7 +250,6 @@ function AdminTourismPage() {
         roomNumber: "",
         collaboratorId: "",
         notes: "",
-        status: "pending",
       });
       await reload();
     } catch (err) {
@@ -1060,7 +1058,7 @@ function AdminTourismPage() {
                 </div>
               </div>
 
-              {/* Country & Status */}
+              {/* Country & automatic status */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-gray-700 font-bold mb-1">Country</label>
@@ -1073,18 +1071,9 @@ function AdminTourismPage() {
                 </div>
                 <div>
                   <label className="block text-gray-700 font-bold mb-1">Initial Status</label>
-                  <select
-                    value={newForm.status}
-                    onChange={(e) =>
-                      setNewForm({ ...newForm, status: e.target.value as BookingStatus })
-                    }
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs focus:outline-none focus:border-amber-500 font-semibold"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="checked-in">Checked In</option>
-                    <option value="declined">Declined</option>
-                  </select>
+                  <div className="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                    Confirmed automatically
+                  </div>
                 </div>
               </div>
 

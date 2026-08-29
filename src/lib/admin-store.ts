@@ -1059,6 +1059,8 @@ export async function addBooking(
   options: { allowLocalFallback?: boolean } = {},
 ): Promise<Booking> {
   const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
+  const status: BookingStatus =
+    isTourismBooking(booking) || isTransferBooking(booking) ? "confirmed" : booking.status;
   if (booking.discountCode) {
     incrementDiscountUsage(booking.discountCode).catch(() => {});
   }
@@ -1102,7 +1104,7 @@ export async function addBooking(
           arrival_date: booking.arrivalDate || null,
           departure_date: booking.departureDate || null,
           lang: booking.lang || null,
-          status: booking.status,
+          status,
           source: booking.source ?? "manual",
           collaborator_id: isValidUuid(resolvedCollabId) ? resolvedCollabId : null,
           room_number: booking.roomNumber ?? null,
@@ -1149,6 +1151,7 @@ export async function addBooking(
   const bookings = readStore<Booking>(BOOKINGS_KEY);
   const newBooking: Booking = {
     ...booking,
+    status,
     id: generateId(),
     ticketCode,
     createdAt: new Date().toISOString(),
@@ -2817,7 +2820,7 @@ export function commissionLabel(c: Collaborator): string {
  *  sales only fill the mission — no commission on them. Commission
  *  starts on the bookings that come after the goal is reached. A
  *  booking that crosses the goal line is consumed by the mission. */
-export function isTourismBooking(b: Booking): boolean {
+export function isTourismBooking(b: Pick<Booking, "packId" | "packName">): boolean {
   if (!b) return false;
   const pid = (b.packId || "").toLowerCase();
   if (
@@ -2860,7 +2863,9 @@ export function isTourismBooking(b: Booking): boolean {
 /** A standalone transfer request. Pack reservations that historically included
  * a transfer are deliberately not classified here so their festival pack still
  * counts normally; only the transfer add-on is ignored by partner accounting. */
-export function isTransferBooking(b: Booking): boolean {
+export function isTransferBooking(
+  b: Pick<Booking, "packId" | "packName" | "needsTransfer" | "transferType">,
+): boolean {
   if (!b) return false;
   const value = `${b.packId || ""} ${b.packName || ""}`.toLowerCase();
   return (

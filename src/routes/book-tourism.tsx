@@ -517,7 +517,7 @@ function BookTourismPage() {
         roomNumber: form.roomNumber.trim() || matchedFestivalBooking?.roomNumber || null,
         guestDetails: JSON.stringify(form.guests),
         lang: L,
-        status: "pending",
+        status: "confirmed",
         source: finalCollaboratorId ? "referral" : "website",
         collaboratorId: finalCollaboratorId,
       }, { allowLocalFallback: false });
