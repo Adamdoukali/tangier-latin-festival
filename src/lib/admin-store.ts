@@ -1059,8 +1059,8 @@ export async function addBooking(
   options: { allowLocalFallback?: boolean } = {},
 ): Promise<Booking> {
   const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
-  const status: BookingStatus =
-    isTourismBooking(booking) || isTransferBooking(booking) ? "confirmed" : booking.status;
+  const autoConfirmService = isTourismBooking(booking) || isTransferBooking(booking);
+  const status: BookingStatus = autoConfirmService ? "confirmed" : booking.status;
   if (booking.discountCode) {
     incrementDiscountUsage(booking.discountCode).catch(() => {});
   }
@@ -1142,7 +1142,16 @@ export async function addBooking(
           "transfer_cost",
         ],
       );
-      return bookingFromRow(data);
+      const created = bookingFromRow(data);
+      // Some existing databases still apply a legacy default/trigger that
+      // changes new service requests back to pending. Correct the returned row
+      // immediately so transfers and excursions are reliably auto-confirmed.
+      if (autoConfirmService && created.status !== "confirmed") {
+        const confirmed = await updateBookingStatus(created.id, "confirmed");
+        if (!confirmed) throw new Error("Could not automatically confirm the service booking.");
+        return confirmed;
+      }
+      return created;
     } catch (e) {
       warn("addBooking", e);
       if (options.allowLocalFallback === false) throw e;
