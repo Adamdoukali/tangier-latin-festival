@@ -20,7 +20,6 @@ import {
   getClients,
   packRoomCategory,
   bookingPeopleCount,
-  guestOrigin,
   perPersonRate,
   updateBookingStatus,
   updateBookingRoomNumber,
@@ -31,6 +30,7 @@ import {
   type Booking,
   type Pack,
   type Collaborator,
+  type ClientGuest,
 } from "@/lib/admin-store";
 import {
   formatSpreadsheetDate,
@@ -48,6 +48,7 @@ interface Room {
   pack: Pack | undefined;
   category: "single" | "double" | "special";
   guests: string[];
+  clients: ClientGuest[];
   partner: Collaborator | undefined;
 }
 
@@ -134,8 +135,15 @@ function AdminHotel() {
       const partner = b.collaboratorId
         ? collaborators.find((c) => c.id === b.collaboratorId)
         : undefined;
+      const clients = getClients([b], packs, collaborators);
       return (
         b.customerName.toLowerCase().includes(q) ||
+        clients.some(
+          (client) =>
+            client.fullName.toLowerCase().includes(q) ||
+            client.country.toLowerCase().includes(q) ||
+            client.email.toLowerCase().includes(q),
+        ) ||
         b.ticketCode.toLowerCase().includes(q) ||
         (b.roomNumber ?? "").toLowerCase().includes(q) ||
         (b.roomType ?? "").toLowerCase().includes(q) ||
@@ -145,14 +153,13 @@ function AdminHotel() {
     .map((b) => {
       const pack = packs.find((p) => p.id === b.packId);
       const category = packRoomCategory(pack || b.packName, b.numPeople);
+      const clients = getClients([b], packs, collaborators);
       return {
         booking: b,
         pack,
         category,
-        guests: b.customerName
-          .split(/\s*&\s*/)
-          .map((g) => g.trim())
-          .filter(Boolean),
+        guests: clients.map((client) => client.fullName).filter(Boolean),
+        clients,
         partner: b.collaboratorId
           ? collaborators.find((c) => c.id === b.collaboratorId)
           : undefined,
@@ -164,14 +171,31 @@ function AdminHotel() {
         new Date(a.booking.createdAt).getTime() - new Date(b.booking.createdAt).getTime()
     );
 
-  const moroccanRooms = rooms.filter((r) => guestOrigin(r.booking) === "morocco");
-  const internationalRooms = rooms.filter((r) => guestOrigin(r.booking) === "international");
-  const moroccanGuests = moroccanRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
-  const internationalGuests = internationalRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
+  const roomOrigin = (room: Room): "morocco" | "international" =>
+    room.clients.some((client) => client.origin === "international")
+      ? "international"
+      : "morocco";
+  const roomCountries = (room: Room): string =>
+    Array.from(
+      new Set(
+        room.clients
+          .filter((client) => client.origin === "international")
+          .map((client) => client.country || "Étranger"),
+      ),
+    ).join(" / ") || "Étranger";
+
+  const moroccanRooms = rooms.filter((room) => roomOrigin(room) === "morocco");
+  const internationalRooms = rooms.filter((room) => roomOrigin(room) === "international");
+  const moroccanGuests = rooms
+    .flatMap((room) => room.clients)
+    .filter((client) => client.origin === "morocco").length;
+  const internationalGuests = rooms
+    .flatMap((room) => room.clients)
+    .filter((client) => client.origin === "international").length;
 
   const displayedRooms = rooms.filter((r) => {
-    if (originFilter === "morocco") return guestOrigin(r.booking) === "morocco";
-    if (originFilter === "international") return guestOrigin(r.booking) === "international";
+    if (originFilter === "morocco") return roomOrigin(r) === "morocco";
+    if (originFilter === "international") return roomOrigin(r) === "international";
     return true;
   });
 
@@ -242,15 +266,13 @@ function AdminHotel() {
         ...g.rooms.filter((r) => r.category === "single"),
       ];
       ordered.forEach((r, i) => {
-        const orig = guestOrigin(r.booking);
-        if (targetOrigin !== "all" && orig !== targetOrigin) return;
-
         const roomId = `Chambre ${i + 1} / ${promoter}`;
         const packType = r.pack
           ? `${r.pack.name}${r.pack.sub ? ` - ${r.pack.sub}` : ""}`
           : r.booking.packName;
         const clients = getClients([r.booking], packs, collaborators);
         for (const client of clients) {
+          if (targetOrigin !== "all" && client.origin !== targetOrigin) continue;
           const amount = guestAmount(r);
           const commission = guestCommission(r);
           spreadsheetRows.push([
@@ -377,13 +399,13 @@ function AdminHotel() {
                   ) : ""}
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
-                  {guestOrigin(r.booking) === "morocco" ? (
+                  {roomOrigin(r) === "morocco" ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <span>🇲🇦</span> Morocco
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                      <span>🌐</span> {r.booking.country ? r.booking.country : "Étranger"}
+                      <span>🌐</span> {roomCountries(r)}
                     </span>
                   )}
                 </td>

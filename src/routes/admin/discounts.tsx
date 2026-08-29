@@ -128,6 +128,15 @@ function AdminDiscounts() {
     });
   };
 
+  const selectApplyScope = (applyScope: DiscountApplyScope) => {
+    setForm((current) => ({
+      ...current,
+      applyScope,
+      overridePrice: applyScope === "fixed_price" ? current.overridePrice : "",
+      maxGuestsDiscounted: applyScope === "per_person" ? current.maxGuestsDiscounted : "",
+    }));
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -183,10 +192,17 @@ function AdminDiscounts() {
         notes: form.notes,
       };
 
-      if (editing) {
-        await updateDiscountCode(editing.id, payload);
-      } else {
-        await addDiscountCode(payload);
+      const saved = editing
+        ? await updateDiscountCode(editing.id, payload)
+        : await addDiscountCode(payload);
+      if (!saved) {
+        throw new Error("The discount code was not saved.");
+      }
+      const savedScope = saved.applyScope || "per_booking";
+      if (savedScope !== payload.applyScope) {
+        throw new Error(
+          `The database returned “${savedScope}” instead of “${payload.applyScope}”. Run supabase/discount-customization.sql, then save again.`,
+        );
       }
       setShowModal(false);
       await reload();
@@ -509,7 +525,7 @@ function AdminDiscounts() {
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, applyScope: "per_booking" })}
+                    onClick={() => selectApplyScope("per_booking")}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
                       form.applyScope === "per_booking"
                         ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"
@@ -520,7 +536,7 @@ function AdminDiscounts() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, applyScope: "per_person" })}
+                    onClick={() => selectApplyScope("per_person")}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
                       form.applyScope === "per_person"
                         ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"
@@ -531,7 +547,7 @@ function AdminDiscounts() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, applyScope: "fixed_price" })}
+                    onClick={() => selectApplyScope("fixed_price")}
                     className={`px-3 py-2 rounded-lg text-xs font-semibold text-center transition cursor-pointer border ${
                       form.applyScope === "fixed_price"
                         ? "bg-amber-500 text-slate-950 border-amber-600 shadow-sm"

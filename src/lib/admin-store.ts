@@ -1191,6 +1191,9 @@ export async function updateBookingTransfer(
       return bookingFromRow(data);
     } catch (e) {
       warn("updateBookingTransfer", e);
+      if (!isLocalId(id)) {
+        throw e instanceof Error ? e : new Error("Could not update the transfer.");
+      }
     }
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -1238,6 +1241,9 @@ export async function updateBooking(
       return bookingFromRow(data);
     } catch (e) {
       warn("updateBooking", e);
+      if (!isLocalId(id)) {
+        throw e instanceof Error ? e : new Error("Could not update the booking.");
+      }
     }
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -1283,13 +1289,14 @@ export async function updateBookingStatus(
 }
 
 export async function deleteBooking(id: string): Promise<boolean> {
-  if (useDb()) {
+  if (useDb() && !isLocalId(id)) {
     try {
       const { error } = await supabase!.from("bookings").delete().eq("id", id);
       if (error) throw error;
       return true;
     } catch (e) {
       warn("deleteBooking", e);
+      throw e instanceof Error ? e : new Error("Could not delete the booking.");
     }
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -1360,6 +1367,7 @@ export async function addDiscountCode(
       return discountFromRow(data);
     } catch (e) {
       warn("addDiscountCode", e);
+      throw e instanceof Error ? e : new Error("Could not create the discount code.");
     }
   }
   const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);
@@ -1391,6 +1399,7 @@ export async function updateDiscountCode(
       return discountFromRow(data);
     } catch (e) {
       warn("updateDiscountCode", e);
+      throw e instanceof Error ? e : new Error("Could not update the discount code.");
     }
   }
   const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);
@@ -1410,6 +1419,7 @@ export async function deleteDiscountCode(id: string): Promise<boolean> {
       return true;
     } catch (e) {
       warn("deleteDiscountCode", e);
+      throw e instanceof Error ? e : new Error("Could not delete the discount code.");
     }
   }
   const discounts = readStore<DiscountCode>(DISCOUNTS_KEY);

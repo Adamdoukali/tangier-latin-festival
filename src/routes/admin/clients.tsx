@@ -18,7 +18,7 @@ import {
   getPacks,
   getCollaborators,
   guestDetailsColumnReady,
-  updateBookingGuestDetails,
+  updateBooking,
   getClients,
   parseGuestDetails,
   type Booking,
@@ -52,6 +52,7 @@ function AdminClients() {
     email: string;
     phone: string;
     origin: "morocco" | "international";
+    country: string;
     notes: string;
   }>({
     firstName: "",
@@ -59,6 +60,7 @@ function AdminClients() {
     email: "",
     phone: "",
     origin: "morocco",
+    country: "Morocco",
     notes: "",
   });
 
@@ -101,6 +103,7 @@ function AdminClients() {
       c.lastName.toLowerCase().includes(q) ||
       c.email.toLowerCase().includes(q) ||
       c.phone.toLowerCase().includes(q) ||
+      c.country.toLowerCase().includes(q) ||
       c.ticketCode.toLowerCase().includes(q) ||
       (c.roomNumber ?? "").toLowerCase().includes(q) ||
       (c.roomType ?? "").toLowerCase().includes(q) ||
@@ -116,8 +119,41 @@ function AdminClients() {
       email: client.email,
       phone: client.phone,
       origin: client.origin,
+      country: client.country,
       notes: client.notes ?? "",
     });
+  };
+
+  const countryForOrigin = (
+    currentCountry: string,
+    origin: "morocco" | "international",
+  ): string => {
+    if (origin === "morocco") return "Morocco";
+    return /^(morocco|maroc|المغرب)?$/i.test(currentCountry.trim())
+      ? "Étranger"
+      : currentCountry.trim() || "Étranger";
+  };
+
+  const saveSynchronizedGuestDetails = async (
+    targetBooking: Booking,
+    updatedDetails: GuestDetail[],
+  ) => {
+    const currentGuests = getClients([targetBooking], packs, collaborators);
+    const synchronizedNames = currentGuests.map((guest, index) => {
+      const detail = updatedDetails[index] ?? {};
+      const firstName = detail.firstName ?? guest.firstName;
+      const lastName = detail.lastName ?? guest.lastName;
+      return `${firstName} ${lastName}`.trim() || guest.fullName;
+    });
+    const primary = updatedDetails[0] ?? {};
+    const saved = await updateBooking(targetBooking.id, {
+      guestDetails: JSON.stringify(updatedDetails),
+      customerName: synchronizedNames.join(" & ") || targetBooking.customerName,
+      email: primary.email ?? targetBooking.email,
+      phone: primary.phone ?? targetBooking.phone,
+      country: primary.country ?? targetBooking.country,
+    });
+    if (!saved) throw new Error("The client changes were not saved.");
   };
 
   const handleSaveClient = async () => {
@@ -141,11 +177,12 @@ function AdminClients() {
       email: editForm.email.trim(),
       phone: editForm.phone.trim(),
       origin: editForm.origin,
+      country: countryForOrigin(editForm.country, editForm.origin),
       notes: editForm.notes.trim(),
     };
 
     try {
-      await updateBookingGuestDetails(targetBooking.id, JSON.stringify(updatedDetails));
+      await saveSynchronizedGuestDetails(targetBooking, updatedDetails);
       setEditingClient(null);
       await reload();
     } catch (e) {
@@ -170,10 +207,11 @@ function AdminClients() {
     updatedDetails[client.guestIndex] = {
       ...updatedDetails[client.guestIndex],
       origin: newOrigin,
+      country: countryForOrigin(client.country, newOrigin),
     };
 
     try {
-      await updateBookingGuestDetails(targetBooking.id, JSON.stringify(updatedDetails));
+      await saveSynchronizedGuestDetails(targetBooking, updatedDetails);
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -606,7 +644,13 @@ function AdminClients() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setEditForm({ ...editForm, origin: "morocco" })}
+                    onClick={() =>
+                      setEditForm((current) => ({
+                        ...current,
+                        origin: "morocco",
+                        country: "Morocco",
+                      }))
+                    }
                     className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
                       editForm.origin === "morocco"
                         ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
@@ -617,7 +661,13 @@ function AdminClients() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditForm({ ...editForm, origin: "international" })}
+                    onClick={() =>
+                      setEditForm((current) => ({
+                        ...current,
+                        origin: "international",
+                        country: countryForOrigin(current.country, "international"),
+                      }))
+                    }
                     className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
                       editForm.origin === "international"
                         ? "bg-blue-600 text-white border-blue-600 shadow-sm"
@@ -627,6 +677,22 @@ function AdminClients() {
                     <span>🌐</span> Étranger
                   </button>
                 </div>
+                {editForm.origin === "international" && (
+                  <div className="mt-3">
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                      Country / Nationality
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.country}
+                      onChange={(e) =>
+                        setEditForm((current) => ({ ...current, country: e.target.value }))
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                      placeholder="e.g. Spain, France, United Kingdom"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="col-span-2">

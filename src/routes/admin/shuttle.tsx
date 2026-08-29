@@ -26,6 +26,7 @@ import {
   UserCheck,
   UserPlus,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import {
   getBookings,
@@ -34,6 +35,8 @@ import {
   addBooking,
   updateBooking,
   updateBookingTransfer,
+  updateBookingStatus,
+  deleteBooking,
   calculateTransferCost,
   formatTransferOptionLabel,
   isTourismBooking,
@@ -46,6 +49,7 @@ import {
   type Collaborator,
   type TransferType,
   type TransferOption,
+  type BookingStatus,
 } from "@/lib/admin-store";
 import { buildTransferSpreadsheet } from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
@@ -110,11 +114,14 @@ function AdminShuttlePage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<TabView>("arrivals");
   const [typeFilter, setTypeFilter] = useState<"all" | "port" | "airport">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "confirmed" | "pending" | "declined">(
-    "all",
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "confirmed" | "pending" | "checked-in" | "declined"
+  >("all");
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Add Transfer Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -151,6 +158,7 @@ function AdminShuttlePage() {
     transferDetails: "",
     transferCost: 10,
     collaboratorId: "",
+    status: "pending" as BookingStatus,
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -543,14 +551,66 @@ function AdminShuttlePage() {
           b.transferLocation,
         ),
       collaboratorId: b.collaboratorId || "",
+      status: b.status,
     });
+  };
+
+  const handleStatusChange = async (booking: Booking, status: BookingStatus) => {
+    if (booking.status === status) return;
+    setActionError("");
+    setUpdatingStatusId(booking.id);
+    try {
+      await updateBookingStatus(booking.id, status);
+      await reload();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not update transfer status.");
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const isStandaloneTransfer = (booking: Booking) =>
+    !booking.packId && isTransferBooking(booking);
+
+  const handleDeleteTransfer = async (booking: Booking) => {
+    const standalone = isStandaloneTransfer(booking);
+    const message = standalone
+      ? `Delete the transfer request for ${booking.customerName}? This cannot be undone.`
+      : `Remove the transfer from ${booking.customerName}? Their festival booking will be kept.`;
+    if (!window.confirm(message)) return;
+
+    setActionError("");
+    setDeletingId(booking.id);
+    try {
+      if (standalone) {
+        const deleted = await deleteBooking(booking.id);
+        if (!deleted) throw new Error("The transfer request was not deleted.");
+      } else {
+        const updated = await updateBookingTransfer(booking.id, {
+          needsTransfer: false,
+          transferType: null,
+          transferOption: null,
+          transferLocation: null,
+          transferDetails: null,
+          transferCost: 0,
+        });
+        if (!updated) throw new Error("The transfer was not removed from the booking.");
+      }
+      if (editingBooking?.id === booking.id) setEditingBooking(null);
+      await reload();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not delete the transfer.");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleSaveEdit = async () => {
     if (!editingBooking) return;
     setSavingEdit(true);
+    setActionError("");
     try {
-      await updateBookingTransfer(editingBooking.id, {
+      const transferUpdate = await updateBookingTransfer(editingBooking.id, {
         needsTransfer: editForm.needsTransfer,
         transferType: editForm.needsTransfer ? editForm.transferType : null,
         transferOption: editForm.needsTransfer ? editForm.transferOption : null,
@@ -558,17 +618,43 @@ function AdminShuttlePage() {
         transferDetails: editForm.needsTransfer ? editForm.transferDetails : null,
         transferCost: editForm.needsTransfer ? editForm.transferCost : 0,
       });
-      await updateBooking(editingBooking.id, {
+      if (!transferUpdate) throw new Error("The transfer changes were not saved.");
+      const bookingUpdate = await updateBooking(editingBooking.id, {
         collaboratorId: editForm.collaboratorId || null,
       });
+      if (!bookingUpdate) throw new Error("The partner assignment was not saved.");
+      if (editForm.status !== editingBooking.status) {
+        await updateBookingStatus(editingBooking.id, editForm.status);
+      }
       setEditingBooking(null);
       await reload();
     } catch (err) {
-      console.error(err);
+      setActionError(err instanceof Error ? err.message : "Could not save transfer changes.");
     } finally {
       setSavingEdit(false);
     }
   };
+
+  const statusControl = (booking: Booking) => (
+    <select
+      value={booking.status}
+      onChange={(event) => handleStatusChange(booking, event.target.value as BookingStatus)}
+      disabled={updatingStatusId === booking.id || deletingId === booking.id}
+      className={`rounded-lg border px-2 py-1.5 text-[10px] font-bold uppercase focus:outline-none disabled:opacity-50 ${
+        booking.status === "confirmed" || booking.status === "checked-in"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+          : booking.status === "declined"
+            ? "border-red-200 bg-red-50 text-red-800"
+            : "border-amber-200 bg-amber-50 text-amber-800"
+      }`}
+      aria-label={`Transfer status for ${booking.customerName}`}
+    >
+      <option value="pending">Pending</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="checked-in">Checked-in</option>
+      <option value="declined">Declined</option>
+    </select>
+  );
 
   return (
     <div className="space-y-6 pb-12">
@@ -651,6 +737,21 @@ function AdminShuttlePage() {
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError("")}
+            className="ml-auto rounded p-1 hover:bg-red-100"
+            aria-label="Dismiss error"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
@@ -804,6 +905,7 @@ function AdminShuttlePage() {
             <option value="all">All Statuses</option>
             <option value="confirmed">Confirmed</option>
             <option value="pending">Pending</option>
+            <option value="checked-in">Checked-in</option>
             <option value="declined">Declined</option>
           </select>
 
@@ -964,6 +1066,7 @@ function AdminShuttlePage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
+                        {statusControl(b)}
                         <button
                           onClick={() => openWhatsApp(b, "arrival")}
                           className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-emerald-200"
@@ -978,6 +1081,14 @@ function AdminShuttlePage() {
                           title="Edit Transfer Details"
                         >
                           <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTransfer(b)}
+                          disabled={deletingId === b.id}
+                          className="p-1.5 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+                          title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1107,6 +1218,7 @@ function AdminShuttlePage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
+                        {statusControl(b)}
                         <button
                           onClick={() => openWhatsApp(b, "departure")}
                           className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-emerald-200"
@@ -1121,6 +1233,14 @@ function AdminShuttlePage() {
                           title="Edit Transfer Details"
                         >
                           <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTransfer(b)}
+                          disabled={deletingId === b.id}
+                          className="p-1.5 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
+                          title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -1204,17 +1324,7 @@ function AdminShuttlePage() {
                     <td className="px-4 py-3.5 font-bold text-blue-700">€{b.transferCost || 0}</td>
 
                     <td className="px-4 py-3.5">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          b.status === "confirmed"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : b.status === "declined"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {b.status}
-                      </span>
+                      {statusControl(b)}
                     </td>
 
                     <td className="px-4 py-3.5 text-right space-x-1">
@@ -1231,6 +1341,14 @@ function AdminShuttlePage() {
                         title="Edit Transfer"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTransfer(b)}
+                        disabled={deletingId === b.id}
+                        className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition cursor-pointer disabled:opacity-50"
+                        title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -1288,6 +1406,24 @@ function AdminShuttlePage() {
                       {collaborator.name} ({collaborator.code})
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
+                  Transfer Status
+                </label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, status: e.target.value as BookingStatus })
+                  }
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="checked-in">Checked-in</option>
+                  <option value="declined">Declined</option>
                 </select>
               </div>
 
