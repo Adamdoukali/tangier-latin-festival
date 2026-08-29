@@ -1,0 +1,28 @@
+.git
+.tanstack
+.vercel
+.workspace
+.wrangler
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.nitro
+
+# Local work files that are not part of the deployed application
+Microsoft
+scratch
+partner_bundle
+partner_code.zip
+gallery_old.tsx
+old_photos.json
+fix.js
+merge_cats.js
+compress_videos.ps1
+compress_videos2.ps1
+
+# Local credentials
+.env
+.env.*
+*.local
