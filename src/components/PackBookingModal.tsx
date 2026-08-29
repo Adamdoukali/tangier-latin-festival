@@ -14,6 +14,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { countries, getFlagUrl } from "@/lib/countries";
+import { formatInternationalPhone } from "@/lib/phone";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText } from "@/lib/translations";
 import {
@@ -625,8 +626,10 @@ export function PackBookingModal({
                 if (fn || ln) guestNames.push(`${fn} ${ln}`.trim());
               }
               const customerName = guestNames.join(" & ");
-              const phone =
-                `${formData.get("Phone Country Code") ?? ""} ${formData.get("Phone") ?? ""}`.trim();
+              const phone = formatInternationalPhone(
+                String(formData.get("Phone") || ""),
+                String(formData.get("Phone Country Code") || "+212"),
+              );
               const customerEmail = String(formData.get("Email") ?? "");
 
               // Record the booking FIRST so the guest gets their reservation

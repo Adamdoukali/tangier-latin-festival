@@ -17,6 +17,7 @@ import chefchaouenImg from "@/assets/chefchaouen.jpg";
 import asilahImg from "@/assets/asilah.jpg";
 import tangierImg from "@/assets/tangier-tour.jpg";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 import {
   addBooking,
   getCollaboratorByCode,
@@ -422,9 +423,14 @@ function BookTourismPage() {
     }, 60);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedTour) return;
+    const submittedData = new FormData(e.currentTarget);
+    const phone = formatInternationalPhone(
+      form.phone,
+      String(submittedData.get("Phone Country Code") || "+212"),
+    );
 
     const hasEmptyGuest = form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim());
     if (hasEmptyGuest || !form.email.trim() || !form.phone.trim()) {
@@ -461,7 +467,7 @@ function BookTourismPage() {
     let matchedCollabId = matchedFestivalBooking?.collaboratorId;
     if (!matchedCollabId && (form.phone || form.email || form.guests[0]?.firstName)) {
       const match = await findMatchingFestivalBooking({
-        phone: form.phone,
+        phone,
         email: form.email,
         name: `${form.guests[0]?.firstName || ""} ${form.guests[0]?.lastName || ""}`.trim(),
       });
@@ -507,7 +513,7 @@ function BookTourismPage() {
         packName: `Tourism: ${selectedTour.city} (${selectedTour.date[L] || selectedTour.date.en})`,
         customerName: customerName,
         email: form.email.trim(),
-        phone: form.phone.trim(),
+        phone,
         country: form.country.trim() || matchedFestivalBooking?.country || "Morocco",
         numPeople: numGuests,
         danceLevel: "",
@@ -546,7 +552,7 @@ function BookTourismPage() {
           Date: `${tourDateStr} (${selectedTour.time})`,
           Guests: String(numGuests),
           "Total Price": `${displayTourPrice(totalCost)} ${displayCurrency}`,
-          Phone: form.phone,
+          Phone: phone,
           Country: form.country || "N/A",
           ...(form.roomNumber ? { "Hotel Room": form.roomNumber } : {}),
           ...(form.notes ? { Notes: form.notes } : {}),

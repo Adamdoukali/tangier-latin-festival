@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 import {
   addBooking,
   calculateTransferCost,
@@ -269,10 +270,7 @@ function BookTransferPage() {
           firstName: passenger.firstName.trim(),
           lastName: passenger.lastName.trim(),
           email: passenger.email.trim(),
-          phone: (rawPhone.startsWith("+") ? rawPhone : `${dialCode}${rawPhone}`).replace(
-            /\s+/g,
-            "",
-          ),
+          phone: formatInternationalPhone(rawPhone, dialCode),
           country: passenger.country.trim(),
         };
       });

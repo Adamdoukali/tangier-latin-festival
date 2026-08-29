@@ -16,6 +16,7 @@ import {
   Ship,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 import {
   getActivePacks,
   getPackById,
@@ -302,8 +303,13 @@ function BookPage() {
       guests: f.guests.map((g, i) => (i === idx ? { ...g, [field]: value } : g)),
     }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const submittedData = new FormData(e.currentTarget);
+    const phone = formatInternationalPhone(
+      form.phone,
+      String(submittedData.get("Phone Country Code") || "+212"),
+    );
     const departureDate = selected
       ? constrainPackDepartureDate(form.arrival, form.departure, selected)
       : form.departure;
@@ -340,7 +346,7 @@ function BookPage() {
         packName: packLabel(selected),
         customerName,
         email: form.email,
-        phone: form.phone,
+        phone,
         country: form.country,
         numPeople: form.guests.length > 0 ? form.guests.length : getGuestCount(selected) || 1,
         danceLevel: "",
@@ -373,7 +379,7 @@ function BookPage() {
           name: customerName,
           email: form.email,
           Pack: `${selected.name} - ${selected.sub} (${selected.price} ${selected.currency || "€"})`,
-          Phone: form.phone,
+          Phone: phone,
           Country: form.country,
           Arrival: form.arrival,
           Departure: departureDate,

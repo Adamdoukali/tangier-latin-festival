@@ -19,7 +19,6 @@ import {
   X,
   ExternalLink,
   Sparkles,
-  Ticket,
   ChevronRight,
   TrendingUp,
   Plus,
@@ -269,7 +268,6 @@ function AdminTourismPage() {
 
   // KPIs
   const stats = useMemo(() => {
-    const totalBookings = tourismBookings.length;
     const active = tourismBookings.filter((b) => b.status !== "declined");
     const totalGuests = active.reduce((sum, b) => sum + (b.numPeople || 1), 0);
 
@@ -291,7 +289,6 @@ function AdminTourismPage() {
       .reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
 
     return {
-      totalBookings,
       totalGuests,
       tangierGuests,
       asilahGuests,
@@ -509,15 +506,6 @@ function AdminTourismPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between text-gray-500">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Total Bookings</span>
-            <Ticket className="h-4 w-4 text-blue-600" />
-          </div>
-          <p className="mt-2 font-display text-2xl font-black text-slate-900">{stats.totalBookings}</p>
-          <span className="text-[10px] text-gray-400 font-medium">Reservations</span>
-        </div>
-
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between text-gray-500">
             <span className="text-[10px] font-bold uppercase tracking-wider">Total Guests</span>

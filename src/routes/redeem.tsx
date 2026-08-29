@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 import { z } from "zod";
 import QRCode from "qrcode";
 import {
@@ -109,9 +110,14 @@ function RedeemPage() {
       guests: f.guests.map((g, i) => (i === idx ? { ...g, [field]: value } : g)),
     }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!code || !invite) return;
+    const submittedData = new FormData(e.currentTarget);
+    const phone = formatInternationalPhone(
+      form.phone,
+      String(submittedData.get("Phone Country Code") || "+212"),
+    );
     const departureDate = pack
       ? constrainPackDepartureDate(form.arrival, form.departure, pack)
       : form.departure;
@@ -135,7 +141,7 @@ function RedeemPage() {
     const result = await redeemInvite(code, {
       customerName,
       email: form.email,
-      phone: form.phone,
+      phone,
       country: form.country,
       arrivalDate: form.arrival,
       departureDate,
@@ -159,7 +165,7 @@ function RedeemPage() {
           Pack: result.booking.packName,
           "Invite code": code ?? "",
           "Ticket code": result.booking.ticketCode,
-          Phone: form.phone,
+          Phone: phone,
           Country: form.country,
           Notes: form.notes,
         },

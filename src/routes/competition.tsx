@@ -8,6 +8,7 @@ import competitionImg from "@/assets/competition.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 
 const competitionSearchSchema = z.object({
   lang: z.enum(["en", "fr", "es"]).optional(),
@@ -179,6 +180,14 @@ function CompetitionPage() {
               e.preventDefault();
               setIsSubmitting(true);
               const formData = new FormData(e.currentTarget);
+              formData.set(
+                "phone",
+                formatInternationalPhone(
+                  String(formData.get("phone") || ""),
+                  String(formData.get("Phone Country Code") || "+212"),
+                ),
+              );
+              formData.delete("Phone Country Code");
               formData.append("access_key", "132f8460-381d-4f1b-861e-acb51f25e842");
               formData.append("subject", "New Competition Registration");
               
@@ -381,4 +390,3 @@ function AnimatedProgress({ value }: { value: number }) {
     </div>
   );
 }
-

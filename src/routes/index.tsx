@@ -57,6 +57,7 @@ import {
   Language,
 } from "@/lib/translations";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
+import { formatInternationalPhone } from "@/lib/phone";
 import { sendFormNotification, contactAutoResponse } from "@/lib/form-notify";
 
 export const Route = createFileRoute("/")({
@@ -963,6 +964,10 @@ function ContactForm() {
     setIsSubmitting(true);
     setError(false);
     const formData = new FormData(e.currentTarget);
+    const phone = formatInternationalPhone(
+      String(formData.get("phone") || ""),
+      String(formData.get("Phone Country Code") || "+212"),
+    );
 
     try {
       const ok = await sendFormNotification({
@@ -970,7 +975,7 @@ function ContactForm() {
         fields: {
           name: String(formData.get("name") ?? ""),
           email: String(formData.get("email") ?? ""),
-          Phone: String(formData.get("phone") ?? ""),
+          Phone: phone,
           Message: String(formData.get("message") ?? ""),
         },
         autoresponse: contactAutoResponse(lang),
