@@ -32,6 +32,7 @@ import {
   packLabel,
   packDepartureDateLimits,
   constrainPackDepartureDate,
+  isDuplicateBookingEmailError,
   ticketUrl,
   EUR_TO_MAD,
   partnerCurrency,
@@ -362,6 +363,17 @@ function BookPage() {
         discountCodeId: finalDiscount?.id ?? null,
       });
     } catch (dbErr) {
+      if (isDuplicateBookingEmailError(dbErr)) {
+        setError(
+          tr(
+            "This email address is already used for another festival booking. Please use a different email address.",
+            "Cette adresse e-mail est déjà utilisée pour une autre réservation festival. Veuillez utiliser une autre adresse e-mail.",
+            "Este correo electrónico ya se utiliza para otra reserva del festival. Utiliza otro correo electrónico.",
+          ),
+        );
+        setSubmitting(false);
+        return;
+      }
       console.warn("Could not record booking:", dbErr);
     }
 

@@ -1054,6 +1054,66 @@ export async function getBookingByTicketCode(code: string): Promise<Booking | un
   return readStore<Booking>(BOOKINGS_KEY).find((b) => b.ticketCode.toUpperCase() === wanted);
 }
 
+export const DUPLICATE_BOOKING_EMAIL_MESSAGE =
+  "This email address is already used for another festival booking. Please use a different email address.";
+
+export class DuplicateBookingEmailError extends Error {
+  readonly code = "DUPLICATE_BOOKING_EMAIL";
+
+  constructor() {
+    super(DUPLICATE_BOOKING_EMAIL_MESSAGE);
+    this.name = "DuplicateBookingEmailError";
+  }
+}
+
+export function isDuplicateBookingEmailError(error: unknown): boolean {
+  return (
+    error instanceof DuplicateBookingEmailError ||
+    (typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "DUPLICATE_BOOKING_EMAIL")
+  );
+}
+
+const normalizeBookingEmail = (email: string | null | undefined): string =>
+  (email || "").trim().toLowerCase();
+
+/** Festival pack tickets require one unique email per booking. Standalone
+ * transfers and excursions deliberately remain excluded so an existing guest
+ * can use the same email to link those services to their festival ticket. */
+export async function assertFestivalBookingEmailAvailable(email: string): Promise<void> {
+  const normalizedEmail = normalizeBookingEmail(email);
+  if (!normalizedEmail) return;
+
+  if (useDb()) {
+    const { data, error } = await supabase!
+      .from("bookings")
+      .select("id, pack_id, pack_name, needs_transfer, transfer_type")
+      .ilike("email", normalizedEmail);
+    if (error) throw new Error(`Could not verify the booking email: ${error.message}`);
+    const duplicate = (data || []).some((row) => {
+      const candidate = {
+        packId: row.pack_id,
+        packName: row.pack_name,
+        needsTransfer: row.needs_transfer,
+        transferType: row.transfer_type,
+      } as Pick<Booking, "packId" | "packName" | "needsTransfer" | "transferType">;
+      return !isTourismBooking(candidate) && !isTransferBooking(candidate);
+    });
+    if (duplicate) throw new DuplicateBookingEmailError();
+    return;
+  }
+
+  const duplicate = readStore<Booking>(BOOKINGS_KEY).some(
+    (existing) =>
+      normalizeBookingEmail(existing.email) === normalizedEmail &&
+      !isTourismBooking(existing) &&
+      !isTransferBooking(existing),
+  );
+  if (duplicate) throw new DuplicateBookingEmailError();
+}
+
 export async function addBooking(
   booking: Omit<Booking, "id" | "ticketCode" | "createdAt"> & { ticketCode?: string },
   options: { allowLocalFallback?: boolean } = {},
@@ -1061,6 +1121,8 @@ export async function addBooking(
   const ticketCode = (booking.ticketCode?.trim() || generateTicketCode()).toUpperCase();
   const autoConfirmService = isTourismBooking(booking) || isTransferBooking(booking);
   const status: BookingStatus = autoConfirmService ? "confirmed" : booking.status;
+  const email = normalizeBookingEmail(booking.email);
+  if (!autoConfirmService) await assertFestivalBookingEmailAvailable(email);
   if (booking.discountCode) {
     incrementDiscountUsage(booking.discountCode).catch(() => {});
   }
@@ -1095,7 +1157,7 @@ export async function addBooking(
           pack_id: isValidUuid(booking.packId) ? booking.packId : null,
           pack_name: booking.packName,
           customer_name: booking.customerName,
-          email: booking.email,
+          email,
           phone: booking.phone,
           country: booking.country,
           num_people: booking.numPeople,
@@ -1160,6 +1222,7 @@ export async function addBooking(
   const bookings = readStore<Booking>(BOOKINGS_KEY);
   const newBooking: Booking = {
     ...booking,
+    email,
     status,
     id: generateId(),
     ticketCode,
@@ -1715,6 +1778,19 @@ export async function redeemInvite(
   const invite = await getInviteByCode(inviteCode);
   if (!invite) return { success: false, error: "Invite code not found." };
   if (invite.used) return { success: false, error: "This invite has already been used." };
+
+  try {
+    await assertFestivalBookingEmailAvailable(data.email);
+  } catch (error) {
+    return {
+      success: false,
+      error: isDuplicateBookingEmailError(error)
+        ? DUPLICATE_BOOKING_EMAIL_MESSAGE
+        : error instanceof Error
+          ? error.message
+          : "Could not verify this email address.",
+    };
+  }
 
   const pack = await getPackById(invite.packId);
 

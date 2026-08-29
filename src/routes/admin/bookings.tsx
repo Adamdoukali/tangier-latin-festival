@@ -153,22 +153,26 @@ function AdminBookings() {
       .filter(Boolean);
     const customerName = extraNames.length > 0 ? [leadName, ...extraNames].join(" & ") : leadName;
 
-    await addBooking({
-      ...form,
-      customerName,
-      company: form.company.trim() || null,
-      packName: packLabel(pack),
-      arrivalDate: form.arrival || null,
-      arrivalTime: form.arrivalTime.trim() || null,
-      departureDate: departureDate || null,
-      departureTime: form.departureTime.trim() || null,
-      roomNumber: form.roomNumber.trim() || null,
-      roomType: form.roomType.trim() || null,
-      collaboratorId: form.collaboratorId.trim() || null,
-      source: form.collaboratorId.trim() ? "referral" : "manual",
-    });
-    setShowForm(false);
-    await reload();
+    try {
+      await addBooking({
+        ...form,
+        customerName,
+        company: form.company.trim() || null,
+        packName: packLabel(pack),
+        arrivalDate: form.arrival || null,
+        arrivalTime: form.arrivalTime.trim() || null,
+        departureDate: departureDate || null,
+        departureTime: form.departureTime.trim() || null,
+        roomNumber: form.roomNumber.trim() || null,
+        roomType: form.roomType.trim() || null,
+        collaboratorId: form.collaboratorId.trim() || null,
+        source: form.collaboratorId.trim() ? "referral" : "manual",
+      });
+      setShowForm(false);
+      await reload();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not create the booking.");
+    }
   };
 
   const handleStatusChange = async (id: string, status: BookingStatus) => {

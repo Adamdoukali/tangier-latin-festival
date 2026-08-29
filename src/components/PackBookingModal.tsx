@@ -30,6 +30,7 @@ import {
   EUR_TO_MAD,
   packDepartureDateLimits,
   constrainPackDepartureDate,
+  isDuplicateBookingEmailError,
   type Booking,
   type DiscountCode,
   type TransferType,
@@ -119,7 +120,7 @@ export function PackBookingModal({
   const { t, lang } = useLanguage();
   const [submitted, setSubmitted] = useState(false);
   const [reservation, setReservation] = useState<Booking | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const numGuests =
@@ -574,7 +575,7 @@ export function PackBookingModal({
             onSubmit={async (e) => {
               e.preventDefault();
               setIsSubmitting(true);
-              setError(false);
+              setError("");
               const formData = new FormData(e.currentTarget);
               const savedDepartureDate = constrainPackDepartureDate(
                 arrivalDate,
@@ -700,6 +701,17 @@ export function PackBookingModal({
                   transferCost: needsTransfer ? transferCost : 0,
                 });
               } catch (dbErr) {
+                if (isDuplicateBookingEmailError(dbErr)) {
+                  setError(
+                    lang === "fr"
+                      ? "Cette adresse e-mail est déjà utilisée pour une autre réservation festival. Veuillez utiliser une autre adresse e-mail."
+                      : lang === "es"
+                        ? "Este correo electrónico ya se utiliza para otra reserva del festival. Utiliza otro correo electrónico."
+                        : "This email address is already used for another festival booking. Please use a different email address.",
+                  );
+                  setIsSubmitting(false);
+                  return;
+                }
                 console.warn("Could not record booking in database:", dbErr);
               }
 
@@ -748,7 +760,7 @@ export function PackBookingModal({
                 setSubmitted(true);
               } catch (err) {
                 console.error(err);
-                setError(true);
+                setError(t("packFormError"));
               } finally {
                 setIsSubmitting(false);
               }
@@ -1449,7 +1461,7 @@ export function PackBookingModal({
 
             {error && (
               <p className="text-center text-xs text-red-600 mt-2 font-medium">
-                {t("packFormError")}
+                {error}
               </p>
             )}
 
