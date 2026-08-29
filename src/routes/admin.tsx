@@ -10,13 +10,14 @@ import {
   Tag,
   Bus,
   Compass,
+  ScrollText,
   ArrowLeft,
   Menu,
   X,
   LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getAuthStatus, logoutAdmin } from "@/lib/auth-store";
+import { getAuthStatus, getCurrentAdmin, logoutAdmin } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -34,6 +35,7 @@ const navItems = [
   { to: "/admin/collaborators", label: "Collaborators", icon: Users, exact: false },
   { to: "/admin/hotel", label: "Hotel", icon: Building2, exact: false },
   { to: "/admin/bracelets", label: "Bracelets", icon: Watch, exact: false },
+  { to: "/admin/logs", label: "Activity Logs", icon: ScrollText, exact: false },
 ];
 
 function AdminLayout() {
@@ -46,6 +48,7 @@ function AdminLayout() {
   const navigate = useNavigate();
 
   const isLoginPage = location.pathname === "/admin/login";
+  const currentAdmin = mounted ? getCurrentAdmin() : null;
 
   useEffect(() => {
     setMounted(true);
@@ -102,9 +105,7 @@ function AdminLayout() {
               <span className="font-display text-sm text-white font-bold">T</span>
             </div>
             <div className="leading-tight">
-              <div className="font-display text-sm tracking-wide text-white">
-                TLF Admin
-              </div>
+              <div className="font-display text-sm tracking-wide text-white">TLF Admin</div>
               <div className="text-[10px] tracking-widest text-slate-400 uppercase">
                 Back Office
               </div>
@@ -173,10 +174,16 @@ function AdminLayout() {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="font-display text-lg tracking-wide text-gray-900">
-            {navItems.find((n) =>
-              isActive(n.to, n.exact)
-            )?.label ?? "Admin"}
+            {navItems.find((n) => isActive(n.to, n.exact))?.label ?? "Admin"}
           </h1>
+          {currentAdmin && (
+            <div className="ml-auto min-w-0 text-right">
+              <p className="truncate text-xs font-semibold text-slate-700">{currentAdmin.name}</p>
+              <p className="hidden truncate text-[10px] text-slate-400 sm:block">
+                {currentAdmin.email}
+              </p>
+            </div>
+          )}
         </header>
 
         {/* Page content */}

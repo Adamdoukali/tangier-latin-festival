@@ -11,6 +11,7 @@ function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // If already logged in, redirect away from login page
@@ -20,14 +21,21 @@ function AdminLogin() {
     }
   }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const success = loginAdmin(email, password);
-    if (success) {
-      navigate({ to: "/admin" });
-    } else {
-      setError("Invalid email or password. Please try again.");
+    setSubmitting(true);
+    try {
+      const success = await loginAdmin(email, password);
+      if (success) {
+        navigate({ to: "/admin" });
+      } else {
+        setError("Invalid email or password. Please try again.");
+      }
+    } catch {
+      setError("Could not connect to the admin login. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -40,9 +48,7 @@ function AdminLogin() {
 
       {/* Banner — swap for a custom image anytime */}
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
-        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">
-          Tangier International
-        </p>
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
         <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
           LATIN FESTIVAL
         </h1>
@@ -99,9 +105,10 @@ function AdminLogin() {
               <div className="pt-2 text-center">
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all group cursor-pointer"
+                  disabled={submitting}
+                  className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all group cursor-pointer disabled:cursor-wait disabled:opacity-60"
                 >
-                  Admin Login
+                  {submitting ? "Signing in…" : "Admin Login"}
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

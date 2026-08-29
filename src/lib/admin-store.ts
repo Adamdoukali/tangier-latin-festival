@@ -8,6 +8,7 @@
 // SQL Editor to create the collaborators table + attribution columns.
 
 import { supabase } from "./supabase";
+import { recordAdminAction } from "./admin-audit";
 
 // ─── Types ──────────────────────────────────────────────────────────
 
@@ -881,6 +882,12 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
     for (let i = 0; i < orderedIds.length; i++) {
       await updatePack(orderedIds[i], { sortOrder: i + 1 });
     }
+    await recordAdminAction({
+      action: "reorder",
+      section: "Packs",
+      summary: `Reordered ${orderedIds.length} packs`,
+      changes: { orderedIds },
+    });
     return true;
   }
 
@@ -900,6 +907,12 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
         return false;
       }
     }
+    await recordAdminAction({
+      action: "reorder",
+      section: "Packs",
+      summary: `Reordered ${orderedIds.length} packs`,
+      changes: { orderedIds },
+    });
     return true;
   }
 
@@ -919,6 +932,12 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
       return false;
     }
   }
+  await recordAdminAction({
+    action: "reorder",
+    section: "Packs",
+    summary: `Reordered ${orderedIds.length} packs`,
+    changes: { orderedIds },
+  });
   return true;
 }
 
@@ -934,7 +953,16 @@ export async function addPack(pack: Omit<Pack, "id" | "createdAt">): Promise<Pac
   if (useDb()) {
     try {
       const data = await insertRow("packs", packToRow(pack));
-      return packFromRow(data);
+      const created = packFromRow(data);
+      await recordAdminAction({
+        action: "create",
+        section: "Packs",
+        entityId: created.id,
+        entityLabel: packLabel(created),
+        summary: `Created pack ${packLabel(created)}`,
+        after: created,
+      });
+      return created;
     } catch (e) {
       warn("addPack", e);
     }
@@ -943,6 +971,14 @@ export async function addPack(pack: Omit<Pack, "id" | "createdAt">): Promise<Pac
   const newPack: Pack = { ...pack, id: generateId(), createdAt: new Date().toISOString() };
   packs.push(newPack);
   writeStore(PACKS_KEY, packs);
+  await recordAdminAction({
+    action: "create",
+    section: "Packs",
+    entityId: newPack.id,
+    entityLabel: packLabel(newPack),
+    summary: `Created pack ${packLabel(newPack)}`,
+    after: newPack,
+  });
   return newPack;
 }
 
@@ -950,6 +986,7 @@ export async function updatePack(
   id: string,
   updates: Partial<Omit<Pack, "id" | "createdAt">>,
 ): Promise<Pack | null> {
+  const before = await getPackById(id);
   if (useDb()) {
     try {
       const { data, error } = await supabase!
@@ -959,7 +996,18 @@ export async function updatePack(
         .select()
         .single();
       if (error) throw error;
-      return packFromRow(data);
+      const updated = packFromRow(data);
+      await recordAdminAction({
+        action: "update",
+        section: "Packs",
+        entityId: id,
+        entityLabel: packLabel(updated),
+        summary: `Updated pack ${packLabel(updated)}`,
+        before,
+        after: updated,
+        changes: updates,
+      });
+      return updated;
     } catch (e) {
       warn("updatePack", e);
     }
@@ -969,14 +1017,33 @@ export async function updatePack(
   if (idx === -1) return null;
   packs[idx] = { ...packs[idx], ...updates };
   writeStore(PACKS_KEY, packs);
+  await recordAdminAction({
+    action: "update",
+    section: "Packs",
+    entityId: id,
+    entityLabel: packLabel(packs[idx]),
+    summary: `Updated pack ${packLabel(packs[idx])}`,
+    before,
+    after: packs[idx],
+    changes: updates,
+  });
   return packs[idx];
 }
 
 export async function deletePack(id: string): Promise<boolean> {
+  const before = await getPackById(id);
   if (useDb()) {
     try {
       const { error } = await supabase!.from("packs").delete().eq("id", id);
       if (error) throw error;
+      await recordAdminAction({
+        action: "delete",
+        section: "Packs",
+        entityId: id,
+        entityLabel: before ? packLabel(before) : id,
+        summary: `Deleted pack ${before ? packLabel(before) : id}`,
+        before,
+      });
       return true;
     } catch (e) {
       warn("deletePack", e);
@@ -986,6 +1053,14 @@ export async function deletePack(id: string): Promise<boolean> {
   const filtered = packs.filter((p) => p.id !== id);
   if (filtered.length === packs.length) return false;
   writeStore(PACKS_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: "Packs",
+    entityId: id,
+    entityLabel: before ? packLabel(before) : id,
+    summary: `Deleted pack ${before ? packLabel(before) : id}`,
+    before,
+  });
   return true;
 }
 
@@ -1010,10 +1085,35 @@ export async function seedPacksToDb(): Promise<number> {
     warn("seedPacksToDb", firstError);
     throw firstError;
   }
+  if (inserted > 0) {
+    await recordAdminAction({
+      action: "create",
+      section: "Packs",
+      summary: `Restored ${inserted} default packs`,
+      changes: { inserted },
+    });
+  }
   return inserted;
 }
 
 // ─── Bookings CRUD ──────────────────────────────────────────────────
+
+function bookingAuditSection(
+  booking: Pick<Booking, "packId" | "packName" | "needsTransfer" | "transferType">,
+): string {
+  if (typeof window !== "undefined") {
+    if (window.location.pathname.startsWith("/admin/clients")) return "Clients";
+    if (window.location.pathname.startsWith("/admin/hotel")) return "Hotel";
+    if (window.location.pathname.startsWith("/admin/bracelets")) return "Bracelets";
+  }
+  if (isTransferBooking(booking)) return "Transfers";
+  if (isTourismBooking(booking)) return "Tourism";
+  return "Bookings";
+}
+
+function bookingAuditLabel(booking: Pick<Booking, "customerName" | "ticketCode">): string {
+  return `${booking.customerName || "Unnamed client"}${booking.ticketCode ? ` (${booking.ticketCode})` : ""}`;
+}
 
 export async function getBookings(): Promise<Booking[]> {
   if (useDb()) {
@@ -1211,8 +1311,24 @@ export async function addBooking(
       if (autoConfirmService && created.status !== "confirmed") {
         const confirmed = await updateBookingStatus(created.id, "confirmed");
         if (!confirmed) throw new Error("Could not automatically confirm the service booking.");
+        await recordAdminAction({
+          action: "create",
+          section: bookingAuditSection(confirmed),
+          entityId: confirmed.id,
+          entityLabel: bookingAuditLabel(confirmed),
+          summary: `Created ${bookingAuditSection(confirmed).toLowerCase()} record for ${confirmed.customerName}`,
+          after: confirmed,
+        });
         return confirmed;
       }
+      await recordAdminAction({
+        action: "create",
+        section: bookingAuditSection(created),
+        entityId: created.id,
+        entityLabel: bookingAuditLabel(created),
+        summary: `Created ${bookingAuditSection(created).toLowerCase()} record for ${created.customerName}`,
+        after: created,
+      });
       return created;
     } catch (e) {
       warn("addBooking", e);
@@ -1230,6 +1346,14 @@ export async function addBooking(
   };
   bookings.push(newBooking);
   writeStore(BOOKINGS_KEY, bookings);
+  await recordAdminAction({
+    action: "create",
+    section: bookingAuditSection(newBooking),
+    entityId: newBooking.id,
+    entityLabel: bookingAuditLabel(newBooking),
+    summary: `Created ${bookingAuditSection(newBooking).toLowerCase()} record for ${newBooking.customerName}`,
+    after: newBooking,
+  });
   return newBooking;
 }
 
@@ -1244,6 +1368,7 @@ export async function updateBookingTransfer(
     transferCost?: number | null;
   },
 ): Promise<Booking | null> {
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     try {
       const updates: Record<string, any> = {};
@@ -1263,7 +1388,18 @@ export async function updateBookingTransfer(
         .select()
         .single();
       if (error) throw error;
-      return bookingFromRow(data);
+      const updated = bookingFromRow(data);
+      await recordAdminAction({
+        action: "update",
+        section: "Transfers",
+        entityId: id,
+        entityLabel: bookingAuditLabel(updated),
+        summary: `Updated transfer for ${updated.customerName}`,
+        before,
+        after: updated,
+        changes: transfer,
+      });
+      return updated;
     } catch (e) {
       warn("updateBookingTransfer", e);
       if (!isLocalId(id)) {
@@ -1276,6 +1412,16 @@ export async function updateBookingTransfer(
   if (idx === -1) return null;
   bookings[idx] = { ...bookings[idx], ...transfer };
   writeStore(BOOKINGS_KEY, bookings);
+  await recordAdminAction({
+    action: "update",
+    section: "Transfers",
+    entityId: id,
+    entityLabel: bookingAuditLabel(bookings[idx]),
+    summary: `Updated transfer for ${bookings[idx].customerName}`,
+    before,
+    after: bookings[idx],
+    changes: transfer,
+  });
   return bookings[idx];
 }
 
@@ -1283,6 +1429,7 @@ export async function updateBooking(
   id: string,
   updates: Partial<Booking>,
 ): Promise<Booking | null> {
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     try {
       const rowUpdates: Record<string, any> = {};
@@ -1313,7 +1460,18 @@ export async function updateBooking(
         .select()
         .single();
       if (error) throw error;
-      return bookingFromRow(data);
+      const updated = bookingFromRow(data);
+      await recordAdminAction({
+        action: "update",
+        section: bookingAuditSection(updated),
+        entityId: id,
+        entityLabel: bookingAuditLabel(updated),
+        summary: `Updated ${bookingAuditSection(updated).toLowerCase()} record for ${updated.customerName}`,
+        before,
+        after: updated,
+        changes: updates,
+      });
+      return updated;
     } catch (e) {
       warn("updateBooking", e);
       if (!isLocalId(id)) {
@@ -1326,6 +1484,16 @@ export async function updateBooking(
   if (idx === -1) return null;
   bookings[idx] = { ...bookings[idx], ...updates };
   writeStore(BOOKINGS_KEY, bookings);
+  await recordAdminAction({
+    action: "update",
+    section: bookingAuditSection(bookings[idx]),
+    entityId: id,
+    entityLabel: bookingAuditLabel(bookings[idx]),
+    summary: `Updated ${bookingAuditSection(bookings[idx]).toLowerCase()} record for ${bookings[idx].customerName}`,
+    before,
+    after: bookings[idx],
+    changes: updates,
+  });
   return bookings[idx];
 }
 
@@ -1333,6 +1501,7 @@ export async function updateBookingStatus(
   id: string,
   status: BookingStatus,
 ): Promise<Booking | null> {
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     const { data, error } = await supabase!
       .from("bookings")
@@ -1353,21 +1522,51 @@ export async function updateBookingStatus(
       }
       throw new Error(error.message || "Could not update the booking status.");
     }
-    return bookingFromRow(data);
+    const updated = bookingFromRow(data);
+    await recordAdminAction({
+      action: "status",
+      section: bookingAuditSection(updated),
+      entityId: id,
+      entityLabel: bookingAuditLabel(updated),
+      summary: `Changed ${updated.customerName}'s status to ${status}`,
+      before,
+      after: updated,
+      changes: { status },
+    });
+    return updated;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
   const idx = bookings.findIndex((b) => b.id === id);
   if (idx === -1) return null;
   bookings[idx] = { ...bookings[idx], status };
   writeStore(BOOKINGS_KEY, bookings);
+  await recordAdminAction({
+    action: "status",
+    section: bookingAuditSection(bookings[idx]),
+    entityId: id,
+    entityLabel: bookingAuditLabel(bookings[idx]),
+    summary: `Changed ${bookings[idx].customerName}'s status to ${status}`,
+    before,
+    after: bookings[idx],
+    changes: { status },
+  });
   return bookings[idx];
 }
 
 export async function deleteBooking(id: string): Promise<boolean> {
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     try {
       const { error } = await supabase!.from("bookings").delete().eq("id", id);
       if (error) throw error;
+      await recordAdminAction({
+        action: "delete",
+        section: before ? bookingAuditSection(before) : "Bookings",
+        entityId: id,
+        entityLabel: before ? bookingAuditLabel(before) : id,
+        summary: `Deleted ${before ? bookingAuditSection(before).toLowerCase() : "booking"} record${before ? ` for ${before.customerName}` : ""}`,
+        before,
+      });
       return true;
     } catch (e) {
       warn("deleteBooking", e);
@@ -1378,6 +1577,14 @@ export async function deleteBooking(id: string): Promise<boolean> {
   const filtered = bookings.filter((b) => b.id !== id);
   if (filtered.length === bookings.length) return false;
   writeStore(BOOKINGS_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: before ? bookingAuditSection(before) : "Bookings",
+    entityId: id,
+    entityLabel: before ? bookingAuditLabel(before) : id,
+    summary: `Deleted ${before ? bookingAuditSection(before).toLowerCase() : "booking"} record${before ? ` for ${before.customerName}` : ""}`,
+    before,
+  });
   return true;
 }
 
@@ -1439,7 +1646,16 @@ export async function addDiscountCode(
         notes: discount.notes ?? null,
       });
 
-      return discountFromRow(data);
+      const created = discountFromRow(data);
+      await recordAdminAction({
+        action: "create",
+        section: "Discounts",
+        entityId: created.id,
+        entityLabel: created.code,
+        summary: `Created discount code ${created.code}`,
+        after: created,
+      });
+      return created;
     } catch (e) {
       warn("addDiscountCode", e);
       throw e instanceof Error ? e : new Error("Could not create the discount code.");
@@ -1455,6 +1671,14 @@ export async function addDiscountCode(
   };
   discounts.push(newDiscount);
   writeStore(DISCOUNTS_KEY, discounts);
+  await recordAdminAction({
+    action: "create",
+    section: "Discounts",
+    entityId: newDiscount.id,
+    entityLabel: newDiscount.code,
+    summary: `Created discount code ${newDiscount.code}`,
+    after: newDiscount,
+  });
   return newDiscount;
 }
 
@@ -1462,6 +1686,7 @@ export async function updateDiscountCode(
   id: string,
   updates: Partial<Omit<DiscountCode, "id" | "createdAt">>,
 ): Promise<DiscountCode | null> {
+  const before = (await getDiscountCodes()).find((discount) => discount.id === id);
   if (useDb() && !isLocalId(id)) {
     try {
       const { data, error } = await supabase!
@@ -1471,7 +1696,18 @@ export async function updateDiscountCode(
         .select()
         .single();
       if (error) throw error;
-      return discountFromRow(data);
+      const updated = discountFromRow(data);
+      await recordAdminAction({
+        action: "update",
+        section: "Discounts",
+        entityId: id,
+        entityLabel: updated.code,
+        summary: `Updated discount code ${updated.code}`,
+        before,
+        after: updated,
+        changes: updates,
+      });
+      return updated;
     } catch (e) {
       warn("updateDiscountCode", e);
       throw e instanceof Error ? e : new Error("Could not update the discount code.");
@@ -1483,14 +1719,33 @@ export async function updateDiscountCode(
   discounts[idx] = { ...discounts[idx], ...updates };
   if (updates.code) discounts[idx].code = updates.code.trim().toUpperCase();
   writeStore(DISCOUNTS_KEY, discounts);
+  await recordAdminAction({
+    action: "update",
+    section: "Discounts",
+    entityId: id,
+    entityLabel: discounts[idx].code,
+    summary: `Updated discount code ${discounts[idx].code}`,
+    before,
+    after: discounts[idx],
+    changes: updates,
+  });
   return discounts[idx];
 }
 
 export async function deleteDiscountCode(id: string): Promise<boolean> {
+  const before = (await getDiscountCodes()).find((discount) => discount.id === id);
   if (useDb() && !isLocalId(id)) {
     try {
       const { error } = await supabase!.from("discount_codes").delete().eq("id", id);
       if (error) throw error;
+      await recordAdminAction({
+        action: "delete",
+        section: "Discounts",
+        entityId: id,
+        entityLabel: before?.code || id,
+        summary: `Deleted discount code ${before?.code || id}`,
+        before,
+      });
       return true;
     } catch (e) {
       warn("deleteDiscountCode", e);
@@ -1501,6 +1756,14 @@ export async function deleteDiscountCode(id: string): Promise<boolean> {
   const filtered = discounts.filter((d) => d.id !== id);
   if (filtered.length === discounts.length) return false;
   writeStore(DISCOUNTS_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: "Discounts",
+    entityId: id,
+    entityLabel: before?.code || id,
+    summary: `Deleted discount code ${before?.code || id}`,
+    before,
+  });
   return true;
 }
 
@@ -1660,7 +1923,16 @@ export async function generateInvite(
         },
         ["collaborator_id"],
       );
-      return inviteFromRow(data);
+      const created = inviteFromRow(data);
+      await recordAdminAction({
+        action: "create",
+        section: "QR Invites",
+        entityId: created.id,
+        entityLabel: created.code,
+        summary: `Created QR invite ${created.code} for ${created.packName}`,
+        after: created,
+      });
+      return created;
     } catch (e) {
       warn("generateInvite", e);
     }
@@ -1678,6 +1950,14 @@ export async function generateInvite(
   };
   invites.push(invite);
   writeStore(INVITES_KEY, invites);
+  await recordAdminAction({
+    action: "create",
+    section: "QR Invites",
+    entityId: invite.id,
+    entityLabel: invite.code,
+    summary: `Created QR invite ${invite.code} for ${invite.packName}`,
+    after: invite,
+  });
   return invite;
 }
 
@@ -1696,6 +1976,7 @@ export async function generateBulkInvites(
 }
 
 export async function markInviteUsed(id: string): Promise<Invite | null> {
+  const before = (await getInvites()).find((invite) => invite.id === id);
   if (useDb()) {
     try {
       const { data, error } = await supabase!
@@ -1705,7 +1986,18 @@ export async function markInviteUsed(id: string): Promise<Invite | null> {
         .select()
         .single();
       if (error) throw error;
-      return inviteFromRow(data);
+      const updated = inviteFromRow(data);
+      await recordAdminAction({
+        action: "status",
+        section: "QR Invites",
+        entityId: id,
+        entityLabel: updated.code,
+        summary: `Marked QR invite ${updated.code} as used`,
+        before,
+        after: updated,
+        changes: { used: true },
+      });
+      return updated;
     } catch (e) {
       warn("markInviteUsed", e);
     }
@@ -1715,14 +2007,33 @@ export async function markInviteUsed(id: string): Promise<Invite | null> {
   if (idx === -1) return null;
   invites[idx] = { ...invites[idx], used: true };
   writeStore(INVITES_KEY, invites);
+  await recordAdminAction({
+    action: "status",
+    section: "QR Invites",
+    entityId: id,
+    entityLabel: invites[idx].code,
+    summary: `Marked QR invite ${invites[idx].code} as used`,
+    before,
+    after: invites[idx],
+    changes: { used: true },
+  });
   return invites[idx];
 }
 
 export async function deleteInvite(id: string): Promise<boolean> {
+  const before = (await getInvites()).find((invite) => invite.id === id);
   if (useDb()) {
     try {
       const { error } = await supabase!.from("invites").delete().eq("id", id);
       if (error) throw error;
+      await recordAdminAction({
+        action: "delete",
+        section: "QR Invites",
+        entityId: id,
+        entityLabel: before?.code || id,
+        summary: `Deleted QR invite ${before?.code || id}`,
+        before,
+      });
       return true;
     } catch (e) {
       warn("deleteInvite", e);
@@ -1732,6 +2043,14 @@ export async function deleteInvite(id: string): Promise<boolean> {
   const filtered = invites.filter((i) => i.id !== id);
   if (filtered.length === invites.length) return false;
   writeStore(INVITES_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: "QR Invites",
+    entityId: id,
+    entityLabel: before?.code || id,
+    summary: `Deleted QR invite ${before?.code || id}`,
+    before,
+  });
   return true;
 }
 
@@ -2196,7 +2515,16 @@ export async function addCollaborator(
           "mission_currency",
         ],
       );
-      return collabFromRow(data);
+      const created = collabFromRow(data);
+      await recordAdminAction({
+        action: "create",
+        section: "Collaborators",
+        entityId: created.id,
+        entityLabel: `${created.name} (${created.code})`,
+        summary: `Created collaborator ${created.name}`,
+        after: created,
+      });
+      return created;
     } catch (e) {
       warn("addCollaborator", e);
       throw e;
@@ -2211,6 +2539,14 @@ export async function addCollaborator(
   };
   all.push(created);
   writeStore(COLLABS_KEY, all);
+  await recordAdminAction({
+    action: "create",
+    section: "Collaborators",
+    entityId: created.id,
+    entityLabel: `${created.name} (${created.code})`,
+    summary: `Created collaborator ${created.name}`,
+    after: created,
+  });
   return created;
 }
 
@@ -2218,6 +2554,7 @@ export async function updateCollaborator(
   id: string,
   updates: Partial<Omit<Collaborator, "id" | "createdAt">>,
 ): Promise<Collaborator | null> {
+  const before = await getCollaboratorById(id);
   if (useDb()) {
     try {
       const row: Record<string, unknown> = {};
@@ -2276,7 +2613,21 @@ export async function updateCollaborator(
           .single());
       }
       if (error) throw error;
-      return collabFromRow(data);
+      const updated = collabFromRow(data);
+      await recordAdminAction({
+        action: updates.active !== undefined ? "status" : "update",
+        section: "Collaborators",
+        entityId: id,
+        entityLabel: `${updated.name} (${updated.code})`,
+        summary:
+          updates.active !== undefined
+            ? `${updates.active ? "Activated" : "Deactivated"} collaborator ${updated.name}`
+            : `Updated collaborator ${updated.name}`,
+        before,
+        after: updated,
+        changes: updates,
+      });
+      return updated;
     } catch (e) {
       warn("updateCollaborator", e);
     }
@@ -2286,14 +2637,36 @@ export async function updateCollaborator(
   if (idx === -1) return null;
   all[idx] = { ...all[idx], ...updates };
   writeStore(COLLABS_KEY, all);
+  await recordAdminAction({
+    action: updates.active !== undefined ? "status" : "update",
+    section: "Collaborators",
+    entityId: id,
+    entityLabel: `${all[idx].name} (${all[idx].code})`,
+    summary:
+      updates.active !== undefined
+        ? `${updates.active ? "Activated" : "Deactivated"} collaborator ${all[idx].name}`
+        : `Updated collaborator ${all[idx].name}`,
+    before,
+    after: all[idx],
+    changes: updates,
+  });
   return all[idx];
 }
 
 export async function deleteCollaborator(id: string): Promise<boolean> {
+  const before = await getCollaboratorById(id);
   if (useDb()) {
     try {
       const { error } = await supabase!.from("collaborators").delete().eq("id", id);
       if (error) throw error;
+      await recordAdminAction({
+        action: "delete",
+        section: "Collaborators",
+        entityId: id,
+        entityLabel: before ? `${before.name} (${before.code})` : id,
+        summary: `Deleted collaborator ${before?.name || id}`,
+        before,
+      });
       return true;
     } catch (e) {
       warn("deleteCollaborator", e);
@@ -2303,6 +2676,14 @@ export async function deleteCollaborator(id: string): Promise<boolean> {
   const filtered = all.filter((x) => x.id !== id);
   if (filtered.length === all.length) return false;
   writeStore(COLLABS_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: "Collaborators",
+    entityId: id,
+    entityLabel: before ? `${before.name} (${before.code})` : id,
+    summary: `Deleted collaborator ${before?.name || id}`,
+    before,
+  });
   return true;
 }
 
@@ -2522,6 +2903,7 @@ export async function updateBookingRoomNumber(
   roomNumber: string | null,
 ): Promise<void> {
   const value = roomNumber?.trim() || null;
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!.from("bookings").update({ room_number: value }).eq("id", id);
     if (error) {
@@ -2533,6 +2915,16 @@ export async function updateBookingRoomNumber(
       }
       throw new Error(error.message || "Could not save the room number.");
     }
+    await recordAdminAction({
+      action: "update",
+      section: "Hotel",
+      entityId: id,
+      entityLabel: before ? bookingAuditLabel(before) : id,
+      summary: `${value ? `Assigned room ${value} to` : "Cleared the room for"} ${before?.customerName || "a client"}`,
+      before,
+      after: before ? { ...before, roomNumber: value } : { roomNumber: value },
+      changes: { roomNumber: value },
+    });
     return;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -2540,6 +2932,16 @@ export async function updateBookingRoomNumber(
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], roomNumber: value };
     writeStore(BOOKINGS_KEY, bookings);
+    await recordAdminAction({
+      action: "update",
+      section: "Hotel",
+      entityId: id,
+      entityLabel: bookingAuditLabel(bookings[idx]),
+      summary: `${value ? `Assigned room ${value} to` : "Cleared the room for"} ${bookings[idx].customerName}`,
+      before,
+      after: bookings[idx],
+      changes: { roomNumber: value },
+    });
   }
 }
 
@@ -2570,6 +2972,7 @@ export async function roomTypeColumnReady(): Promise<boolean> {
 /** Set (or clear) the hotel room type of a booking. */
 export async function updateBookingRoomType(id: string, roomType: string | null): Promise<void> {
   const value = roomType?.trim() || null;
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!.from("bookings").update({ room_type: value }).eq("id", id);
     if (error) {
@@ -2581,6 +2984,16 @@ export async function updateBookingRoomType(id: string, roomType: string | null)
       }
       throw new Error(error.message || "Could not save the room type.");
     }
+    await recordAdminAction({
+      action: "update",
+      section: "Hotel",
+      entityId: id,
+      entityLabel: before ? bookingAuditLabel(before) : id,
+      summary: `Changed the room type for ${before?.customerName || "a client"}`,
+      before,
+      after: before ? { ...before, roomType: value } : { roomType: value },
+      changes: { roomType: value },
+    });
     return;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -2588,6 +3001,16 @@ export async function updateBookingRoomType(id: string, roomType: string | null)
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], roomType: value };
     writeStore(BOOKINGS_KEY, bookings);
+    await recordAdminAction({
+      action: "update",
+      section: "Hotel",
+      entityId: id,
+      entityLabel: bookingAuditLabel(bookings[idx]),
+      summary: `Changed the room type for ${bookings[idx].customerName}`,
+      before,
+      after: bookings[idx],
+      changes: { roomType: value },
+    });
   }
 }
 
@@ -2635,6 +3058,7 @@ export async function updateBookingGuestDetails(
   guestDetails: string | null,
 ): Promise<void> {
   const value = guestDetails?.trim() || null;
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!
       .from("bookings")
@@ -2649,6 +3073,16 @@ export async function updateBookingGuestDetails(
       }
       throw new Error(error.message || "Could not save guest details.");
     }
+    await recordAdminAction({
+      action: "update",
+      section: "Clients",
+      entityId: id,
+      entityLabel: before ? bookingAuditLabel(before) : id,
+      summary: `Updated guest details for ${before?.customerName || "a client"}`,
+      before,
+      after: before ? { ...before, guestDetails: value } : { guestDetails: value },
+      changes: { guestDetails: value },
+    });
     return;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -2656,6 +3090,16 @@ export async function updateBookingGuestDetails(
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], guestDetails: value };
     writeStore(BOOKINGS_KEY, bookings);
+    await recordAdminAction({
+      action: "update",
+      section: "Clients",
+      entityId: id,
+      entityLabel: bookingAuditLabel(bookings[idx]),
+      summary: `Updated guest details for ${bookings[idx].customerName}`,
+      before,
+      after: bookings[idx],
+      changes: { guestDetails: value },
+    });
   }
 }
 
@@ -2764,6 +3208,16 @@ export async function setGuestBraceletGiven(
       }
       throw new Error(error.message || "Could not save the bracelet status.");
     }
+    await recordAdminAction({
+      action: "status",
+      section: "Bracelets",
+      entityId: booking.id,
+      entityLabel: bookingAuditLabel(booking),
+      summary: `${given ? "Marked" : "Unmarked"} bracelet as given for guest ${guestIndex + 1} of ${booking.customerName}`,
+      before: booking,
+      after: { ...booking, braceletGiven: value },
+      changes: { guestIndex, given },
+    });
     return;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -2771,6 +3225,16 @@ export async function setGuestBraceletGiven(
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], braceletGiven: value };
     writeStore(BOOKINGS_KEY, bookings);
+    await recordAdminAction({
+      action: "status",
+      section: "Bracelets",
+      entityId: booking.id,
+      entityLabel: bookingAuditLabel(booking),
+      summary: `${given ? "Marked" : "Unmarked"} bracelet as given for guest ${guestIndex + 1} of ${booking.customerName}`,
+      before: booking,
+      after: bookings[idx],
+      changes: { guestIndex, given },
+    });
   }
 }
 
@@ -2783,6 +3247,7 @@ export async function braceletColumnReady(): Promise<boolean> {
 
 /** Set (or clear with null) a booking's raw bracelet value. */
 export async function updateBookingBracelet(id: string, bracelet: string | null): Promise<void> {
+  const before = await getBookingById(id);
   if (useDb() && !isLocalId(id)) {
     const { error } = await supabase!.from("bookings").update({ bracelet }).eq("id", id);
     if (error) {
@@ -2794,6 +3259,16 @@ export async function updateBookingBracelet(id: string, bracelet: string | null)
       }
       throw new Error(error.message || "Could not save the bracelet category.");
     }
+    await recordAdminAction({
+      action: "update",
+      section: "Bracelets",
+      entityId: id,
+      entityLabel: before ? bookingAuditLabel(before) : id,
+      summary: `Changed bracelet category for ${before?.customerName || "a client"}`,
+      before,
+      after: before ? { ...before, bracelet } : { bracelet },
+      changes: { bracelet },
+    });
     return;
   }
   const bookings = readStore<Booking>(BOOKINGS_KEY);
@@ -2801,6 +3276,16 @@ export async function updateBookingBracelet(id: string, bracelet: string | null)
   if (idx !== -1) {
     bookings[idx] = { ...bookings[idx], bracelet };
     writeStore(BOOKINGS_KEY, bookings);
+    await recordAdminAction({
+      action: "update",
+      section: "Bracelets",
+      entityId: id,
+      entityLabel: bookingAuditLabel(bookings[idx]),
+      summary: `Changed bracelet category for ${bookings[idx].customerName}`,
+      before,
+      after: bookings[idx],
+      changes: { bracelet },
+    });
   }
 }
 
