@@ -80,7 +80,8 @@ function FestivalTicketBadge({ booking }: { booking: Booking }) {
           : "border-amber-200 bg-amber-50 text-amber-800"
       }`}
     >
-      <AlertCircle className="h-3 w-3" /> {noTicket ? "No festival ticket" : "Ticket not checked"}
+      <AlertCircle className="h-3 w-3" />{" "}
+      {noTicket ? "Aucun billet du festival" : "Billet non vérifié"}
     </span>
   );
 }
@@ -101,7 +102,7 @@ function TransferPartnerBadge({
     </span>
   ) : (
     <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-500">
-      Direct
+      Sans partenaire
     </span>
   );
 }
@@ -132,7 +133,7 @@ function AdminShuttlePage() {
     customerName: "",
     email: "",
     phone: "",
-    country: "Morocco",
+    country: "Maroc",
     numPeople: 1,
     arrivalDate: "2027-01-08",
     departureDate: "2027-01-11",
@@ -290,7 +291,7 @@ function AdminShuttlePage() {
     };
   }, [shuttleBookings]);
 
-  // Group by Arrival Date
+  // Group by Date d’arrivée
   const arrivalGroups = useMemo(() => {
     const groups: Record<string, Booking[]> = {};
     shuttleBookings
@@ -301,7 +302,7 @@ function AdminShuttlePage() {
           !b.transferOption,
       )
       .forEach((b) => {
-        const dateKey = b.arrivalDate || "No Arrival Date";
+        const dateKey = b.arrivalDate || "Sans date d’arrivée";
         if (!groups[dateKey]) groups[dateKey] = [];
         groups[dateKey].push(b);
       });
@@ -310,13 +311,13 @@ function AdminShuttlePage() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
   }, [shuttleBookings]);
 
-  // Group by Departure Date
+  // Group by Date de départ
   const departureGroups = useMemo(() => {
     const groups: Record<string, Booking[]> = {};
     shuttleBookings
       .filter((b) => b.transferOption === "round_trip" || b.transferOption === "one_way_departure")
       .forEach((b) => {
-        const dateKey = b.departureDate || "No Departure Date";
+        const dateKey = b.departureDate || "Sans date de départ";
         if (!groups[dateKey]) groups[dateKey] = [];
         groups[dateKey].push(b);
       });
@@ -357,7 +358,7 @@ function AdminShuttlePage() {
       b.transferLocation ||
       (b.transferType === "port" ? "Tanger Ville Port" : "Tangier Airport (TNG)");
 
-    const text = `Hello ${firstName}! 🎉 This is the Tangier International Latin Festival Transfer Team.\n\nWe have your ${type === "arrival" ? "arrival shuttle pickup" : "departure shuttle dropoff"} scheduled for ${date} at ${location}.\n\nFlight/Boat info: ${b.transferDetails || "Not specified yet"}\nTicket Code: ${b.ticketCode}\n\nPlease let us know if your arrival time or flight/boat number changes. See you soon in Tangier!`;
+    const text = `Bonjour ${firstName} ! 🎉 Ici l’équipe des transferts du Tangier International Latin Festival.\n\nVotre ${type === "arrival" ? "prise en charge à l’arrivée" : "dépose au départ"} est prévue le ${date} à ${location}.\n\nInformations vol/bateau : ${b.transferDetails || "Pas encore renseignées"}\nCode du billet : ${b.ticketCode}\n\nPrévenez-nous si votre heure d’arrivée ou votre numéro de vol/bateau change. À bientôt à Tanger !`;
 
     window.open(`https://wa.me/${rawDigits}?text=${encodeURIComponent(text)}`, "_blank");
   };
@@ -386,7 +387,7 @@ function AdminShuttlePage() {
       customerName: "",
       email: "",
       phone: "",
-      country: "Morocco",
+      country: "Maroc",
       numPeople: 1,
       arrivalDate: "2027-01-08",
       departureDate: "2027-01-11",
@@ -422,7 +423,7 @@ function AdminShuttlePage() {
         customerName: b.customerName,
         email: b.email || "",
         phone: b.phone || "",
-        country: b.country || "Morocco",
+        country: b.country || "Maroc",
         numPeople: b.numPeople || 1,
         arrivalDate: b.arrivalDate || "2027-01-08",
         departureDate: b.departureDate || "2027-01-11",
@@ -442,7 +443,7 @@ function AdminShuttlePage() {
     setAddError("");
     if (addMode === "existing") {
       if (!selectedExistingBookingId) {
-        setAddError("Please select a client from the database.");
+        setAddError("Veuillez sélectionner un client dans la base de données.");
         return;
       }
       setSavingAdd(true);
@@ -450,13 +451,13 @@ function AdminShuttlePage() {
         const festivalBooking = bookings.find(
           (booking) => booking.id === selectedExistingBookingId,
         );
-        if (!festivalBooking) throw new Error("Festival ticket not found.");
+        if (!festivalBooking) throw new Error("Billet du festival introuvable.");
         const assignedPartnerId = addForm.collaboratorId || festivalBooking.collaboratorId || null;
         await addBooking({
           customerName: addForm.customerName.trim(),
           email: addForm.email.trim(),
           phone: addForm.phone.trim(),
-          country: addForm.country.trim() || festivalBooking.country || "Morocco",
+          country: addForm.country.trim() || festivalBooking.country || "Maroc",
           numPeople: Math.max(1, addForm.numPeople || 1),
           danceLevel: "",
           packId: "",
@@ -484,13 +485,13 @@ function AdminShuttlePage() {
         setIsAddModalOpen(false);
         await reload();
       } catch (err: any) {
-        setAddError(err?.message || "Failed to create the linked transfer request.");
+        setAddError(err?.message || "Impossible de créer la demande de transfert liée.");
       } finally {
         setSavingAdd(false);
       }
     } else {
       if (!addForm.customerName.trim()) {
-        setAddError("Please enter the client's name.");
+        setAddError("Veuillez saisir le nom du client.");
         return;
       }
       setSavingAdd(true);
@@ -499,7 +500,7 @@ function AdminShuttlePage() {
           customerName: addForm.customerName.trim(),
           email: addForm.email.trim(),
           phone: addForm.phone.trim(),
-          country: addForm.country.trim() || "Morocco",
+          country: addForm.country.trim() || "Maroc",
           numPeople: Math.max(1, addForm.numPeople || 1),
           danceLevel: "",
           packId: "",
@@ -520,7 +521,7 @@ function AdminShuttlePage() {
         setIsAddModalOpen(false);
         await reload();
       } catch (err: any) {
-        setAddError(err?.message || "Failed to create transfer booking.");
+        setAddError(err?.message || "Impossible de créer la réservation de transfert.");
       } finally {
         setSavingAdd(false);
       }
@@ -560,19 +561,20 @@ function AdminShuttlePage() {
       await updateBookingStatus(booking.id, status);
       await reload();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Could not update transfer status.");
+      setActionError(
+        err instanceof Error ? err.message : "Impossible de mettre à jour le statut du transfert.",
+      );
     } finally {
       setUpdatingStatusId(null);
     }
   };
 
-  const isStandaloneTransfer = (booking: Booking) =>
-    !booking.packId && isTransferBooking(booking);
+  const isStandaloneTransfer = (booking: Booking) => !booking.packId && isTransferBooking(booking);
 
   const handleDeleteTransfer = async (booking: Booking) => {
     const standalone = isStandaloneTransfer(booking);
     const message = standalone
-      ? `Delete the transfer request for ${booking.customerName}? This cannot be undone.`
+      ? `Supprimer la demande de transfert for ${booking.customerName}? Cette action est irréversible.`
       : `Remove the transfer from ${booking.customerName}? Their festival booking will be kept.`;
     if (!window.confirm(message)) return;
 
@@ -581,7 +583,7 @@ function AdminShuttlePage() {
     try {
       if (standalone) {
         const deleted = await deleteBooking(booking.id);
-        if (!deleted) throw new Error("The transfer request was not deleted.");
+        if (!deleted) throw new Error("La demande de transfert n’a pas été supprimée.");
       } else {
         const updated = await updateBookingTransfer(booking.id, {
           needsTransfer: false,
@@ -591,12 +593,12 @@ function AdminShuttlePage() {
           transferDetails: null,
           transferCost: 0,
         });
-        if (!updated) throw new Error("The transfer was not removed from the booking.");
+        if (!updated) throw new Error("Le transfert n’a pas été retiré de la réservation.");
       }
       if (editingBooking?.id === booking.id) setEditingBooking(null);
       await reload();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Could not delete the transfer.");
+      setActionError(err instanceof Error ? err.message : "Impossible de supprimer le transfert.");
     } finally {
       setDeletingId(null);
     }
@@ -615,18 +617,23 @@ function AdminShuttlePage() {
         transferDetails: editForm.needsTransfer ? editForm.transferDetails : null,
         transferCost: editForm.needsTransfer ? editForm.transferCost : 0,
       });
-      if (!transferUpdate) throw new Error("The transfer changes were not saved.");
+      if (!transferUpdate)
+        throw new Error("Les modifications du transfert n’ont pas été enregistrées.");
       const bookingUpdate = await updateBooking(editingBooking.id, {
         collaboratorId: editForm.collaboratorId || null,
       });
-      if (!bookingUpdate) throw new Error("The partner assignment was not saved.");
+      if (!bookingUpdate) throw new Error("L’attribution au partenaire n’a pas été enregistrée.");
       if (editForm.status !== editingBooking.status) {
         await updateBookingStatus(editingBooking.id, editForm.status);
       }
       setEditingBooking(null);
       await reload();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Could not save transfer changes.");
+      setActionError(
+        err instanceof Error
+          ? err.message
+          : "Impossible d’enregistrer les modifications du transfert.",
+      );
     } finally {
       setSavingEdit(false);
     }
@@ -646,10 +653,10 @@ function AdminShuttlePage() {
       }`}
       aria-label={`Transfer status for ${booking.customerName}`}
     >
-      <option value="pending">Pending</option>
-      <option value="confirmed">Confirmed</option>
-      <option value="checked-in">Checked-in</option>
-      <option value="declined">Declined</option>
+      <option value="pending">En attente</option>
+      <option value="confirmed">Confirmé</option>
+      <option value="checked-in">Arrivé</option>
+      <option value="declined">Refusé</option>
     </select>
   );
 
@@ -664,10 +671,11 @@ function AdminShuttlePage() {
             </div>
             <div>
               <h1 className="font-display text-2xl font-bold text-gray-900">
-                Transfer Shuttle Management
+                Gestion des navettes de transfert
               </h1>
               <p className="text-xs text-gray-500">
-                Manage, group, add, and export airport and port shuttle passenger lists.
+                Gérez, regroupez, ajoutez et exportez les listes de passagers des navettes aéroport
+                et port.
               </p>
             </div>
           </div>
@@ -693,10 +701,10 @@ function AdminShuttlePage() {
             <span>
               {copiedId ===
               (selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form")
-                ? "Form Link Copied"
+                ? "Lien du formulaire copié"
                 : selectedPartner
-                  ? `Copy ${selectedPartner.name} Link`
-                  : "Copy Transfer Form Link"}
+                  ? `Copier le lien de ${selectedPartner.name}`
+                  : "Copier le lien du formulaire de transfert"}
             </span>
           </button>
 
@@ -707,7 +715,7 @@ function AdminShuttlePage() {
             className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl transition"
           >
             <ExternalLink className="h-4 w-4" />
-            Open Form
+            Ouvrir le formulaire
           </a>
 
           <button
@@ -716,7 +724,7 @@ function AdminShuttlePage() {
             className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
           >
             <Plus className="h-4 w-4" />
-            <span>Add Transfer / Navette</span>
+            <span>Ajouter un transfert / une navette</span>
           </button>
 
           <button
@@ -730,7 +738,7 @@ function AdminShuttlePage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
-            Export Filtered XLSX ({shuttleBookings.length})
+            Exporter la sélection XLSX ({shuttleBookings.length})
           </button>
         </div>
       </div>
@@ -743,7 +751,7 @@ function AdminShuttlePage() {
             type="button"
             onClick={() => setActionError("")}
             className="ml-auto rounded p-1 hover:bg-red-100"
-            aria-label="Dismiss error"
+            aria-label="Fermer l’erreur"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -755,20 +763,22 @@ function AdminShuttlePage() {
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              Passengers
+              Passagers
             </p>
             <Users className="h-4 w-4 text-blue-600" />
           </div>
           <p className="font-display text-2xl font-bold text-gray-900 mt-1">
             {stats.totalPassengers}
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">{stats.totalBookings} total bookings</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">
+            {stats.totalBookings} réservations au total
+          </p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
-              Arrivals
+              Arrivées
             </p>
             <Calendar className="h-4 w-4 text-emerald-600" />
           </div>
@@ -776,14 +786,14 @@ function AdminShuttlePage() {
             {stats.arrivalsCount}
           </p>
           <p className="text-[10px] text-emerald-700 mt-0.5">
-            {arrivalGroups.length} arrival dates
+            {arrivalGroups.length} dates d’arrivée
           </p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">
-              Departures
+              Départs
             </p>
             <Calendar className="h-4 w-4 text-purple-600" />
           </div>
@@ -791,14 +801,14 @@ function AdminShuttlePage() {
             {stats.departuresCount}
           </p>
           <p className="text-[10px] text-purple-700 mt-0.5">
-            {departureGroups.length} departure dates
+            {departureGroups.length} dates de départ
           </p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-              Port vs Airport
+              Port et aéroport
             </p>
             <Ship className="h-4 w-4 text-amber-600" />
           </div>
@@ -806,13 +816,13 @@ function AdminShuttlePage() {
             {stats.portCount} <span className="text-xs font-normal text-gray-500">Port</span> ·{" "}
             {stats.airportCount} <span className="text-xs font-normal text-gray-500">Air</span>
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Split by hub</p>
+          <p className="text-[10px] text-gray-500 mt-0.5">Répartition par point</p>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
-              Shuttle Revenue
+              Revenu des navettes
             </p>
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </div>
@@ -820,7 +830,7 @@ function AdminShuttlePage() {
             €{stats.totalRevenue}
           </p>
           <p className="text-[10px] text-gray-500 mt-0.5">
-            Approx. {stats.totalRevenue * EUR_TO_MAD} MAD
+            Environ {stats.totalRevenue * EUR_TO_MAD} MAD
           </p>
         </div>
       </div>
@@ -838,7 +848,7 @@ function AdminShuttlePage() {
             }`}
           >
             <Calendar className="h-3.5 w-3.5" />
-            Arrival Groups ({stats.arrivalsCount})
+            Groupes d’arrivée ({stats.arrivalsCount})
           </button>
           <button
             onClick={() => setTab("departures")}
@@ -849,7 +859,7 @@ function AdminShuttlePage() {
             }`}
           >
             <Calendar className="h-3.5 w-3.5" />
-            Departure Groups ({stats.departuresCount})
+            Groupes de départ ({stats.departuresCount})
           </button>
           <button
             onClick={() => setTab("all")}
@@ -860,7 +870,7 @@ function AdminShuttlePage() {
             }`}
           >
             <Users className="h-3.5 w-3.5" />
-            All Passengers ({shuttleBookings.length})
+            Tous les passagers ({shuttleBookings.length})
           </button>
         </div>
 
@@ -871,10 +881,10 @@ function AdminShuttlePage() {
             value={partnerFilter}
             onChange={(e) => setPartnerFilter(e.target.value)}
             className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-900 focus:outline-none focus:border-blue-600 cursor-pointer"
-            title="Filter transfers by the partner referral link used"
+            title="Filtrer les transferts selon le lien de parrainage utilisé"
           >
-            <option value="all">All Partner Links</option>
-            <option value="direct">Direct / No Partner</option>
+            <option value="all">Tous les liens partenaires</option>
+            <option value="direct">Direct / sans partenaire</option>
             {collaborators.map((collaborator) => (
               <option key={collaborator.id} value={collaborator.id}>
                 {collaborator.name} ({collaborator.code})
@@ -888,9 +898,9 @@ function AdminShuttlePage() {
             onChange={(e) => setTypeFilter(e.target.value as any)}
             className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
           >
-            <option value="all">All Hubs (Port & Airport)</option>
-            <option value="port">🚢 Port only</option>
-            <option value="airport">✈️ Airport only</option>
+            <option value="all">Tous les points (port et aéroport)</option>
+            <option value="port">🚢 Port uniquement</option>
+            <option value="airport">✈️ Aéroport uniquement</option>
           </select>
 
           {/* Status filter */}
@@ -899,11 +909,11 @@ function AdminShuttlePage() {
             onChange={(e) => setStatusFilter(e.target.value as any)}
             className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
           >
-            <option value="all">All Statuses</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="pending">Pending</option>
-            <option value="checked-in">Checked-in</option>
-            <option value="declined">Declined</option>
+            <option value="all">Tous les statuts</option>
+            <option value="confirmed">Confirmé</option>
+            <option value="pending">En attente</option>
+            <option value="checked-in">Arrivé</option>
+            <option value="declined">Refusé</option>
           </select>
 
           {/* Search Box */}
@@ -913,7 +923,7 @@ function AdminShuttlePage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, phone, code..."
+              placeholder="Rechercher un nom, téléphone ou code…"
               className="w-full rounded-lg border border-gray-300 bg-white pl-8 pr-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
             />
             {search && (
@@ -930,17 +940,19 @@ function AdminShuttlePage() {
 
       {/* Main Content Areas */}
       {loading ? (
-        <div className="p-12 text-center text-gray-500 text-sm">Loading shuttle bookings...</div>
+        <div className="p-12 text-center text-gray-500 text-sm">
+          Chargement des réservations de navette…
+        </div>
       ) : shuttleBookings.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center">
           <Bus className="mx-auto h-10 w-10 text-gray-300 mb-3" />
           <h3 className="font-display text-lg font-bold text-gray-900">
-            No Shuttle Bookings Found
+            Aucune réservation de navette
           </h3>
           <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
             {search || typeFilter !== "all" || statusFilter !== "all" || partnerFilter !== "all"
-              ? "Try adjusting your filters or search keywords."
-              : "Standalone airport and port transfer requests will appear here, grouped by arrival and departure dates."}
+              ? "Modifiez les filtres ou les mots-clés de recherche."
+              : "Les demandes de transfert indépendantes apparaîtront ici, regroupées par dates d’arrivée et de départ."}
           </p>
         </div>
       ) : tab === "arrivals" ? (
@@ -961,7 +973,7 @@ function AdminShuttlePage() {
                     </div>
                     <div>
                       <h3 className="font-display text-base font-bold text-gray-900">
-                        Arrival Date: <span className="text-emerald-800">{date}</span>
+                        Date d’arrivée: <span className="text-emerald-800">{date}</span>
                       </h3>
                       <p className="text-[11px] text-gray-500">
                         {groupBookings.length} bookings ·{" "}
@@ -1044,7 +1056,7 @@ function AdminShuttlePage() {
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 mt-1">
-                            <span className="font-semibold text-gray-800">Flight/Ferry:</span>{" "}
+                            <span className="font-semibold text-gray-800">Vol / ferry :</span>{" "}
                             {b.transferDetails || (
                               <span className="italic text-gray-400">Not provided yet</span>
                             )}
@@ -1067,7 +1079,7 @@ function AdminShuttlePage() {
                         <button
                           onClick={() => openWhatsApp(b, "arrival")}
                           className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-emerald-200"
-                          title="Message on WhatsApp"
+                          title="Envoyer un message WhatsApp"
                         >
                           <Phone className="h-3 w-3" />
                           WhatsApp
@@ -1075,7 +1087,7 @@ function AdminShuttlePage() {
                         <button
                           onClick={() => handleOpenEdit(b)}
                           className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition cursor-pointer"
-                          title="Edit Transfer Details"
+                          title="Modifier les détails du transfert"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -1083,7 +1095,11 @@ function AdminShuttlePage() {
                           onClick={() => handleDeleteTransfer(b)}
                           disabled={deletingId === b.id}
                           className="p-1.5 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
-                          title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                          title={
+                            isStandaloneTransfer(b)
+                              ? "Supprimer le transfert"
+                              : "Retirer le transfert de la réservation"
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1113,7 +1129,7 @@ function AdminShuttlePage() {
                     </div>
                     <div>
                       <h3 className="font-display text-base font-bold text-gray-900">
-                        Departure Date: <span className="text-purple-800">{date}</span>
+                        Date de départ: <span className="text-purple-800">{date}</span>
                       </h3>
                       <p className="text-[11px] text-gray-500">
                         {groupBookings.length} bookings ·{" "}
@@ -1196,7 +1212,7 @@ function AdminShuttlePage() {
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 mt-1">
-                            <span className="font-semibold text-gray-800">Flight/Ferry:</span>{" "}
+                            <span className="font-semibold text-gray-800">Vol / ferry :</span>{" "}
                             {b.transferDetails || (
                               <span className="italic text-gray-400">Not provided yet</span>
                             )}
@@ -1219,7 +1235,7 @@ function AdminShuttlePage() {
                         <button
                           onClick={() => openWhatsApp(b, "departure")}
                           className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-lg transition flex items-center gap-1.5 cursor-pointer border border-emerald-200"
-                          title="Message on WhatsApp"
+                          title="Envoyer un message WhatsApp"
                         >
                           <Phone className="h-3 w-3" />
                           WhatsApp
@@ -1227,7 +1243,7 @@ function AdminShuttlePage() {
                         <button
                           onClick={() => handleOpenEdit(b)}
                           className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition cursor-pointer"
-                          title="Edit Transfer Details"
+                          title="Modifier les détails du transfert"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -1235,7 +1251,11 @@ function AdminShuttlePage() {
                           onClick={() => handleDeleteTransfer(b)}
                           disabled={deletingId === b.id}
                           className="p-1.5 text-red-500 hover:text-red-700 rounded-lg hover:bg-red-50 transition cursor-pointer disabled:opacity-50"
-                          title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                          title={
+                            isStandaloneTransfer(b)
+                              ? "Supprimer le transfert"
+                              : "Retirer le transfert de la réservation"
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1255,14 +1275,14 @@ function AdminShuttlePage() {
               <thead className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500">
                 <tr>
                   <th className="px-4 py-3.5">Code / Client</th>
-                  <th className="px-4 py-3.5">Partner Link</th>
-                  <th className="px-4 py-3.5">Hub & Type</th>
+                  <th className="px-4 py-3.5">Lien partenaire</th>
+                  <th className="px-4 py-3.5">Lieu et type</th>
                   <th className="px-4 py-3.5">Direction</th>
-                  <th className="px-4 py-3.5">Arrival Date</th>
-                  <th className="px-4 py-3.5">Departure Date</th>
-                  <th className="px-4 py-3.5">Details (Flight/Boat)</th>
-                  <th className="px-4 py-3.5">Cost</th>
-                  <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5">Date d’arrivée</th>
+                  <th className="px-4 py-3.5">Date de départ</th>
+                  <th className="px-4 py-3.5">Détails (vol / bateau)</th>
+                  <th className="px-4 py-3.5">Coût</th>
+                  <th className="px-4 py-3.5">Statut</th>
                   <th className="px-4 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
@@ -1320,22 +1340,20 @@ function AdminShuttlePage() {
 
                     <td className="px-4 py-3.5 font-bold text-blue-700">€{b.transferCost || 0}</td>
 
-                    <td className="px-4 py-3.5">
-                      {statusControl(b)}
-                    </td>
+                    <td className="px-4 py-3.5">{statusControl(b)}</td>
 
                     <td className="px-4 py-3.5 text-right space-x-1">
                       <button
                         onClick={() => openWhatsApp(b, "arrival")}
                         className="p-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition cursor-pointer"
-                        title="WhatsApp Chat"
+                        title="Discussion WhatsApp"
                       >
                         <Phone className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleOpenEdit(b)}
                         className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition cursor-pointer"
-                        title="Edit Transfer"
+                        title="Modifier le transfert"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
@@ -1343,7 +1361,11 @@ function AdminShuttlePage() {
                         onClick={() => handleDeleteTransfer(b)}
                         disabled={deletingId === b.id}
                         className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition cursor-pointer disabled:opacity-50"
-                        title={isStandaloneTransfer(b) ? "Delete Transfer" : "Remove Transfer from Booking"}
+                        title={
+                          isStandaloneTransfer(b)
+                            ? "Supprimer le transfert"
+                            : "Retirer le transfert de la réservation"
+                        }
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -1356,17 +1378,17 @@ function AdminShuttlePage() {
         </div>
       )}
 
-      {/* Edit Transfer Modal */}
+      {/* Modifier le transfert Modal */}
       {editingBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <div>
                 <h3 className="font-display font-bold text-base text-gray-900">
-                  Edit Transfer: {editingBooking.customerName}
+                  Modifier le transfert: {editingBooking.customerName}
                 </h3>
                 <p className="text-xs text-gray-500 font-mono">
-                  {editingBooking.ticketCode} · {editingBooking.numPeople} Guests
+                  {editingBooking.ticketCode} · {editingBooking.numPeople} participants
                 </p>
               </div>
               <button
@@ -1379,7 +1401,7 @@ function AdminShuttlePage() {
 
             <div className="p-6 space-y-4 text-xs">
               <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="font-bold text-gray-900">Transfer Requested</span>
+                <span className="font-bold text-gray-900">Transfert demandé</span>
                 <input
                   type="checkbox"
                   checked={editForm.needsTransfer}
@@ -1390,14 +1412,14 @@ function AdminShuttlePage() {
 
               <div>
                 <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
-                  Partner Referral Link
+                  Lien de parrainage du partenaire
                 </label>
                 <select
                   value={editForm.collaboratorId}
                   onChange={(e) => setEditForm({ ...editForm, collaboratorId: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="">Direct / No Partner</option>
+                  <option value="">Direct / sans partenaire</option>
                   {collaborators.map((collaborator) => (
                     <option key={collaborator.id} value={collaborator.id}>
                       {collaborator.name} ({collaborator.code})
@@ -1408,7 +1430,7 @@ function AdminShuttlePage() {
 
               <div>
                 <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
-                  Transfer Status
+                  Statut du transfert
                 </label>
                 <select
                   value={editForm.status}
@@ -1417,10 +1439,10 @@ function AdminShuttlePage() {
                   }
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="checked-in">Checked-in</option>
-                  <option value="declined">Declined</option>
+                  <option value="pending">En attente</option>
+                  <option value="confirmed">Confirmé</option>
+                  <option value="checked-in">Arrivé</option>
+                  <option value="declined">Refusé</option>
                 </select>
               </div>
 
@@ -1483,8 +1505,8 @@ function AdminShuttlePage() {
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="round_trip">Round Trip (Aller-Retour)</option>
-                        <option value="one_way_arrival">One-Way (Arrival)</option>
-                        <option value="one_way_departure">One-Way (Departure)</option>
+                        <option value="one_way_arrival">Aller simple (arrivée)</option>
+                        <option value="one_way_departure">Aller simple (départ)</option>
                       </select>
                     </div>
                   </div>
@@ -1530,7 +1552,7 @@ function AdminShuttlePage() {
 
                   <div>
                     <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
-                      Flight / Ferry Details & Notes
+                      Détails du vol / ferry et notes
                     </label>
                     <input
                       type="text"
@@ -1538,14 +1560,14 @@ function AdminShuttlePage() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, transferDetails: e.target.value })
                       }
-                      placeholder="e.g. Flight AT123 at 14:30"
+                      placeholder="p. ex. vol AT123 à 14 h 30"
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
                   <div>
                     <label className="font-bold uppercase tracking-wider text-gray-600 block mb-1">
-                      Total Cost Charged (€)
+                      Montant total facturé (€)
                     </label>
                     <input
                       type="number"
@@ -1566,7 +1588,7 @@ function AdminShuttlePage() {
                 onClick={() => setEditingBooking(null)}
                 className="px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-200 rounded-lg transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 type="button"
@@ -1574,7 +1596,7 @@ function AdminShuttlePage() {
                 disabled={savingEdit}
                 className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition shadow-xs cursor-pointer disabled:opacity-50"
               >
-                {savingEdit ? "Saving..." : "Save Changes"}
+                {savingEdit ? "Enregistrement…" : "Enregistrer les modifications"}
               </button>
             </div>
           </div>
@@ -1592,10 +1614,11 @@ function AdminShuttlePage() {
                 </div>
                 <div>
                   <h3 className="font-display font-bold text-base text-white">
-                    Add Transfer / Shuttle Pass
+                    Ajouter un transfert / une navette
                   </h3>
                   <p className="text-[11px] text-blue-200">
-                    Assign a transfer to a festival invite/client or create a new manual entry.
+                    Attribuez un transfert à une invitation ou à un client du festival, ou créez une
+                    nouvelle fiche manuelle.
                   </p>
                 </div>
               </div>
@@ -1624,7 +1647,7 @@ function AdminShuttlePage() {
                   }`}
                 >
                   <UserCheck className="h-3.5 w-3.5" />
-                  <span>Existing Invite / Client</span>
+                  <span>Invitation / client existant</span>
                 </button>
                 <button
                   type="button"
@@ -1639,7 +1662,7 @@ function AdminShuttlePage() {
                   }`}
                 >
                   <UserPlus className="h-3.5 w-3.5" />
-                  <span>New Manual Client</span>
+                  <span>Nouveau client manuel</span>
                 </button>
               </div>
 
@@ -1650,11 +1673,11 @@ function AdminShuttlePage() {
                 </div>
               )}
 
-              {/* Mode A: Select Existing Booking from Database */}
+              {/* Mode A: Sélectionner une réservation existante from Database */}
               {addMode === "existing" && (
                 <div className="space-y-2 p-3.5 bg-blue-50/60 rounded-2xl border border-blue-200">
                   <label className="font-bold uppercase tracking-wider text-blue-950 block text-[11px]">
-                    1. Select Client from Database ({bookings.length} clients available)
+                    1. Sélectionner un client dans la base ({bookings.length} clients disponibles)
                   </label>
 
                   <div className="relative">
@@ -1663,7 +1686,7 @@ function AdminShuttlePage() {
                       type="text"
                       value={clientSearch}
                       onChange={(e) => setClientSearch(e.target.value)}
-                      placeholder="Type name, ticket code (#TLF-...), email, or phone..."
+                      placeholder="Saisir un nom, un code billet (#TLF-…), un e-mail ou un téléphone…"
                       className="w-full pl-8 pr-3 py-2 rounded-xl border border-gray-300 bg-white text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                     />
                   </div>
@@ -1713,7 +1736,7 @@ function AdminShuttlePage() {
                                     : "bg-amber-100 text-amber-800"
                                 }`}
                               >
-                                Has Transfer
+                                Transfert existant
                               </span>
                             ) : (
                               <span
@@ -1723,7 +1746,7 @@ function AdminShuttlePage() {
                                     : "bg-emerald-100 text-emerald-800"
                                 }`}
                               >
-                                No Transfer Yet
+                                Aucun transfert
                               </span>
                             )}
                           </div>
@@ -1738,24 +1761,26 @@ function AdminShuttlePage() {
               {addMode === "manual" && (
                 <div className="space-y-3 p-3.5 bg-gray-50 rounded-2xl border border-gray-200">
                   <span className="font-bold uppercase tracking-wider text-gray-700 block text-[11px]">
-                    1. Guest Details
+                    1. Informations du participant
                   </span>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="font-bold text-gray-700 block mb-1">
-                        Full Name <span className="text-red-500">*</span>
+                        Nom complet <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={addForm.customerName}
                         onChange={(e) => setAddForm({ ...addForm, customerName: e.target.value })}
-                        placeholder="e.g. John Doe"
+                        placeholder="p. ex. Jean Dupont"
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">Passengers Count</label>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Nombre de passagers
+                      </label>
                       <input
                         type="number"
                         min="1"
@@ -1781,7 +1806,9 @@ function AdminShuttlePage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">Phone (WhatsApp)</label>
+                      <label className="font-bold text-gray-700 block mb-1">
+                        Téléphone (WhatsApp)
+                      </label>
                       <input
                         type="tel"
                         value={addForm.phone}
@@ -1791,7 +1818,7 @@ function AdminShuttlePage() {
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">Email</label>
+                      <label className="font-bold text-gray-700 block mb-1">E-mail</label>
                       <input
                         type="email"
                         value={addForm.email}
@@ -1804,7 +1831,7 @@ function AdminShuttlePage() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">Arrival Date</label>
+                      <label className="font-bold text-gray-700 block mb-1">Date d’arrivée</label>
                       <input
                         type="date"
                         value={addForm.arrivalDate}
@@ -1813,7 +1840,7 @@ function AdminShuttlePage() {
                       />
                     </div>
                     <div>
-                      <label className="font-bold text-gray-700 block mb-1">Departure Date</label>
+                      <label className="font-bold text-gray-700 block mb-1">Date de départ</label>
                       <input
                         type="date"
                         value={addForm.departureDate}
@@ -1827,14 +1854,14 @@ function AdminShuttlePage() {
 
               <div className="space-y-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-3.5">
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-blue-950">
-                  Partner Referral Link (optional)
+                  Lien de parrainage du partenaire (facultatif)
                 </label>
                 <select
                   value={addForm.collaboratorId}
                   onChange={(e) => setAddForm({ ...addForm, collaboratorId: e.target.value })}
                   className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-600 cursor-pointer"
                 >
-                  <option value="">Direct / No Partner</option>
+                  <option value="">Direct / sans partenaire</option>
                   {collaborators.map((collaborator) => (
                     <option key={collaborator.id} value={collaborator.id}>
                       {collaborator.name} ({collaborator.code})
@@ -1842,20 +1869,20 @@ function AdminShuttlePage() {
                   ))}
                 </select>
                 <p className="text-[10px] text-blue-800">
-                  Used only for admin filtering and partner-specific Excel manifests. Transfer
-                  revenue is not added to partner commissions.
+                  Utilisé uniquement pour les filtres de l’administration et les fichiers Excel de
+                  chaque partenaire. Le revenu des transferts n’est pas ajouté aux commissions.
                 </p>
               </div>
 
               {/* 2. Transfer Details */}
               <div className="space-y-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
                 <span className="font-bold uppercase tracking-wider text-slate-800 block text-[11px]">
-                  2. Transfer Specifications & Pricing
+                  2. Détails et tarif du transfert
                 </span>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Transfer Type</label>
+                    <label className="font-bold text-gray-700 block mb-1">Type de transfert</label>
                     <select
                       value={addForm.transferType}
                       onChange={(e) => {
@@ -1879,8 +1906,8 @@ function AdminShuttlePage() {
                       }}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer bg-white"
                     >
-                      <option value="port">🚢 Port Shuttle</option>
-                      <option value="airport">✈️ Airport Shuttle</option>
+                      <option value="port">🚢 Navette du port</option>
+                      <option value="airport">✈️ Navette de l’aéroport</option>
                     </select>
                   </div>
 
@@ -1904,16 +1931,16 @@ function AdminShuttlePage() {
                       }}
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-blue-500 cursor-pointer bg-white"
                     >
-                      <option value="round_trip">Round Trip (Aller-Retour)</option>
-                      <option value="one_way_arrival">One-Way Arrival (Aller simple)</option>
-                      <option value="one_way_departure">One-Way Departure (Retour simple)</option>
+                      <option value="round_trip">Aller-retour</option>
+                      <option value="one_way_arrival">Aller simple (arrivée)</option>
+                      <option value="one_way_departure">Aller simple (départ)</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">
-                    Pickup / Dropoff Location
+                    Lieu d’arrivée / de départ
                   </label>
                   <select
                     value={addForm.transferLocation}
@@ -1934,16 +1961,14 @@ function AdminShuttlePage() {
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 font-medium bg-white"
                   >
                     {addForm.transferType === "port" ? (
-                      <option value="Port of Tangier (Tanger Ville)">
-                        Port of Tangier (Port de Tanger Ville)
-                      </option>
+                      <option value="Port of Tangier (Tanger Ville)">Port de Tanger Ville</option>
                     ) : (
                       <>
                         <option value="Tangier Ibn Battouta Airport (TNG)">
-                          Tangier Ibn Battouta Airport (TNG) — €10 (1-way) / €20 (A/R)
+                          Aéroport de Tanger Ibn Battouta (TNG) — 10 € (aller) / 20 € (A/R)
                         </option>
                         <option value="Tetouan Sania Ramel Airport (TTU)">
-                          Tetouan Sania Ramel Airport (TTU) — €15 (1-way) / €30 (A/R)
+                          Aéroport de Tétouan Sania Ramel (TTU) — 15 € (aller) / 30 € (A/R)
                         </option>
                       </>
                     )}
@@ -1952,13 +1977,13 @@ function AdminShuttlePage() {
 
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">
-                    Flight / Ferry Details & Schedule
+                    Détails et horaires du vol / ferry
                   </label>
                   <input
                     type="text"
                     value={addForm.transferDetails}
                     onChange={(e) => setAddForm({ ...addForm, transferDetails: e.target.value })}
-                    placeholder="e.g. Flight AT123 arriving at 14:30 / Ferry Balearia 11:00"
+                    placeholder="p. ex. vol AT123 à 14 h 30 / ferry Balearia à 11 h"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
                   />
                 </div>
@@ -1966,7 +1991,7 @@ function AdminShuttlePage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="font-bold text-gray-700 block mb-1">
-                      Total Transfer Fee (€)
+                      Montant total du transfert (€)
                     </label>
                     <input
                       type="number"
@@ -1981,20 +2006,20 @@ function AdminShuttlePage() {
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Status</label>
+                    <label className="font-bold text-gray-700 block mb-1">Statut</label>
                     <div className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
-                      Confirmed automatically
+                      Confirmé automatiquement
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Notes / Remarks</label>
+                  <label className="font-bold text-gray-700 block mb-1">Notes / remarques</label>
                   <input
                     type="text"
                     value={addForm.notes}
                     onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
-                    placeholder="Special instructions or luggage notes..."
+                    placeholder="Instructions particulières ou remarques sur les bagages…"
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-blue-500 bg-white"
                   />
                 </div>
@@ -2007,7 +2032,7 @@ function AdminShuttlePage() {
                   onClick={() => setIsAddModalOpen(false)}
                   className="px-4 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 rounded-xl transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   type="submit"
@@ -2015,7 +2040,7 @@ function AdminShuttlePage() {
                   className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
                 >
                   <Check className="h-4 w-4" />
-                  <span>{savingAdd ? "Saving..." : "Save Transfer"}</span>
+                  <span>{savingAdd ? "Enregistrement…" : "Enregistrer le transfert"}</span>
                 </button>
               </div>
             </form>

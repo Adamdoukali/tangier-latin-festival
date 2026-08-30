@@ -171,7 +171,7 @@ function AdminBookings() {
       setShowForm(false);
       await reload();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not create the booking.");
+      alert(error instanceof Error ? error.message : "Impossible de créer la réservation.");
     }
   };
 
@@ -197,8 +197,7 @@ function AdminBookings() {
           ? collaborators.find((c) => c.id === updated.collaboratorId)
           : undefined;
         const bLang = ((updated.lang || partner?.language || "en") as Language) ?? "en";
-        const tUrl =
-          ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
+        const tUrl = ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
         const mail = ticketConfirmationEmail({
           customerName: updated.customerName,
           packName: translateDynamicText(updated.packName, bLang),
@@ -248,7 +247,7 @@ function AdminBookings() {
         ? `Bonjour ${firstName} ! 🎉 Votre réservation pour le Tangier International Latin Festival est CONFIRMÉE.\n\n🎫 Votre billet (présentez le QR à l'entrée) :\n${tUrl}\n\nCode : ${b.ticketCode} · ${pack}\nRendez-vous du 07 au 11 janvier 2027 au Kenzi Solazur, Tanger !`
         : bLang === "es"
           ? `¡Hola ${firstName}! 🎉 Tu reserva para el Tangier International Latin Festival está CONFIRMADA.\n\n🎫 Tu entrada (muestra el QR en la entrada):\n${tUrl}\n\nCódigo: ${b.ticketCode} · ${pack}\n¡Nos vemos del 07 al 11 de enero de 2027 en el Kenzi Solazur, Tánger!`
-          : `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n🎫 Your ticket (show the QR at check-in):\n${tUrl}\n\nCode: ${b.ticketCode} · ${pack}\nSee you January 07–11, 2027 at the Kenzi Solazur, Tangier!`;
+          : `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n🎫 Your ticket (show the QR at check-in):\n${tUrl}\n\nCode: ${b.ticketCode} · ${pack}\nSee you Du 7 au 11 janvier 2027 at the Kenzi Solazur, Tangier!`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
   };
 
@@ -293,30 +292,30 @@ function AdminBookings() {
     let subject: string;
     let body: string;
     if (b.status === "pending") {
-      subject = `Your Tangier Latin Festival booking request (${b.ticketCode})`;
+      subject = `Votre demande de réservation au Tangier Latin Festival (${b.ticketCode})`;
       body =
-        `Hello ${firstName},\n\n` +
-        `Thank you for your booking request for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027).\n\n` +
-        `We are reviewing it and will respond within 24 hours to confirm your booking and send you the payment details.\n\n` +
-        `Your reference: ${b.ticketCode}\n\n` +
-        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
+        `Bonjour ${firstName},\n\n` +
+        `Merci pour votre demande de réservation du forfait « ${translateDynamicText(b.packName, "fr")} » au Tangier International Latin Festival, du 7 au 11 janvier 2027.\n\n` +
+        `Nous l’examinons et vous répondrons sous 24 heures pour confirmer votre réservation et vous envoyer les modalités de paiement.\n\n` +
+        `Votre référence : ${b.ticketCode}\n\n` +
+        `Cordialement,\nL’équipe du Tangier International Latin Festival\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     } else if (b.status === "declined") {
-      subject = `About your Tangier Latin Festival booking request (${b.ticketCode})`;
+      subject = `À propos de votre demande de réservation (${b.ticketCode})`;
       body =
-        `Hello ${firstName},\n\n` +
-        `Thank you for your interest in the Tangier International Latin Festival. Unfortunately we were not able to confirm your booking request for the "${b.packName}" pack.\n\n` +
-        `If you believe this is a mistake or would like to book a different pack, just reply to this email or contact us on WhatsApp and we'll be happy to help.\n\n` +
-        `Warm regards,\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
+        `Bonjour ${firstName},\n\n` +
+        `Merci pour votre intérêt pour le Tangier International Latin Festival. Nous n’avons malheureusement pas pu confirmer votre demande pour le forfait « ${translateDynamicText(b.packName, "fr")} ».\n\n` +
+        `Si vous pensez qu’il s’agit d’une erreur ou souhaitez choisir un autre forfait, répondez à cet e-mail ou contactez-nous sur WhatsApp.\n\n` +
+        `Cordialement,\nL’équipe du Tangier International Latin Festival\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     } else {
-      subject = `Your Tangier Latin Festival booking is confirmed! (${b.ticketCode})`;
+      subject = `Votre réservation au Tangier Latin Festival est confirmée ! (${b.ticketCode})`;
       body =
-        `Hello ${firstName},\n\n` +
-        `Great news — your booking for the "${b.packName}" pack at the Tangier International Latin Festival (January 07-11, 2027, Kenzi Solazur Hotel) is confirmed!\n\n` +
-        `Your ticket (with QR code): ${ticketUrl(b.ticketCode)}\n` +
-        `Ticket code: ${b.ticketCode}\n` +
-        `Guests: ${b.customerName} (${b.numPeople} ${b.numPeople > 1 ? "people" : "person"})\n\n` +
-        `Open the link and show the QR code at check-in.\n\n` +
-        `See you on the dance floor!\nTangier International Latin Festival team\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
+        `Bonjour ${firstName},\n\n` +
+        `Bonne nouvelle : votre réservation du forfait « ${translateDynamicText(b.packName, "fr")} » au Tangier International Latin Festival, du 7 au 11 janvier 2027 à l’hôtel Kenzi Solazur, est confirmée !\n\n` +
+        `Votre billet avec code QR : ${ticketUrl(b.ticketCode)}\n` +
+        `Code du billet : ${b.ticketCode}\n` +
+        `Participants : ${b.customerName} (${b.numPeople} ${b.numPeople > 1 ? "personnes" : "personne"})\n\n` +
+        `Ouvrez le lien et présentez le code QR à l’accueil.\n\n` +
+        `À bientôt sur la piste de danse !\nL’équipe du Tangier International Latin Festival\ncontact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
     }
     window.location.href = `mailto:${encodeURIComponent(b.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
@@ -343,9 +342,7 @@ function AdminBookings() {
         (partner?.code.toLowerCase().includes(q) ?? false)
       );
     })
-    .sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const statusStyles: Record<string, string> = {
     pending: "bg-amber-100 text-amber-600 border-amber-200",
@@ -360,10 +357,10 @@ function AdminBookings() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl tracking-wide text-gray-900">
-            Booking Management
+            Gestion des réservations
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Manage tickets, change statuses, and generate QR codes.
+            Gérez les billets, modifiez les statuts et générez les codes QR.
           </p>
         </div>
         <button
@@ -373,7 +370,7 @@ function AdminBookings() {
           }}
           className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer self-start"
         >
-          <Plus className="h-4 w-4" /> Add Booking
+          <Plus className="h-4 w-4" /> Ajouter une réservation
         </button>
       </div>
 
@@ -385,23 +382,21 @@ function AdminBookings() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, ticket, pack or partner / referral…"
+            placeholder="Rechercher par nom, e-mail, billet, forfait ou partenaire…"
             className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
           />
         </div>
         <div className="relative">
           <select
             value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as BookingStatus | "all")
-            }
+            onChange={(e) => setStatusFilter(e.target.value as BookingStatus | "all")}
             className="appearance-none rounded-lg border border-gray-300 bg-white px-4 pr-8 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
           >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="checked-in">Checked In</option>
-            <option value="declined">Declined</option>
+            <option value="all">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="confirmed">Confirmé</option>
+            <option value="checked-in">Arrivé</option>
+            <option value="declined">Refusé</option>
           </select>
           <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
         </div>
@@ -425,29 +420,26 @@ function AdminBookings() {
         {filtered.length === 0 ? (
           <div className="px-5 py-16 text-center text-sm text-gray-400">
             {bookings.length === 0
-              ? 'No bookings yet. Click "Add Booking" to create one.'
-              : "No bookings match your filters."}
+              ? "Aucune réservation. Cliquez sur « Ajouter une réservation » pour en créer une."
+              : "Aucune réservation ne correspond aux filtres."}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
-                  <th className="px-5 py-3 text-left font-medium">Customer</th>
+                  <th className="px-5 py-3 text-left font-medium">Client</th>
                   <th className="px-5 py-3 text-left font-medium">Ticket</th>
-                  <th className="px-5 py-3 text-left font-medium">Pack</th>
+                  <th className="px-5 py-3 text-left font-medium">Forfait</th>
                   <th className="px-5 py-3 text-left font-medium">Source</th>
-                  <th className="px-5 py-3 text-left font-medium">Status</th>
+                  <th className="px-5 py-3 text-left font-medium">Statut</th>
                   <th className="px-5 py-3 text-left font-medium">Date</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filtered.map((b) => (
-                  <tr
-                    key={b.id}
-                    className="hover:bg-gray-50 transition"
-                  >
+                  <tr key={b.id} className="hover:bg-gray-50 transition">
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-800">{b.customerName}</p>
                       <p className="text-xs text-gray-500">{b.email}</p>
@@ -460,7 +452,7 @@ function AdminBookings() {
                         <button
                           onClick={() => copyCode(b.ticketCode)}
                           className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
-                          title="Copy code"
+                          title="Copier le code"
                         >
                           <Copy className="h-3 w-3" />
                         </button>
@@ -476,16 +468,16 @@ function AdminBookings() {
                         const gross = unitPrice * count;
                         const priceInfo = pack
                           ? count > 1
-                            ? `${count} people (${unitPrice} ${cur}/p → ${gross} ${cur})`
+                            ? `${count} personnes (${unitPrice} ${cur}/p → ${gross} ${cur})`
                             : `${unitPrice} ${cur}`
                           : null;
                         const detail = [
                           pack?.sub,
                           priceInfo,
                           b.arrivalDate
-                            ? `${new Date(b.arrivalDate).toLocaleDateString()} → ${
+                            ? `${new Date(b.arrivalDate).toLocaleDateString("fr-FR")} → ${
                                 b.departureDate
-                                  ? new Date(b.departureDate).toLocaleDateString()
+                                  ? new Date(b.departureDate).toLocaleDateString("fr-FR")
                                   : "?"
                               }`
                             : null,
@@ -496,13 +488,17 @@ function AdminBookings() {
                           <>
                             <p className="text-gray-700 font-medium">{name}</p>
                             {detail && (
-                              <p className="text-[11px] text-gray-500 mt-0.5 max-w-[240px] truncate" title={detail}>
+                              <p
+                                className="text-[11px] text-gray-500 mt-0.5 max-w-[240px] truncate"
+                                title={detail}
+                              >
                                 {detail}
                               </p>
                             )}
                             {b.discountCode && (
                               <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono font-semibold">
-                                Code: {b.discountCode} ({b.discountAmount ? `-€${b.discountAmount}` : "Discount"})
+                                Code: {b.discountCode} (
+                                {b.discountAmount ? `-€${b.discountAmount}` : "Réduction"})
                               </span>
                             )}
                           </>
@@ -537,7 +533,7 @@ function AdminBookings() {
                           );
                         }
                         if (b.source === "website") {
-                          return <span className="text-xs text-blue-600">Website</span>;
+                          return <span className="text-xs text-blue-600">Site web</span>;
                         }
                         return <span className="text-xs text-gray-400">Manual</span>;
                       })()}
@@ -545,19 +541,17 @@ function AdminBookings() {
                     <td className="px-5 py-3">
                       <select
                         value={b.status}
-                        onChange={(e) =>
-                          handleStatusChange(b.id, e.target.value as BookingStatus)
-                        }
+                        onChange={(e) => handleStatusChange(b.id, e.target.value as BookingStatus)}
                         className={`appearance-none rounded-full px-2.5 py-0.5 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${statusStyles[b.status]}`}
                       >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="checked-in">Checked In</option>
-                        <option value="declined">Declined</option>
+                        <option value="pending">En attente</option>
+                        <option value="confirmed">Confirmé</option>
+                        <option value="checked-in">Arrivé</option>
+                        <option value="declined">Refusé</option>
                       </select>
                     </td>
                     <td className="px-5 py-3 text-gray-500 whitespace-nowrap">
-                      {new Date(b.createdAt).toLocaleDateString()}
+                      {new Date(b.createdAt).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -566,8 +560,8 @@ function AdminBookings() {
                           className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
                           title={
                             b.status === "pending"
-                              ? "Email customer: we respond within 24h"
-                              : "Email customer: confirmation details"
+                              ? "Envoyer l’e-mail de réponse sous 24 h"
+                              : "Envoyer l’e-mail de confirmation"
                           }
                         >
                           <Mail className="h-4 w-4" />
@@ -575,14 +569,14 @@ function AdminBookings() {
                         <button
                           onClick={() => showQr(b)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition cursor-pointer"
-                          title="View QR Code"
+                          title="Afficher le code QR"
                         >
                           <QrCode className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(b.id)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                          title="Delete"
+                          title="Supprimer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -596,12 +590,12 @@ function AdminBookings() {
         )}
       </div>
 
-      {/* Add Booking Modal */}
+      {/* Ajouter une réservation Modal */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg text-gray-900">New Booking</h3>
+              <h3 className="font-display text-lg text-gray-900">Nouvelle réservation</h3>
               <button
                 onClick={() => setShowForm(false)}
                 className="text-gray-500 hover:text-gray-700 transition cursor-pointer"
@@ -614,18 +608,19 @@ function AdminBookings() {
               {/* Pack Select */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  Pack / Pass <span className="text-red-500">*</span>
+                  Forfait / pass <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={form.packId}
                   onChange={(e) => onPackSelect(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer font-medium"
                 >
-                  <option value="">Select a pack</option>
+                  <option value="">Sélectionner un forfait</option>
                   {packs.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.sub}) — {p.price} {p.currency || "€"}
-                      {p.active ? "" : "  · PRIVATE"}
+                      {translateDynamicText(p.name, "fr")} ({translateDynamicText(p.sub, "fr")}) —{" "}
+                      {p.price} {p.currency || "€"}
+                      {p.active ? "" : "  · PRIVÉ"}
                     </option>
                   ))}
                 </select>
@@ -637,13 +632,16 @@ function AdminBookings() {
                   return (
                     <div className="mt-2 p-2.5 rounded-lg bg-amber-50/80 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
                       <div>
-                        <span className="font-semibold">{selPack.name}</span> · {selPack.category || "Pass"}
+                        <span className="font-semibold">
+                          {translateDynamicText(selPack.name, "fr")}
+                        </span>{" "}
+                        · {translateDynamicText(selPack.category || "Pass", "fr")}
                       </div>
                       <div className="font-bold text-sm text-amber-950">
-                        {unit} {selPack.currency || "€"} / person
+                        {unit} {selPack.currency || "€"} / personne
                         {form.numPeople > 1 && (
                           <span className="ml-1.5 text-xs text-amber-800 font-normal">
-                            (Total: {total} {selPack.currency || "€"})
+                            (Total : {total} {selPack.currency || "€"})
                           </span>
                         )}
                       </div>
@@ -652,17 +650,17 @@ function AdminBookings() {
                 })()}
               </div>
 
-              {/* Assign to Partner / Collaborator */}
+              {/* Attribuer à un partenaire / collaborateur */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  Assign to Partner / Collaborator
+                  Attribuer à un partenaire / collaborateur
                 </label>
                 <select
                   value={form.collaboratorId}
                   onChange={(e) => setForm({ ...form, collaboratorId: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                 >
-                  <option value="">Direct / Festival Official (No Partner)</option>
+                  <option value="">Direct / festival officiel (sans partenaire)</option>
                   {collaborators.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.code}) — {commissionLabel(c)}
@@ -670,7 +668,8 @@ function AdminBookings() {
                   ))}
                 </select>
                 <p className="mt-1 text-[11px] text-gray-500">
-                  Assigning to a partner tracks sales and commission in their partner portal.
+                  L’attribution à un partenaire comptabilise la vente et la commission dans son
+                  espace partenaire.
                 </p>
               </div>
 
@@ -678,31 +677,27 @@ function AdminBookings() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    First Name (Lead Guest) <span className="text-red-500">*</span>
+                    Prénom du participant principal <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={form.firstName}
-                    onChange={(e) =>
-                      setForm({ ...form, firstName: e.target.value })
-                    }
-                    placeholder="First name"
+                    onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                    placeholder="Prénom"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Last Name (Lead Guest) <span className="text-red-500">*</span>
+                    Nom du participant principal <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={form.lastName}
-                    onChange={(e) =>
-                      setForm({ ...form, lastName: e.target.value })
-                    }
-                    placeholder="Last name"
+                    onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                    placeholder="Nom"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
@@ -711,32 +706,33 @@ function AdminBookings() {
               {/* Company Name */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                  Company / Organisation
+                  Société / organisation
                 </label>
                 <input
                   type="text"
                   value={form.company}
                   onChange={(e) => setForm({ ...form, company: e.target.value })}
-                  placeholder="e.g. Latin Dance Academy, Salsa Studios"
+                  placeholder="p. ex. Académie de danse latine"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
 
-              {/* Additional Guests if numPeople >= 2 */}
+              {/* Additional guests if numPeople >= 2 */}
               {form.numPeople >= 2 && (
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Additional Guests (Guest 2, 3...)
+                    Participants supplémentaires (2, 3…)
                   </label>
                   <input
                     type="text"
                     value={form.additionalGuests}
                     onChange={(e) => setForm({ ...form, additionalGuests: e.target.value })}
-                    placeholder="e.g. Maria Gonzalez, Carlos Gomez"
+                    placeholder="p. ex. Maria Gonzalez, Carlos Gomez"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                   <p className="mt-1 text-[11px] text-gray-500">
-                    Separate additional guest full names with commas or &amp; to assign them individual hotel room and bracelet slots.
+                    Séparez les noms complets par une virgule ou « &amp; » afin d’attribuer à chacun
+                    sa chambre d’hôtel et son bracelet.
                   </p>
                 </div>
               )}
@@ -745,7 +741,7 @@ function AdminBookings() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Email <span className="text-red-500">*</span>
+                    E-mail <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -758,7 +754,7 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Phone <span className="text-red-500">*</span>
+                    Téléphone <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -775,39 +771,35 @@ function AdminBookings() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Country
+                    Pays
                   </label>
                   <input
                     type="text"
                     value={form.country}
-                    onChange={(e) =>
-                      setForm({ ...form, country: e.target.value })
-                    }
-                    placeholder="Morocco"
+                    onChange={(e) => setForm({ ...form, country: e.target.value })}
+                    placeholder="Maroc"
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                   />
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Number of Guests (Pax) <span className="text-red-500">*</span>
+                    Nombre de participants <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     min={1}
                     value={form.numPeople}
-                    onChange={(e) =>
-                      setForm({ ...form, numPeople: parseInt(e.target.value) || 1 })
-                    }
+                    onChange={(e) => setForm({ ...form, numPeople: parseInt(e.target.value) || 1 })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition font-bold"
                   />
                 </div>
               </div>
 
-              {/* Hotel Room Number & Room Type */}
+              {/* Hotel Numéro de chambre & Type de chambre */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Hotel Room Nº (Optional)
+                    Nº de chambre d’hôtel (facultatif)
                   </label>
                   <input
                     type="text"
@@ -819,14 +811,14 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Hotel Room Type (Optional)
+                    Type de chambre d’hôtel (facultatif)
                   </label>
                   <select
                     value={form.roomType}
                     onChange={(e) => setForm({ ...form, roomType: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                   >
-                    <option value="">— Select room type —</option>
+                    <option value="">— Sélectionner un type de chambre —</option>
                     {ROOM_TYPES.map((rt) => (
                       <option key={rt.id} value={rt.label}>
                         {rt.label} {rt.capacity ? `(${rt.capacity})` : ""}
@@ -836,11 +828,11 @@ function AdminBookings() {
                 </div>
               </div>
 
-              {/* Arrival Date & Time */}
+              {/* Date d’arrivée & Time */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Arrival Date <span className="text-red-500">*</span>
+                    Date d’arrivée <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -860,7 +852,7 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Arrival Time
+                    Heure d’arrivée
                   </label>
                   <input
                     type="time"
@@ -872,11 +864,11 @@ function AdminBookings() {
                 </div>
               </div>
 
-              {/* Departure Date & Time */}
+              {/* Date de départ & Time */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Departure Date <span className="text-red-500">*</span>
+                    Date de départ <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -886,11 +878,7 @@ function AdminBookings() {
                     max={formDepartureLimits?.max || "2027-01-30"}
                     onChange={(e) => {
                       const departure = selectedFormPack
-                        ? constrainPackDepartureDate(
-                            form.arrival,
-                            e.target.value,
-                            selectedFormPack,
-                          )
+                        ? constrainPackDepartureDate(form.arrival, e.target.value, selectedFormPack)
                         : e.target.value;
                       setForm({ ...form, departure });
                     }}
@@ -899,7 +887,7 @@ function AdminBookings() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Departure Time
+                    Heure de départ
                   </label>
                   <input
                     type="time"
@@ -911,7 +899,7 @@ function AdminBookings() {
                 </div>
               </div>
 
-              {/* Dance Level & Initial Status */}
+              {/* Dance Level & Statut initial */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
@@ -919,32 +907,28 @@ function AdminBookings() {
                   </label>
                   <select
                     value={form.danceLevel}
-                    onChange={(e) =>
-                      setForm({ ...form, danceLevel: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, danceLevel: e.target.value })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
+                    <option value="Avancé">Avancé</option>
                     <option value="Professional">Professional</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5 font-medium">
-                    Initial Status
+                    Statut initial
                   </label>
                   <select
                     value={form.status}
-                    onChange={(e) =>
-                      setForm({ ...form, status: e.target.value as BookingStatus })
-                    }
+                    onChange={(e) => setForm({ ...form, status: e.target.value as BookingStatus })}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer font-semibold"
                   >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="checked-in">Checked In</option>
-                    <option value="declined">Declined</option>
+                    <option value="pending">En attente</option>
+                    <option value="confirmed">Confirmé</option>
+                    <option value="checked-in">Arrivé</option>
+                    <option value="declined">Refusé</option>
                   </select>
                 </div>
               </div>
@@ -952,13 +936,13 @@ function AdminBookings() {
               {/* Notes */}
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Notes &amp; Special Requests
+                  Notes et demandes particulières
                 </label>
                 <input
                   type="text"
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                  placeholder="Special requirements, room preferences, etc."
+                  placeholder="Besoins particuliers, préférences de chambre, etc."
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -970,13 +954,13 @@ function AdminBookings() {
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={handleCreate}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
               >
-                <Check className="h-4 w-4" /> Create Booking
+                <Check className="h-4 w-4" /> Créer la réservation
               </button>
             </div>
           </div>
@@ -988,7 +972,7 @@ function AdminBookings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6 text-center">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-lg text-gray-900">Ticket QR Code</h3>
+              <h3 className="font-display text-lg text-gray-900">Code QR du billet</h3>
               <button
                 onClick={() => {
                   setQrBooking(null);
@@ -1012,10 +996,10 @@ function AdminBookings() {
                 }`}
               >
                 {autoEmail === "sent"
-                  ? "✓ Confirmation email with the ticket sent automatically."
+                  ? "✓ E-mail de confirmation avec le billet envoyé automatiquement."
                   : autoEmail === "failed"
-                    ? "Automatic email failed — send the ticket with the buttons below."
-                    : "Sending confirmation email to the guest…"}
+                    ? "L’e-mail automatique a échoué : envoyez le billet à l’aide des boutons ci-dessous."
+                    : "Envoi de l’e-mail de confirmation au participant…"}
               </div>
             )}
 
@@ -1025,25 +1009,25 @@ function AdminBookings() {
                   <img src={qrDataUrl} alt="QR Code" className="w-48 h-48" />
                 </div>
                 <div>
-                  <p className="font-display text-sm text-gray-800">
-                    {qrBooking.customerName}
-                  </p>
+                  <p className="font-display text-sm text-gray-800">{qrBooking.customerName}</p>
                   <code className="text-xs font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded mt-1 inline-block">
                     {qrBooking.ticketCode}
                   </code>
-                  <p className="text-xs text-gray-500 mt-1">{qrBooking.packName}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {translateDynamicText(qrBooking.packName, "fr")}
+                  </p>
                   {/* Where this booking came from */}
                   {(() => {
                     const partner = qrBooking.collaboratorId
                       ? collaborators.find((c) => c.id === qrBooking.collaboratorId)
                       : undefined;
                     const origin = partner
-                      ? `Partner: ${partner.name}${qrBooking.inviteCode ? ` · invite ${qrBooking.inviteCode}` : ""}`
+                      ? `Partenaire : ${partner.name}${qrBooking.inviteCode ? ` · invitation ${qrBooking.inviteCode}` : ""}`
                       : qrBooking.inviteCode
                         ? `Invite ${qrBooking.inviteCode}`
                         : qrBooking.source === "website"
-                          ? "Website booking"
-                          : "Manual booking";
+                          ? "Réservation sur le site"
+                          : "Réservation manuelle";
                     return (
                       <p className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-widest text-violet-600 border border-violet-200 bg-violet-50 rounded px-2 py-1">
                         {origin}
@@ -1061,7 +1045,7 @@ function AdminBookings() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-green-50 text-[#16a34a] hover:bg-green-100 transition"
                     >
-                      <Phone className="h-3.5 w-3.5" /> WhatsApp Ticket
+                      <Phone className="h-3.5 w-3.5" /> Billet par WhatsApp
                     </a>
                   )}
                   {qrBooking.email && (
@@ -1069,7 +1053,7 @@ function AdminBookings() {
                       onClick={() => emailCustomer(qrBooking)}
                       className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-600 hover:bg-emerald-100 transition cursor-pointer"
                     >
-                      <Mail className="h-3.5 w-3.5" /> Email Ticket
+                      <Mail className="h-3.5 w-3.5" /> Billet par e-mail
                     </button>
                   )}
                 </div>
@@ -1078,19 +1062,19 @@ function AdminBookings() {
                     onClick={downloadQr}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-amber-100 text-amber-600 hover:bg-amber-100 transition cursor-pointer"
                   >
-                    <Download className="h-3.5 w-3.5" /> Download
+                    <Download className="h-3.5 w-3.5" /> Télécharger
                   </button>
                   <button
                     onClick={() => copyCode(ticketUrl(qrBooking.ticketCode))}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
-                    <Link2 className="h-3.5 w-3.5" /> Copy Link
+                    <Link2 className="h-3.5 w-3.5" /> Copier le lien
                   </button>
                   <button
                     onClick={() => copyCode(qrBooking.ticketCode)}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:text-gray-800 transition cursor-pointer"
                   >
-                    <Copy className="h-3.5 w-3.5" /> Copy Code
+                    <Copy className="h-3.5 w-3.5" /> Copier le code
                   </button>
                 </div>
               </div>
@@ -1103,24 +1087,22 @@ function AdminBookings() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
-            <h3 className="font-display text-lg text-gray-900">
-              Delete Booking?
-            </h3>
+            <h3 className="font-display text-lg text-gray-900">Supprimer la réservation ?</h3>
             <p className="mt-2 text-sm text-gray-500">
-              This will permanently remove this booking and its ticket.
+              Cette réservation et son billet seront supprimés définitivement.
             </p>
             <div className="mt-6 flex items-center gap-3 justify-end">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>

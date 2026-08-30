@@ -29,18 +29,18 @@ export const Route = createFileRoute("/admin")({
 });
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { to: "/admin/clients", label: "Clients", icon: Users, exact: false },
-  { to: "/admin/shuttle", label: "Transfer Shuttle", icon: Bus, exact: false },
-  { to: "/admin/tourism", label: "Tourism", icon: Compass, exact: false },
-  { to: "/admin/packs", label: "Packs", icon: Package, exact: false },
-  { to: "/admin/bookings", label: "Bookings", icon: Ticket, exact: false },
-  { to: "/admin/discounts", label: "Discounts", icon: Tag, exact: false },
-  { to: "/admin/invite", label: "QR Invites", icon: QrCode, exact: false },
-  { to: "/admin/collaborators", label: "Collaborators", icon: Users, exact: false },
-  { to: "/admin/hotel", label: "Hotel", icon: Building2, exact: false },
+  { to: "/admin/shuttle", label: "Navettes de transfert", icon: Bus, exact: false },
+  { to: "/admin/tourism", label: "Tourisme", icon: Compass, exact: false },
+  { to: "/admin/packs", label: "Forfaits", icon: Package, exact: false },
+  { to: "/admin/bookings", label: "Réservations", icon: Ticket, exact: false },
+  { to: "/admin/discounts", label: "Réductions", icon: Tag, exact: false },
+  { to: "/admin/invite", label: "Invitations QR", icon: QrCode, exact: false },
+  { to: "/admin/collaborators", label: "Collaborateurs", icon: Users, exact: false },
+  { to: "/admin/hotel", label: "Hôtel", icon: Building2, exact: false },
   { to: "/admin/bracelets", label: "Bracelets", icon: Watch, exact: false },
-  { to: "/admin/logs", label: "Activity Logs", icon: ScrollText, exact: false },
+  { to: "/admin/logs", label: "Journal d’activité", icon: ScrollText, exact: false },
 ];
 
 function AdminLayout() {
@@ -86,6 +86,7 @@ function AdminLayout() {
     // crash the panel; the back office is internal, so opt out entirely.
     <div
       className="min-h-screen bg-slate-100 text-gray-900 flex notranslate"
+      lang="fr"
       translate="no"
       style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
     >
@@ -117,7 +118,7 @@ function AdminLayout() {
                 {currentAdmin?.name || "TLF Admin"}
               </div>
               <div className="text-[10px] tracking-widest text-slate-400 uppercase">
-                Back Office
+                Administration
               </div>
             </div>
           </div>
@@ -158,7 +159,7 @@ function AdminLayout() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to website
+            Retour au site
           </Link>
           <button
             onClick={() => {
@@ -168,7 +169,7 @@ function AdminLayout() {
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
-            Sign Out
+            Déconnexion
           </button>
         </div>
       </aside>
@@ -184,7 +185,7 @@ function AdminLayout() {
             <Menu className="h-5 w-5" />
           </button>
           <h1 className="font-display text-lg tracking-wide text-gray-900">
-            {navItems.find((n) => isActive(n.to, n.exact))?.label ?? "Admin"}
+            {navItems.find((n) => isActive(n.to, n.exact))?.label ?? "Administration"}
           </h1>
           {currentAdmin && (
             <div className="ml-auto min-w-0 text-right">

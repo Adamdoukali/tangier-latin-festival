@@ -127,7 +127,7 @@ function AdminHotel() {
     .filter((b) =>
       includePending
         ? b.status !== "declined"
-        : b.status === "confirmed" || b.status === "checked-in"
+        : b.status === "confirmed" || b.status === "checked-in",
     )
     .filter((b) => {
       if (!search.trim()) return true;
@@ -167,14 +167,11 @@ function AdminHotel() {
     })
     .filter((r): r is Room => r.category !== "fullpass")
     .sort(
-      (a, b) =>
-        new Date(a.booking.createdAt).getTime() - new Date(b.booking.createdAt).getTime()
+      (a, b) => new Date(a.booking.createdAt).getTime() - new Date(b.booking.createdAt).getTime(),
     );
 
   const roomOrigin = (room: Room): "morocco" | "international" =>
-    room.clients.some((client) => client.origin === "international")
-      ? "international"
-      : "morocco";
+    room.clients.some((client) => client.origin === "international") ? "international" : "morocco";
   const roomCountries = (room: Room): string =>
     Array.from(
       new Set(
@@ -205,19 +202,19 @@ function AdminHotel() {
     const key = r.partner?.id ?? "zzz-direct";
     const title = r.partner
       ? `${r.partner.name} (${r.partner.code})`
-      : "Direct — festival website / manual";
+      : "Sans partenaire — site du festival / saisie manuelle";
     if (!groups.has(key)) groups.set(key, { title, rooms: [] });
     groups.get(key)!.rooms.push(r);
   }
   const sortedGroups = Array.from(groups.entries()).sort(([a], [b]) =>
-    a === "zzz-direct" ? 1 : b === "zzz-direct" ? -1 : 0
+    a === "zzz-direct" ? 1 : b === "zzz-direct" ? -1 : 0,
   );
 
   const doubles = displayedRooms.filter((r) => r.category === "double");
   const singles = displayedRooms.filter((r) => r.category === "single");
   const totalGuests = displayedRooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0);
 
-  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString() : "—");
+  const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("fr-FR") : "—");
   const nightsOf = (r: Room) =>
     r.pack?.features.find((f) => /night|nuit|noche/i.test(f)) ?? r.pack?.sub ?? "";
 
@@ -232,7 +229,7 @@ function AdminHotel() {
         const n = Math.round(
           (new Date(r.booking.departureDate).getTime() -
             new Date(r.booking.arrivalDate).getTime()) /
-            86400000
+            86400000,
         );
         if (n > 0) return n;
       }
@@ -260,7 +257,7 @@ function AdminHotel() {
     // Rooms numbered within each promoter group, in the displayed order
     const spreadsheetRows: Array<Array<string | number>> = [];
     for (const [, g] of sortedGroups) {
-      const promoter = g.rooms[0]?.partner?.name ?? "Direct";
+      const promoter = g.rooms[0]?.partner?.name ?? "Sans partenaire";
       const ordered = [
         ...g.rooms.filter((r) => r.category === "double"),
         ...g.rooms.filter((r) => r.category === "single"),
@@ -298,15 +295,11 @@ function AdminHotel() {
     }
 
     const suffix =
-      targetOrigin === "morocco"
-        ? "maroc"
-        : targetOrigin === "international"
-        ? "etranger"
-        : "all";
+      targetOrigin === "morocco" ? "maroc" : targetOrigin === "international" ? "etranger" : "all";
     downloadXlsx(
       `database-hotel-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
       [HOTEL_EXPORT_HEADER, ...spreadsheetRows],
-      "Hotel"
+      "Hôtel",
     );
   };
 
@@ -322,15 +315,15 @@ function AdminHotel() {
         <thead>
           <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
             <th className="px-4 py-2.5 text-left font-medium">#</th>
-            <th className="px-4 py-2.5 text-left font-medium">Room Nº</th>
-            <th className="px-4 py-2.5 text-left font-medium">Room Type</th>
-            <th className="px-4 py-2.5 text-left font-medium">Guest 1</th>
-            <th className="px-4 py-2.5 text-left font-medium">Guest 2</th>
-            <th className="px-4 py-2.5 text-left font-medium">Origin</th>
-            <th className="px-4 py-2.5 text-left font-medium">Nights</th>
-            <th className="px-4 py-2.5 text-left font-medium">Arrival → Departure</th>
-            <th className="px-4 py-2.5 text-left font-medium">Check-in</th>
-            <th className="px-4 py-2.5 text-left font-medium">Reservation</th>
+            <th className="px-4 py-2.5 text-left font-medium">Nº de chambre</th>
+            <th className="px-4 py-2.5 text-left font-medium">Type de chambre</th>
+            <th className="px-4 py-2.5 text-left font-medium">Participant 1</th>
+            <th className="px-4 py-2.5 text-left font-medium">Participant 2</th>
+            <th className="px-4 py-2.5 text-left font-medium">Origine</th>
+            <th className="px-4 py-2.5 text-left font-medium">Nuits</th>
+            <th className="px-4 py-2.5 text-left font-medium">Arrivée → départ</th>
+            <th className="px-4 py-2.5 text-left font-medium">Arrivée</th>
+            <th className="px-4 py-2.5 text-left font-medium">Réservation</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100" key={resetKey}>
@@ -358,7 +351,7 @@ function AdminHotel() {
                           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                           : "border-gray-300 bg-white text-gray-900"
                       }`}
-                      title="Hotel room number — press Enter to save"
+                      title="Numéro de chambre d’hôtel — appuyez sur Entrée pour enregistrer"
                     />
                   </div>
                 </td>
@@ -371,14 +364,15 @@ function AdminHotel() {
                         ? "border-amber-200 bg-amber-50 text-amber-900 font-bold"
                         : "border-gray-300 bg-white text-gray-400 font-normal"
                     }`}
-                    title="Select hotel room type"
+                    title="Sélectionner le type de chambre"
                   >
                     <option value="" className="text-gray-400">
-                      — Select room type —
+                      — Sélectionner un type de chambre —
                     </option>
                     {ROOM_TYPES.map((rt) => (
                       <option key={rt.id} value={rt.label} className="text-gray-900 font-normal">
-                        {rt.label}{rt.capacity ? ` (${rt.capacity})` : ""}
+                        {rt.label}
+                        {rt.capacity ? ` (${rt.capacity})` : ""}
                       </option>
                     ))}
                   </select>
@@ -389,19 +383,24 @@ function AdminHotel() {
                     r.guests.length > 2 ? (
                       <div>
                         <span>{r.guests[1]}</span>
-                        <span className="ml-1.5 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium" title={r.guests.slice(2).join(" & ")}>
+                        <span
+                          className="ml-1.5 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
+                          title={r.guests.slice(2).join(" & ")}
+                        >
                           +{r.guests.length - 2} more ({r.guests.slice(2).join(", ")})
                         </span>
                       </div>
                     ) : (
-                      r.guests[1] ?? (r.booking.numPeople > 1 ? "Guest 2" : "—")
+                      (r.guests[1] ?? (r.booking.numPeople > 1 ? "Participant 2" : "—"))
                     )
-                  ) : ""}
+                  ) : (
+                    ""
+                  )}
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
                   {roomOrigin(r) === "morocco" ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <span>🇲🇦</span> Morocco
+                      <span>🇲🇦</span> Maroc
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
@@ -430,8 +429,8 @@ function AdminHotel() {
                       }`}
                       title={
                         arrived
-                          ? "Guest arrived — click to undo"
-                          : "Mark the guests as arrived (check-in)"
+                          ? "Participant arrivé — cliquer pour annuler"
+                          : "Marquer les guests comme arrivés"
                       }
                     >
                       <UserCheck className="h-3.5 w-3.5" />
@@ -458,11 +457,11 @@ function AdminHotel() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl tracking-wide text-gray-900">
-            Hotel Rooming List
+            Répartition des chambres d’hôtel
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Every booked room with its guests, grouped by partner — ready to hand to the
-            Kenzi Solazur.
+            Toutes les chambres réservées avec leurs participants, regroupées par partenaire, prêtes
+            à être transmises au Kenzi Solazur.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
@@ -470,25 +469,26 @@ function AdminHotel() {
             onClick={() => downloadRoomingXlsx("morocco")}
             disabled={moroccanRooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel workbook containing only Moroccan guests"
+            title="Télécharger le fichier Excel contenant uniquement les participants marocains"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanGuests} participants)
           </button>
           <button
             onClick={() => downloadRoomingXlsx("international")}
             disabled={internationalRooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel workbook containing only Étranger / International guests"
+            title="Télécharger le fichier Excel contenant uniquement les participants étrangers"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalGuests}{" "}
+            participants)
           </button>
           <button
             onClick={() => downloadRoomingXlsx("all")}
             disabled={rooms.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
-            title="Download Excel workbook containing all rooms and guests"
+            title="Télécharger le fichier Excel contenant toutes les chambres et tous les participants"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 XLSX All ({totalGuests} guests)
+            <Download className="h-3.5 w-3.5" /> 📁 XLSX Tous ({totalGuests} participants)
           </button>
         </div>
       </div>
@@ -499,15 +499,13 @@ function AdminHotel() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Room numbers need a database update
+              Les numéros de chambre nécessitent une mise à jour de la base
             </p>
             <p className="mt-1">
-              Assigning room numbers can't be saved yet. Open the Supabase Dashboard → SQL
-              Editor, run the script in{" "}
-              <code className="font-mono bg-amber-100 px-1 rounded">
-                supabase/room-number.sql
-              </code>
-              , then refresh this page.
+              L’attribution des numéros de chambre ne peut pas encore être enregistrée. Ouvrez le
+              tableau de bord Supabase → Éditeur SQL et exécutez le script{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">supabase/room-number.sql</code>,
+              puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -519,15 +517,13 @@ function AdminHotel() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Room types need a database update
+              Les types de chambre nécessitent une mise à jour de la base
             </p>
             <p className="mt-1">
-              Assigning room types can't be saved yet. Open the Supabase Dashboard → SQL
-              Editor, run the script in{" "}
-              <code className="font-mono bg-amber-100 px-1 rounded">
-                supabase/room-type.sql
-              </code>
-              , then refresh this page.
+              L’attribution des types de chambre ne peut pas encore être enregistrée. Ouvrez le
+              tableau de bord Supabase → Éditeur SQL et exécutez le script{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">supabase/room-type.sql</code>,
+              puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -549,28 +545,30 @@ function AdminHotel() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Double Rooms</p>
+            <p className="text-xs tracking-widest uppercase text-gray-500">Chambres doubles</p>
             <BedDouble className="h-4 w-4 text-blue-500" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{doubles.length}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Single Rooms</p>
+            <p className="text-xs tracking-widest uppercase text-gray-500">
+              Chambres individuelles
+            </p>
             <Bed className="h-4 w-4 text-violet-500" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{singles.length}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Guests</p>
+            <p className="text-xs tracking-widest uppercase text-gray-500">Participants</p>
             <Users className="h-4 w-4 text-emerald-500" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{totalGuests}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Arrived</p>
+            <p className="text-xs tracking-widest uppercase text-gray-500">Arrivé</p>
             <UserCheck className="h-4 w-4 text-cyan-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">
@@ -580,14 +578,15 @@ function AdminHotel() {
         </div>
       </div>
 
-      {/* Room Type Inventory Allocation Overview */}
+      {/* Type de chambre Inventory Allocation Overview */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <Hotel className="h-4 w-4 text-amber-600" /> Room Type Allocation & Inventory
+            <Hotel className="h-4 w-4 text-amber-600" /> Attribution et inventaire des types de
+            chambres
           </h4>
           <span className="text-xs text-slate-500">
-            {rooms.filter((r) => r.booking.roomType).length} of {rooms.length} rooms assigned
+            {rooms.filter((r) => r.booking.roomType).length} sur {rooms.length} chambres attribuées
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
@@ -603,11 +602,15 @@ function AdminHotel() {
               >
                 <span className="font-medium text-gray-800 truncate">{rt.label}</span>
                 <div className="mt-1 flex items-baseline justify-between">
-                  <span className={`font-bold text-sm ${isOver ? "text-red-600" : count > 0 ? "text-amber-700" : "text-gray-400"}`}>
+                  <span
+                    className={`font-bold text-sm ${isOver ? "text-red-600" : count > 0 ? "text-amber-700" : "text-gray-400"}`}
+                  >
                     {count}
                   </span>
                   {rt.capacity !== undefined ? (
-                    <span className={`text-[11px] font-mono ${isOver ? "text-red-500 font-bold" : "text-gray-400"}`}>
+                    <span
+                      className={`text-[11px] font-mono ${isOver ? "text-red-500 font-bold" : "text-gray-400"}`}
+                    >
                       / {rt.capacity} max
                     </span>
                   ) : (
@@ -624,7 +627,9 @@ function AdminHotel() {
       <div className="flex flex-col gap-3">
         {/* Origin Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">Filter Origin:</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">
+            Filtrer par origine :
+          </span>
           <button
             onClick={() => setOriginFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
@@ -633,7 +638,8 @@ function AdminHotel() {
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
             }`}
           >
-            All Rooms ({rooms.length} rooms · {rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)} guests)
+            Toutes les chambres ({rooms.length} chambres ·{" "}
+            {rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)} participants)
           </button>
           <button
             onClick={() => setOriginFilter("morocco")}
@@ -643,7 +649,7 @@ function AdminHotel() {
                 : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
             }`}
           >
-            <span>🇲🇦</span> Morocco ({moroccanRooms.length} rooms · {moroccanGuests} guests)
+            <span>🇲🇦</span> Maroc ({moroccanRooms.length} chambres · {moroccanGuests} participants)
           </button>
           <button
             onClick={() => setOriginFilter("international")}
@@ -653,7 +659,8 @@ function AdminHotel() {
                 : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
             }`}
           >
-            <span>🌐</span> Étranger ({internationalRooms.length} rooms · {internationalGuests} guests)
+            <span>🌐</span> Étranger ({internationalRooms.length} chambres · {internationalGuests}{" "}
+            participants)
           </button>
         </div>
 
@@ -664,7 +671,7 @@ function AdminHotel() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search a guest, reservation, partner or room number…"
+              placeholder="Rechercher un participant, une réservation, un partenaire ou une chambre…"
               className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
             />
           </div>
@@ -675,7 +682,7 @@ function AdminHotel() {
               onChange={(e) => setIncludePending(e.target.checked)}
               className="accent-amber-500"
             />
-            Include pending bookings (not confirmed yet)
+            Inclure les réservations en attente
           </label>
         </div>
       </div>
@@ -683,12 +690,12 @@ function AdminHotel() {
       {/* Groups */}
       {loading ? (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
-          Loading…
+          Chargement…
         </div>
       ) : rooms.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
           <Building2 className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-          No confirmed rooms yet.
+          Aucune chambre confirmée pour le moment.
         </div>
       ) : (
         sortedGroups.map(([key, g]) => {
@@ -705,15 +712,15 @@ function AdminHotel() {
                   {g.title}
                 </h3>
                 <p className="text-xs text-slate-300">
-                  {gDoubles.length} double · {gSingles.length} single ·{" "}
+                  {gDoubles.length} doubles · {gSingles.length} individuelles ·{" "}
                   {g.rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)}{" "}
-                  guests
+                  participants
                 </p>
               </div>
               {gDoubles.length > 0 && (
                 <div className="px-5 pt-4">
                   <p className="text-xs font-semibold tracking-widest uppercase text-blue-600 flex items-center gap-1.5">
-                    <BedDouble className="h-3.5 w-3.5" /> Double Rooms ({gDoubles.length})
+                    <BedDouble className="h-3.5 w-3.5" /> Chambres doubles ({gDoubles.length})
                   </p>
                   <RoomTable list={gDoubles} />
                 </div>
@@ -721,7 +728,7 @@ function AdminHotel() {
               {gSingles.length > 0 && (
                 <div className="px-5 pt-4 pb-4">
                   <p className="text-xs font-semibold tracking-widest uppercase text-violet-600 flex items-center gap-1.5">
-                    <Bed className="h-3.5 w-3.5" /> Single Rooms ({gSingles.length})
+                    <Bed className="h-3.5 w-3.5" /> Chambres individuelles ({gSingles.length})
                   </p>
                   <RoomTable list={gSingles} />
                 </div>

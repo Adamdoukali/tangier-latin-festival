@@ -75,7 +75,6 @@ function AdminDiscounts() {
     notes: "",
   });
 
-
   const openCreateModal = () => {
     setEditing(null);
     setForm({
@@ -141,13 +140,13 @@ function AdminDiscounts() {
     e.preventDefault();
     setError("");
     if (!form.code.trim()) {
-      setError("Discount code is required.");
+      setError("Le code de réduction est obligatoire.");
       return;
     }
 
     const cleanCode = form.code.trim().toUpperCase();
     const existing = discounts.find(
-      (d) => d.code.toUpperCase() === cleanCode && d.id !== editing?.id
+      (d) => d.code.toUpperCase() === cleanCode && d.id !== editing?.id,
     );
     if (existing) {
       setError(`Discount code "${cleanCode}" already exists.`);
@@ -160,9 +159,7 @@ function AdminDiscounts() {
         : null;
 
     const maxUsesVal =
-      form.maxUses !== "" && !isNaN(Number(form.maxUses))
-        ? Number(form.maxUses)
-        : null;
+      form.maxUses !== "" && !isNaN(Number(form.maxUses)) ? Number(form.maxUses) : null;
 
     const overrideVal =
       form.overridePrice !== "" && !isNaN(Number(form.overridePrice))
@@ -196,22 +193,20 @@ function AdminDiscounts() {
         ? await updateDiscountCode(editing.id, payload)
         : await addDiscountCode(payload);
       if (!saved) {
-        throw new Error("The discount code was not saved.");
+        throw new Error("Le code de réduction n’a pas été enregistré.");
       }
       const savedScope = saved.applyScope || "per_booking";
       if (savedScope !== payload.applyScope) {
         throw new Error(
-          `The database returned “${savedScope}” instead of “${payload.applyScope}”. Run supabase/discount-customization.sql, then save again.`,
+          `La base de données a renvoyé « ${savedScope} » au lieu de « ${payload.applyScope} ». Exécutez supabase/discount-customization.sql, puis enregistrez à nouveau.`,
         );
       }
       setShowModal(false);
       await reload();
-
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
   };
-
 
   const handleToggleActive = async (d: DiscountCode) => {
     await updateDiscountCode(d.id, { active: !d.active });
@@ -233,7 +228,7 @@ function AdminDiscounts() {
   const filtered = discounts.filter(
     (d) =>
       d.code.toLowerCase().includes(search.toLowerCase()) ||
-      (d.notes && d.notes.toLowerCase().includes(search.toLowerCase()))
+      (d.notes && d.notes.toLowerCase().includes(search.toLowerCase())),
   );
 
   const totalActive = discounts.filter((d) => d.active).length;
@@ -246,17 +241,17 @@ function AdminDiscounts() {
         <div>
           <div className="flex items-center gap-2">
             <Tag className="h-6 w-6 text-amber-500" />
-            <h1 className="text-2xl font-bold text-gray-900">Discount Codes</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Codes de réduction</h1>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Create public and collaborator discount codes with custom commission overrides.
+            Créez des codes de réduction publics ou partenaires avec des commissions personnalisées.
           </p>
         </div>
         <button
           onClick={openCreateModal}
           className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2.5 rounded-lg shadow-sm transition cursor-pointer self-start sm:self-auto"
         >
-          <Plus className="h-4 w-4" /> New Discount Code
+          <Plus className="h-4 w-4" /> Nouveau code de réduction
         </button>
       </div>
 
@@ -268,7 +263,7 @@ function AdminDiscounts() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Total Discount Codes
+              Total des codes de réduction
             </p>
             <p className="text-2xl font-bold text-gray-900 mt-0.5">{discounts.length}</p>
           </div>
@@ -280,7 +275,7 @@ function AdminDiscounts() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Active Codes
+              Codes actifs
             </p>
             <p className="text-2xl font-bold text-gray-900 mt-0.5">{totalActive}</p>
           </div>
@@ -292,7 +287,7 @@ function AdminDiscounts() {
           </div>
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Total Redemptions
+              Total des utilisations
             </p>
             <p className="text-2xl font-bold text-gray-900 mt-0.5">{totalUses}</p>
           </div>
@@ -305,7 +300,7 @@ function AdminDiscounts() {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search discount codes or notes..."
+            placeholder="Rechercher un code de réduction ou une note…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition"
@@ -313,18 +308,18 @@ function AdminDiscounts() {
         </div>
       </div>
 
-      {/* Discount Codes Table */}
+      {/* Codes de réduction Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-slate-50 text-gray-700 font-semibold border-b border-gray-200 uppercase text-xs tracking-wider">
               <tr>
                 <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Discount & Scope</th>
-                <th className="px-6 py-4">Applicable Packs</th>
-                <th className="px-6 py-4">Partner Commission</th>
-                <th className="px-6 py-4">Redemptions</th>
-                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Réduction et portée</th>
+                <th className="px-6 py-4">Forfaits applicables</th>
+                <th className="px-6 py-4">Commission partenaire</th>
+                <th className="px-6 py-4">Utilisations</th>
+                <th className="px-6 py-4">Statut</th>
                 <th className="px-6 py-4">Notes</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
@@ -333,7 +328,7 @@ function AdminDiscounts() {
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
-                    No discount codes found.
+                    Aucun code de réduction trouvé.
                   </td>
                 </tr>
               ) : (
@@ -344,14 +339,14 @@ function AdminDiscounts() {
                     d.applyScope === "fixed_price"
                       ? `Fixed €${d.overridePrice ?? 0} Rate (${madOverride} MAD)`
                       : d.applyScope === "per_person"
-                      ? `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / person`
-                      : `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / booking`;
+                        ? `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / person`
+                        : `${d.discountType === "percent" ? `-${d.discountAmount}%` : `-€${d.discountAmount} (-${madAmount} MAD)`} / booking`;
 
                   const packCount = d.applicablePackIds?.length ?? 0;
                   const packBadge =
                     !d.applicablePackIds || packCount === 0
-                      ? "All Packs"
-                      : `${packCount} Pack${packCount > 1 ? "s" : ""}`;
+                      ? "Tous les packs"
+                      : `${packCount} forfait${packCount > 1 ? "s" : ""}`;
 
                   return (
                     <tr key={d.id} className="hover:bg-slate-50/80 transition">
@@ -363,7 +358,7 @@ function AdminDiscounts() {
                           <button
                             onClick={() => copyToClipboard(d.code)}
                             className="p-1 text-gray-400 hover:text-gray-600 rounded transition cursor-pointer"
-                            title="Copy code"
+                            title="Copier le code"
                           >
                             {copiedCode === d.code ? (
                               <Check className="h-3.5 w-3.5 text-emerald-600" />
@@ -381,11 +376,13 @@ function AdminDiscounts() {
                       </td>
 
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-                          packBadge === "All Packs"
-                            ? "bg-slate-100 text-slate-700 border-slate-200"
-                            : "bg-blue-50 text-blue-700 border-blue-200 font-bold"
-                        }`}>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                            packBadge === "Tous les packs"
+                              ? "bg-slate-100 text-slate-700 border-slate-200"
+                              : "bg-blue-50 text-blue-700 border-blue-200 font-bold"
+                          }`}
+                        >
                           <Package className="h-3 w-3" />
                           {packBadge}
                         </span>
@@ -399,9 +396,7 @@ function AdminDiscounts() {
                               : `€${d.commissionOverride} / booking`}
                           </span>
                         ) : (
-                          <span className="text-gray-400 text-xs italic">
-                            Standard rate
-                          </span>
+                          <span className="text-gray-400 text-xs italic">Standard rate</span>
                         )}
                       </td>
 
@@ -428,7 +423,7 @@ function AdminDiscounts() {
                               d.active ? "bg-emerald-500" : "bg-gray-400"
                             }`}
                           />
-                          {d.active ? "Active" : "Disabled"}
+                          {d.active ? "Actif" : "Désactivé"}
                         </button>
                       </td>
 
@@ -436,48 +431,45 @@ function AdminDiscounts() {
                         {d.notes || "—"}
                       </td>
 
-
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openEditModal(d)}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                          title="Edit"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        {deleteConfirm === d.id ? (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleDelete(d.id)}
-                              className="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 cursor-pointer"
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="p-1 text-gray-400 hover:text-gray-600 rounded cursor-pointer"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ) : (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => setDeleteConfirm(d.id)}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                            title="Delete"
+                            onClick={() => openEditModal(d)}
+                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                            title="Modifier"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Edit2 className="h-4 w-4" />
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-
-
+                          {deleteConfirm === d.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDelete(d.id)}
+                                className="px-2 py-1 bg-red-600 text-white rounded text-xs font-bold hover:bg-red-700 cursor-pointer"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="p-1 text-gray-400 hover:text-gray-600 rounded cursor-pointer"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteConfirm(d.id)}
+                              className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -490,7 +482,7 @@ function AdminDiscounts() {
             <div className="flex items-center justify-between px-6 py-4 bg-slate-900 text-white">
               <h2 className="font-semibold text-lg flex items-center gap-2">
                 <Tag className="h-5 w-5 text-amber-400" />
-                {editing ? "Edit Discount Code" : "New Discount Code"}
+                {editing ? "Modifier le code de réduction" : "Nouveau code de réduction"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -503,7 +495,7 @@ function AdminDiscounts() {
             <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[85vh] overflow-y-auto">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Discount Code *
+                  Code de réduction *
                 </label>
                 <input
                   type="text"
@@ -519,7 +511,7 @@ function AdminDiscounts() {
               <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
                 <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-wider">
                   <Coins className="h-4 w-4 text-amber-600" />
-                  <span>Discount Application Mode</span>
+                  <span>Mode d’application de la réduction</span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
@@ -532,7 +524,7 @@ function AdminDiscounts() {
                         : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-                    Per Booking
+                    Par réservation
                   </button>
                   <button
                     type="button"
@@ -543,7 +535,7 @@ function AdminDiscounts() {
                         : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
                     }`}
                   >
-                    Per Person
+                    Par personne
                   </button>
                   <button
                     type="button"
@@ -561,7 +553,7 @@ function AdminDiscounts() {
                 {form.applyScope === "fixed_price" ? (
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                      Fixed Special Price (€ / MAD) *
+                      Prix spécial fixe (€ / MAD) *
                     </label>
                     <div className="relative">
                       <input
@@ -576,14 +568,20 @@ function AdminDiscounts() {
                       />
                     </div>
                     <p className="text-[11px] text-gray-600 mt-1 font-medium">
-                      Exact rate: <strong className="text-amber-800">€{form.overridePrice || 0}</strong> = <strong className="text-amber-800">{Math.round(Number(form.overridePrice || 0) * EUR_TO_MAD)} MAD</strong>
+                      Exact rate:{" "}
+                      <strong className="text-amber-800">€{form.overridePrice || 0}</strong> ={" "}
+                      <strong className="text-amber-800">
+                        {Math.round(Number(form.overridePrice || 0) * EUR_TO_MAD)} MAD
+                      </strong>
                     </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                        {form.applyScope === "per_person" ? "Amount Off Per Person *" : "Discount Value *"}
+                        {form.applyScope === "per_person"
+                          ? "Montant déduit par personne *"
+                          : "Valeur de la réduction *"}
                       </label>
                       <input
                         type="number"
@@ -598,7 +596,10 @@ function AdminDiscounts() {
                       />
                       {form.discountType === "fixed" && (
                         <p className="text-[11px] text-gray-600 mt-1 font-medium">
-                          <strong className="text-amber-800">€{form.discountAmount || 0}</strong> = <strong className="text-amber-800">{Math.round((form.discountAmount || 0) * EUR_TO_MAD)} MAD</strong>
+                          <strong className="text-amber-800">€{form.discountAmount || 0}</strong> ={" "}
+                          <strong className="text-amber-800">
+                            {Math.round((form.discountAmount || 0) * EUR_TO_MAD)} MAD
+                          </strong>
                         </p>
                       )}
                     </div>
@@ -621,31 +622,34 @@ function AdminDiscounts() {
                     {form.applyScope === "per_person" && (
                       <div className="col-span-2 pt-2 border-t border-amber-200/80">
                         <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                          Which Guests Receive the Discount?
+                          Quels participants reçoivent la réduction ?
                         </label>
                         <select
                           value={form.maxGuestsDiscounted}
                           onChange={(e) =>
                             setForm({
                               ...form,
-                              maxGuestsDiscounted: e.target.value === "" ? "" : Number(e.target.value),
+                              maxGuestsDiscounted:
+                                e.target.value === "" ? "" : Number(e.target.value),
                             })
                           }
                           className="w-full px-3 py-2 border border-amber-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-amber-500 text-xs font-bold"
                         >
-                          <option value="">All Guests in Booking (Default)</option>
-                          <option value="1">1st Guest Only (1 Person)</option>
-                          <option value="2">Up to 2 Guests (2 Persons)</option>
-                          <option value="3">Up to 3 Guests (3 Persons)</option>
+                          <option value="">
+                            Tous les participants de la réservation (par défaut)
+                          </option>
+                          <option value="1">Uniquement le 1er participant (1 personne)</option>
+                          <option value="2">Jusqu’à 2 participants (2 personnes)</option>
+                          <option value="3">Jusqu’à 3 participants (3 personnes)</option>
                         </select>
                         <p className="text-[11px] text-gray-600 mt-1 font-medium">
                           {form.maxGuestsDiscounted === 1
-                            ? "Only the 1st guest in a multi-guest booking receives the per-person discount."
+                            ? "Seul le premier participant d’une réservation multiple reçoit la réduction par personne."
                             : form.maxGuestsDiscounted === 2
-                            ? "Only up to 2 guests in a booking receive the per-person discount."
-                            : form.maxGuestsDiscounted === 3
-                            ? "Only up to 3 guests in a booking receive the per-person discount."
-                            : "Every guest in the booking receives the per-person discount."}
+                              ? "Au maximum 2 participants par réservation reçoivent la réduction par personne."
+                              : form.maxGuestsDiscounted === 3
+                                ? "Au maximum 3 participants par réservation reçoivent la réduction par personne."
+                                : "Chaque participant de la réservation reçoit la réduction par personne."}
                         </p>
                       </div>
                     )}
@@ -653,12 +657,11 @@ function AdminDiscounts() {
                 )}
               </div>
 
-
               {/* Target Packs Selection */}
               <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200/80 space-y-3">
                 <div className="flex items-center gap-2 text-blue-900 font-bold text-xs uppercase tracking-wider">
                   <Package className="h-4 w-4 text-blue-600" />
-                  <span>Applicable Packs</span>
+                  <span>Forfaits applicables</span>
                 </div>
 
                 <div className="space-y-2">
@@ -671,7 +674,7 @@ function AdminDiscounts() {
                       className="text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-xs font-bold text-gray-900">
-                      Applies to ALL Festival Packs
+                      S’applique à TOUS les forfaits du festival
                     </span>
                   </label>
 
@@ -684,7 +687,7 @@ function AdminDiscounts() {
                       className="text-blue-600 focus:ring-blue-500"
                     />
                     <span className="text-xs font-bold text-gray-900">
-                      Applies ONLY to Specific Packs
+                      S’applique UNIQUEMENT aux forfaits sélectionnés
                     </span>
                   </label>
                 </div>
@@ -692,7 +695,7 @@ function AdminDiscounts() {
                 {!form.allPacks && (
                   <div className="pt-2 border-t border-blue-200/60 space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     <p className="text-[11px] text-blue-700 font-medium mb-1">
-                      Check the packs allowed for this discount code:
+                      Cochez les forfaits autorisés pour ce code :
                     </p>
                     {packs.map((p) => {
                       const isSelected = form.applicablePackIds.includes(p.id);
@@ -722,9 +725,13 @@ function AdminDiscounts() {
                               tabIndex={-1}
                               className="rounded text-blue-600 border-gray-300 pointer-events-none"
                             />
-                            <span className="truncate">{p.name} {p.sub ? `(${p.sub})` : ""}</span>
+                            <span className="truncate">
+                              {p.name} {p.sub ? `(${p.sub})` : ""}
+                            </span>
                           </div>
-                          <span className="font-mono text-gray-500 shrink-0 ml-2">{p.price} {p.currency || "€"}</span>
+                          <span className="font-mono text-gray-500 shrink-0 ml-2">
+                            {p.price} {p.currency || "€"}
+                          </span>
                         </div>
                       );
                     })}
@@ -732,12 +739,12 @@ function AdminDiscounts() {
                 )}
               </div>
 
-              {/* Collaborator Commission Override */}
+              {/* Commission personnalisée du collaborateur */}
               <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 space-y-3">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-purple-600" />
                   <label className="text-xs font-bold text-purple-900 uppercase tracking-wider">
-                    Collaborator Commission Override
+                    Commission personnalisée du collaborateur
                   </label>
                 </div>
                 <p className="text-xs text-purple-700 leading-relaxed">
@@ -749,11 +756,9 @@ function AdminDiscounts() {
                       type="number"
                       min="0"
                       step="any"
-                      placeholder="e.g. 10"
+                      placeholder="p. ex. 10"
                       value={form.commissionOverride}
-                      onChange={(e) =>
-                        setForm({ ...form, commissionOverride: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, commissionOverride: e.target.value })}
                       className="w-full px-3.5 py-2 border border-purple-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
@@ -768,8 +773,8 @@ function AdminDiscounts() {
                       }
                       className="w-full px-3 py-2 border border-purple-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:border-purple-500 text-xs font-semibold"
                     >
-                      <option value="fixed">€ per booking / person</option>
-                      <option value="percent">% of sale</option>
+                      <option value="fixed">€ par réservation / personne</option>
+                      <option value="percent">% de la vente</option>
                     </select>
                   </div>
                 </div>
@@ -778,12 +783,12 @@ function AdminDiscounts() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Max Redemptions (Optional)
+                    Nombre maximal d’utilisations (facultatif)
                   </label>
                   <input
                     type="number"
                     min="1"
-                    placeholder="Unlimited"
+                    placeholder="Illimité"
                     value={form.maxUses}
                     onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
                     className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-amber-500"
@@ -792,7 +797,7 @@ function AdminDiscounts() {
 
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Status
+                    Statut
                   </label>
                   <label className="flex items-center gap-2 pt-2 cursor-pointer">
                     <input
@@ -801,16 +806,14 @@ function AdminDiscounts() {
                       onChange={(e) => setForm({ ...form, active: e.target.checked })}
                       className="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
                     />
-                    <span className="text-sm font-semibold text-gray-800">
-                      Active and usable
-                    </span>
+                    <span className="text-sm font-semibold text-gray-800">Actif et utilisable</span>
                   </label>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                  Notes / Assignee (Optional)
+                  Notes / bénéficiaire (facultatif)
                 </label>
                 <textarea
                   rows={2}
@@ -827,17 +830,16 @@ function AdminDiscounts() {
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                 >
-                  Cancel
+                  Annuler
                 </button>
                 <button
                   type="submit"
                   className="px-6 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold text-sm rounded-lg shadow transition cursor-pointer"
                 >
-                  {editing ? "Save Changes" : "Create Code"}
+                  {editing ? "Enregistrer les modifications" : "Créer le code"}
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}

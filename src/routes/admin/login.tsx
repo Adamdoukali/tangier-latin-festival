@@ -30,10 +30,10 @@ function AdminLogin() {
       if (success) {
         navigate({ to: "/admin" });
       } else {
-        setError("Invalid email or password. Please try again.");
+        setError("E-mail ou mot de passe incorrect. Veuillez réessayer.");
       }
     } catch {
-      setError("Could not connect to the admin login. Please try again.");
+      setError("Connexion à l’administration impossible. Veuillez réessayer.");
     } finally {
       setSubmitting(false);
     }
@@ -42,19 +42,20 @@ function AdminLogin() {
   return (
     <div
       className="min-h-screen bg-slate-100 flex flex-col"
+      lang="fr"
       style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
 
       {/* Banner — swap for a custom image anytime */}
       <div className="w-full bg-[#13234d] bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] py-10 px-6 text-center shadow-md">
-        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tangier International</p>
+        <p className="text-amber-400 text-xs tracking-[0.4em] uppercase">Tanger International</p>
         <h1 className="mt-1 text-white text-3xl md:text-4xl font-bold tracking-wide">
-          LATIN FESTIVAL
+          FESTIVAL LATIN
         </h1>
         <p className="mt-2 text-slate-300 text-sm">
-          January 07–11, 2027 · Kenzi Solazur Hotel, Tangier —{" "}
-          <span className="text-amber-300 font-semibold">Admin Portal</span>
+          Du 7 au 11 janvier 2027 · Hôtel Kenzi Solazur, Tanger —{" "}
+          <span className="text-amber-300 font-semibold">Espace administrateur</span>
         </p>
       </div>
 
@@ -63,12 +64,12 @@ function AdminLogin() {
           <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             {/* Card header */}
             <div className="bg-[#333a45] px-6 py-4 text-center">
-              <h2 className="text-white text-lg font-semibold">Admin Login</h2>
+              <h2 className="text-white text-lg font-semibold">Connexion administrateur</h2>
             </div>
 
             <form onSubmit={handleLogin} className="p-8 space-y-5">
               <p className="text-center text-sm font-semibold text-gray-700">
-                Please enter your admin credentials
+                Veuillez saisir vos identifiants administrateur
               </p>
               {error && (
                 <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-600 text-sm text-center">
@@ -85,7 +86,7 @@ function AdminLogin() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-white border border-gray-300 rounded-md py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                  placeholder="Email Address"
+                  placeholder="Adresse e-mail"
                 />
               </div>
               <div className="relative">
@@ -98,7 +99,7 @@ function AdminLogin() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-white border border-gray-300 rounded-md py-3 pl-11 pr-4 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                  placeholder="Password"
+                  placeholder="Mot de passe"
                 />
               </div>
 
@@ -108,7 +109,7 @@ function AdminLogin() {
                   disabled={submitting}
                   className="inline-flex items-center justify-center gap-2 bg-[#c8102e] hover:bg-[#a60d26] text-white rounded-md px-10 py-3 font-semibold shadow transition-all group cursor-pointer disabled:cursor-wait disabled:opacity-60"
                 >
-                  {submitting ? "Signing in…" : "Admin Login"}
+                  {submitting ? "Connexion…" : "Connexion administrateur"}
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

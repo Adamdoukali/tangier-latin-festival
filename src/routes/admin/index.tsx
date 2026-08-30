@@ -33,6 +33,7 @@ import {
   type CollaboratorStats,
   type ClientGuest,
 } from "@/lib/admin-store";
+import { translateDynamicText } from "@/lib/translations";
 
 export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
@@ -89,7 +90,7 @@ function AdminDashboard() {
       setRecentBookings(
         bookings
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 5)
+          .slice(0, 5),
       );
       setCollabStats(cs.sort((a, b) => b.ticketsSold - a.ticketsSold));
     })();
@@ -100,7 +101,7 @@ function AdminDashboard() {
 
   const cards = [
     {
-      label: "Double Rooms",
+      label: "Chambres doubles",
       value: roomCounts.double,
       icon: BedDouble,
       color: "from-blue-500 to-blue-700",
@@ -108,7 +109,7 @@ function AdminDashboard() {
       iconColor: "text-blue-600",
     },
     {
-      label: "Single Rooms",
+      label: "Chambres individuelles",
       value: roomCounts.single,
       icon: Bed,
       color: "from-violet-500 to-violet-700",
@@ -116,7 +117,7 @@ function AdminDashboard() {
       iconColor: "text-violet-600",
     },
     {
-      label: "Full Pass",
+      label: "Pass complet",
       value: roomCounts.fullpass,
       icon: Ticket,
       color: "from-cyan-500 to-cyan-700",
@@ -124,7 +125,7 @@ function AdminDashboard() {
       iconColor: "text-cyan-700",
     },
     {
-      label: "Pending",
+      label: "En attente",
       value: stats.pendingBookings,
       icon: Clock,
       color: "from-amber-500 to-amber-700",
@@ -132,7 +133,7 @@ function AdminDashboard() {
       iconColor: "text-amber-600",
     },
     {
-      label: "Total Clients",
+      label: "Nombre total de clients",
       value: allClients.length,
       icon: Users,
       color: "from-emerald-500 to-emerald-700",
@@ -140,7 +141,7 @@ function AdminDashboard() {
       iconColor: "text-emerald-600",
     },
     {
-      label: "Active Packs",
+      label: "Forfaits actifs",
       value: stats.activePacks,
       icon: Package,
       color: "from-pink-500 to-pink-700",
@@ -160,11 +161,9 @@ function AdminDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h2 className="font-display text-2xl tracking-wide text-gray-900">
-          Welcome back
-        </h2>
+        <h2 className="font-display text-2xl tracking-wide text-gray-900">Welcome back</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Here's an overview of your festival management.
+          Voici un aperçu de la gestion de votre festival.
         </p>
       </div>
 
@@ -181,12 +180,8 @@ function AdminDashboard() {
             />
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs tracking-widest uppercase text-gray-500">
-                  {card.label}
-                </p>
-                <p className="mt-2 font-display text-3xl text-gray-900">
-                  {card.value}
-                </p>
+                <p className="text-xs tracking-widest uppercase text-gray-500">{card.label}</p>
+                <p className="mt-2 font-display text-3xl text-gray-900">{card.value}</p>
               </div>
               <div className={`${card.iconBg} rounded-lg p-2.5`}>
                 <card.icon className={`h-5 w-5 ${card.iconColor}`} />
@@ -196,7 +191,7 @@ function AdminDashboard() {
         ))}
       </div>
 
-      {/* Guests by origin — Morocco vs international, per pack type */}
+      {/* guests by origin — Morocco vs international, per pack type */}
       {(() => {
         const catOfClient = (c: ClientGuest) => {
           const p = allPacks.find((x) => x.id === c.packName || x.name === c.packName);
@@ -205,7 +200,7 @@ function AdminDashboard() {
         const rowsData = [
           {
             key: "morocco",
-            label: "Morocco",
+            label: "Maroc",
             dot: "bg-emerald-500",
             cls: "text-emerald-700",
           },
@@ -230,20 +225,18 @@ function AdminDashboard() {
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
               <h3 className="font-display text-sm tracking-wide text-gray-800">
-                Guests by Origin
+                Participants par origine
               </h3>
-              <span className="text-xs text-gray-400">
-                people · declined excluded
-              </span>
+              <span className="text-xs text-gray-400">personnes · refusées exclues</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-[10px] tracking-widest uppercase text-gray-500 border-b border-gray-200">
                     <th className="px-5 py-3">Origin</th>
-                    <th className="px-5 py-3 text-right">Double Rooms</th>
-                    <th className="px-5 py-3 text-right">Single Rooms</th>
-                    <th className="px-5 py-3 text-right">Full Pass</th>
+                    <th className="px-5 py-3 text-right">Chambres doubles</th>
+                    <th className="px-5 py-3 text-right">Chambres individuelles</th>
+                    <th className="px-5 py-3 text-right">Pass complet</th>
                     <th className="px-5 py-3 text-right">Total</th>
                   </tr>
                 </thead>
@@ -291,8 +284,8 @@ function AdminDashboard() {
             <Package className="h-5 w-5 text-amber-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Manage Packs</p>
-            <p className="text-xs text-gray-500">Add, edit or remove packs</p>
+            <p className="text-sm font-medium text-gray-800">Gérer les forfaits</p>
+            <p className="text-xs text-gray-500">Ajouter, modifier ou supprimer des forfaits</p>
           </div>
           <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-amber-600 transition" />
         </Link>
@@ -304,8 +297,8 @@ function AdminDashboard() {
             <Ticket className="h-5 w-5 text-blue-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Manage Bookings</p>
-            <p className="text-xs text-gray-500">View tickets & statuses</p>
+            <p className="text-sm font-medium text-gray-800">Gérer les réservations</p>
+            <p className="text-xs text-gray-500">Afficher les billets et les statuts</p>
           </div>
           <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition" />
         </Link>
@@ -317,8 +310,8 @@ function AdminDashboard() {
             <TrendingUp className="h-5 w-5 text-violet-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Generate Invites</p>
-            <p className="text-xs text-gray-500">QR codes & bulk invites</p>
+            <p className="text-sm font-medium text-gray-800">Générer des invitations</p>
+            <p className="text-xs text-gray-500">Codes QR et invitations en masse</p>
           </div>
           <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-violet-600 transition" />
         </Link>
@@ -329,26 +322,26 @@ function AdminDashboard() {
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
             <h3 className="font-display text-sm tracking-wide text-gray-800">
-              Collaborator Sales & Commissions
+              Ventes et commissions des collaborateurs
             </h3>
             <Link
               to="/admin/collaborators"
               className="text-xs text-amber-600 hover:text-amber-700 tracking-widest uppercase transition"
             >
-              Manage →
+              Gérer →
             </Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[10px] tracking-widest uppercase text-gray-500 border-b border-gray-200">
-                  <th className="px-5 py-3">Collaborator</th>
+                  <th className="px-5 py-3">Collaborateur</th>
                   <th className="px-5 py-3">Code</th>
-                  <th className="px-5 py-3 text-right">Single Rooms</th>
-                  <th className="px-5 py-3 text-right">Double Rooms</th>
-                  <th className="px-5 py-3 text-right">Full Pass</th>
-                  <th className="px-5 py-3 text-right">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right">Sales</th>
+                  <th className="px-5 py-3 text-right">Chambres individuelles</th>
+                  <th className="px-5 py-3 text-right">Chambres doubles</th>
+                  <th className="px-5 py-3 text-right">Pass complet</th>
+                  <th className="px-5 py-3 text-right">Billets vendus</th>
+                  <th className="px-5 py-3 text-right">Ventes</th>
                   <th className="px-5 py-3 text-right">Commission</th>
                 </tr>
               </thead>
@@ -379,7 +372,10 @@ function AdminDashboard() {
                   </tr>
                 ))}
                 <tr className="border-t border-gray-300 bg-white shadow-sm">
-                  <td className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500" colSpan={2}>
+                  <td
+                    className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500"
+                    colSpan={2}
+                  >
                     Total
                   </td>
                   <td className="px-5 py-3 text-right font-medium text-gray-900">
@@ -422,24 +418,24 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* Recent Bookings */}
+      {/* Réservations récentes */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <h3 className="font-display text-sm tracking-wide text-gray-800">
-            Recent Bookings
+            Réservations récentes
           </h3>
           <Link
             to="/admin/bookings"
             className="text-xs text-amber-600 hover:text-amber-700 tracking-widest uppercase transition"
           >
-            View all →
+            Tout afficher →
           </Link>
         </div>
         {recentBookings.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-gray-400">
-            No bookings yet. Create one from the{" "}
+            Aucune réservation. Créez-en une depuis la{" "}
             <Link to="/admin/bookings" className="text-amber-600 hover:underline">
-              Bookings page
+              page Réservations
             </Link>
             .
           </div>
@@ -451,11 +447,9 @@ function AdminDashboard() {
                 className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">
-                    {b.customerName}
-                  </p>
+                  <p className="text-sm font-medium text-gray-800 truncate">{b.customerName}</p>
                   <p className="text-xs text-gray-500 truncate">
-                    {b.packName} · {b.ticketCode}
+                    {translateDynamicText(b.packName, "fr")} · {b.ticketCode}
                   </p>
                 </div>
                 <span
@@ -464,7 +458,7 @@ function AdminDashboard() {
                   {b.status}
                 </span>
                 <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {new Date(b.createdAt).toLocaleDateString()}
+                  {new Date(b.createdAt).toLocaleDateString("fr-FR")}
                 </span>
               </div>
             ))}

@@ -31,6 +31,52 @@ const actionStyle: Record<AdminAuditAction, string> = {
   reorder: "bg-violet-50 text-violet-700 border-violet-200",
 };
 
+const actionLabel: Record<AdminAuditAction, string> = {
+  create: "Création",
+  update: "Modification",
+  delete: "Suppression",
+  status: "Statut",
+  reorder: "Réorganisation",
+};
+
+const sectionLabels: Record<string, string> = {
+  bookings: "Réservations",
+  bracelets: "Bracelets",
+  clients: "Clients",
+  collaborators: "Collaborateurs",
+  discounts: "Réductions",
+  hotel: "Hôtel",
+  invites: "Invitations QR",
+  packs: "Forfaits",
+  shuttle: "Transferts",
+  tourism: "Tourisme",
+};
+
+function translateAuditSummary(summary: string): string {
+  return summary
+    .replace(/^Created collaborator\b/i, "Collaborateur créé :")
+    .replace(/^Updated collaborator\b/i, "Collaborateur modifié :")
+    .replace(/^Deleted collaborator\b/i, "Collaborateur supprimé :")
+    .replace(/^Activated collaborator\b/i, "Collaborateur activé :")
+    .replace(/^Deactivated collaborator\b/i, "Collaborateur désactivé :")
+    .replace(/^Created pack\b/i, "Forfait créé :")
+    .replace(/^Updated pack\b/i, "Forfait modifié :")
+    .replace(/^Deleted pack\b/i, "Forfait supprimé :")
+    .replace(/^Created booking\b/i, "Réservation créée :")
+    .replace(/^Updated booking\b/i, "Réservation modifiée :")
+    .replace(/^Deleted booking\b/i, "Réservation supprimée :")
+    .replace(/^Created discount\b/i, "Réduction créée :")
+    .replace(/^Updated discount\b/i, "Réduction modifiée :")
+    .replace(/^Deleted discount\b/i, "Réduction supprimée :")
+    .replace(/^Created invite\b/i, "Invitation créée :")
+    .replace(/^Deleted invite\b/i, "Invitation supprimée :")
+    .replace(/\bdouble rooms?\b/gi, "chambre double")
+    .replace(/\bsingle rooms?\b/gi, "chambre individuelle")
+    .replace(/\b(\d+) nights?\b/gi, "$1 nuits")
+    .replace(/\bguest\b/gi, "participant")
+    .replace(/\bpack\b/gi, "forfait");
+}
+
 function readableKey(key: string): string {
   return key
     .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -40,7 +86,7 @@ function readableKey(key: string): string {
 
 function displayValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "boolean") return value ? "Oui" : "Non";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
 }
@@ -53,7 +99,8 @@ function ChangeDetails({ log }: { log: AdminAuditLog }) {
     .filter(([key]) => !["id", "createdAt"].includes(key))
     .slice(0, 30);
 
-  if (!rows.length) return <p className="text-xs text-slate-500">No field details recorded.</p>;
+  if (!rows.length)
+    return <p className="text-xs text-slate-500">Aucun détail de modification enregistré.</p>;
 
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -142,9 +189,11 @@ function AdminLogsPage() {
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Admin Activity Logs</h2>
+              <h2 className="text-xl font-bold text-slate-900">
+                Journal d’activité des administrateurs
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                A chronological record of which administrator changed what and when.
+                Un historique chronologique indiquant quel administrateur a modifié quoi et quand.
               </p>
             </div>
           </div>
@@ -153,7 +202,7 @@ function AdminLogsPage() {
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Refresh
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Actualiser
           </button>
         </div>
       </section>
@@ -162,13 +211,14 @@ function AdminLogsPage() {
         <div className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
-            <p className="text-sm font-bold">Database log table is not installed yet</p>
+            <p className="text-sm font-bold">La table du journal n’est pas encore installée</p>
             <p className="mt-1 text-xs leading-5">
-              New activity is temporarily saved in this browser only. Run
+              Les nouvelles activités sont temporairement enregistrées uniquement dans ce
+              navigateur. Exécutez une fois
               <code className="mx-1 rounded bg-amber-100 px-1.5 py-0.5">
                 supabase/admin-audit-logs.sql
               </code>
-              once to share the history across all admin accounts and devices.
+              pour partager l’historique entre tous les comptes administrateurs et appareils.
             </p>
           </div>
         </div>
@@ -181,7 +231,7 @@ function AdminLogsPage() {
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search activity, record, or admin…"
+              placeholder="Rechercher une activité, une fiche ou un administrateur…"
               className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
             />
           </label>
@@ -190,7 +240,7 @@ function AdminLogsPage() {
             onChange={(event) => setAdminFilter(event.target.value)}
             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
           >
-            <option value="all">All admins</option>
+            <option value="all">Tous les administrateurs</option>
             {admins.map((admin) => (
               <option key={admin} value={admin}>
                 {admin}
@@ -202,10 +252,10 @@ function AdminLogsPage() {
             onChange={(event) => setSectionFilter(event.target.value)}
             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
           >
-            <option value="all">All sections</option>
+            <option value="all">Toutes les sections</option>
             {sections.map((section) => (
               <option key={section} value={section}>
-                {section}
+                {sectionLabels[section] ?? section}
               </option>
             ))}
           </select>
@@ -214,12 +264,12 @@ function AdminLogsPage() {
             onChange={(event) => setActionFilter(event.target.value as AdminAuditAction | "all")}
             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
           >
-            <option value="all">All actions</option>
-            <option value="create">Created</option>
-            <option value="update">Updated</option>
-            <option value="status">Status changed</option>
-            <option value="reorder">Reordered</option>
-            <option value="delete">Deleted</option>
+            <option value="all">Toutes les actions</option>
+            <option value="create">Créé</option>
+            <option value="update">Modifié</option>
+            <option value="status">Statut modifié</option>
+            <option value="reorder">Réorganisé</option>
+            <option value="delete">Supprimé</option>
           </select>
         </div>
       </section>
@@ -227,21 +277,21 @@ function AdminLogsPage() {
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3 text-xs text-slate-500">
           <span className="inline-flex items-center gap-2">
-            <Filter className="h-3.5 w-3.5" /> {filtered.length} activities
+            <Filter className="h-3.5 w-3.5" /> {filtered.length} activités
           </span>
           {databaseReady && (
             <span className="inline-flex items-center gap-1.5 text-emerald-700">
-              <Database className="h-3.5 w-3.5" /> Shared database history
+              <Database className="h-3.5 w-3.5" /> Historique partagé de la base de données
             </span>
           )}
         </div>
         {loading ? (
           <div className="grid min-h-48 place-items-center text-sm text-slate-500">
-            Loading activity…
+            Chargement de l’activité…
           </div>
         ) : filtered.length === 0 ? (
           <div className="grid min-h-48 place-items-center px-5 text-center text-sm text-slate-500">
-            No activity matches these filters.
+            Aucune activité ne correspond à ces filtres.
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -261,24 +311,26 @@ function AdminLogsPage() {
                         <span
                           className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${actionStyle[log.action]}`}
                         >
-                          {log.action}
+                          {actionLabel[log.action]}
                         </span>
                         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
-                          {log.section}
+                          {sectionLabels[log.section] ?? log.section}
                         </span>
                         {log.storage === "local" && (
                           <span className="text-[10px] font-semibold text-amber-600">
-                            Local only
+                            Local uniquement
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">{log.summary}</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        {translateAuditSummary(log.summary)}
+                      </p>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
                         <span className="font-semibold text-slate-700">{log.adminName}</span>
                         <span>{log.adminEmail}</span>
                         <span className="inline-flex items-center gap-1">
                           <Clock3 className="h-3 w-3" />
-                          {new Date(log.createdAt).toLocaleString()}
+                          {new Date(log.createdAt).toLocaleString("fr-FR")}
                         </span>
                       </div>
                     </div>

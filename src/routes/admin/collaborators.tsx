@@ -219,21 +219,21 @@ function AdminCollaborators() {
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.code.trim()) {
-      setSaveError("Name and code are required.");
+      setSaveError("Le nom et le code sont obligatoires.");
       return;
     }
     if (!form.email.trim()) {
-      setSaveError("Partner email is required so they can set their password and log in.");
+      setSaveError(
+        "L’e-mail du partenaire est obligatoire afin qu’il puisse définir son mot de passe et se connecter.",
+      );
       return;
     }
     const payload = {
       ...form,
       email: form.email.trim().toLowerCase(),
       inviteQuota: form.inviteQuota.trim() === "" ? null : parseInt(form.inviteQuota, 10) || 0,
-      missionGoal:
-        form.missionGoal.trim() === "" ? null : parseInt(form.missionGoal, 10) || null,
-      commission:
-        form.commissionType === "per_person" ? form.commissionDouble : form.commission,
+      missionGoal: form.missionGoal.trim() === "" ? null : parseInt(form.missionGoal, 10) || null,
+      commission: form.commissionType === "per_person" ? form.commissionDouble : form.commission,
     };
     try {
       if (editingId) {
@@ -252,8 +252,8 @@ function AdminCollaborators() {
       const msg = e instanceof Error ? e.message : String(e);
       setSaveError(
         msg.includes("duplicate")
-          ? "This referral code or email is already registered."
-          : msg
+          ? "Ce code de parrainage ou cet e-mail est déjà enregistré."
+          : msg,
       );
     }
   };
@@ -311,7 +311,7 @@ function AdminCollaborators() {
     downloadXlsx(
       `bilan-collaborateurs-resume-${new Date().toISOString().slice(0, 10)}.xlsx`,
       buildCollaboratorSummarySpreadsheet(visibleStats, bookings, packs),
-      "Bilan resume"
+      "Bilan résumé",
     );
   };
 
@@ -321,9 +321,9 @@ function AdminCollaborators() {
       buildCollaboratorDetailsSpreadsheet(
         visibleStats.map(({ collaborator }) => collaborator),
         bookings,
-        packs
+        packs,
       ),
-      "Bilan details"
+      "Bilan détaillé",
     );
   };
 
@@ -332,17 +332,17 @@ function AdminCollaborators() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">Collaborators</h2>
+          <h2 className="font-display text-2xl tracking-wide text-gray-900">Collaborateurs</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Partners who sell tickets or distribute invites. Every sale and invite is tracked per
-            collaborator.
+            Partenaires qui vendent des billets ou distribuent des invitations. Chaque vente et
+            invitation est attribuée au collaborateur concerné.
           </p>
         </div>
         <button
           onClick={openNew}
           className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer self-start"
         >
-          <Plus className="h-4 w-4" /> Add Collaborator
+          <Plus className="h-4 w-4" /> Ajouter un collaborateur
         </button>
       </div>
 
@@ -351,12 +351,14 @@ function AdminCollaborators() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
-            <p className="font-semibold text-amber-700">Database setup required</p>
+            <p className="font-semibold text-amber-700">
+              Configuration de la base de données requise
+            </p>
             <p className="mt-1">
-              The <code className="font-mono">collaborators</code> table doesn't exist yet in your
-              Supabase project. Open the Supabase Dashboard → SQL Editor and run the script in{" "}
-              <code className="font-mono bg-amber-50 px-1 rounded">supabase/schema.sql</code>{" "}
-              (in the project repo), then refresh this page.
+              La table <code className="font-mono">collaborators</code> n’existe pas encore dans
+              votre projet Supabase. Ouvrez le tableau de bord Supabase → Éditeur SQL, exécutez le
+              script <code className="font-mono bg-amber-50 px-1 rounded">supabase/schema.sql</code>
+              du projet, puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -368,17 +370,15 @@ function AdminCollaborators() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Commission options need a database update
+              Les options de commission nécessitent une mise à jour de la base
             </p>
             <p className="mt-1">
-              The commission <em>type</em> (per person) and <em>currency</em> (MAD) can't be
-              saved yet — the database is missing two columns. Open the Supabase Dashboard →
-              SQL Editor, run the script in{" "}
-              <code className="font-mono bg-amber-50 px-1 rounded">
-                supabase/commission.sql
-              </code>
-              , then refresh this page. Until then, collaborators save with the classic
-              percentage commission only.
+              Le <em>type</em> de commission (par personne) et la <em>devise</em> (MAD) ne peuvent
+              pas encore être enregistrés : deux colonnes manquent dans la base. Ouvrez le tableau
+              de bord Supabase → Éditeur SQL et exécutez le script{" "}
+              <code className="font-mono bg-amber-50 px-1 rounded">supabase/commission.sql</code>,
+              puis actualisez cette page. En attendant, seule la commission classique en pourcentage
+              est enregistrée pour les collaborateurs.
             </p>
           </div>
         </div>
@@ -390,15 +390,16 @@ function AdminCollaborators() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Per-category commission rates need a database update
+              Les commissions par catégorie nécessitent une mise à jour de la base
             </p>
             <p className="mt-1">
-              The separate double / single / full pass rates can't be saved yet. Open the
-              Supabase Dashboard → SQL Editor, run the script in{" "}
+              Les tarifs distincts pour chambre double, chambre individuelle et pass complet ne
+              peuvent pas encore être enregistrés. Ouvrez le tableau de bord Supabase → Éditeur SQL
+              et exécutez le script{" "}
               <code className="font-mono bg-amber-100 px-1 rounded">
                 supabase/commission-rates.sql
               </code>
-              , then refresh this page.
+              , puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -409,14 +410,16 @@ function AdminCollaborators() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
-            <p className="font-semibold text-amber-700">Missions need a database update</p>
+            <p className="font-semibold text-amber-700">
+              Les missions nécessitent une mise à jour de la base
+            </p>
             <p className="mt-1">
-              Mission goals and rewards can't be saved yet. Open the Supabase Dashboard →
-              SQL Editor, run the script in{" "}
+              Les objectifs et récompenses des missions ne peuvent pas encore être enregistrés.
+              Ouvrez le tableau de bord Supabase → Éditeur SQL et exécutez le script{" "}
               <code className="font-mono bg-amber-50 px-1 rounded">
                 supabase/partner-missions.sql
               </code>
-              , then refresh this page.
+              , puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -428,15 +431,15 @@ function AdminCollaborators() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Partner language needs a database update
+              La langue du partenaire nécessite une mise à jour de la base
             </p>
             <p className="mt-1">
-              The partner's language choice can't be saved yet. Open the Supabase Dashboard →
-              SQL Editor, run the script in{" "}
+              La langue du partenaire ne peut pas encore être enregistrée. Ouvrez le tableau de bord
+              Supabase → Éditeur SQL et exécutez le script{" "}
               <code className="font-mono bg-amber-50 px-1 rounded">
                 supabase/partner-language.sql
               </code>
-              , then refresh this page.
+              , puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -444,21 +447,23 @@ function AdminCollaborators() {
 
       {/* How it works */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 text-sm text-gray-600 space-y-1.5">
-        <p className="font-display text-sm tracking-wide text-gray-800 mb-2">How tracking works</p>
-        <p>
-          · <span className="text-gray-700">Selling:</span> give each collaborator their referral
-          link — any pack booking made through it is attributed to them.
+        <p className="font-display text-sm tracking-wide text-gray-800 mb-2">
+          Fonctionnement du suivi
         </p>
         <p>
-          · <span className="text-gray-700">Confirming:</span> bookings arrive as Pending; when
-          you (or the partner) confirm after payment, the guest automatically receives their
-          ticket QR with their names and details.
+          · <span className="text-gray-700">Vente :</span> donnez à chaque collaborateur son lien de
+          parrainage ; toute réservation effectuée par ce lien lui sera attribuée.
         </p>
         <p>
-          · <span className="text-gray-700">Self-service:</span> give a partner a username +
-          access code and they can sign in at{" "}
-          <code className="font-mono text-violet-700">/partner</code> — in their own
-          language — to track and confirm their bookings and see their commission.
+          · <span className="text-gray-700">Confirmation :</span> les réservations arrivent en
+          attente. Après confirmation du paiement par vous ou le partenaire, le participant reçoit
+          automatiquement son billet QR avec ses informations.
+        </p>
+        <p>
+          · <span className="text-gray-700">Espace partenaire :</span> donnez au partenaire un
+          identifiant et un code d’accès. Il pourra se connecter sur{" "}
+          <code className="font-mono text-violet-700">/partner</code> pour suivre et confirmer ses
+          réservations et consulter sa commission.
         </p>
       </div>
 
@@ -469,7 +474,7 @@ function AdminCollaborators() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search a collaborator by name, code, username, email or phone…"
+          placeholder="Rechercher un collaborateur par nom, code, identifiant, e-mail ou téléphone…"
           className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
         />
       </div>
@@ -477,28 +482,28 @@ function AdminCollaborators() {
       {/* Table */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         {loading ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">Loading…</div>
+          <div className="px-5 py-16 text-center text-sm text-gray-400">Chargement…</div>
         ) : visibleStats.length === 0 ? (
           <div className="px-5 py-16 text-center text-sm text-gray-400">
             <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-            No collaborators yet. Click "Add Collaborator" to create the first one.
+            Aucun collaborateur. Cliquez sur « Ajouter un collaborateur » pour créer le premier.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
-                  <th className="px-5 py-3 text-left font-medium">Partner / Email</th>
-                  <th className="px-5 py-3 text-left font-medium">Code / Link</th>
-                  <th className="px-5 py-3 text-right font-medium">Single Rooms</th>
-                  <th className="px-5 py-3 text-right font-medium">Double Rooms</th>
-                  <th className="px-5 py-3 text-right font-medium">Full Pass</th>
-                  <th className="px-5 py-3 text-right font-medium">Tickets Sold</th>
-                  <th className="px-5 py-3 text-right font-medium">Sales</th>
+                  <th className="px-5 py-3 text-left font-medium">Partenaire / e-mail</th>
+                  <th className="px-5 py-3 text-left font-medium">Code / lien</th>
+                  <th className="px-5 py-3 text-right font-medium">Chambres individuelles</th>
+                  <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
+                  <th className="px-5 py-3 text-right font-medium">Pass complet</th>
+                  <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
+                  <th className="px-5 py-3 text-right font-medium">Ventes</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
                   <th className="px-5 py-3 text-right font-medium">Mission</th>
-                  <th className="px-5 py-3 text-left font-medium">Last Active</th>
-                  <th className="px-5 py-3 text-center font-medium">Status</th>
+                  <th className="px-5 py-3 text-left font-medium">Dernière activité</th>
+                  <th className="px-5 py-3 text-center font-medium">Statut</th>
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
@@ -507,150 +512,149 @@ function AdminCollaborators() {
                   const mission = collaboratorMissionProgress(c, bookings);
                   return (
                     <tr key={c.id} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-gray-800">{c.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {c.email ? (
-                          <span className="text-gray-600 font-mono">{c.email}</span>
-                        ) : (
-                          <span className="text-red-400">no email specified</span>
-                        )}
-                        <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
-                      </p>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                          {c.code}
-                        </code>
-                        <button
-                          onClick={() => copyLink(c)}
-                          className={`p-1 rounded transition cursor-pointer ${
-                            copiedId === c.id
-                              ? "text-emerald-600"
-                              : "text-gray-400 hover:text-gray-700"
-                          }`}
-                          title={`Copy referral link: ${referralUrl(c.code, c.language)}`}
-                        >
-                          {copiedId === c.id ? (
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-gray-800">{c.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {c.email ? (
+                            <span className="text-gray-600 font-mono">{c.email}</span>
                           ) : (
-                            <Link2 className="h-3.5 w-3.5" />
+                            <span className="text-red-400">no email specified</span>
                           )}
-                        </button>
-                        <button
-                          onClick={() => copyTransferLink(c)}
-                          className={`p-1 rounded transition cursor-pointer ${
-                            copiedId === `transfer-${c.id}`
-                              ? "text-emerald-600"
-                              : "text-blue-500 hover:text-blue-800"
-                          }`}
-                          title={`Copy transfer referral link: ${transferReferralUrl(c.code, c.language)}`}
-                        >
-                          {copiedId === `transfer-${c.id}` ? (
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                          ) : (
-                            <Bus className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-right text-gray-700">{s.singleRooms}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">{s.doubleRooms}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">{s.fullPass}</td>
-                    <td className="px-5 py-3 text-right text-gray-800 font-medium">
-                      {s.ticketsSold}
-                    </td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
-                      {formatForPartner(s.revenue, c)}
-                    </td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">
-                        {formatForPartner(s.commission, c)}
-                      </span>
-                      <span className="ml-1.5 text-[10px] text-gray-500">
-                        ({commissionLabel(c)}{mission.complete ? " + mission reward" : ""})
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                      {mission.goal ? (
-                        <span
-                          className={
-                            mission.complete
-                              ? "text-emerald-600"
-                              : "text-gray-700"
-                          }
-                          title={`Bring ${mission.goal} people → win ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
-                        >
-                          {mission.complete ? "✓ " : ""}
-                          {mission.creditedParticipants}/{mission.goal}
-                          <span className="ml-1.5 text-[10px] text-gray-500">
-                            ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
-                      {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString() : "never"}
-                    </td>
-                    <td className="px-5 py-3 text-center">
-                      <button
-                        onClick={() => toggleActive(c)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                          c.active
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                            : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
-                        }`}
-                        title={c.active ? "Click to deactivate account" : "Click to activate account"}
-                      >
-                        {c.active ? (
-                          <>
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Active
-                          </>
-                        ) : (
-                          <>
-                            <ShieldAlert className="h-3.5 w-3.5 text-amber-600" /> Inactive
-                          </>
-                        )}
-                      </button>
-                    </td>
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {c.email && (
+                          <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
+                        </p>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                            {c.code}
+                          </code>
                           <button
-                            onClick={() => handleSendResetEmail(c)}
-                            className={`p-1.5 rounded-lg transition cursor-pointer ${
-                              resetSentId === c.id
-                                ? "text-emerald-600 bg-emerald-50"
-                                : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
+                            onClick={() => copyLink(c)}
+                            className={`p-1 rounded transition cursor-pointer ${
+                              copiedId === c.id
+                                ? "text-emerald-600"
+                                : "text-gray-400 hover:text-gray-700"
                             }`}
-                            title={
-                              resetSentId === c.id
-                                ? "Password link copied & email sent!"
-                                : "Send password setup link to email (copies link to clipboard)"
-                            }
+                            title={`Copier le lien de parrainage: ${referralUrl(c.code, c.language)}`}
                           >
-                            <KeyRound className="h-4 w-4" />
+                            {copiedId === c.id ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Link2 className="h-3.5 w-3.5" />
+                            )}
                           </button>
+                          <button
+                            onClick={() => copyTransferLink(c)}
+                            className={`p-1 rounded transition cursor-pointer ${
+                              copiedId === `transfer-${c.id}`
+                                ? "text-emerald-600"
+                                : "text-blue-500 hover:text-blue-800"
+                            }`}
+                            title={`Copier le lien de transfert du partenaire: ${transferReferralUrl(c.code, c.language)}`}
+                          >
+                            {copiedId === `transfer-${c.id}` ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Bus className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right text-gray-700">{s.singleRooms}</td>
+                      <td className="px-5 py-3 text-right text-gray-700">{s.doubleRooms}</td>
+                      <td className="px-5 py-3 text-right text-gray-700">{s.fullPass}</td>
+                      <td className="px-5 py-3 text-right text-gray-800 font-medium">
+                        {s.ticketsSold}
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
+                        {formatForPartner(s.revenue, c)}
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap">
+                        <span className="text-amber-600">{formatForPartner(s.commission, c)}</span>
+                        <span className="ml-1.5 text-[10px] text-gray-500">
+                          ({commissionLabel(c)}
+                          {mission.complete ? " + mission reward" : ""})
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap">
+                        {mission.goal ? (
+                          <span
+                            className={mission.complete ? "text-emerald-600" : "text-gray-700"}
+                            title={`Bring ${mission.goal} personnes → gagner ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
+                          >
+                            {mission.complete ? "✓ " : ""}
+                            {mission.creditedParticipants}/{mission.goal}
+                            <span className="ml-1.5 text-[10px] text-gray-500">
+                              ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
+                        {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString("fr-FR") : "jamais"}
+                      </td>
+                      <td className="px-5 py-3 text-center">
                         <button
-                          onClick={() => openEdit(c)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
-                          title="Edit"
+                          onClick={() => toggleActive(c)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                            c.active
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                              : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                          }`}
+                          title={
+                            c.active
+                              ? "Cliquer pour désactiver le compte"
+                              : "Cliquer pour activer le compte"
+                          }
                         >
-                          <Pencil className="h-4 w-4" />
+                          {c.active ? (
+                            <>
+                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Actif
+                            </>
+                          ) : (
+                            <>
+                              <ShieldAlert className="h-3.5 w-3.5 text-amber-600" /> Inactif
+                            </>
+                          )}
                         </button>
-                        <button
-                          onClick={() => setDeleteConfirm(c.id)}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {c.email && (
+                            <button
+                              onClick={() => handleSendResetEmail(c)}
+                              className={`p-1.5 rounded-lg transition cursor-pointer ${
+                                resetSentId === c.id
+                                  ? "text-emerald-600 bg-emerald-50"
+                                  : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
+                              }`}
+                              title={
+                                resetSentId === c.id
+                                  ? "Lien de mot de passe copié et e-mail envoyé !"
+                                  : "Envoyer le lien de création du mot de passe par e-mail et le copier"
+                              }
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => openEdit(c)}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                            title="Modifier"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteConfirm(c.id)}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -684,7 +688,7 @@ function AdminCollaborators() {
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-display text-lg text-gray-900">
-                {editingId ? "Edit Collaborator" : "New Collaborator"}
+                {editingId ? "Modifier le collaborateur" : "Nouveau collaborateur"}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
@@ -697,7 +701,7 @@ function AdminCollaborators() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Name
+                  Nom
                 </label>
                 <input
                   type="text"
@@ -706,8 +710,7 @@ function AdminCollaborators() {
                     setForm((f) => ({
                       ...f,
                       name: e.target.value,
-                      code:
-                        editingId || codeTouched ? f.code : suggestCode(e.target.value),
+                      code: editingId || codeTouched ? f.code : suggestCode(e.target.value),
                     }))
                   }
                   placeholder="e.g. Salsero Madrid"
@@ -740,7 +743,7 @@ function AdminCollaborators() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Email
+                    E-mail
                   </label>
                   <input
                     type="email"
@@ -752,7 +755,7 @@ function AdminCollaborators() {
                 </div>
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Phone
+                    Téléphone
                   </label>
                   <input
                     type="tel"
@@ -781,8 +784,8 @@ function AdminCollaborators() {
                       }
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
                     >
-                      <option value="percent">% of sales</option>
-                      <option value="per_person">Fixed amount per person</option>
+                      <option value="percent">% des ventes</option>
+                      <option value="per_person">Montant fixe par personne</option>
                     </select>
                   </div>
                   {form.commissionType === "percent" ? (
@@ -809,7 +812,7 @@ function AdminCollaborators() {
                   ) : (
                     <div>
                       <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                        Currency
+                        Devise
                       </label>
                       <select
                         value={form.commissionCurrency}
@@ -820,7 +823,7 @@ function AdminCollaborators() {
                           })
                         }
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
-                        title="Commission currency"
+                        title="Devise de la commission"
                       >
                         <option value="EUR">€ (Euro)</option>
                         <option value="MAD">MAD (Dirham)</option>
@@ -857,39 +860,39 @@ function AdminCollaborators() {
                 )}
                 <p className="text-[11px] text-gray-500">
                   {form.commissionType === "percent"
-                    ? "Earns a percentage of the € value of every sale made through their link. Free invite tickets don't count."
-                    : "Earns a different amount per person depending on what was sold — e.g. 15 for a double room, 10 for a single, 5 for a full pass (a double room = 2 people). Free invite tickets don't count."}
+                    ? "Le partenaire gagne un pourcentage de la valeur en euros de chaque vente réalisée avec son lien. Les invitations gratuites ne comptent pas."
+                    : "Le partenaire gagne un montant différent par personne selon le produit vendu, par exemple 15 pour une chambre double, 10 pour une chambre individuelle et 5 pour un pass complet (une chambre double = 2 personnes). Les invitations gratuites ne comptent pas."}
                 </p>
               </div>
 
               {/* Mission */}
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 space-y-3">
                 <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">
-                  Mission (optional)
+                  Mission facultative
                 </p>
                 <p className="text-xs text-gray-500 -mt-1">
-                  A bonus goal shown in their portal: bring this many people → win this
-                  amount. While the mission is running, those first sales earn NO
-                  commission — commission starts on sales made after the goal is reached.
-                  Leave the goal empty for no mission. Editable anytime.
+                  Objectif bonus affiché dans l’espace partenaire : apporter ce nombre de personnes
+                  pour gagner la récompense. Tant que la mission est en cours, les premières ventes
+                  ne génèrent aucune commission. La commission commence après l’objectif atteint.
+                  Laissez l’objectif vide pour désactiver la mission. Modifiable à tout moment.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                      Goal (people)
+                      Objectif (personnes)
                     </label>
                     <input
                       type="number"
                       min={1}
                       value={form.missionGoal}
                       onChange={(e) => setForm({ ...form, missionGoal: e.target.value })}
-                      placeholder="e.g. 2"
+                      placeholder="p. ex. 2"
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                     />
                   </div>
                   <div>
                     <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                      Reward
+                      Récompense
                     </label>
                     <div className="flex gap-1.5">
                       <input
@@ -899,7 +902,7 @@ function AdminCollaborators() {
                         onChange={(e) =>
                           setForm({ ...form, missionReward: parseFloat(e.target.value) || 0 })
                         }
-                        placeholder="e.g. 100"
+                        placeholder="p. ex. 100"
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                       />
                       <select
@@ -911,7 +914,7 @@ function AdminCollaborators() {
                           })
                         }
                         className="rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer shrink-0"
-                        title="Reward currency"
+                        title="Devise de la récompense"
                       >
                         <option value="EUR">€</option>
                         <option value="MAD">MAD</option>
@@ -924,7 +927,7 @@ function AdminCollaborators() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                    Language
+                    Langue
                   </label>
                   <select
                     value={form.language}
@@ -940,8 +943,8 @@ function AdminCollaborators() {
                     ))}
                   </select>
                   <p className="mt-1.5 text-[11px] text-gray-500">
-                    Their portal displays in this language, and their links open the website
-                    in it for their guests.
+                    Leur espace s’affiche dans cette langue et leurs liens ouvrent le site dans
+                    cette langue pour leurs clients.
                   </p>
                 </div>
                 <div className="flex items-start pt-7">
@@ -952,7 +955,7 @@ function AdminCollaborators() {
                       onChange={(e) => setForm({ ...form, active: e.target.checked })}
                       className="accent-amber-500"
                     />
-                    Active
+                    Actif
                   </label>
                 </div>
               </div>
@@ -961,7 +964,7 @@ function AdminCollaborators() {
               <div className="rounded-lg border border-violet-200 bg-violet-50 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-xs tracking-widest uppercase text-violet-700 font-semibold">
-                    Partner Portal &amp; Security
+                    Espace partenaire et sécurité
                   </p>
                   <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 cursor-pointer">
                     <input
@@ -971,40 +974,46 @@ function AdminCollaborators() {
                       className="accent-emerald-600 h-4 w-4"
                     />
                     <span className={form.active ? "text-emerald-700 font-bold" : "text-amber-700"}>
-                      {form.active ? "Activated" : "Inactive (Pending)"}
+                      {form.active ? "Activé" : "Inactif (en attente)"}
                     </span>
                   </label>
                 </div>
                 <p className="text-xs text-gray-600">
-                  Partners sign in at <code className="font-mono text-violet-700">/partner</code> using
-                  their email and password. Passwords are set by partners via email link — they are never shown in plain text.
+                  Les partenaires se connectent sur{" "}
+                  <code className="font-mono text-violet-700">/partner</code> avec leur e-mail et
+                  leur mot de passe. Ils définissent leur mot de passe grâce au lien reçu par e-mail
+                  ; il n’est jamais affiché en clair.
                 </p>
                 <div className="p-2.5 rounded-md bg-white border border-violet-100 text-xs text-gray-600 space-y-1">
                   <p>
-                    <span className="font-semibold text-gray-800">Account status:</span>{" "}
+                    <span className="font-semibold text-gray-800">État du compte :</span>{" "}
                     {form.active ? (
-                      <span className="text-emerald-700 font-semibold">Active — Partner can sign in</span>
+                      <span className="text-emerald-700 font-semibold">
+                        Actif — le partenaire peut se connecter
+                      </span>
                     ) : (
                       <span className="text-amber-700 font-semibold">
-                        Inactive — Partner cannot log in until you activate the account.
+                        Inactif — le partenaire ne peut pas se connecter avant l’activation du
+                        compte.
                       </span>
                     )}
                   </p>
                   <p className="text-gray-500">
-                    When created, an email with a password setup link will be automatically sent to the partner.
+                    À la création du compte, un e-mail contenant un lien de définition du mot de
+                    passe est automatiquement envoyé au partenaire.
                   </p>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
-                  Notes (optional)
+                  Notes (facultatives)
                 </label>
                 <textarea
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={2}
-                  placeholder="Deal terms, region, contact person..."
+                  placeholder="Conditions, région, personne de contact…"
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition resize-none"
                 />
               </div>
@@ -1017,13 +1026,14 @@ function AdminCollaborators() {
                 onClick={() => setShowForm(false)}
                 className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={handleSave}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
               >
-                <Check className="h-4 w-4" /> {editingId ? "Save Changes" : "Create"}
+                <Check className="h-4 w-4" />{" "}
+                {editingId ? "Enregistrer les modifications" : "Créer"}
               </button>
             </div>
           </div>
@@ -1034,7 +1044,7 @@ function AdminCollaborators() {
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-xl border border-gray-200 bg-white p-6">
-            <h3 className="font-display text-lg text-gray-900">Delete Collaborator?</h3>
+            <h3 className="font-display text-lg text-gray-900">Supprimer le collaborateur ?</h3>
             <p className="mt-2 text-sm text-gray-500">
               Their past bookings and invites stay in the system but lose the attribution link.
             </p>
@@ -1043,13 +1053,13 @@ function AdminCollaborators() {
                 onClick={() => setDeleteConfirm(null)}
                 className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-red-200 text-red-600 hover:bg-red-200 transition cursor-pointer"
               >
-                Delete
+                Supprimer
               </button>
             </div>
           </div>

@@ -26,6 +26,7 @@ import {
   type Collaborator,
   type BraceletCategory,
 } from "@/lib/admin-store";
+import { translateDynamicText } from "@/lib/translations";
 
 export const Route = createFileRoute("/admin/bracelets")({
   component: AdminBracelets,
@@ -40,21 +41,21 @@ const CATEGORIES: Array<{
 }> = [
   {
     key: "artist",
-    title: "Bracelets of the Artists",
+    title: "Bracelets des artistes",
     icon: Mic2,
     accent: "text-fuchsia-600",
     chip: "bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700",
   },
   {
     key: "hotel",
-    title: "Bracelets of the Hotel",
+    title: "Bracelets de l’hôtel",
     icon: Building2,
     accent: "text-blue-600",
     chip: "bg-blue-50 border-blue-200 text-blue-700",
   },
   {
     key: "fullpass",
-    title: "Bracelets of the Full Pass",
+    title: "Bracelets des pass complets",
     icon: Ticket,
     accent: "text-emerald-600",
     chip: "bg-emerald-50 border-emerald-200 text-emerald-700",
@@ -108,7 +109,7 @@ function AdminBracelets() {
     .filter((b) =>
       includePending
         ? b.status !== "declined"
-        : b.status === "confirmed" || b.status === "checked-in"
+        : b.status === "confirmed" || b.status === "checked-in",
     )
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     .flatMap((b) => {
@@ -121,7 +122,7 @@ function AdminBracelets() {
       return brs.map((bracelet, i) => ({
         booking: b,
         guestIndex: i,
-        guestName: names[i] ?? `Guest ${i + 1}`,
+        guestName: names[i] ?? `Participant ${i + 1}`,
         bracelet,
         given: given[i] ?? false,
         pack: packs.find((p) => p.id === b.packId),
@@ -167,9 +168,9 @@ function AdminBracelets() {
       <div>
         <h2 className="font-display text-2xl tracking-wide text-gray-900">Bracelets</h2>
         <p className="mt-1 text-sm text-gray-500">
-          One bracelet per guest. Guests of the same reservation appear separately (Guest 1,
-          Guest 2), so an artist sharing a double room can wear the Artist bracelet while
-          their roommate keeps the Hotel one — change anyone with the selector on their row.
+          Un bracelet par participant. Les participants d’une même réservation apparaissent
+          séparément (Participant 1, Participant 2), afin que chacun puisse recevoir le bracelet
+          approprié grâce au sélecteur de sa ligne.
         </p>
       </div>
 
@@ -179,15 +180,15 @@ function AdminBracelets() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              The "received" toggle needs a database update
+              La remise des bracelets nécessite une mise à jour de la base de données
             </p>
             <p className="mt-1">
-              Marking bracelets as handed out can't be saved yet. Open the Supabase
-              Dashboard → SQL Editor, run the script in{" "}
+              La remise des bracelets ne peut pas encore être enregistrée. Ouvrez le tableau de bord
+              Supabase → Éditeur SQL et exécutez le script{" "}
               <code className="font-mono bg-amber-100 px-1 rounded">
                 supabase/bracelet-given.sql
               </code>
-              , then refresh this page.
+              , puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -198,14 +199,14 @@ function AdminBracelets() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
-            <p className="font-semibold text-amber-700">Bracelets need a database update</p>
+            <p className="font-semibold text-amber-700">
+              Les bracelets nécessitent une mise à jour de la base de données
+            </p>
             <p className="mt-1">
-              Category changes can't be saved yet. Open the Supabase Dashboard → SQL Editor,
-              run the script in{" "}
-              <code className="font-mono bg-amber-100 px-1 rounded">
-                supabase/bracelets.sql
-              </code>
-              , then refresh this page. The automatic categories below already work.
+              Les changements de catégorie ne peuvent pas encore être enregistrés. Ouvrez le tableau
+              de bord Supabase → Éditeur SQL et exécutez le script{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">supabase/bracelets.sql</code>,
+              puis actualisez cette page. Les catégories automatiques ci-dessous fonctionnent déjà.
             </p>
           </div>
         </div>
@@ -233,16 +234,16 @@ function AdminBracelets() {
               <div className="flex items-center justify-between">
                 <p className="text-xs tracking-widest uppercase text-gray-500">
                   {cat.key === "artist"
-                    ? "Artists"
+                    ? "Artistes"
                     : cat.key === "hotel"
-                      ? "Hotel"
-                      : "Full Pass"}
+                      ? "Hôtel"
+                      : "Pass complet"}
                 </p>
                 <cat.icon className={`h-4 w-4 ${cat.accent}`} />
               </div>
               <p className="mt-1 font-display text-2xl text-gray-900">{mine.length}</p>
               <p className="text-[11px] text-gray-400">
-                bracelets · <span className="text-emerald-600 font-medium">{given} received</span>
+                bracelets · <span className="text-emerald-600 font-medium">{given} remis</span>
               </p>
             </div>
           );
@@ -257,7 +258,7 @@ function AdminBracelets() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search a guest by name, reservation or partner…"
+            placeholder="Rechercher un participant par nom, réservation ou partenaire…"
             className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
           />
         </div>
@@ -268,14 +269,14 @@ function AdminBracelets() {
             onChange={(e) => setIncludePending(e.target.checked)}
             className="accent-amber-500"
           />
-          Include pending bookings (not confirmed yet)
+          Inclure les réservations en attente
         </label>
       </div>
 
       {/* Category sections */}
       {loading ? (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
-          Loading…
+          Chargement…
         </div>
       ) : (
         CATEGORIES.map((cat) => {
@@ -293,25 +294,25 @@ function AdminBracelets() {
                 <p className="text-xs text-slate-300">
                   {mine.length} bracelets ·{" "}
                   <span className="text-emerald-300">
-                    {mine.filter((r) => r.given).length} received
+                    {mine.filter((r) => r.given).length} remis
                   </span>
                 </p>
               </div>
               {mine.length === 0 ? (
                 <p className="px-5 py-8 text-center text-sm text-gray-400">
-                  Nobody in this category yet.
+                  Personne dans cette catégorie pour le moment.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
-                        <th className="px-4 py-2.5 text-left font-medium">Guest</th>
-                        <th className="px-4 py-2.5 text-left font-medium">Pack</th>
-                        <th className="px-4 py-2.5 text-left font-medium">Partner</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Participant</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Forfait</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Partenaire</th>
                         <th className="px-4 py-2.5 text-left font-medium">Reservation</th>
-                        <th className="px-4 py-2.5 text-left font-medium">Category</th>
-                        <th className="px-4 py-2.5 text-center font-medium">Received</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Catégorie</th>
+                        <th className="px-4 py-2.5 text-center font-medium">Remis</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -324,15 +325,18 @@ function AdminBracelets() {
                             <span className="font-medium text-gray-900">{r.guestName}</span>
                             {(r.booking.numPeople || 1) > 1 && (
                               <span className="ml-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400 border border-gray-200 bg-gray-50 rounded px-1.5 py-0.5">
-                                Guest {r.guestIndex + 1}/{r.booking.numPeople}
+                                Participant {r.guestIndex + 1}/{r.booking.numPeople}
                               </span>
                             )}
                           </td>
                           <td className="px-4 py-2.5 text-gray-600 max-w-[240px] truncate">
-                            {r.pack ? packLabel(r.pack) : r.booking.packName}
+                            {translateDynamicText(
+                              r.pack ? packLabel(r.pack) : r.booking.packName,
+                              "fr",
+                            )}
                           </td>
                           <td className="px-4 py-2.5 text-gray-600">
-                            {r.partner ? r.partner.name : "Direct"}
+                            {r.partner ? r.partner.name : "Sans partenaire"}
                           </td>
                           <td className="px-4 py-2.5">
                             <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
@@ -348,8 +352,8 @@ function AdminBracelets() {
                               className={`appearance-none rounded-full px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium border cursor-pointer focus:outline-none ${cat.chip}`}
                             >
                               <option value="artist">Artist</option>
-                              <option value="hotel">Hotel</option>
-                              <option value="fullpass">Full Pass</option>
+                              <option value="hotel">Hôtel</option>
+                              <option value="fullpass">Pass complet</option>
                             </select>
                             {!r.booking.bracelet && (
                               <span className="ml-1.5 text-[10px] text-gray-400">auto</span>
@@ -361,22 +365,22 @@ function AdminBracelets() {
                               className="cursor-pointer align-middle inline-flex items-center gap-1.5"
                               title={
                                 r.given
-                                  ? "Bracelet handed out — click to undo"
-                                  : "Mark bracelet as handed out"
+                                  ? "Bracelet remis — cliquer pour annuler"
+                                  : "Marquer le bracelet comme remis"
                               }
                             >
                               {r.given ? (
                                 <>
                                   <ToggleRight className="h-6 w-6 text-emerald-500" />
                                   <span className="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">
-                                    Yes
+                                    Oui
                                   </span>
                                 </>
                               ) : (
                                 <>
                                   <ToggleLeft className="h-6 w-6 text-gray-300" />
                                   <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                                    No
+                                    Non
                                   </span>
                                 </>
                               )}

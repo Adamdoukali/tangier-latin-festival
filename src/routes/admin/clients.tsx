@@ -27,6 +27,7 @@ import {
   type ClientGuest,
   type GuestDetail,
 } from "@/lib/admin-store";
+import { translateDynamicText } from "@/lib/translations";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/clients")({
@@ -60,7 +61,7 @@ function AdminClients() {
     email: "",
     phone: "",
     origin: "morocco",
-    country: "Morocco",
+    country: "Maroc",
     notes: "",
   });
 
@@ -93,7 +94,7 @@ function AdminClients() {
   const filteredClients = allClients.filter((c) => {
     if (originFilter === "morocco" && c.origin !== "morocco") return false;
     if (originFilter === "international" && c.origin !== "international") return false;
-    if (missingContactOnly && (c.email.trim() && c.phone.trim())) return false;
+    if (missingContactOnly && c.email.trim() && c.phone.trim()) return false;
 
     if (!search.trim()) return true;
     const q = search.trim().toLowerCase();
@@ -128,7 +129,7 @@ function AdminClients() {
     currentCountry: string,
     origin: "morocco" | "international",
   ): string => {
-    if (origin === "morocco") return "Morocco";
+    if (origin === "morocco") return "Maroc";
     return /^(morocco|maroc|المغرب)?$/i.test(currentCountry.trim())
       ? "Étranger"
       : currentCountry.trim() || "Étranger";
@@ -153,7 +154,7 @@ function AdminClients() {
       phone: primary.phone ?? targetBooking.phone,
       country: primary.country ?? targetBooking.country,
     });
-    if (!saved) throw new Error("The client changes were not saved.");
+    if (!saved) throw new Error("Les modifications du client n’ont pas été enregistrées.");
   };
 
   const handleSaveClient = async () => {
@@ -190,7 +191,10 @@ function AdminClients() {
     }
   };
 
-  const handleInlineOriginChange = async (client: ClientGuest, newOrigin: "morocco" | "international") => {
+  const handleInlineOriginChange = async (
+    client: ClientGuest,
+    newOrigin: "morocco" | "international",
+  ) => {
     if (client.origin === newOrigin) return;
     setError("");
 
@@ -222,14 +226,14 @@ function AdminClients() {
     const header = [
       "Prénom",
       "Nom",
-      "Email",
+      "E-mail",
       "Téléphone",
       "Origine / Nationalité",
       "N° Chambre",
       "Type de Chambre",
-      "Pack Billet",
+      "Forfait / billet",
       "Code Billet",
-      "Promoteur / Partner",
+      "Promoteur / partenaire",
       "Notes",
     ];
 
@@ -249,16 +253,12 @@ function AdminClients() {
       c.roomType ?? "",
       c.packName,
       c.ticketCode,
-      c.collaboratorName ?? "Direct",
+      c.collaboratorName ?? "Sans partenaire",
       c.notes ?? "",
     ]);
 
     const suffix =
-      targetOrigin === "morocco"
-        ? "maroc"
-        : targetOrigin === "international"
-        ? "etranger"
-        : "all";
+      targetOrigin === "morocco" ? "maroc" : targetOrigin === "international" ? "etranger" : "all";
     downloadXlsx(
       `clients-database-${suffix}-${new Date().toISOString().slice(0, 10)}.xlsx`,
       [header, ...spreadsheetRows],
@@ -266,7 +266,7 @@ function AdminClients() {
         ? "Clients Maroc"
         : targetOrigin === "international"
           ? "Clients Etranger"
-          : "Tous les clients"
+          : "Tous les clients",
     );
   };
 
@@ -276,10 +276,11 @@ function AdminClients() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl tracking-wide text-gray-900">
-            Clients Database
+            Base de données clients
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Complete database of every individual client & guest, contact details, room assignments, and nationality.
+            Base complète de chaque client et participant, avec ses coordonnées, sa chambre et sa
+            nationalité.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
@@ -302,7 +303,7 @@ function AdminClients() {
             disabled={allClients.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 XLSX All ({allClients.length})
+            <Download className="h-3.5 w-3.5" /> 📁 XLSX Tous ({allClients.length})
           </button>
         </div>
       </div>
@@ -313,11 +314,16 @@ function AdminClients() {
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-sm text-amber-800">
             <p className="font-semibold text-amber-700">
-              Per-guest client updates need a database migration
+              Les informations par participant nécessitent une migration de la base de données
             </p>
             <p className="mt-1">
-              Saving custom emails/phones per guest can't be stored in Supabase yet. Open the Supabase Dashboard → SQL Editor, run{" "}
-              <code className="font-mono bg-amber-100 px-1 rounded">supabase/guest-details.sql</code>, then refresh this page.
+              Les e-mails et téléphones personnalisés par participant ne peuvent pas encore être
+              enregistrés dans Supabase. Ouvrez le tableau de bord Supabase → Éditeur SQL et
+              exécutez{" "}
+              <code className="font-mono bg-amber-100 px-1 rounded">
+                supabase/guest-details.sql
+              </code>
+              , puis actualisez cette page.
             </p>
           </div>
         </div>
@@ -339,28 +345,34 @@ function AdminClients() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Total Clients</p>
+            <p className="text-xs tracking-widest uppercase text-gray-500">Total clients</p>
             <Users className="h-4 w-4 text-slate-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{allClients.length}</p>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">Morocco 🇲🇦</p>
+            <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">
+              Morocco 🇲🇦
+            </p>
             <UserCheck className="h-4 w-4 text-emerald-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-emerald-900">{moroccanCount}</p>
         </div>
         <div className="rounded-xl border border-blue-200 bg-blue-50/30 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-blue-700 font-semibold">Étranger 🌐</p>
+            <p className="text-xs tracking-widest uppercase text-blue-700 font-semibold">
+              Étranger 🌐
+            </p>
             <UserCheck className="h-4 w-4 text-blue-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-blue-900">{internationalCount}</p>
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50/30 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-amber-700 font-semibold">Missing Contact</p>
+            <p className="text-xs tracking-widest uppercase text-amber-700 font-semibold">
+              Coordonnées manquantes
+            </p>
             <Mail className="h-4 w-4 text-amber-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-amber-900">{missingContactCount}</p>
@@ -370,7 +382,9 @@ function AdminClients() {
       {/* Filter Controls */}
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">Filter Origin:</span>
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">
+            Filtrer par origine :
+          </span>
           <button
             onClick={() => setOriginFilter("all")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
@@ -379,7 +393,7 @@ function AdminClients() {
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
             }`}
           >
-            All Clients ({allClients.length})
+            Tous les clients ({allClients.length})
           </button>
           <button
             onClick={() => setOriginFilter("morocco")}
@@ -410,7 +424,7 @@ function AdminClients() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by client name, email, phone, room or code…"
+              placeholder="Rechercher par nom, e-mail, téléphone, chambre ou code…"
               className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
             />
           </div>
@@ -421,7 +435,7 @@ function AdminClients() {
               onChange={(e) => setMissingContactOnly(e.target.checked)}
               className="accent-amber-500"
             />
-            Show clients missing phone or email
+            Afficher les clients sans téléphone ou e-mail
           </label>
         </div>
       </div>
@@ -429,12 +443,12 @@ function AdminClients() {
       {/* Clients Table */}
       {loading ? (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
-          Loading client database…
+          Chargement de la base clients…
         </div>
       ) : filteredClients.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
           <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-          No clients found matching filters.
+          Aucun client ne correspond aux filtres.
         </div>
       ) : (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
@@ -443,13 +457,13 @@ function AdminClients() {
               <thead>
                 <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500 bg-slate-50">
                   <th className="px-4 py-3 text-left font-medium">#</th>
-                  <th className="px-4 py-3 text-left font-medium">Client Name</th>
-                  <th className="px-4 py-3 text-left font-medium">Email</th>
-                  <th className="px-4 py-3 text-left font-medium">Phone</th>
-                  <th className="px-4 py-3 text-left font-medium">Nationality / Origin</th>
-                  <th className="px-4 py-3 text-left font-medium">Room</th>
-                  <th className="px-4 py-3 text-left font-medium">Pack</th>
-                  <th className="px-4 py-3 text-left font-medium">Promoter</th>
+                  <th className="px-4 py-3 text-left font-medium">Nom du client</th>
+                  <th className="px-4 py-3 text-left font-medium">E-mail</th>
+                  <th className="px-4 py-3 text-left font-medium">Téléphone</th>
+                  <th className="px-4 py-3 text-left font-medium">Nationalité / origine</th>
+                  <th className="px-4 py-3 text-left font-medium">Chambre</th>
+                  <th className="px-4 py-3 text-left font-medium">Forfait</th>
+                  <th className="px-4 py-3 text-left font-medium">Partenaire</th>
                   <th className="px-4 py-3 text-center font-medium">Action</th>
                 </tr>
               </thead>
@@ -462,7 +476,7 @@ function AdminClients() {
                         {client.fullName}
                         {client.guestIndex > 0 && (
                           <span className="ml-1.5 text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-normal">
-                            Guest {client.guestIndex + 1}
+                            Participant {client.guestIndex + 1}
                           </span>
                         )}
                       </div>
@@ -478,7 +492,7 @@ function AdminClients() {
                           onClick={() => openEditModal(client)}
                           className="text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
                         >
-                          + Add Email
+                          + Ajouter un e-mail
                         </button>
                       )}
                     </td>
@@ -493,7 +507,7 @@ function AdminClients() {
                           onClick={() => openEditModal(client)}
                           className="text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
                         >
-                          + Add Phone
+                          + Ajouter un téléphone
                         </button>
                       )}
                     </td>
@@ -503,7 +517,7 @@ function AdminClients() {
                         onChange={(e) =>
                           handleInlineOriginChange(
                             client,
-                            e.target.value as "morocco" | "international"
+                            e.target.value as "morocco" | "international",
                           )
                         }
                         className={`rounded-full px-2.5 py-1 text-xs font-semibold border focus:outline-none transition cursor-pointer ${
@@ -512,7 +526,7 @@ function AdminClients() {
                             : "bg-blue-50 text-blue-800 border-blue-200"
                         }`}
                       >
-                        <option value="morocco">🇲🇦 Morocco</option>
+                        <option value="morocco">🇲🇦 Maroc</option>
                         <option value="international">🌐 Étranger</option>
                       </select>
                     </td>
@@ -526,31 +540,29 @@ function AdminClients() {
                           }`}
                           title={
                             client.roomNumber
-                              ? "Hotel room assigned"
-                              : "Room type assigned; hotel room number pending"
+                              ? "Chambre d’hôtel attribuée"
+                              : "Type de chambre attribué ; numéro de chambre en attente"
                           }
                         >
                           {client.roomNumber ? `Nº ${client.roomNumber}` : client.roomType}
                           {client.roomNumber && client.roomType ? ` · ${client.roomType}` : ""}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">Unassigned</span>
+                        <span className="text-xs text-gray-400">Non attribuée</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-700">
-                      <div>{client.packName}</div>
+                      <div>{translateDynamicText(client.packName, "fr")}</div>
                       <code className="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.5 rounded font-mono">
                         {client.ticketCode}
                       </code>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-600">
-                      {client.collaboratorName}
-                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{client.collaboratorName}</td>
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => openEditModal(client)}
                         className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition cursor-pointer"
-                        title="Edit client information"
+                        title="Modifier les informations du client"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -569,7 +581,7 @@ function AdminClients() {
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-150">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="font-display text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Pencil className="h-5 w-5 text-amber-600" /> Edit Client Details
+                <Pencil className="h-5 w-5 text-amber-600" /> Modifier les informations du client
               </h3>
               <button
                 onClick={() => setEditingClient(null)}
@@ -581,16 +593,17 @@ function AdminClients() {
 
             <div className="text-xs text-gray-500 bg-slate-50 p-2.5 rounded-lg flex items-center justify-between">
               <span>
-                Ticket Code: <code className="font-mono text-amber-800 font-bold">{editingClient.ticketCode}</code>
+                Code du billet :{" "}
+                <code className="font-mono text-amber-800 font-bold">
+                  {editingClient.ticketCode}
+                </code>
               </span>
-              <span>Pack: {editingClient.packName}</span>
+              <span>Forfait : {translateDynamicText(editingClient.packName, "fr")}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  First Name (Prénom)
-                </label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Prénom</label>
                 <input
                   type="text"
                   value={editForm.firstName}
@@ -600,9 +613,7 @@ function AdminClients() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Last Name (Nom)
-                </label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Nom</label>
                 <input
                   type="text"
                   value={editForm.lastName}
@@ -614,7 +625,7 @@ function AdminClients() {
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Email Address
+                  Adresse e-mail
                 </label>
                 <input
                   type="email"
@@ -626,7 +637,7 @@ function AdminClients() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Phone Number
+                  Numéro de téléphone
                 </label>
                 <input
                   type="text"
@@ -648,7 +659,7 @@ function AdminClients() {
                       setEditForm((current) => ({
                         ...current,
                         origin: "morocco",
-                        country: "Morocco",
+                        country: "Maroc",
                       }))
                     }
                     className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
@@ -657,7 +668,7 @@ function AdminClients() {
                         : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                     }`}
                   >
-                    <span>🇲🇦</span> Morocco
+                    <span>🇲🇦</span> Maroc
                   </button>
                   <button
                     type="button"
@@ -697,14 +708,14 @@ function AdminClients() {
 
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Notes / Comments
+                  Notes / commentaires
                 </label>
                 <textarea
                   rows={2}
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
-                  placeholder="Additional notes for this client…"
+                  placeholder="Notes supplémentaires concernant ce client…"
                 />
               </div>
             </div>
@@ -715,14 +726,14 @@ function AdminClients() {
                 onClick={() => setEditingClient(null)}
                 className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 type="button"
                 onClick={handleSaveClient}
                 className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition cursor-pointer shadow-sm flex items-center gap-1.5"
               >
-                <Check className="h-4 w-4" /> Save Client Info
+                <Check className="h-4 w-4" /> Enregistrer les informations
               </button>
             </div>
           </div>
