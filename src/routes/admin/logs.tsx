@@ -72,7 +72,8 @@ function translateAuditSummary(summary: string): string {
     .replace(/^Deleted invite\b/i, "Invitation supprimée :")
     .replace(/\bdouble rooms?\b/gi, "chambre double")
     .replace(/\bsingle rooms?\b/gi, "chambre individuelle")
-    .replace(/\b(\d+) nights?\b/gi, "$1 nuits")
+    .replace(/\btriple rooms?\b/gi, "chambre triple")
+    .replace(/\b(\d+) n(?:ight|uight)s?\b/gi, "$1 nuits")
     .replace(/\bguest\b/gi, "participant")
     .replace(/\bpack\b/gi, "forfait");
 }
