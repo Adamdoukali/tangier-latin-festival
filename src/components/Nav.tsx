@@ -326,7 +326,7 @@ export function Nav() {
                     href={localizedHref(l.href)}
                     onClick={() => setMobileMenuOpen(false)}
                     aria-current={active ? "page" : undefined}
-                    className={`relative flex min-h-0 items-center justify-between border-b border-border/10 py-[clamp(0.15rem,0.55vh,0.35rem)] pl-4 pr-2 font-display text-[13px] leading-5 tracking-[0.08em] uppercase transition ${
+                    className={`relative flex min-h-0 items-center justify-between border-b border-border/10 py-[clamp(0.15rem,0.55vh,0.35rem)] pl-4 pr-2 font-display text-sm leading-5 tracking-[0.08em] uppercase transition ${
                       active
                         ? "bg-black/5 font-semibold text-black"
                         : "text-foreground/85 hover:bg-black/5 hover:text-black"
@@ -355,7 +355,7 @@ export function Nav() {
             <a
               href={lang && lang !== "en" ? `/partner?lang=${lang}` : "/partner"}
               onClick={() => setMobileMenuOpen(false)}
-              className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 text-[11px] font-semibold text-amber-500 transition hover:bg-amber-400/20 active:scale-95"
+              className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-4 text-xs font-semibold text-amber-500 transition hover:bg-amber-400/20 active:scale-95"
             >
               <User className="h-3.5 w-3.5" />
               <span>
