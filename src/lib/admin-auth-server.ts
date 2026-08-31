@@ -23,8 +23,8 @@ const DEFAULT_ADMIN_ACCOUNTS: ServerAdminAccount[] = [
   {
     id: "admin-nouha",
     name: "Nouha",
-    email: "nouhaberrada411@gmail.com",
-    passwordHash: "c8f57b31a574b3b6b7eac6f651fa27382cab823a88f5443038a46b6d730481cc",
+    email: "berradanouha4@gmail.com",
+    passwordHash: "2f84208517bb4fac3f9539370429fe3f4bfa1a6f7c01ac20f0d89a9d325dc63a",
   },
   {
     id: "admin-safae",
