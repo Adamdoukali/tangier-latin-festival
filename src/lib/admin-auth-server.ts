@@ -7,6 +7,7 @@ interface ServerAdminAccount {
   email: string;
   password?: string;
   passwordHash?: string;
+  role?: "admin" | "scanner";
 }
 
 const PASSWORD_HASH_PREFIX = "TLF_ADMIN_LOGIN_V1";
@@ -19,24 +20,35 @@ const DEFAULT_ADMIN_ACCOUNTS: ServerAdminAccount[] = [
     name: "Primary Admin",
     email: "admin@tangierlatinfestival.com",
     passwordHash: "81c669b51411d496b22b0ccd824f2b072d43f08ddc4c7c19880821f0de8d20c1",
+    role: "admin",
+  },
+  {
+    id: "scanner-staff",
+    name: "Staff Scanner & Accueil",
+    email: "scanner@tangierlatinfestival.com",
+    passwordHash: "1014678cb363071fc6f95d97d6da2e1f854de6290a8aa4c64809e4c1e2e20719",
+    role: "scanner",
   },
   {
     id: "admin-nouha",
     name: "Nouha",
     email: "berradanouha4@gmail.com",
     passwordHash: "2f84208517bb4fac3f9539370429fe3f4bfa1a6f7c01ac20f0d89a9d325dc63a",
+    role: "admin",
   },
   {
     id: "admin-safae",
     name: "Safae",
     email: "safae.bouti95@gmail.com",
     passwordHash: "5bb59f836e745ce54d66d2d837b9f17086d39a889ce9fb5e8805c91f1edfd0e4",
+    role: "admin",
   },
   {
     id: "admin-badr",
     name: "Badr",
     email: "badr.bakkacha@gmail.com",
     passwordHash: "88aa4f9381eff3aea98902fc9aec5a6c188441dd2ee5e2c6118faa643c5fbf87",
+    role: "admin",
   },
 ];
 
@@ -66,6 +78,7 @@ function serverAccounts(): ServerAdminAccount[] {
         email: account.email!.trim().toLowerCase(),
         password: account.password,
         passwordHash: account.passwordHash,
+        role: account.role || "admin",
       }));
     return [
       ...DEFAULT_ADMIN_ACCOUNTS,
@@ -90,6 +103,11 @@ export const verifyAdminCredentials = createServerFn({ method: "POST" })
     if (!account) return { success: false as const };
     return {
       success: true as const,
-      admin: { id: account.id, name: account.name, email: account.email },
+      admin: {
+        id: account.id,
+        name: account.name,
+        email: account.email,
+        role: account.role || "admin",
+      },
     };
   });

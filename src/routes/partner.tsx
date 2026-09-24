@@ -61,6 +61,7 @@ import {
   partnerTourismShareLink,
   packRoomCategory,
   partnerCurrency,
+  isConfirmedBooking,
   type Collaborator,
   type Pack,
   type Booking,
@@ -978,13 +979,14 @@ function buildUnifiedReservations(
         : { eur: rawFestUnitPrice, mad: 0 },
       displayCurrency,
     );
+    const isFestConfirmed = isConfirmedBooking(fb);
     const festGuests = fb.numPeople || 1;
-    const festGross = festUnitPrice * festGuests;
-    const festDiscount = fromEur(fb.discountAmount || 0);
+    const festGross = isFestConfirmed ? festUnitPrice * festGuests : 0;
+    const festDiscount = isFestConfirmed ? fromEur(fb.discountAmount || 0) : 0;
     const festNet = Math.max(0, festGross - festDiscount);
 
     let festCommission = 0;
-    if (fb.status !== "declined") {
+    if (isFestConfirmed) {
       const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts, {
         includeMissionReward: false,
       });
@@ -997,10 +999,11 @@ function buildUnifiedReservations(
     matchingTours.forEach((t) => attachedTourIds.add(t.id));
 
     const tours = matchingTours.map((tb) => {
+      const isTourConfirmed = isConfirmedBooking(tb);
       const numPeople = tb.numPeople || 1;
       const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
-      const gross = unitPrice * numPeople;
-      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
+      const gross = isTourConfirmed ? unitPrice * numPeople : 0;
+      const comm = isTourConfirmed ? fromEur(numPeople * 5) : 0;
       return {
         booking: tb,
         tourName: tb.packName,
@@ -1066,10 +1069,11 @@ function buildUnifiedReservations(
     .filter((tb) => !attachedTourIds.has(tb.id))
     .map((tb) => {
       const { guest1, guest2, allGuests } = extractGuests(tb);
+      const isTourConfirmed = isConfirmedBooking(tb);
       const numPeople = tb.numPeople || 1;
       const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
-      const gross = unitPrice * numPeople;
-      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
+      const gross = isTourConfirmed ? unitPrice * numPeople : 0;
+      const comm = isTourConfirmed ? fromEur(numPeople * 5) : 0;
 
       const tours = [
         {
@@ -1240,7 +1244,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     const festivalOnly = mine.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
     setTicketsSold(
       festivalOnly
-        .filter((b) => b.status !== "declined")
+        .filter((b) => isConfirmedBooking(b))
         .reduce((s, b) => s + (b.numPeople || 1), 0),
     );
   }, [partner]);
@@ -1345,9 +1349,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     L as Language,
   );
 
-  // Festival metrics
+  // Festival metrics — only confirmed tickets count towards sold rooms, passes and sales
   const liveFestival = myBookings.filter(
-    (b) => !isTourismBooking(b) && !isTransferBooking(b) && b.status !== "declined",
+    (b) => !isTourismBooking(b) && !isTransferBooking(b) && isConfirmedBooking(b),
   );
   const mission = collaboratorMissionProgress(partner, myBookings);
   const missionGoal = mission.goal;
@@ -1395,9 +1399,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   }, emptyMoney());
   const festEarned = collaboratorFestivalCommission(partner, myBookings, allPacks, allDiscounts);
 
-  // Excursions metrics — accurately computed from all client reservations
+  // Excursions metrics — accurately computed from confirmed client reservations
   const allLiveTours = unifiedReservations
-    .filter((r) => r.status !== "declined")
+    .filter((r) => isConfirmedBooking(r.status))
     .flatMap((r) => r.tours);
 
   const asilahTourCount = allLiveTours
@@ -1461,7 +1465,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const tourDue = Math.max(0, totalTourRevenue - totalTourCommission);
 
   const totalParticipantsCount = unifiedReservations
-    .filter((r) => r.status !== "declined")
+    .filter((r) => isConfirmedBooking(r.status))
     .reduce(
       (sum, r) =>
         sum +
@@ -2221,6 +2225,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             {tr("Total:", "Total :", "Total:")} {res.totalAmount}{" "}
                             {accountCurrencyLabel}
                           </span>
+                          {!hasTicket && (
+                            <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">
+                              {tr("Not confirmed (0)", "Non confirmé (0)", "No confirmado (0)")}
+                            </span>
+                          )}
                           {priceBreakdown.length > 0 && (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1 rounded-xl shadow-2xs">
                               {priceBreakdown.map((part, index) => (

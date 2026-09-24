@@ -28,12 +28,14 @@ export interface AdminIdentity {
   id: string;
   name: string;
   email: string;
+  role?: "admin" | "scanner";
 }
 
 const PRIMARY_ADMIN: AdminIdentity = {
   id: "primary-admin",
   name: "Primary Admin",
   email: "admin@tangierlatinfestival.com",
+  role: "admin",
 };
 
 export function getCurrentAdmin(): AdminIdentity | null {

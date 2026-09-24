@@ -34,6 +34,7 @@ import {
   ticketUrl,
   isTourismBooking,
   commissionLabel,
+  isConfirmedBooking,
   type Booking,
   type BookingStatus,
   type Collaborator,
@@ -268,9 +269,9 @@ function AdminTourismPage() {
     return bookings.filter((b) => !isTourismBooking(b));
   }, [bookings]);
 
-  // KPIs
+  // KPIs (only confirmed bookings count towards revenue and participants)
   const stats = useMemo(() => {
-    const active = tourismBookings.filter((b) => b.status !== "declined");
+    const active = tourismBookings.filter((b) => isConfirmedBooking(b));
     const totalGuests = active.reduce((sum, b) => sum + (b.numPeople || 1), 0);
 
     const tangierGuests = active
@@ -415,7 +416,7 @@ function AdminTourismPage() {
 
   // WhatsApp Tour Manifest Coordinator Dispatch
   const openWhatsAppCoordinator = (tour: TourDefinition) => {
-    const list = tourismBookings.filter((b) => getTourId(b) === tour.id && b.status !== "declined");
+    const list = tourismBookings.filter((b) => getTourId(b) === tour.id && isConfirmedBooking(b));
     const totalCount = list.reduce((s, b) => s + (b.numPeople || 1), 0);
 
     let message = `*Tangier Latin Festival 2027 — Liste de l’excursion*\n`;
@@ -586,7 +587,7 @@ function AdminTourismPage() {
       <div className="grid md:grid-cols-3 gap-4">
         {TOURS.map((t) => {
           const count = tourismBookings
-            .filter((b) => getTourId(b) === t.id && b.status !== "declined")
+            .filter((b) => getTourId(b) === t.id && isConfirmedBooking(b))
             .reduce((s, b) => s + (b.numPeople || 1), 0);
 
           return (

@@ -11,6 +11,7 @@ import {
   Bus,
   Compass,
   ScrollText,
+  ScanLine,
   ArrowLeft,
   Menu,
   X,
@@ -41,6 +42,11 @@ const navItems = [
   { to: "/admin/hotel", label: "Hôtel", icon: Building2, exact: false },
   { to: "/admin/bracelets", label: "Bracelets", icon: Watch, exact: false },
   { to: "/admin/logs", label: "Journal d’activité", icon: ScrollText, exact: false },
+];
+
+const scannerNavItems = [
+  { to: "/admin/scanner", label: "Check-in Entrées", icon: ScanLine, exact: false },
+  { to: "/admin/bracelet-scanner", label: "Scanner des Bracelets", icon: Watch, exact: false },
 ];
 
 function AdminLayout() {
@@ -132,7 +138,12 @@ function AdminLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {(!currentAdmin
+            ? []
+            : currentAdmin.role === "scanner"
+              ? scannerNavItems
+              : [...navItems, ...scannerNavItems]
+          ).map((item) => {
             const active = isActive(item.to, item.exact);
             return (
               <Link

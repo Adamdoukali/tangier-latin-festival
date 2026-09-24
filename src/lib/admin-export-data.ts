@@ -11,6 +11,7 @@ import {
   packRoomCategory,
   partnerCurrency,
   perPersonRate,
+  isConfirmedBooking,
   type Booking,
   type Collaborator,
   type CollaboratorStats,
@@ -179,7 +180,7 @@ export function buildTransferSpreadsheet(
   collaborators: Collaborator[],
 ): SpreadsheetRows {
   const rows: SpreadsheetRows = [];
-  for (const booking of bookings.filter((item) => item.status !== "declined")) {
+  for (const booking of bookings.filter((item) => isConfirmedBooking(item))) {
     const guests = selectedTransferGuests(booking, packs, collaborators);
     const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
     const perGuestCost = guests.length
@@ -241,7 +242,7 @@ export function buildExcursionSpreadsheet(
   const grouped = new Map<string, ExcursionLine>();
 
   for (const booking of bookings.filter(
-    (item) => item.status !== "declined" && isTourismBooking(item),
+    (item) => isConfirmedBooking(item) && isTourismBooking(item),
   )) {
     const guests = guestsForBooking(booking, packs, collaborators);
     const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
@@ -300,7 +301,7 @@ export function buildCollaboratorSummarySpreadsheet(
 ): SpreadsheetRows {
   const rows = visibleStats.map(({ collaborator, revenue, commission }) => {
     const mine = bookings.filter(
-      (booking) => booking.collaboratorId === collaborator.id && booking.status !== "declined",
+      (booking) => booking.collaboratorId === collaborator.id && isConfirmedBooking(booking),
     );
     const festival = mine.filter(
       (booking) => !isTourismBooking(booking) && !isTransferBooking(booking),
@@ -405,7 +406,7 @@ const collaboratorAddOns = (
     });
   };
 
-  for (const booking of bookings.filter((item) => item.status !== "declined")) {
+  for (const booking of bookings.filter((item) => isConfirmedBooking(item))) {
     const collaborator = collaborators.find((item) => item.id === booking.collaboratorId);
     if (!collaborator) continue;
 
@@ -476,7 +477,7 @@ export function buildCollaboratorDetailsSpreadsheet(
   const festivalBookings = bookings
     .filter(
       (booking) =>
-        booking.status !== "declined" &&
+        isConfirmedBooking(booking) &&
         !!booking.collaboratorId &&
         !isTourismBooking(booking) &&
         !isTransferBooking(booking),
@@ -554,7 +555,7 @@ export function buildCollaboratorDetailsSpreadsheet(
   // does not have a matching festival-pack row under the same partner.
   const transferBookings = bookings.filter(
     (booking) =>
-      booking.status !== "declined" &&
+      isConfirmedBooking(booking) &&
       !!booking.collaboratorId &&
       (isTransferBooking(booking) || !!booking.needsTransfer),
   );

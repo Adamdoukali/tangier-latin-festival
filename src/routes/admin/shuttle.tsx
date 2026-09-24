@@ -44,6 +44,7 @@ import {
   ticketUrl,
   partnerTransferShareLink,
   EUR_TO_MAD,
+  isConfirmedBooking,
   type Booking,
   type Pack,
   type Collaborator,
@@ -261,22 +262,23 @@ function AdminShuttlePage() {
       ? "direct"
       : "all-partners";
 
-  // KPIs
+  // KPIs — only confirmed bookings count towards revenue and passengers
   const stats = useMemo(() => {
-    const totalBookings = shuttleBookings.length;
-    const totalPassengers = shuttleBookings.reduce((sum, b) => sum + (b.numPeople || 1), 0);
-    const portCount = shuttleBookings.filter((b) => b.transferType === "port").length;
-    const airportCount = shuttleBookings.filter((b) => b.transferType === "airport").length;
-    const totalRevenue = shuttleBookings.reduce((sum, b) => sum + (b.transferCost || 0), 0);
+    const confirmedShuttles = shuttleBookings.filter((b) => isConfirmedBooking(b));
+    const totalBookings = confirmedShuttles.length;
+    const totalPassengers = confirmedShuttles.reduce((sum, b) => sum + (b.numPeople || 1), 0);
+    const portCount = confirmedShuttles.filter((b) => b.transferType === "port").length;
+    const airportCount = confirmedShuttles.filter((b) => b.transferType === "airport").length;
+    const totalRevenue = confirmedShuttles.reduce((sum, b) => sum + (b.transferCost || 0), 0);
 
-    const arrivalsCount = shuttleBookings.filter(
+    const arrivalsCount = confirmedShuttles.filter(
       (b) =>
         b.transferOption === "round_trip" ||
         b.transferOption === "one_way_arrival" ||
         !b.transferOption,
     ).length;
 
-    const departuresCount = shuttleBookings.filter(
+    const departuresCount = confirmedShuttles.filter(
       (b) => b.transferOption === "round_trip" || b.transferOption === "one_way_departure",
     ).length;
 

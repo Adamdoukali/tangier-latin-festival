@@ -1,0 +1,260 @@
+﻿[
+    {
+        "name":  "Ana \u0026 Isa",
+        "style":  "Salsa",
+        "img":  "/media/artists/ana-isa.jpg",
+        "sizeKb":  77.5
+    },
+    {
+        "name":  "Ave fenix",
+        "style":  "école",
+        "img":  "/media/artists/ave-fenix.jpg",
+        "sizeKb":  70.4
+    },
+    {
+        "name":  "Badr josé \u0026 Lina",
+        "style":  "Salsa",
+        "img":  "/media/artists/badr-jos-lina.jpg",
+        "sizeKb":  70.7
+    },
+    {
+        "name":  "Bromalé",
+        "style":  "Salsa",
+        "img":  "/media/artists/bromal.png",
+        "sizeKb":  1372.5
+    },
+    {
+        "name":  "Carmen Vega",
+        "style":  "Salsa",
+        "img":  "/media/artists/carmen-vega.jpg",
+        "sizeKb":  65.7
+    },
+    {
+        "name":  "Clave \u0026 Sabor",
+        "style":  "Salsa",
+        "img":  "/media/artists/clave-sabor.jpg",
+        "sizeKb":  126.8
+    },
+    {
+        "name":  "Dani \u0026 Sonia",
+        "style":  "Bachata",
+        "img":  "/media/artists/dani-sonia.jpg",
+        "sizeKb":  99.1
+    },
+    {
+        "name":  "DJ Farsh Piro",
+        "style":  "DJs",
+        "img":  "/media/artists/dj-farsh-piro.jpg",
+        "sizeKb":  118.5
+    },
+    {
+        "name":  "Dj Kamal salsadura",
+        "style":  "DJs",
+        "img":  "/media/artists/dj-kamal-salsadura.jpg",
+        "sizeKb":  48.6
+    },
+    {
+        "name":  "Dj Toni",
+        "style":  "DJs",
+        "img":  "/media/artists/dj-toni.jpg",
+        "sizeKb":  47.4
+    },
+    {
+        "name":  "Egua Dance",
+        "style":  "Salsa",
+        "img":  "/media/artists/egua-dance.jpg",
+        "sizeKb":  209.3
+    },
+    {
+        "name":  "Elegancia",
+        "style":  "Bachata",
+        "img":  "/media/artists/elegancia.jpg",
+        "sizeKb":  61.4
+    },
+    {
+        "name":  "Etienne \u0026 Leslie",
+        "style":  "Bachata",
+        "img":  "/media/artists/etienne-leslie.jpg",
+        "sizeKb":  94.5
+    },
+    {
+        "name":  "Evo Ladies",
+        "style":  "Salsa",
+        "img":  "/media/artists/evo-ladies.png",
+        "sizeKb":  548.9
+    },
+    {
+        "name":  "Ewajo Dance Company",
+        "style":  "Salsa",
+        "img":  "/media/artists/ewajo-dance-company.jpg",
+        "sizeKb":  198
+    },
+    {
+        "name":  "Flowly \u0026 Anastasiia",
+        "style":  "Bachata",
+        "img":  "/media/artists/flowly-anastasiia.jpg",
+        "sizeKb":  108.3
+    },
+    {
+        "name":  "Gonzalo \u0026 Lucia",
+        "style":  "Bachata",
+        "img":  "/media/artists/gonzalo-lucia.jpg",
+        "sizeKb":  85.8
+    },
+    {
+        "name":  "Guajiras",
+        "style":  "Salsa",
+        "img":  "/media/artists/guajiras.jpg",
+        "sizeKb":  110.5
+    },
+    {
+        "name":  "Iker \u0026 Daniela",
+        "style":  "Bachata",
+        "img":  "/media/artists/iker-daniela.png",
+        "sizeKb":  1094.4
+    },
+    {
+        "name":  "Ivan \u0026 Dragana",
+        "style":  "Salsa",
+        "img":  "/media/artists/ivan-dragana.jpg",
+        "sizeKb":  66.7
+    },
+    {
+        "name":  "Javi \u0026 Lili",
+        "style":  "Bachata",
+        "img":  "/media/artists/javi-lili.jpg",
+        "sizeKb":  94.8
+    },
+    {
+        "name":  "jesus \u0026 Bibiana",
+        "style":  "Bachata",
+        "img":  "/media/artists/jesus-bibiana.jpg",
+        "sizeKb":  73.3
+    },
+    {
+        "name":  "JOSE VIDAL \u0026 ENCARNI",
+        "style":  "Bachata",
+        "img":  "/media/artists/jose-vidal-encarni.png",
+        "sizeKb":  1571.1
+    },
+    {
+        "name":  "julieta \u0026 Elvis",
+        "style":  "Bachata",
+        "img":  "/media/artists/julieta-elvis.jpg",
+        "sizeKb":  69.1
+    },
+    {
+        "name":  "Karen Lazo",
+        "style":  "Salsa",
+        "img":  "/media/artists/karen-lazo.jpg",
+        "sizeKb":  60.1
+    },
+    {
+        "name":  "Kerim Carlos",
+        "style":  "Salsa",
+        "img":  "/media/artists/kerim-carlos.jpg",
+        "sizeKb":  136.2
+    },
+    {
+        "name":  "Kyana",
+        "style":  "Bachata",
+        "img":  "/media/artists/kyana.jpg",
+        "sizeKb":  68.1
+    },
+    {
+        "name":  "Ladies B dance Studio",
+        "style":  "école",
+        "img":  "/media/artists/ladies-b-dance-studio.jpg",
+        "sizeKb":  130.1
+    },
+    {
+        "name":  "Linda",
+        "style":  "Bachata",
+        "img":  "/media/artists/linda.jpg",
+        "sizeKb":  64.9
+    },
+    {
+        "name":  "Mike Event_s",
+        "style":  "Kizomba",
+        "img":  "/media/artists/mike-event-s.jpg",
+        "sizeKb":  56.7
+    },
+    {
+        "name":  "Nane \u0026 Ronny",
+        "style":  "Kizomba",
+        "img":  "/media/artists/nane-ronny.jpg",
+        "sizeKb":  22280.5
+    },
+    {
+        "name":  "Patrick \u0026 josie",
+        "style":  "Bachata",
+        "img":  "/media/artists/patrick-josie.jpg",
+        "sizeKb":  154.6
+    },
+    {
+        "name":  "Pedro \u0026 Taina",
+        "style":  "Kizomba",
+        "img":  "/media/artists/pedro-taina.jpg",
+        "sizeKb":  59
+    },
+    {
+        "name":  "Querido \u0026 Irene",
+        "style":  "Salsa",
+        "img":  "/media/artists/querido-irene.jpg",
+        "sizeKb":  71.6
+    },
+    {
+        "name":  "Rayan \u0026 julie",
+        "style":  "Bachata",
+        "img":  "/media/artists/rayan-julie.jpg",
+        "sizeKb":  147
+    },
+    {
+        "name":  "Reyes del Ritmo",
+        "style":  "Salsa",
+        "img":  "/media/artists/reyes-del-ritmo.jpg",
+        "sizeKb":  69.3
+    },
+    {
+        "name":  "Soul Dance Project",
+        "style":  "Salsa",
+        "img":  "/media/artists/soul-dance-project.png",
+        "sizeKb":  1235.6
+    },
+    {
+        "name":  "Tamba",
+        "style":  "Salsa",
+        "img":  "/media/artists/tamba.jpg",
+        "sizeKb":  68.5
+    },
+    {
+        "name":  "Tiago \u0026 Marwa",
+        "style":  "Bachata",
+        "img":  "/media/artists/tiago-marwa.png",
+        "sizeKb":  390.7
+    },
+    {
+        "name":  "Toni \u0026 Nadia",
+        "style":  "Bachata",
+        "img":  "/media/artists/toni-nadia.png",
+        "sizeKb":  676
+    },
+    {
+        "name":  "Tumbala Ladies",
+        "style":  "école",
+        "img":  "/media/artists/tumbala-ladies.jpg",
+        "sizeKb":  120.3
+    },
+    {
+        "name":  "Vizcaino \u0026 Adriana",
+        "style":  "Bachata",
+        "img":  "/media/artists/vizcaino-adriana.png",
+        "sizeKb":  1292
+    },
+    {
+        "name":  "Wahib",
+        "style":  "Salsa",
+        "img":  "/media/artists/wahib.jpg",
+        "sizeKb":  102.6
+    }
+]

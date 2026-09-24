@@ -30,6 +30,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminTourismRouteImport } from './routes/admin/tourism'
 import { Route as AdminShuttleRouteImport } from './routes/admin/shuttle'
+import { Route as AdminScannerRouteImport } from './routes/admin/scanner'
 import { Route as AdminPacksRouteImport } from './routes/admin/packs'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -39,6 +40,7 @@ import { Route as AdminDiscountsRouteImport } from './routes/admin/discounts'
 import { Route as AdminCollaboratorsRouteImport } from './routes/admin/collaborators'
 import { Route as AdminClientsRouteImport } from './routes/admin/clients'
 import { Route as AdminBraceletsRouteImport } from './routes/admin/bracelets'
+import { Route as AdminBraceletScannerRouteImport } from './routes/admin/bracelet-scanner'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
 
 const TourismRoute = TourismRouteImport.update({
@@ -146,6 +148,11 @@ const AdminShuttleRoute = AdminShuttleRouteImport.update({
   path: '/shuttle',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminScannerRoute = AdminScannerRouteImport.update({
+  id: '/scanner',
+  path: '/scanner',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPacksRoute = AdminPacksRouteImport.update({
   id: '/packs',
   path: '/packs',
@@ -191,6 +198,11 @@ const AdminBraceletsRoute = AdminBraceletsRouteImport.update({
   path: '/bracelets',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBraceletScannerRoute = AdminBraceletScannerRouteImport.update({
+  id: '/bracelet-scanner',
+  path: '/bracelet-scanner',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBookingsRoute = AdminBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -217,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/bracelet-scanner': typeof AdminBraceletScannerRoute
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -226,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
   '/admin/': typeof AdminIndexRoute
@@ -249,6 +263,7 @@ export interface FileRoutesByTo {
   '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/bracelet-scanner': typeof AdminBraceletScannerRoute
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -258,6 +273,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
   '/admin': typeof AdminIndexRoute
@@ -283,6 +299,7 @@ export interface FileRoutesById {
   '/ticket': typeof TicketRoute
   '/tourism': typeof TourismRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/bracelet-scanner': typeof AdminBraceletScannerRoute
   '/admin/bracelets': typeof AdminBraceletsRoute
   '/admin/clients': typeof AdminClientsRoute
   '/admin/collaborators': typeof AdminCollaboratorsRoute
@@ -292,6 +309,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
   '/admin/': typeof AdminIndexRoute
@@ -318,6 +336,7 @@ export interface FileRouteTypes {
     | '/ticket'
     | '/tourism'
     | '/admin/bookings'
+    | '/admin/bracelet-scanner'
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
@@ -327,6 +346,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
     | '/admin/'
@@ -350,6 +370,7 @@ export interface FileRouteTypes {
     | '/ticket'
     | '/tourism'
     | '/admin/bookings'
+    | '/admin/bracelet-scanner'
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
@@ -359,6 +380,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
     | '/admin'
@@ -383,6 +405,7 @@ export interface FileRouteTypes {
     | '/ticket'
     | '/tourism'
     | '/admin/bookings'
+    | '/admin/bracelet-scanner'
     | '/admin/bracelets'
     | '/admin/clients'
     | '/admin/collaborators'
@@ -392,6 +415,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
     | '/admin/'
@@ -567,6 +591,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminShuttleRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/scanner': {
+      id: '/admin/scanner'
+      path: '/scanner'
+      fullPath: '/admin/scanner'
+      preLoaderRoute: typeof AdminScannerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/packs': {
       id: '/admin/packs'
       path: '/packs'
@@ -630,6 +661,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBraceletsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/bracelet-scanner': {
+      id: '/admin/bracelet-scanner'
+      path: '/bracelet-scanner'
+      fullPath: '/admin/bracelet-scanner'
+      preLoaderRoute: typeof AdminBraceletScannerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bookings': {
       id: '/admin/bookings'
       path: '/bookings'
@@ -642,6 +680,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminBraceletScannerRoute: typeof AdminBraceletScannerRoute
   AdminBraceletsRoute: typeof AdminBraceletsRoute
   AdminClientsRoute: typeof AdminClientsRoute
   AdminCollaboratorsRoute: typeof AdminCollaboratorsRoute
@@ -651,6 +690,7 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminPacksRoute: typeof AdminPacksRoute
+  AdminScannerRoute: typeof AdminScannerRoute
   AdminShuttleRoute: typeof AdminShuttleRoute
   AdminTourismRoute: typeof AdminTourismRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -658,6 +698,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminBookingsRoute: AdminBookingsRoute,
+  AdminBraceletScannerRoute: AdminBraceletScannerRoute,
   AdminBraceletsRoute: AdminBraceletsRoute,
   AdminClientsRoute: AdminClientsRoute,
   AdminCollaboratorsRoute: AdminCollaboratorsRoute,
@@ -667,6 +708,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminPacksRoute: AdminPacksRoute,
+  AdminScannerRoute: AdminScannerRoute,
   AdminShuttleRoute: AdminShuttleRoute,
   AdminTourismRoute: AdminTourismRoute,
   AdminIndexRoute: AdminIndexRoute,

@@ -23,6 +23,7 @@ import {
   guestOrigin,
   bookingPeopleCount,
   emptyMoney,
+  isConfirmedBooking,
   formatMoneyPair,
   formatForPartner,
   partnerCurrency,
@@ -69,12 +70,12 @@ function AdminDashboard() {
       ]);
       if (cancelled) return;
       setStats(s);
-      // Non-declined bookings split by pack type
+      // Confirmed bookings split by pack type — unconfirmed/pending are counted as zero
       const catOf = (b: Booking) => {
         const p = packs.find((x) => x.id === b.packId);
         return packRoomCategory(p || b.packName, b.numPeople);
       };
-      const live = bookings.filter((b) => b.status !== "declined");
+      const live = bookings.filter((b) => isConfirmedBooking(b));
       setLiveBookings(live);
       setAllPacks(packs);
       setCollaborators(collabs);
@@ -227,7 +228,7 @@ function AdminDashboard() {
               <h3 className="font-display text-sm tracking-wide text-gray-800">
                 Participants par origine
               </h3>
-              <span className="text-xs text-gray-400">personnes · refusées exclues</span>
+              <span className="text-xs text-gray-400">personnes confirmées</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

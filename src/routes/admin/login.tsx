@@ -17,7 +17,12 @@ function AdminLogin() {
   // If already logged in, redirect away from login page
   useEffect(() => {
     if (getAuthStatus()) {
-      navigate({ to: "/admin" });
+      const admin = getCurrentAdmin();
+      if (admin?.role === "scanner") {
+        navigate({ to: "/admin/scanner" });
+      } else {
+        navigate({ to: "/admin" });
+      }
     }
   }, [navigate]);
 
@@ -28,7 +33,12 @@ function AdminLogin() {
     try {
       const success = await loginAdmin(email, password);
       if (success) {
-        navigate({ to: "/admin" });
+        const admin = getCurrentAdmin();
+        if (admin?.role === "scanner") {
+          navigate({ to: "/admin/scanner" });
+        } else {
+          navigate({ to: "/admin" });
+        }
       } else {
         setError("E-mail ou mot de passe incorrect. Veuillez réessayer.");
       }

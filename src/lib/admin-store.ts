@@ -32,6 +32,20 @@ export interface Pack {
 export type BookingStatus = "pending" | "confirmed" | "checked-in" | "declined";
 export type BookingSource = "manual" | "website" | "invite" | "referral";
 
+/**
+ * A booking is confirmed only when accepted and issued tickets ('confirmed' or 'checked-in').
+ * Pending or declined/rejected bookings do NOT have confirmed tickets and do not count
+ * towards revenue, sales, tickets sold, room counts or commissions (counted as 0).
+ */
+export function isConfirmedBooking(
+  bookingOrStatus: Booking | BookingStatus | string | null | undefined,
+): boolean {
+  if (!bookingOrStatus) return false;
+  const status = typeof bookingOrStatus === "object" ? bookingOrStatus.status : bookingOrStatus;
+  return status === "confirmed" || status === "checked-in";
+}
+
+
 export type TransferType = "port" | "airport";
 export type TransferOption = "one_way_arrival" | "one_way_departure" | "round_trip";
 
@@ -2850,18 +2864,56 @@ export function bookingPeopleCount(booking: Booking, packs?: Pack[]): number {
 
 // ─── Bracelets ──────────────────────────────────────────────────────
 
-export type BraceletCategory = "artist" | "hotel" | "fullpass";
+export type BraceletCategory = "artist" | "hotel" | "fullpass" | "none";
+
+/** Check if an invite, booking, or pack represents an artist entitled to an artist bracelet */
+export function isArtistInviteOrBooking(
+  item:
+    | {
+        packName?: string;
+        notes?: string | null;
+        customerName?: string;
+        assignee?: string;
+        packId?: string;
+      }
+    | null
+    | undefined,
+  packs?: Pack[],
+): boolean {
+  if (!item) return false;
+  const pack = packs?.find((p) => p.id === item.packId || p.name === item.packName);
+  const text = [
+    item.packName || "",
+    item.notes || "",
+    item.customerName || "",
+    item.assignee || "",
+    pack?.name || "",
+    pack?.category || "",
+  ].join(" ");
+  return /artist|artiste/i.test(text);
+}
 
 /** One bracelet per guest of a booking. Manual overrides (single value
- *  or JSON array per guest) win; otherwise automatic — room packs →
- *  hotel bracelet, everything else → full pass. */
+ *  or JSON array per guest) win; otherwise automatic:
+ *  - If it's an invite: only artists receive artist bracelets; other invites default to none unless assigned.
+ *  - Regular room packs -> hotel bracelet
+ *  - Regular pass packs -> full pass */
 export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategory[] {
   const count = Math.max(bookingPeopleCount(booking, packs), booking.numPeople || 1);
   const pack = packs.find((p) => p.id === booking.packId);
-  const def: BraceletCategory =
-    packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
-      ? "fullpass"
-      : "hotel";
+  const isInvite =
+    booking.source === "invite" || Boolean(booking.inviteId) || Boolean(booking.inviteCode);
+  const isArtist = isArtistInviteOrBooking(booking, packs);
+
+  let def: BraceletCategory = "none";
+  if (isInvite) {
+    def = isArtist ? "artist" : "none";
+  } else {
+    def =
+      packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
+        ? "fullpass"
+        : "hotel";
+  }
 
   let overrides: Array<BraceletCategory | null> = [];
   if (booking.bracelet) {
@@ -3042,6 +3094,8 @@ export interface GuestDetail {
   country?: string;
   origin?: "morocco" | "international";
   notes?: string;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 export interface ClientGuest {
@@ -3063,6 +3117,8 @@ export interface ClientGuest {
   collaboratorName?: string;
   notes?: string;
   createdAt: string;
+  checkedIn?: boolean;
+  checkedInAt?: string;
 }
 
 /** True when the guest_details column exists (supabase/guest-details.sql). */
@@ -3177,7 +3233,8 @@ export function getClients(
           : defaultOrigin === "international"
             ? "international"
             : "morocco";
-      const notes = ov.notes !== undefined ? ov.notes : gi === 0 ? b.notes : "";
+      const checkedIn = ov.checkedIn !== undefined ? Boolean(ov.checkedIn) : b.status === "checked-in";
+      const checkedInAt = ov.checkedInAt || (b.status === "checked-in" ? b.createdAt : undefined);
 
       clients.push({
         id: `${b.id}-${gi}`,
@@ -3198,6 +3255,8 @@ export function getClients(
         collaboratorName: partner ? `${partner.name} (${partner.code})` : "Direct",
         notes,
         createdAt: b.createdAt,
+        checkedIn,
+        checkedInAt,
       });
     }
   }
@@ -3475,7 +3534,7 @@ export interface CollaboratorMissionProgress {
 }
 
 /** Mission progress and the reward unlocked by qualifying festival sales.
- * Invites, excursions, transfers and declined bookings never advance a mission. */
+ * Invites, excursions, transfers and non-confirmed bookings never advance a mission. */
 export function collaboratorMissionProgress(
   collaborator: Collaborator,
   bookings: Booking[],
@@ -3485,7 +3544,7 @@ export function collaboratorMissionProgress(
     .filter(
       (booking) =>
         booking.collaboratorId === collaborator.id &&
-        booking.status !== "declined" &&
+        isConfirmedBooking(booking) &&
         booking.source !== "invite" &&
         !isTourismBooking(booking) &&
         !isTransferBooking(booking),
@@ -3681,7 +3740,7 @@ export function collaboratorCommission(
     .filter(
       (b) =>
         b.collaboratorId === c.id &&
-        b.status !== "declined" &&
+        isConfirmedBooking(b) &&
         b.source !== "invite" &&
         !isTransferBooking(b),
     )
@@ -3773,7 +3832,7 @@ export function collaboratorCommission(
 export function collaboratorTourismCommission(collaboratorId: string, bookings: Booking[]): number {
   return bookings
     .filter(
-      (b) => b.collaboratorId === collaboratorId && b.status !== "declined" && isTourismBooking(b),
+      (b) => b.collaboratorId === collaboratorId && isConfirmedBooking(b) && isTourismBooking(b),
     )
     .reduce((sum, b) => sum + (b.numPeople || 1) * 5, 0);
 }
@@ -3782,7 +3841,7 @@ export function collaboratorTourismCommission(collaboratorId: string, bookings: 
 export function collaboratorTourismRevenue(collaboratorId: string, bookings: Booking[]): number {
   return bookings
     .filter(
-      (b) => b.collaboratorId === collaboratorId && b.status !== "declined" && isTourismBooking(b),
+      (b) => b.collaboratorId === collaboratorId && isConfirmedBooking(b) && isTourismBooking(b),
     )
     .reduce((sum, b) => {
       const unitPrice = getTourismPrice(b.packId || b.packName);
@@ -3802,9 +3861,11 @@ export function collaboratorFestivalCommission(
   return collaboratorCommission(c, festivalBookings, packs, discountCodes, options);
 }
 
-/** Sum bookings by the currency their pack is actually priced in. */
+/** Sum bookings by the currency their pack is actually priced in.
+ *  Only confirmed bookings calculate price — pending/declined count as zero. */
 function salesOf(bookings: Booking[], packs: Pack[]): Money {
   return bookings.reduce((acc, b) => {
+    if (!isConfirmedBooking(b)) return acc;
     if (isTourismBooking(b)) {
       const unitPrice = getTourismPrice(b.packId || b.packName);
       const value = unitPrice * (b.numPeople || 1);
@@ -3818,7 +3879,7 @@ function salesOf(bookings: Booking[], packs: Pack[]): Money {
 }
 
 /** Sales attributed to one collaborator, split by currency (never
- *  converted): non-declined, non-invite bookings × pack price. */
+ *  converted): confirmed, non-invite bookings × pack price. */
 export function collaboratorRevenue(
   collaboratorId: string,
   bookings: Booking[],
@@ -3828,7 +3889,7 @@ export function collaboratorRevenue(
     bookings.filter(
       (b) =>
         b.collaboratorId === collaboratorId &&
-        b.status !== "declined" &&
+        isConfirmedBooking(b) &&
         b.source !== "invite" &&
         !isTransferBooking(b),
     ),
@@ -3847,7 +3908,7 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
     const myBookings = bookings.filter(
-      (b) => b.collaboratorId === c.id && b.status !== "declined" && !isTransferBooking(b),
+      (b) => b.collaboratorId === c.id && isConfirmedBooking(b) && !isTransferBooking(b),
     );
     const revenue = salesOf(
       myBookings.filter((b) => b.source !== "invite"),
@@ -3898,9 +3959,9 @@ export async function getStats() {
   const confirmedBookings = bookings.filter((b) => b.status === "confirmed").length;
   const checkedIn = bookings.filter((b) => b.status === "checked-in").length;
 
-  // Split by the currency each pack is priced in — never converted.
+  // Split by the currency each pack is priced in — only confirmed bookings count.
   const totalRevenue = salesOf(
-    bookings.filter((b) => b.status !== "declined"),
+    bookings.filter((b) => isConfirmedBooking(b)),
     packs,
   );
 
@@ -3916,4 +3977,238 @@ export async function getStats() {
     totalPacks,
     activePacks,
   };
+}
+
+// ─── QR Check-In & Scanner Helpers ──────────────────────────────────
+
+export interface TicketValidationResult {
+  type: "ticket";
+  booking: Booking;
+  invite?: Invite;
+  matchedBy: "ticket_code" | "invite_redeemed" | "booking_id" | "invite_code" | "email" | "name";
+}
+
+export interface InviteValidationResult {
+  type: "invite";
+  invite: Invite;
+  matchedBy: "invite_code";
+}
+
+export type ScanValidationResult = TicketValidationResult | InviteValidationResult;
+
+/** Clean raw QR content / query string (strip URL wrapper, whitespace, uppercase) */
+export function extractScanCode(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  try {
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.includes("?")) {
+      const url = new URL(
+        trimmed.startsWith("http") ? trimmed : `http://dummy.com/${trimmed.replace(/^\/+/, "")}`
+      );
+      const codeParam = url.searchParams.get("code");
+      if (codeParam) return codeParam.trim().toUpperCase();
+    }
+  } catch {
+    // Not a valid URL, continue
+  }
+  const match = trimmed.match(/[?&]code=([a-zA-Z0-9_-]+)/i);
+  if (match && match[1]) return match[1].trim().toUpperCase();
+  return trimmed.trim().toUpperCase();
+}
+
+/** Check in a single guest of a booking, updating guest details (name, email, phone, etc.) */
+export async function checkInBookingGuest(
+  booking: Booking,
+  guestIndex: number,
+  guestUpdates?: Partial<GuestDetail>,
+  packs: Pack[] = []
+): Promise<Booking> {
+  const currentDetails = parseGuestDetails(booking.guestDetails);
+  const updatedDetails = [...currentDetails];
+  while (updatedDetails.length <= guestIndex) {
+    updatedDetails.push({});
+  }
+
+  const existingGuest = updatedDetails[guestIndex] || {};
+  const merged: GuestDetail = {
+    ...existingGuest,
+    ...guestUpdates,
+    checkedIn: true,
+    checkedInAt: new Date().toISOString(),
+  };
+  updatedDetails[guestIndex] = merged;
+
+  // Build synchronized customerName and primary fields
+  const names = booking.customerName.split(/\s*&\s*/).map((s) => s.trim()).filter(Boolean);
+  const totalGuests = Math.max(bookingPeopleCount(booking, packs), updatedDetails.length, names.length);
+
+  const synchronizedNames: string[] = [];
+  for (let i = 0; i < totalGuests; i++) {
+    const d = updatedDetails[i];
+    if (d?.firstName || d?.lastName) {
+      synchronizedNames.push(`${d.firstName || ""} ${d.lastName || ""}`.trim());
+    } else if (names[i]) {
+      synchronizedNames.push(names[i]);
+    } else {
+      synchronizedNames.push(`Participant ${i + 1}`);
+    }
+  }
+
+  const primary = updatedDetails[0] ?? {};
+  const allGuestsCheckedIn = Array.from({ length: totalGuests }, (_, i) => {
+    const d = updatedDetails[i];
+    return d ? Boolean(d.checkedIn) : false;
+  }).every(Boolean);
+
+  const updates: Partial<Booking> = {
+    guestDetails: JSON.stringify(updatedDetails),
+    customerName: synchronizedNames.join(" & ") || booking.customerName,
+    status: allGuestsCheckedIn ? "checked-in" : (booking.status === "pending" ? "confirmed" : booking.status),
+  };
+
+  if (guestIndex === 0) {
+    if (primary.email) updates.email = primary.email;
+    if (primary.phone) updates.phone = primary.phone;
+    if (primary.country) updates.country = primary.country;
+  }
+
+  const saved = await updateBooking(booking.id, updates);
+  if (!saved) throw new Error("Could not update the check-in status.");
+
+  await recordAdminAction({
+    action: "status",
+    section: "Check-in",
+    entityId: booking.id,
+    entityLabel: bookingAuditLabel(saved),
+    summary: `Checked in guest ${guestIndex + 1} (${merged.firstName || "Guest"} ${merged.lastName || ""}) for ticket ${booking.ticketCode}`,
+    before: booking,
+    after: saved,
+    changes: { guestIndex, checkedIn: true, details: merged },
+  });
+
+  return saved;
+}
+
+/** Undo check-in for a single guest */
+export async function undoCheckInBookingGuest(
+  booking: Booking,
+  guestIndex: number
+): Promise<Booking> {
+  const currentDetails = parseGuestDetails(booking.guestDetails);
+  const updatedDetails = [...currentDetails];
+  if (updatedDetails[guestIndex]) {
+    updatedDetails[guestIndex] = {
+      ...updatedDetails[guestIndex],
+      checkedIn: false,
+      checkedInAt: undefined,
+    };
+  }
+
+  const updates: Partial<Booking> = {
+    guestDetails: JSON.stringify(updatedDetails),
+    status: "confirmed", // Revert overall booking status back to confirmed
+  };
+
+  const saved = await updateBooking(booking.id, updates);
+  if (!saved) throw new Error("Could not undo check-in.");
+
+  await recordAdminAction({
+    action: "status",
+    section: "Check-in",
+    entityId: booking.id,
+    entityLabel: bookingAuditLabel(saved),
+    summary: `Undid check-in for guest ${guestIndex + 1} for ticket ${booking.ticketCode}`,
+    before: booking,
+    after: saved,
+    changes: { guestIndex, checkedIn: false },
+  });
+
+  return saved;
+}
+
+/** Check in all guests for a booking in a single action */
+export async function checkInEntireBooking(
+  booking: Booking,
+  packs: Pack[] = []
+): Promise<Booking> {
+  const totalGuests = Math.max(bookingPeopleCount(booking, packs), booking.numPeople || 1);
+  const currentDetails = parseGuestDetails(booking.guestDetails);
+  const updatedDetails = [...currentDetails];
+  while (updatedDetails.length < totalGuests) {
+    updatedDetails.push({});
+  }
+
+  const now = new Date().toISOString();
+  for (let i = 0; i < totalGuests; i++) {
+    updatedDetails[i] = {
+      ...updatedDetails[i],
+      checkedIn: true,
+      checkedInAt: updatedDetails[i]?.checkedInAt || now,
+    };
+  }
+
+  const saved = await updateBooking(booking.id, {
+    guestDetails: JSON.stringify(updatedDetails),
+    status: "checked-in",
+  });
+  if (!saved) throw new Error("Could not check in booking.");
+
+  await recordAdminAction({
+    action: "status",
+    section: "Check-in",
+    entityId: booking.id,
+    entityLabel: bookingAuditLabel(saved),
+    summary: `Checked in all guests (${totalGuests}) for ticket ${booking.ticketCode}`,
+    before: booking,
+    after: saved,
+    changes: { status: "checked-in", allCheckedIn: true },
+  });
+
+  return saved;
+}
+
+/** Look up a ticket code, URL, invite code, email, or name across the database */
+export async function resolveTicketOrInvite(
+  rawQuery: string
+): Promise<ScanValidationResult | null> {
+  const cleanCode = extractScanCode(rawQuery);
+  if (!cleanCode) return null;
+
+  // 1. Direct Ticket Code lookup
+  const bookingByTicket = await getBookingByTicketCode(cleanCode);
+  if (bookingByTicket) {
+    return { type: "ticket", booking: bookingByTicket, matchedBy: "ticket_code" };
+  }
+
+  // 2. Direct Invite lookup
+  const invite = await getInviteByCode(cleanCode);
+  if (invite) {
+    if (invite.bookingId) {
+      const linked = await getBookingById(invite.bookingId);
+      if (linked) {
+        return { type: "ticket", booking: linked, invite, matchedBy: "invite_redeemed" };
+      }
+    }
+    // If not redeemed yet
+    return { type: "invite", invite, matchedBy: "invite_code" };
+  }
+
+  // 3. Fallback: Search all bookings (by id, inviteCode, email, customerName)
+  const allBookings = await getBookings();
+  const lowerQuery = rawQuery.trim().toLowerCase();
+
+  const matched = allBookings.find((b) => {
+    if (b.ticketCode.toUpperCase() === cleanCode) return true;
+    if (b.id === cleanCode || b.id === rawQuery.trim()) return true;
+    if (b.inviteCode && b.inviteCode.toUpperCase() === cleanCode) return true;
+    if (b.email && b.email.toLowerCase() === lowerQuery) return true;
+    if (b.customerName && b.customerName.toLowerCase().includes(lowerQuery)) return true;
+    return false;
+  });
+
+  if (matched) {
+    return { type: "ticket", booking: matched, matchedBy: "booking_id" };
+  }
+
+  return null;
 }
