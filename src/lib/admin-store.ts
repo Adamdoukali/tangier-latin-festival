@@ -3235,6 +3235,7 @@ export function getClients(
             : "morocco";
       const checkedIn = ov.checkedIn !== undefined ? Boolean(ov.checkedIn) : b.status === "checked-in";
       const checkedInAt = ov.checkedInAt || (b.status === "checked-in" ? b.createdAt : undefined);
+      const notes = ov.notes !== undefined ? ov.notes : gi === 0 ? b.notes || "" : "";
 
       clients.push({
         id: `${b.id}-${gi}`,
