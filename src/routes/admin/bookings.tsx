@@ -466,14 +466,11 @@ function AdminBookings() {
                         const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
                         const cur = pack?.currency || "€";
                         const count = b.numPeople || 1;
-                        const isConfirmed = isConfirmedBooking(b);
-                        const gross = isConfirmed ? unitPrice * count : 0;
+                        const gross = unitPrice * count;
                         const priceInfo = pack
-                          ? isConfirmed
-                            ? count > 1
-                              ? `${count} personnes (${unitPrice} ${cur}/p → ${gross} ${cur})`
-                              : `${unitPrice} ${cur}`
-                            : `0 ${cur} (non confirmé)`
+                          ? count > 1
+                            ? `${count} personnes (${unitPrice} ${cur}/p → ${gross} ${cur})`
+                            : `${unitPrice} ${cur}`
                           : null;
                         const detail = [
                           pack?.sub,

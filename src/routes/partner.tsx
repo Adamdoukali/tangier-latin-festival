@@ -968,25 +968,32 @@ function buildUnifiedReservations(
   // 1. Build a UnifiedClientBooking for EACH festival booking
   const festivalReservations: UnifiedClientBooking[] = festivalBookings.map((fb) => {
     const { guest1, guest2, allGuests } = extractGuests(fb);
-    const pack = packs.find((p) => p.id === fb.packId);
+    const pack = packs.find(
+      (p) =>
+        p.id === fb.packId || p.name === fb.packName || (fb.packName && fb.packName.includes(p.name)),
+    );
     const label = translateDynamicText(pack ? packLabel(pack) : fb.packName, L);
 
-    const rawFestUnitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
-    const rawFestCurrency = packPrice(pack).currency;
+    let { amount: rawFestUnitPrice, currency: rawFestCurrency } = packPrice(pack);
+    if (!pack && fb.packName) {
+      const match = fb.packName.match(/(\d+(?:[.,]\d+)?)\s*(€|eur|mad|dh)\b/i);
+      if (match) rawFestUnitPrice = Number(match[1].replace(",", "."));
+      if (/mad|dh/i.test(fb.packName)) rawFestCurrency = "MAD";
+    }
+
     const festUnitPrice = moneyIn(
       rawFestCurrency === "MAD"
         ? { eur: 0, mad: rawFestUnitPrice }
         : { eur: rawFestUnitPrice, mad: 0 },
       displayCurrency,
     );
-    const isFestConfirmed = isConfirmedBooking(fb);
     const festGuests = fb.numPeople || 1;
-    const festGross = isFestConfirmed ? festUnitPrice * festGuests : 0;
-    const festDiscount = isFestConfirmed ? fromEur(fb.discountAmount || 0) : 0;
+    const festGross = festUnitPrice * festGuests;
+    const festDiscount = fromEur(fb.discountAmount || 0);
     const festNet = Math.max(0, festGross - festDiscount);
 
     let festCommission = 0;
-    if (isFestConfirmed) {
+    if (fb.status !== "declined") {
       const commMoney = collaboratorFestivalCommission(partner, [fb], packs, discounts, {
         includeMissionReward: false,
       });
@@ -999,11 +1006,10 @@ function buildUnifiedReservations(
     matchingTours.forEach((t) => attachedTourIds.add(t.id));
 
     const tours = matchingTours.map((tb) => {
-      const isTourConfirmed = isConfirmedBooking(tb);
       const numPeople = tb.numPeople || 1;
       const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
-      const gross = isTourConfirmed ? unitPrice * numPeople : 0;
-      const comm = isTourConfirmed ? fromEur(numPeople * 5) : 0;
+      const gross = unitPrice * numPeople;
+      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
       return {
         booking: tb,
         tourName: tb.packName,
@@ -1069,11 +1075,10 @@ function buildUnifiedReservations(
     .filter((tb) => !attachedTourIds.has(tb.id))
     .map((tb) => {
       const { guest1, guest2, allGuests } = extractGuests(tb);
-      const isTourConfirmed = isConfirmedBooking(tb);
       const numPeople = tb.numPeople || 1;
       const unitPrice = fromEur(getTourismPrice(tb.packId || tb.packName));
-      const gross = isTourConfirmed ? unitPrice * numPeople : 0;
-      const comm = isTourConfirmed ? fromEur(numPeople * 5) : 0;
+      const gross = unitPrice * numPeople;
+      const comm = tb.status !== "declined" ? fromEur(numPeople * 5) : 0;
 
       const tours = [
         {
@@ -1402,7 +1407,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   // Excursions metrics — accurately computed from confirmed client reservations
   const allLiveTours = unifiedReservations
     .filter((r) => isConfirmedBooking(r.status))
-    .flatMap((r) => r.tours);
+    .flatMap((r) => r.tours.filter((t) => isConfirmedBooking(t.booking.status)));
 
   const asilahTourCount = allLiveTours
     .filter((t) => {
@@ -1479,6 +1484,22 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     );
   const totalDisplayParticipants = totalParticipantsCount;
 
+  const pendingReservations = unifiedReservations.filter(
+    (r) => !isConfirmedBooking(r.status) && r.status !== "declined",
+  );
+  const pendingParticipantsCount = pendingReservations.reduce(
+    (sum, r) =>
+      sum +
+      Math.max(
+        1,
+        r.allGuests.length,
+        r.festivalBooking?.numPeople || 0,
+        r.tours.reduce((ts, t) => ts + (t.numPeople || 1), 0),
+      ),
+    0,
+  );
+  const pendingSales = pendingReservations.reduce((sum, r) => sum + r.totalAmount, 0);
+
   const filteredReservations = unifiedReservations.filter((res) => {
     if (filterTab === "hotel" && !res.festivalBooking) return false;
     if (filterTab === "tours" && res.tours.length === 0) return false;
@@ -1539,11 +1560,16 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-extrabold text-gray-500">
-                {tr("Total Participants", "Total Participants", "Total Participantes")}
+                {tr("Confirmed Participants", "Participants Confirmés", "Participantes Confirmados")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-slate-900">
                 {totalDisplayParticipants}
               </p>
+              {pendingParticipantsCount > 0 && (
+                <p className="text-xs text-amber-600 font-bold mt-1">
+                  +{pendingParticipantsCount} {tr("pending confirmation", "en attente de confirmation", "pendiente de confirmación")}
+                </p>
+              )}
             </div>
             <div className="h-12 w-12 rounded-2xl bg-blue-50 border border-blue-200 grid place-items-center">
               <Users className="h-6 w-6 text-blue-600" />
@@ -1554,7 +1580,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-5 shadow-md flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-black text-blue-200">
-                {tr("Total Sales", "Total Ventes", "Total Ventas")}
+                {tr("Confirmed Sales", "Ventes Confirmées", "Ventas Confirmadas")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
                 {totalGrossSales} {accountCurrencyLabel}
@@ -1564,6 +1590,11 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                 {totalTourRevenue} {accountCurrencyLabel} (
                 {tr("Excursions", "Excursions", "Excursiones")})
               </p>
+              {pendingSales > 0 && (
+                <p className="text-[11px] text-amber-300 font-bold mt-1">
+                  +{pendingSales} {accountCurrencyLabel} {tr("pending confirmation", "en attente de confirmation", "en espera de confirmación")}
+                </p>
+              )}
             </div>
             <div className="h-12 w-12 rounded-2xl bg-white/15 grid place-items-center">
               <TrendingUp className="h-6 w-6 text-blue-300" />
@@ -1574,7 +1605,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
           <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-md flex items-center justify-between">
             <div>
               <p className="text-[11px] uppercase tracking-wider font-black text-emerald-100">
-                {tr("Your Total Earnings", "Total de vos commissions", "Tus Ganancias Totales")}
+                {tr("Confirmed Earnings", "Commissions Confirmées", "Ganancias Confirmadas")}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
                 {totalCombinedEarnings} {accountCurrencyLabel}
@@ -1599,9 +1630,9 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
             <div>
               <p className="text-[11px] uppercase tracking-wider font-black text-rose-100">
                 {tr(
-                  "Total Due to Festival",
-                  "Total à verser au Festival",
-                  "Total a pagar al Festival",
+                  "Due to Festival (Confirmed)",
+                  "À verser au Festival (Confirmé)",
+                  "A pagar al Festival (Confirmado)",
                 )}
               </p>
               <p className="mt-1 font-display text-3xl font-black text-white">
@@ -2226,8 +2257,12 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             {accountCurrencyLabel}
                           </span>
                           {!hasTicket && (
-                            <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg font-bold">
-                              {tr("Not confirmed (0)", "Non confirmé (0)", "No confirmado (0)")}
+                            <span className="text-[10px] text-amber-800 bg-amber-50 border border-amber-300 px-2.5 py-0.5 rounded-lg font-bold">
+                              {tr(
+                                "Pending confirmation",
+                                "En attente de confirmation",
+                                "Pendiente de confirmación",
+                              )}
                             </span>
                           )}
                           {priceBreakdown.length > 0 && (
