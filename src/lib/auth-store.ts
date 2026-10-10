@@ -88,14 +88,18 @@ export async function loginAdmin(email: string, pass: string): Promise<boolean> 
 
 export const logoutAdmin = (): void => setAuthStatus(false);
 
-/** The owner account can open any partner's portal without their password. */
 export const isOwner = (admin: AdminIdentity | null = getCurrentAdmin()): boolean =>
   admin?.role === "owner";
 
+/** Every admin account (owner, Nouha, Safae, Badr…) can open a partner's
+ *  portal without their password. Scanner-only staff cannot. */
+export const canViewAsPartner = (admin: AdminIdentity | null = getCurrentAdmin()): boolean =>
+  !!admin && admin.role !== "scanner";
+
 // ─── "View as collaborator" ──────────────────────────────────────────
-// The owner opens the Partner Portal as a given collaborator. The marker is
+// An admin opens the Partner Portal as a given collaborator. The marker is
 // stored in the partner session slot; the portal validates it against the
-// signed-in owner before showing anything, so it is useless on its own.
+// signed-in admin before showing anything, so it is useless on its own.
 
 const PARTNER_SESSION_KEY = "tlf_partner_session";
 
@@ -108,7 +112,7 @@ export interface PartnerImpersonation {
 
 export function startPartnerImpersonation(collaboratorId: string): boolean {
   const admin = getCurrentAdmin();
-  if (typeof window === "undefined" || !isOwner(admin)) return false;
+  if (typeof window === "undefined" || !canViewAsPartner(admin)) return false;
   const marker: PartnerImpersonation = {
     impersonateCollaboratorId: collaboratorId,
     adminId: admin!.id,
@@ -119,7 +123,7 @@ export function startPartnerImpersonation(collaboratorId: string): boolean {
   return true;
 }
 
-/** The active "view as" marker, only while the same owner is still signed in. */
+/** The active "view as" marker, only while the same admin is still signed in. */
 export function getPartnerImpersonation(): PartnerImpersonation | null {
   if (typeof window === "undefined") return null;
   try {
@@ -128,7 +132,7 @@ export function getPartnerImpersonation(): PartnerImpersonation | null {
     const parsed = JSON.parse(raw) as Partial<PartnerImpersonation>;
     if (!parsed.impersonateCollaboratorId) return null;
     const admin = getCurrentAdmin();
-    if (!isOwner(admin) || admin!.id !== parsed.adminId) return null;
+    if (!canViewAsPartner(admin) || admin!.id !== parsed.adminId) return null;
     return parsed as PartnerImpersonation;
   } catch {
     return null;

@@ -53,7 +53,7 @@ import {
   buildCollaboratorSummarySpreadsheet,
 } from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
-import { getCurrentAdmin, isOwner, startPartnerImpersonation } from "@/lib/auth-store";
+import { getCurrentAdmin, canViewAsPartner, startPartnerImpersonation } from "@/lib/auth-store";
 import { recordAdminAction } from "@/lib/admin-audit";
 
 export const Route = createFileRoute("/admin/collaborators")({
@@ -642,7 +642,7 @@ function AdminCollaborators() {
                               <KeyRound className="h-4 w-4" />
                             </button>
                           )}
-                          {isOwner(getCurrentAdmin()) && (
+                          {canViewAsPartner(getCurrentAdmin()) && (
                             <button
                               onClick={() => {
                                 if (!startPartnerImpersonation(c.id)) return;
