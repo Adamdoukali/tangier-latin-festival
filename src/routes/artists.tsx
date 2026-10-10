@@ -113,7 +113,7 @@ const ALL_ARTISTS = [
   { name: "Abdel & Houds", style: "Salsa", img: BASE24 + "08/ABDEL-HOUDS.png" },
   { name: "Pedro & Maria", style: "Bachata", img: BASE + "image-258.png" },
   { name: "Athéna", style: "Kizomba", img: BASE25 + "08/Athena.jpg" },
-  { name: "Manu & Olivia", style: "Bachata", img: BASE25 + "08/Manu-Olivia-scaled.jpg" },
+  { name: "Manu & Olivia", style: "Kizomba", img: BASE25 + "08/Manu-Olivia-scaled.jpg" },
   { name: "Francis, Dulce & Francis Jr", style: "Salsa", img: BASE25 + "07/Francis-Dulce-e1753134778111.jpg" },
   { name: "Cia Women Revolution", style: "Bachata", img: BASE25 + "10/CIA-Women-Revolution-1.jpg" },
   { name: "Hajar Pocahontas", style: "Salsa", img: BASE + "image-268.png" },

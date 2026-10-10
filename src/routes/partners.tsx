@@ -13,6 +13,11 @@ import allIn from "@/assets/partners/all-in.png";
 import socialDanceSpain from "@/assets/partners/social-dance-spain.png";
 import oaxaca from "@/assets/partners/oaxaca.png";
 import salsaBachataTurkey from "@/assets/partners/salsa-bachata-turkey.png";
+import bachataLovers from "@/assets/partners/bachata-lovers.png";
+import sbkDanceVideos from "@/assets/partners/sbk-dance-videos.jpg";
+import bachataSensual from "@/assets/partners/bachata-sensual.png";
+import bachataSicilia from "@/assets/partners/bachata-sicilia.png";
+import laSalsaVive from "@/assets/partners/la-salsa-vive.jpg";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translations, Language } from "@/lib/translations";
 
@@ -67,6 +72,15 @@ const partners: Partner[] = [
     logo: salsaBachataTurkey,
     url: "https://www.instagram.com/salsaybachataturkey/",
   },
+  { name: "Bachata Lovers", logo: bachataLovers },
+  { name: "SBK Dance Videos", logo: sbkDanceVideos },
+  {
+    name: "Bachata Sensual",
+    logo: bachataSensual,
+    url: "https://www.instagram.com/simplyfundancing/",
+  },
+  { name: "Bachata Sicilia", logo: bachataSicilia },
+  { name: "La Salsa Vive", logo: laSalsaVive },
 ];
 
 function PartnerCard({ p }: { p: Partner }) {
