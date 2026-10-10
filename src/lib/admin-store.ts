@@ -1480,6 +1480,7 @@ export async function updateBooking(
         rowUpdates.collaborator_id = isValidUuid(updates.collaboratorId)
           ? updates.collaboratorId
           : null;
+      if (updates.source !== undefined) rowUpdates.source = updates.source;
 
       const { data, error } = await supabase!
         .from("bookings")

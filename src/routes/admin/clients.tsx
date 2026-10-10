@@ -57,6 +57,8 @@ function AdminClients() {
     origin: "morocco" | "international";
     country: string;
     notes: string;
+    /** "website" | "manual" | "collab:<collaboratorId>" — who gets the referral */
+    referral: string;
   }>({
     firstName: "",
     lastName: "",
@@ -65,7 +67,12 @@ function AdminClients() {
     origin: "morocco",
     country: "Maroc",
     notes: "",
+    referral: "website",
   });
+
+  // Referral of a booking as a select value (admin can hand it to another partner)
+  const referralValueOf = (b: Booking | undefined): string =>
+    b?.collaboratorId ? `collab:${b.collaboratorId}` : b?.source === "manual" ? "manual" : "website";
 
   const reload = useCallback(async () => {
     const [b, p, c, detailsOk] = await Promise.all([
@@ -124,6 +131,7 @@ function AdminClients() {
       origin: client.origin,
       country: client.country,
       notes: client.notes ?? "",
+      referral: referralValueOf(bookings.find((b) => b.id === client.bookingId)),
     });
   };
 
@@ -186,6 +194,26 @@ function AdminClients() {
 
     try {
       await saveSynchronizedGuestDetails(targetBooking, updatedDetails);
+
+      // Referral reassignment (whole booking): hand the sale to another
+      // partner, or detach it (website / manual). Only admins reach this form.
+      if (editForm.referral !== referralValueOf(targetBooking)) {
+        const toCollaborator = editForm.referral.startsWith("collab:")
+          ? editForm.referral.slice("collab:".length)
+          : null;
+        const saved = await updateBooking(targetBooking.id, {
+          collaboratorId: toCollaborator,
+          source: toCollaborator
+            ? targetBooking.source === "invite" && targetBooking.inviteCode
+              ? "invite"
+              : "referral"
+            : editForm.referral === "manual"
+              ? "manual"
+              : "website",
+        });
+        if (!saved) throw new Error("Le parrainage n’a pas pu être modifié.");
+      }
+
       setEditingClient(null);
       await reload();
     } catch (e) {
@@ -717,6 +745,37 @@ function AdminClients() {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Parrainage / source de la réservation
+                </label>
+                <select
+                  value={editForm.referral}
+                  onChange={(e) => setEditForm({ ...editForm, referral: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                >
+                  <option value="website">Site web (sans parrainage)</option>
+                  <option value="manual">Réservation manuelle (sans parrainage)</option>
+                  <optgroup label="Attribuer à un collaborateur">
+                    {collaborators
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((c) => (
+                        <option key={c.id} value={`collab:${c.id}`}>
+                          {c.name} ({c.code}){c.active ? "" : " — inactif"}
+                        </option>
+                      ))}
+                  </optgroup>
+                </select>
+                <p className="text-[11px] text-gray-500 mt-1">
+                  S’applique à toute la réservation ({editingClient.ticketCode}) : la commission
+                  passe au collaborateur choisi.
+                  {editingClient.collaboratorName
+                    ? ` Actuellement : ${editingClient.collaboratorName}.`
+                    : " Actuellement : aucun parrainage."}
+                </p>
               </div>
 
               <div className="col-span-2">
