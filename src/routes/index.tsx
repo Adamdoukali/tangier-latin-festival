@@ -41,6 +41,11 @@ import partnerSummerBachata from "@/assets/partner-summerbachata.png";
 import partnerBachataSpain from "@/assets/partner-bachataspain.png";
 import partnerBachataWorld from "@/assets/partner-bachataworld.png";
 import partnerAllIn from "@/assets/partner-allin.png";
+import partnerBachataLovers from "@/assets/partners/bachata-lovers.png";
+import partnerSbkDanceVideos from "@/assets/partners/sbk-dance-videos.jpg";
+import partnerBachataSensual from "@/assets/partners/bachata-sensual.png";
+import partnerBachataSicilia from "@/assets/partners/bachata-sicilia.png";
+import partnerLaSalsaVive from "@/assets/partners/la-salsa-vive.jpg";
 import { Countdown } from "@/components/Countdown";
 import { Nav } from "@/components/Nav";
 import { RollingNumber } from "@/components/RollingNumber";
@@ -713,6 +718,46 @@ function Home() {
                     className="h-12 md:h-16 object-contain transition duration-300"
                   />
                 </a>
+                <span className="shrink-0">
+                  <img
+                    src={partnerBachataLovers}
+                    alt="Bachata Lovers"
+                    className="h-12 md:h-16 object-contain transition duration-300"
+                  />
+                </span>
+                <span className="shrink-0">
+                  <img
+                    src={partnerSbkDanceVideos}
+                    alt="SBK Dance Videos"
+                    className="h-12 md:h-16 rounded-full object-contain transition duration-300"
+                  />
+                </span>
+                <a
+                  href="https://www.instagram.com/simplyfundancing/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:opacity-70 transition shrink-0"
+                >
+                  <img
+                    src={partnerBachataSensual}
+                    alt="Bachata Sensual"
+                    className="h-12 md:h-16 object-contain transition duration-300"
+                  />
+                </a>
+                <span className="shrink-0">
+                  <img
+                    src={partnerBachataSicilia}
+                    alt="Bachata Sicilia"
+                    className="h-12 md:h-16 object-contain transition duration-300"
+                  />
+                </span>
+                <span className="shrink-0">
+                  <img
+                    src={partnerLaSalsaVive}
+                    alt="La Salsa Vive"
+                    className="h-12 md:h-16 rounded-full object-contain transition duration-300"
+                  />
+                </span>
               </div>
             ))}
           </div>
