@@ -12,6 +12,7 @@ import {
   Mail,
   Phone,
   Check,
+  MessageCircle,
 } from "lucide-react";
 import {
   getBookings,
@@ -28,6 +29,7 @@ import {
   type GuestDetail,
 } from "@/lib/admin-store";
 import { translateDynamicText } from "@/lib/translations";
+import { formatInternationalPhone } from "@/lib/phone";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
 
 export const Route = createFileRoute("/admin/clients")({
@@ -501,6 +503,17 @@ function AdminClients() {
                         <span className="text-gray-700 flex items-center gap-1.5">
                           <Phone className="h-3.5 w-3.5 text-gray-400" />
                           {client.phone}
+                          {formatInternationalPhone(client.phone).replace(/\D/g, "") && (
+                            <a
+                              href={`https://wa.me/${formatInternationalPhone(client.phone).replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-1 p-1 rounded-md text-[#16a34a] hover:bg-green-50 transition"
+                              title="Ouvrir WhatsApp"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                            </a>
+                          )}
                         </span>
                       ) : (
                         <button

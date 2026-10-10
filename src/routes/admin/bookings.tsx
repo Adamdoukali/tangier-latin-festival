@@ -14,6 +14,7 @@ import {
   Link2,
   Mail,
   Phone,
+  MessageCircle,
 } from "lucide-react";
 import {
   getBookings,
@@ -31,6 +32,7 @@ import {
   ticketUrl,
   commissionLabel,
   isConfirmedBooking,
+  packNightCount,
   type Booking,
   type BookingStatus,
   type Collaborator,
@@ -38,6 +40,38 @@ import {
 } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
+import { getCurrentAdmin } from "@/lib/auth-store";
+import { sendTicketConfirmationEmail } from "@/lib/ticket-confirmation";
+import { formatInternationalPhone } from "@/lib/phone";
+
+/** "en France", "au Maroc", "aux États-Unis"… for the WhatsApp follow-up.
+ * Country names may be stored in English, French or Spanish. */
+function countryInFrench(country?: string | null): string {
+  const raw = (country || "").trim();
+  if (!raw) return "";
+  const key = raw.toLowerCase();
+  const known: Record<string, string> = {
+    morocco: "au Maroc", maroc: "au Maroc", marruecos: "au Maroc",
+    france: "en France", francia: "en France",
+    spain: "en Espagne", espagne: "en Espagne", "españa": "en Espagne",
+    belgium: "en Belgique", belgique: "en Belgique", "bélgica": "en Belgique",
+    portugal: "au Portugal",
+    canada: "au Canada", "canadá": "au Canada",
+    netherlands: "aux Pays-Bas", "pays-bas": "aux Pays-Bas", "países bajos": "aux Pays-Bas",
+    "united states": "aux États-Unis", "états-unis": "aux États-Unis", "estados unidos": "aux États-Unis",
+    "united kingdom": "au Royaume-Uni", "royaume-uni": "au Royaume-Uni", "reino unido": "au Royaume-Uni",
+    germany: "en Allemagne", allemagne: "en Allemagne", alemania: "en Allemagne",
+    italy: "en Italie", italie: "en Italie", italia: "en Italie",
+    switzerland: "en Suisse", suisse: "en Suisse", suiza: "en Suisse",
+    luxembourg: "au Luxembourg", luxemburgo: "au Luxembourg",
+    algeria: "en Algérie", "algérie": "en Algérie", argelia: "en Algérie",
+    tunisia: "en Tunisie", tunisie: "en Tunisie", "túnez": "en Tunisie",
+    senegal: "au Sénégal", "sénégal": "au Sénégal",
+    mexico: "au Mexique", mexique: "au Mexique", "méxico": "au Mexique",
+    brazil: "au Brésil", "brésil": "au Brésil", brasil: "au Brésil",
+  };
+  return ` ${known[key] ?? `en ${raw}`}`;
+}
 
 export const Route = createFileRoute("/admin/bookings")({
   component: AdminBookings,
@@ -193,37 +227,7 @@ function AdminBookings() {
       showQr(updated);
       if (updated.email) {
         setAutoEmail("sending");
-        // Guest's own language: what they booked in, else their partner's
-        const partner = updated.collaboratorId
-          ? collaborators.find((c) => c.id === updated.collaboratorId)
-          : undefined;
-        const bLang = ((updated.lang || partner?.language || "en") as Language) ?? "en";
-        const tUrl = ticketUrl(updated.ticketCode) + (bLang !== "en" ? `&lang=${bLang}` : "");
-        const mail = ticketConfirmationEmail({
-          customerName: updated.customerName,
-          packName: translateDynamicText(updated.packName, bLang),
-          ticketCode: updated.ticketCode,
-          numPeople: updated.numPeople || 1,
-          ticketUrl: tUrl,
-          lang: bLang,
-          guests: updated.customerName.split(/\s*&\s*/),
-          arrivalDate: updated.arrivalDate,
-          departureDate: updated.departureDate,
-        });
-        sendFormNotification({
-          subject: `Ticket confirmed: ${updated.customerName} (${updated.ticketCode})`,
-          guestSubject: mail.subject,
-          lang: bLang,
-          ticket: { code: updated.ticketCode, url: tUrl },
-          fields: {
-            name: updated.customerName,
-            email: updated.email,
-            Ticket: tUrl,
-            Code: updated.ticketCode,
-            Pack: updated.packName,
-          },
-          autoresponse: mail.body,
-        })
+        sendTicketConfirmationEmail(updated, collaborators)
           .then((ok) => setAutoEmail(ok ? "sent" : "failed"))
           .catch(() => setAutoEmail("failed"));
       } else {
@@ -249,6 +253,50 @@ function AdminBookings() {
         : bLang === "es"
           ? `¡Hola ${firstName}! 🎉 Tu reserva para el Tangier International Latin Festival está CONFIRMADA.\n\n🎫 Tu entrada (muestra el QR en la entrada):\n${tUrl}\n\nCódigo: ${b.ticketCode} · ${pack}\n¡Nos vemos del 07 al 11 de enero de 2027 en el Kenzi Solazur, Tánger!`
           : `Hello ${firstName}! 🎉 Your booking for the Tangier International Latin Festival is CONFIRMED.\n\n🎫 Your ticket (show the QR at check-in):\n${tUrl}\n\nCode: ${b.ticketCode} · ${pack}\nSee you Du 7 au 11 janvier 2027 at the Kenzi Solazur, Tangier!`;
+    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  };
+
+  // Prefilled WhatsApp follow-up asking the guest to confirm their reservation,
+  // signed by the team member currently logged in.
+  const waFollowUpLink = (b: Booking): string | null => {
+    const digits = formatInternationalPhone(b.phone).replace(/\D/g, "");
+    if (!digits) return null;
+    const guests = b.customerName
+      .split(/\s*&\s*/)
+      .map((g) => g.trim())
+      .filter(Boolean);
+    const firstName = (guests[0] || b.customerName).split(/\s+/)[0] || b.customerName;
+    const pack = packs.find((p) => p.id === b.packId);
+    const packName = translateDynamicText(b.packName, "fr");
+    const nights = packNightCount(pack);
+    const companions = guests.slice(1).map((g) => g.split(/\s+/)[0]);
+    const forWhom =
+      companions.length > 0
+        ? ` pour vous-même et pour ${companions.join(", ")}`
+        : b.numPeople > 1
+          ? ` pour ${b.numPeople} personnes`
+          : "";
+    const stay = nights ? `, ${nights} nuitée${nights > 1 ? "s" : ""}` : "";
+    const where = countryInFrench(b.country);
+    const teamMember = getCurrentAdmin()?.name?.trim() || "L’équipe";
+    const text =
+      `Hello ${firstName},
+
+` +
+      `Nous vous remercions pour l’intérêt que vous portez au Tangier Latin Festival 💃✨
+` +
+      `Tout d’abord, nous tenons à nous excuser pour le retard de notre réponse.
+` +
+      `Nous aimerions savoir si vous confirmez la réservation de votre ${packName}${forWhom}${stay}. ` +
+      `Je voudrais également savoir où est-ce que vous habitez${where} afin que nous puissions vous rediriger vers l’un de nos promoteurs et procéder au paiement pour finaliser votre réservation.
+
+` +
+      `Nous restons dans l’attente de votre retour et espérons avoir le plaisir de vous accueillir au festival. 💃✨
+
+` +
+      `Cordialement,
+${teamMember}
+Tangier Latin Festival`;
     return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
   };
 
@@ -556,6 +604,17 @@ function AdminBookings() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {waFollowUpLink(b) && (
+                          <a
+                            href={waFollowUpLink(b)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#16a34a] hover:bg-green-50 transition"
+                            title="Écrire sur WhatsApp (message de confirmation pré-rempli)"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </a>
+                        )}
                         <button
                           onClick={() => emailCustomer(b)}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"

@@ -255,6 +255,61 @@ export function ticketConfirmationEmail(opts: {
   };
 }
 
+/** Receipt e-mailed to a Moroccan guest after a payment is recorded
+ *  (amounts in dirhams). Partial payments state the remaining balance. */
+export function paymentReceiptEmail(opts: {
+  customerName: string;
+  ticketCode: string;
+  packName: string;
+  amountMad: number;
+  methodLabel: string;
+  paidAt: string;
+  totalDueMad: number;
+  totalReceivedMad: number;
+  note?: string | null;
+}): { subject: string; body: string } {
+  const firstName = opts.customerName.split(/\s|&/)[0] || opts.customerName;
+  const mad = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} MAD`;
+  const date = opts.paidAt
+    ? new Date(opts.paidAt).toLocaleDateString("fr-FR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+  const remaining = Math.max(opts.totalDueMad - opts.totalReceivedMad, 0);
+  const settled = opts.totalDueMad > 0 && remaining === 0;
+  const lines = [
+    `• Montant reçu : ${mad(opts.amountMad)}`,
+    `• Mode de paiement : ${opts.methodLabel}`,
+    ...(date ? [`• Date : ${date}`] : []),
+    `• Forfait : ${opts.packName}`,
+    `• Numéro de réservation : ${opts.ticketCode}`,
+    ...(opts.note ? [`• Remarque : ${opts.note}`] : []),
+  ].join("\n");
+  const summary = [
+    `• Total de la réservation : ${mad(opts.totalDueMad)}`,
+    `• Total reçu à ce jour : ${mad(opts.totalReceivedMad)}`,
+    `• Reste à payer : ${mad(remaining)}`,
+  ].join("\n");
+  return {
+    subject: settled
+      ? `Reçu de paiement – réservation réglée (${opts.ticketCode})`
+      : `Reçu de paiement (${opts.ticketCode})`,
+    body:
+      `Bonjour ${firstName},\n\n` +
+      `Nous confirmons la bonne réception de votre paiement pour le Tangier International Latin Festival (07–11 janvier 2027 · Hôtel Kenzi Solazur, Tanger).\n\n` +
+      `Détails du paiement :\n${lines}\n\n` +
+      `Récapitulatif :\n${summary}\n\n` +
+      (settled
+        ? `Votre réservation est entièrement réglée. Votre billet avec code QR vous est envoyé dans un e-mail séparé.\n\n`
+        : `Votre réservation sera confirmée et votre billet envoyé dès réception du solde restant. Pour toute question, répondez simplement à cet e-mail ou contactez-nous sur WhatsApp.\n\n`) +
+      `Merci pour votre confiance et à très vite sur la piste !\n` +
+      `— Tangier International Latin Festival\n` +
+      `contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`,
+  };
+}
+
 /** Auto-reply for the general contact form. */
 export function contactAutoResponse(lang: string): string {
   if (lang === "fr") {

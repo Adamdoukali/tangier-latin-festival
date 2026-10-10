@@ -31,6 +31,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminTourismRouteImport } from './routes/admin/tourism'
 import { Route as AdminShuttleRouteImport } from './routes/admin/shuttle'
 import { Route as AdminScannerRouteImport } from './routes/admin/scanner'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
 import { Route as AdminPacksRouteImport } from './routes/admin/packs'
 import { Route as AdminLogsRouteImport } from './routes/admin/logs'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -153,6 +154,11 @@ const AdminScannerRoute = AdminScannerRouteImport.update({
   path: '/scanner',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPacksRoute = AdminPacksRouteImport.update({
   id: '/packs',
   path: '/packs',
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
@@ -273,6 +280,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
@@ -309,6 +317,7 @@ export interface FileRoutesById {
   '/admin/login': typeof AdminLoginRoute
   '/admin/logs': typeof AdminLogsRoute
   '/admin/packs': typeof AdminPacksRoute
+  '/admin/payments': typeof AdminPaymentsRoute
   '/admin/scanner': typeof AdminScannerRoute
   '/admin/shuttle': typeof AdminShuttleRoute
   '/admin/tourism': typeof AdminTourismRoute
@@ -346,6 +355,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/payments'
     | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
@@ -380,6 +390,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/payments'
     | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/admin/logs'
     | '/admin/packs'
+    | '/admin/payments'
     | '/admin/scanner'
     | '/admin/shuttle'
     | '/admin/tourism'
@@ -598,6 +610,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminScannerRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/packs': {
       id: '/admin/packs'
       path: '/packs'
@@ -690,6 +709,7 @@ interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminLogsRoute: typeof AdminLogsRoute
   AdminPacksRoute: typeof AdminPacksRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminScannerRoute: typeof AdminScannerRoute
   AdminShuttleRoute: typeof AdminShuttleRoute
   AdminTourismRoute: typeof AdminTourismRoute
@@ -708,6 +728,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminLogsRoute: AdminLogsRoute,
   AdminPacksRoute: AdminPacksRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
   AdminScannerRoute: AdminScannerRoute,
   AdminShuttleRoute: AdminShuttleRoute,
   AdminTourismRoute: AdminTourismRoute,

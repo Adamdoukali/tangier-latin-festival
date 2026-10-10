@@ -152,6 +152,8 @@ export interface Booking {
   guestDetails?: string | null;
   /** Language the guest booked in ('en' | 'fr' | 'es') */
   lang?: string | null;
+  /** Amount a Moroccan guest must pay in dirhams; null = computed from the pack price */
+  amountDueMad?: number | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -603,6 +605,7 @@ const bookingFromRow = (r: any): Booking => ({
   braceletGiven: r.bracelet_given ?? null,
   roomNumber: r.room_number ?? null,
   roomType: r.room_type ?? null,
+  amountDueMad: r.amount_due_mad != null ? Number(r.amount_due_mad) : null,
   guestDetails:
     typeof r.guest_details === "string"
       ? r.guest_details
@@ -1467,6 +1470,7 @@ export async function updateBooking(
       if (updates.country !== undefined) rowUpdates.country = updates.country;
       if (updates.roomNumber !== undefined) rowUpdates.room_number = updates.roomNumber;
       if (updates.roomType !== undefined) rowUpdates.room_type = updates.roomType;
+      if (updates.amountDueMad !== undefined) rowUpdates.amount_due_mad = updates.amountDueMad;
       if (updates.notes !== undefined) rowUpdates.notes = updates.notes;
       if (updates.status !== undefined) rowUpdates.status = updates.status;
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
@@ -4212,4 +4216,253 @@ export async function resolveTicketOrInvite(
   }
 
   return null;
+}
+
+// ─── Payments (Moroccan guests, tracked in MAD) ──────────────────────
+
+export type PaymentMethod = "virement" | "especes" | "cheque" | "autre";
+export type PaymentStatus = "unpaid" | "partial" | "paid";
+
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  virement: "Virement bancaire",
+  especes: "Espèces",
+  cheque: "Chèque",
+  autre: "Autre",
+};
+
+export interface BookingPayment {
+  id: string;
+  bookingId: string;
+  amountMad: number;
+  method: PaymentMethod;
+  /** YYYY-MM-DD */
+  paidAt: string;
+  note?: string | null;
+  /** Object path in the 'payment-proofs' bucket (or a data: URL in local mode) */
+  proofPath?: string | null;
+  proofName?: string | null;
+  receiptSentAt?: string | null;
+  recordedBy?: string | null;
+  createdAt: string;
+}
+
+const PAYMENTS_KEY = "tlf_admin_payments";
+const PROOF_BUCKET = "payment-proofs";
+
+const paymentFromRow = (r: any): BookingPayment => ({
+  id: r.id,
+  bookingId: r.booking_id,
+  amountMad: Number(r.amount_mad) || 0,
+  method: (r.method as PaymentMethod) || "virement",
+  paidAt: r.paid_at ?? "",
+  note: r.note ?? null,
+  proofPath: r.proof_path ?? null,
+  proofName: r.proof_name ?? null,
+  receiptSentAt: r.receipt_sent_at ?? null,
+  recordedBy: r.recorded_by ?? null,
+  createdAt: r.created_at ?? new Date().toISOString(),
+});
+
+const PAYMENTS_SETUP_HINT =
+  "La table des paiements n’existe pas encore. Exécutez supabase/payments.sql dans l’éditeur SQL de Supabase.";
+
+function isMissingPaymentsSetup(e: unknown): boolean {
+  const msg = String((e as any)?.message ?? "");
+  const code = String((e as any)?.code ?? "");
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    /booking_payments|could not find the table|Bucket not found/i.test(msg)
+  );
+}
+
+export async function getPayments(): Promise<BookingPayment[]> {
+  if (hasConfiguredDb()) {
+    if (!useDb()) return [];
+    try {
+      const { data, error } = await supabase!
+        .from("booking_payments")
+        .select("*")
+        .order("paid_at", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map(paymentFromRow);
+    } catch (e) {
+      warn("getPayments", e);
+      return [];
+    }
+  }
+  return readStore<BookingPayment>(PAYMENTS_KEY).sort((a, b) =>
+    (b.paidAt + b.createdAt).localeCompare(a.paidAt + a.createdAt),
+  );
+}
+
+/** Store a proof file (photo of the transfer, signed cash note, PDF).
+ *  Returns the storage path to keep on the payment. */
+export async function uploadPaymentProof(
+  bookingId: string,
+  file: File,
+): Promise<{ path: string; name: string }> {
+  if (useDb() && !isLocalId(bookingId)) {
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${bookingId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase!.storage
+      .from(PROOF_BUCKET)
+      .upload(path, file, { contentType: file.type || undefined, upsert: false });
+    if (error) {
+      if (isMissingPaymentsSetup(error)) throw new Error(PAYMENTS_SETUP_HINT);
+      throw new Error(error.message || "Impossible d’envoyer le justificatif.");
+    }
+    return { path, name: file.name };
+  }
+  // Local mode: keep the file inline so the proof survives a reload
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+  return { path: dataUrl, name: file.name };
+}
+
+/** Short-lived link to view a proof (signed URL, one hour). */
+export async function getPaymentProofUrl(path: string | null | undefined): Promise<string | null> {
+  if (!path) return null;
+  if (path.startsWith("data:")) return path;
+  if (!useDb()) return null;
+  const { data, error } = await supabase!.storage.from(PROOF_BUCKET).createSignedUrl(path, 3600);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+export async function addPayment(
+  input: Omit<BookingPayment, "id" | "createdAt">,
+  booking?: Pick<Booking, "customerName" | "ticketCode"> | null,
+): Promise<BookingPayment> {
+  const label = booking ? bookingAuditLabel(booking) : input.bookingId;
+  const summary = `Recorded a payment of ${input.amountMad} MAD (${PAYMENT_METHOD_LABELS[input.method]}) for ${booking?.customerName || input.bookingId}`;
+  if (useDb() && !isLocalId(input.bookingId)) {
+    try {
+      const data = await insertRow("booking_payments", {
+        booking_id: input.bookingId,
+        amount_mad: input.amountMad,
+        method: input.method,
+        paid_at: input.paidAt,
+        note: input.note ?? null,
+        proof_path: input.proofPath ?? null,
+        proof_name: input.proofName ?? null,
+        receipt_sent_at: input.receiptSentAt ?? null,
+        recorded_by: input.recordedBy ?? null,
+      });
+      const created = paymentFromRow(data);
+      await recordAdminAction({
+        action: "create",
+        section: "Payments",
+        entityId: input.bookingId,
+        entityLabel: label,
+        summary,
+        after: created,
+      });
+      return created;
+    } catch (e) {
+      warn("addPayment", e);
+      if (isMissingPaymentsSetup(e)) throw new Error(PAYMENTS_SETUP_HINT);
+      throw e instanceof Error ? e : new Error("Impossible d’enregistrer le paiement.");
+    }
+  }
+  const created: BookingPayment = {
+    ...input,
+    id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+  };
+  writeStore(PAYMENTS_KEY, [created, ...readStore<BookingPayment>(PAYMENTS_KEY)]);
+  await recordAdminAction({
+    action: "create",
+    section: "Payments",
+    entityId: input.bookingId,
+    entityLabel: label,
+    summary,
+    after: created,
+  });
+  return created;
+}
+
+export async function markPaymentReceiptSent(id: string): Promise<void> {
+  const at = new Date().toISOString();
+  if (useDb() && !isLocalId(id)) {
+    const { error } = await supabase!
+      .from("booking_payments")
+      .update({ receipt_sent_at: at })
+      .eq("id", id);
+    if (error) warn("markPaymentReceiptSent", error);
+    return;
+  }
+  const all = readStore<BookingPayment>(PAYMENTS_KEY);
+  writeStore(
+    PAYMENTS_KEY,
+    all.map((p) => (p.id === id ? { ...p, receiptSentAt: at } : p)),
+  );
+}
+
+export async function deletePayment(
+  payment: BookingPayment,
+  booking?: Pick<Booking, "customerName" | "ticketCode"> | null,
+): Promise<boolean> {
+  const label = booking ? bookingAuditLabel(booking) : payment.bookingId;
+  const summary = `Deleted a payment of ${payment.amountMad} MAD for ${booking?.customerName || payment.bookingId}`;
+  if (useDb() && !isLocalId(payment.id)) {
+    try {
+      const { error } = await supabase!.from("booking_payments").delete().eq("id", payment.id);
+      if (error) throw error;
+      if (payment.proofPath && !payment.proofPath.startsWith("data:")) {
+        await supabase!.storage.from(PROOF_BUCKET).remove([payment.proofPath]);
+      }
+      await recordAdminAction({
+        action: "delete",
+        section: "Payments",
+        entityId: payment.bookingId,
+        entityLabel: label,
+        summary,
+        before: payment,
+      });
+      return true;
+    } catch (e) {
+      warn("deletePayment", e);
+      throw e instanceof Error ? e : new Error("Impossible de supprimer le paiement.");
+    }
+  }
+  const all = readStore<BookingPayment>(PAYMENTS_KEY);
+  const filtered = all.filter((p) => p.id !== payment.id);
+  if (filtered.length === all.length) return false;
+  writeStore(PAYMENTS_KEY, filtered);
+  await recordAdminAction({
+    action: "delete",
+    section: "Payments",
+    entityId: payment.bookingId,
+    entityLabel: label,
+    summary,
+    before: payment,
+  });
+  return true;
+}
+
+/** What a Moroccan guest owes in dirhams: the admin override when set,
+ *  otherwise the pack price (× guests, minus discount), converted from
+ *  euros at EUR_TO_MAD when the pack is priced in euros. */
+export function bookingAmountDueMad(booking: Booking, pack?: Pack | null): number {
+  if (booking.amountDueMad != null && booking.amountDueMad >= 0) return booking.amountDueMad;
+  const { amount, currency } = packPrice(pack ?? undefined);
+  const count = booking.numPeople || 1;
+  const total = Math.max(amount * count - (booking.discountAmount || 0), 0);
+  return Math.round(currency === "MAD" ? total : total * EUR_TO_MAD);
+}
+
+export function paymentStatusFor(due: number, received: number): PaymentStatus {
+  if (received <= 0) return "unpaid";
+  if (due > 0 && received >= due) return "paid";
+  return "partial";
+}
+
+export function formatMad(value: number): string {
+  return `${Math.round(value).toLocaleString("fr-FR")} MAD`;
 }
