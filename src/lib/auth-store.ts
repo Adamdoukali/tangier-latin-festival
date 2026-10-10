@@ -28,14 +28,15 @@ export interface AdminIdentity {
   id: string;
   name: string;
   email: string;
-  role?: "admin" | "scanner";
+  /** owner = full access + can open any partner's portal ("view as") */
+  role?: "owner" | "admin" | "scanner";
 }
 
 const PRIMARY_ADMIN: AdminIdentity = {
   id: "primary-admin",
-  name: "Primary Admin",
+  name: "Propriétaire",
   email: "admin@tangierlatinfestival.com",
-  role: "admin",
+  role: "owner",
 };
 
 export function getCurrentAdmin(): AdminIdentity | null {
@@ -86,3 +87,50 @@ export async function loginAdmin(email: string, pass: string): Promise<boolean> 
 }
 
 export const logoutAdmin = (): void => setAuthStatus(false);
+
+/** The owner account can open any partner's portal without their password. */
+export const isOwner = (admin: AdminIdentity | null = getCurrentAdmin()): boolean =>
+  admin?.role === "owner";
+
+// ─── "View as collaborator" ──────────────────────────────────────────
+// The owner opens the Partner Portal as a given collaborator. The marker is
+// stored in the partner session slot; the portal validates it against the
+// signed-in owner before showing anything, so it is useless on its own.
+
+const PARTNER_SESSION_KEY = "tlf_partner_session";
+
+export interface PartnerImpersonation {
+  impersonateCollaboratorId: string;
+  adminId: string;
+  adminName: string;
+  startedAt: string;
+}
+
+export function startPartnerImpersonation(collaboratorId: string): boolean {
+  const admin = getCurrentAdmin();
+  if (typeof window === "undefined" || !isOwner(admin)) return false;
+  const marker: PartnerImpersonation = {
+    impersonateCollaboratorId: collaboratorId,
+    adminId: admin!.id,
+    adminName: admin!.name,
+    startedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(PARTNER_SESSION_KEY, JSON.stringify(marker));
+  return true;
+}
+
+/** The active "view as" marker, only while the same owner is still signed in. */
+export function getPartnerImpersonation(): PartnerImpersonation | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PARTNER_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PartnerImpersonation>;
+    if (!parsed.impersonateCollaboratorId) return null;
+    const admin = getCurrentAdmin();
+    if (!isOwner(admin) || admin!.id !== parsed.adminId) return null;
+    return parsed as PartnerImpersonation;
+  } catch {
+    return null;
+  }
+}

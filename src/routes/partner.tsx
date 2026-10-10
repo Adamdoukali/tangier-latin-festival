@@ -71,6 +71,7 @@ import {
   normalizePhone,
 } from "@/lib/admin-store";
 import { savePartnerSession, clearPartnerSession, restorePartnerSession } from "@/lib/partner-auth";
+import { getPartnerImpersonation } from "@/lib/auth-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
 
@@ -1140,6 +1141,8 @@ function buildUnifiedReservations(
 function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () => void }) {
   const L = partner.language ?? "en";
   const tr = (en: string, fr: string, es: string) => (L === "fr" ? fr : L === "es" ? es : en);
+  // Set when the festival owner opened this portal from the admin ("view as")
+  const viewAs = getPartnerImpersonation();
 
   const isMadPartner = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
   const accountCurrency = partnerCurrency(partner);
@@ -1525,6 +1528,13 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
 
+      {viewAs && (
+        <div className="bg-amber-400 text-[#13234d] text-xs sm:text-sm font-semibold px-4 py-2 text-center">
+          Mode administrateur : vous consultez le portail de <strong>{partner.name}</strong> en
+          tant que {viewAs.adminName}. Toute action effectuée ici est enregistrée au nom de ce
+          partenaire.
+        </div>
+      )}
       <header className="bg-[#13234d] shadow-md sticky top-0 z-30">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">

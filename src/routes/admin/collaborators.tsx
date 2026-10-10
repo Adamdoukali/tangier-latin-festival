@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Bus,
+  Eye,
 } from "lucide-react";
 import {
   getCollaboratorStats,
@@ -52,6 +53,8 @@ import {
   buildCollaboratorSummarySpreadsheet,
 } from "@/lib/admin-export-data";
 import { downloadXlsx } from "@/lib/spreadsheet-export";
+import { getCurrentAdmin, isOwner, startPartnerImpersonation } from "@/lib/auth-store";
+import { recordAdminAction } from "@/lib/admin-audit";
 
 export const Route = createFileRoute("/admin/collaborators")({
   component: AdminCollaborators,
@@ -637,6 +640,25 @@ function AdminCollaborators() {
                               }
                             >
                               <KeyRound className="h-4 w-4" />
+                            </button>
+                          )}
+                          {isOwner(getCurrentAdmin()) && (
+                            <button
+                              onClick={() => {
+                                if (!startPartnerImpersonation(c.id)) return;
+                                recordAdminAction({
+                                  action: "update",
+                                  section: "Collaborators",
+                                  entityId: c.id,
+                                  entityLabel: c.name,
+                                  summary: `Opened the partner portal as ${c.name} (view as)`,
+                                });
+                                window.open("/partner", "_blank", "noopener");
+                              }}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition cursor-pointer"
+                              title="Voir le portail partenaire en tant que ce collaborateur"
+                            >
+                              <Eye className="h-4 w-4" />
                             </button>
                           )}
                           <button

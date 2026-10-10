@@ -7,7 +7,8 @@ interface ServerAdminAccount {
   email: string;
   password?: string;
   passwordHash?: string;
-  role?: "admin" | "scanner";
+  /** owner = full access + "view as" any partner; set on the primary account */
+  role?: "owner" | "admin" | "scanner";
 }
 
 const PASSWORD_HASH_PREFIX = "TLF_ADMIN_LOGIN_V1";
@@ -105,9 +106,11 @@ export const verifyAdminCredentials = createServerFn({ method: "POST" })
       success: true as const,
       admin: {
         id: account.id,
-        name: account.name,
+        name: account.id === "primary-admin" ? "Propriétaire" : account.name,
         email: account.email,
-        role: account.role || "admin",
+        // The primary festival account is the owner: it can open any
+        // partner's portal from the admin without their password.
+        role: account.id === "primary-admin" ? "owner" : account.role || "admin",
       },
     };
   });

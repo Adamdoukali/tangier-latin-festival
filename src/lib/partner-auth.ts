@@ -3,7 +3,8 @@
 // re-validated against the database on every portal load, so deactivating a
 // collaborator or changing their password locks them out immediately.
 
-import { partnerLogin, type Collaborator } from "./admin-store";
+import { partnerLogin, getCollaboratorById, type Collaborator } from "./admin-store";
+import { getPartnerImpersonation } from "./auth-store";
 
 const SESSION_KEY = "tlf_partner_session";
 
@@ -32,6 +33,14 @@ export async function restorePartnerSession(): Promise<Collaborator | null> {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw) as PartnerSession;
+    // Owner viewing a collaborator's portal from the admin (no password needed)
+    const viewAs = getPartnerImpersonation();
+    if (viewAs) {
+      const collaborator = await getCollaboratorById(viewAs.impersonateCollaboratorId);
+      if (collaborator) return collaborator;
+      clearPartnerSession();
+      return null;
+    }
     const identifier = session.email || session.username;
     const pass = session.password || session.accessCode;
     if (!identifier || !pass) return null;
