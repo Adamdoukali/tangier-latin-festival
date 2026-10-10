@@ -9,119 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TourismRouteImport } from './routes/tourism'
-import { Route as TicketRouteImport } from './routes/ticket'
-import { Route as TestimonialsRouteImport } from './routes/testimonials'
-import { Route as ReelsRouteImport } from './routes/reels'
-import { Route as RedeemRouteImport } from './routes/redeem'
-import { Route as ProgramRouteImport } from './routes/program'
-import { Route as PartnersRouteImport } from './routes/partners'
-import { Route as PartnerRouteImport } from './routes/partner'
-import { Route as PacksRouteImport } from './routes/packs'
-import { Route as HotelRouteImport } from './routes/hotel'
-import { Route as GalleryRouteImport } from './routes/gallery'
-import { Route as CompetitionRouteImport } from './routes/competition'
-import { Route as BookTransferRouteImport } from './routes/book-transfer'
-import { Route as BookTourismRouteImport } from './routes/book-tourism'
-import { Route as BookRouteImport } from './routes/book'
-import { Route as ArtistsRouteImport } from './routes/artists'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as ArtistsRouteImport } from './routes/artists'
+import { Route as BookRouteImport } from './routes/book'
+import { Route as BookTourismRouteImport } from './routes/book-tourism'
+import { Route as BookTransferRouteImport } from './routes/book-transfer'
+import { Route as CompetitionRouteImport } from './routes/competition'
+import { Route as GalleryRouteImport } from './routes/gallery'
+import { Route as HotelRouteImport } from './routes/hotel'
+import { Route as PacksRouteImport } from './routes/packs'
+import { Route as PartnerRouteImport } from './routes/partner'
+import { Route as PartnersRouteImport } from './routes/partners'
+import { Route as ProgramRouteImport } from './routes/program'
+import { Route as RedeemRouteImport } from './routes/redeem'
+import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
+import { Route as TicketRouteImport } from './routes/ticket'
+import { Route as TourismRouteImport } from './routes/tourism'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminTourismRouteImport } from './routes/admin/tourism'
-import { Route as AdminShuttleRouteImport } from './routes/admin/shuttle'
-import { Route as AdminScannerRouteImport } from './routes/admin/scanner'
-import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
-import { Route as AdminPacksRouteImport } from './routes/admin/packs'
-import { Route as AdminLogsRouteImport } from './routes/admin/logs'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
-import { Route as AdminInviteRouteImport } from './routes/admin/invite'
-import { Route as AdminHotelRouteImport } from './routes/admin/hotel'
-import { Route as AdminDiscountsRouteImport } from './routes/admin/discounts'
-import { Route as AdminCollaboratorsRouteImport } from './routes/admin/collaborators'
-import { Route as AdminClientsRouteImport } from './routes/admin/clients'
-import { Route as AdminBraceletsRouteImport } from './routes/admin/bracelets'
-import { Route as AdminBraceletScannerRouteImport } from './routes/admin/bracelet-scanner'
 import { Route as AdminBookingsRouteImport } from './routes/admin/bookings'
+import { Route as AdminBraceletScannerRouteImport } from './routes/admin/bracelet-scanner'
+import { Route as AdminBraceletsRouteImport } from './routes/admin/bracelets'
+import { Route as AdminClientsRouteImport } from './routes/admin/clients'
+import { Route as AdminCollaboratorsRouteImport } from './routes/admin/collaborators'
+import { Route as AdminDiscountsRouteImport } from './routes/admin/discounts'
+import { Route as AdminHotelRouteImport } from './routes/admin/hotel'
+import { Route as AdminInviteRouteImport } from './routes/admin/invite'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminLogsRouteImport } from './routes/admin/logs'
+import { Route as AdminPacksRouteImport } from './routes/admin/packs'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminScannerRouteImport } from './routes/admin/scanner'
+import { Route as AdminShuttleRouteImport } from './routes/admin/shuttle'
+import { Route as AdminTourismRouteImport } from './routes/admin/tourism'
 
-const TourismRoute = TourismRouteImport.update({
-  id: '/tourism',
-  path: '/tourism',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TicketRoute = TicketRouteImport.update({
-  id: '/ticket',
-  path: '/ticket',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestimonialsRoute = TestimonialsRouteImport.update({
-  id: '/testimonials',
-  path: '/testimonials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReelsRoute = ReelsRouteImport.update({
-  id: '/reels',
-  path: '/reels',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RedeemRoute = RedeemRouteImport.update({
-  id: '/redeem',
-  path: '/redeem',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProgramRoute = ProgramRouteImport.update({
-  id: '/program',
-  path: '/program',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PartnersRoute = PartnersRouteImport.update({
-  id: '/partners',
-  path: '/partners',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PartnerRoute = PartnerRouteImport.update({
-  id: '/partner',
-  path: '/partner',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PacksRoute = PacksRouteImport.update({
-  id: '/packs',
-  path: '/packs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HotelRoute = HotelRouteImport.update({
-  id: '/hotel',
-  path: '/hotel',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GalleryRoute = GalleryRouteImport.update({
-  id: '/gallery',
-  path: '/gallery',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompetitionRoute = CompetitionRouteImport.update({
-  id: '/competition',
-  path: '/competition',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookTransferRoute = BookTransferRouteImport.update({
-  id: '/book-transfer',
-  path: '/book-transfer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookTourismRoute = BookTourismRouteImport.update({
-  id: '/book-tourism',
-  path: '/book-tourism',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookRoute = BookRouteImport.update({
-  id: '/book',
-  path: '/book',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ArtistsRoute = ArtistsRouteImport.update({
-  id: '/artists',
-  path: '/artists',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -129,9 +54,84 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ArtistsRoute = ArtistsRouteImport.update({
+  id: '/artists',
+  path: '/artists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookRoute = BookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookTourismRoute = BookTourismRouteImport.update({
+  id: '/book-tourism',
+  path: '/book-tourism',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookTransferRoute = BookTransferRouteImport.update({
+  id: '/book-transfer',
+  path: '/book-transfer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitionRoute = CompetitionRouteImport.update({
+  id: '/competition',
+  path: '/competition',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HotelRoute = HotelRouteImport.update({
+  id: '/hotel',
+  path: '/hotel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacksRoute = PacksRouteImport.update({
+  id: '/packs',
+  path: '/packs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerRoute = PartnerRouteImport.update({
+  id: '/partner',
+  path: '/partner',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnersRoute = PartnersRouteImport.update({
+  id: '/partners',
+  path: '/partners',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProgramRoute = ProgramRouteImport.update({
+  id: '/program',
+  path: '/program',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RedeemRoute = RedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReelsRoute = ReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicketRoute = TicketRouteImport.update({
+  id: '/ticket',
+  path: '/ticket',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TourismRoute = TourismRouteImport.update({
+  id: '/tourism',
+  path: '/tourism',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -139,69 +139,9 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminTourismRoute = AdminTourismRouteImport.update({
-  id: '/tourism',
-  path: '/tourism',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminShuttleRoute = AdminShuttleRouteImport.update({
-  id: '/shuttle',
-  path: '/shuttle',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminScannerRoute = AdminScannerRouteImport.update({
-  id: '/scanner',
-  path: '/scanner',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
-  id: '/payments',
-  path: '/payments',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPacksRoute = AdminPacksRouteImport.update({
-  id: '/packs',
-  path: '/packs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLogsRoute = AdminLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminInviteRoute = AdminInviteRouteImport.update({
-  id: '/invite',
-  path: '/invite',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminHotelRoute = AdminHotelRouteImport.update({
-  id: '/hotel',
-  path: '/hotel',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminDiscountsRoute = AdminDiscountsRouteImport.update({
-  id: '/discounts',
-  path: '/discounts',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCollaboratorsRoute = AdminCollaboratorsRouteImport.update({
-  id: '/collaborators',
-  path: '/collaborators',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminClientsRoute = AdminClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBraceletsRoute = AdminBraceletsRouteImport.update({
-  id: '/bracelets',
-  path: '/bracelets',
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBraceletScannerRoute = AdminBraceletScannerRouteImport.update({
@@ -209,9 +149,69 @@ const AdminBraceletScannerRoute = AdminBraceletScannerRouteImport.update({
   path: '/bracelet-scanner',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminBookingsRoute = AdminBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
+const AdminBraceletsRoute = AdminBraceletsRouteImport.update({
+  id: '/bracelets',
+  path: '/bracelets',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminClientsRoute = AdminClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCollaboratorsRoute = AdminCollaboratorsRouteImport.update({
+  id: '/collaborators',
+  path: '/collaborators',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDiscountsRoute = AdminDiscountsRouteImport.update({
+  id: '/discounts',
+  path: '/discounts',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHotelRoute = AdminHotelRouteImport.update({
+  id: '/hotel',
+  path: '/hotel',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminInviteRoute = AdminInviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPacksRoute = AdminPacksRouteImport.update({
+  id: '/packs',
+  path: '/packs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminScannerRoute = AdminScannerRouteImport.update({
+  id: '/scanner',
+  path: '/scanner',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminShuttleRoute = AdminShuttleRouteImport.update({
+  id: '/shuttle',
+  path: '/shuttle',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTourismRoute = AdminTourismRouteImport.update({
+  id: '/tourism',
+  path: '/tourism',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -456,116 +456,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tourism': {
-      id: '/tourism'
-      path: '/tourism'
-      fullPath: '/tourism'
-      preLoaderRoute: typeof TourismRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ticket': {
-      id: '/ticket'
-      path: '/ticket'
-      fullPath: '/ticket'
-      preLoaderRoute: typeof TicketRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/testimonials': {
-      id: '/testimonials'
-      path: '/testimonials'
-      fullPath: '/testimonials'
-      preLoaderRoute: typeof TestimonialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reels': {
-      id: '/reels'
-      path: '/reels'
-      fullPath: '/reels'
-      preLoaderRoute: typeof ReelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/redeem': {
-      id: '/redeem'
-      path: '/redeem'
-      fullPath: '/redeem'
-      preLoaderRoute: typeof RedeemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/program': {
-      id: '/program'
-      path: '/program'
-      fullPath: '/program'
-      preLoaderRoute: typeof ProgramRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/partners': {
-      id: '/partners'
-      path: '/partners'
-      fullPath: '/partners'
-      preLoaderRoute: typeof PartnersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/partner': {
-      id: '/partner'
-      path: '/partner'
-      fullPath: '/partner'
-      preLoaderRoute: typeof PartnerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/packs': {
-      id: '/packs'
-      path: '/packs'
-      fullPath: '/packs'
-      preLoaderRoute: typeof PacksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/hotel': {
-      id: '/hotel'
-      path: '/hotel'
-      fullPath: '/hotel'
-      preLoaderRoute: typeof HotelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gallery': {
-      id: '/gallery'
-      path: '/gallery'
-      fullPath: '/gallery'
-      preLoaderRoute: typeof GalleryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/competition': {
-      id: '/competition'
-      path: '/competition'
-      fullPath: '/competition'
-      preLoaderRoute: typeof CompetitionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book-transfer': {
-      id: '/book-transfer'
-      path: '/book-transfer'
-      fullPath: '/book-transfer'
-      preLoaderRoute: typeof BookTransferRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book-tourism': {
-      id: '/book-tourism'
-      path: '/book-tourism'
-      fullPath: '/book-tourism'
-      preLoaderRoute: typeof BookTourismRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book': {
-      id: '/book'
-      path: '/book'
-      fullPath: '/book'
-      preLoaderRoute: typeof BookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/artists': {
-      id: '/artists'
-      path: '/artists'
-      fullPath: '/artists'
-      preLoaderRoute: typeof ArtistsRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -575,11 +470,116 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/artists': {
+      id: '/artists'
+      path: '/artists'
+      fullPath: '/artists'
+      preLoaderRoute: typeof ArtistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book': {
+      id: '/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof BookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book-tourism': {
+      id: '/book-tourism'
+      path: '/book-tourism'
+      fullPath: '/book-tourism'
+      preLoaderRoute: typeof BookTourismRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book-transfer': {
+      id: '/book-transfer'
+      path: '/book-transfer'
+      fullPath: '/book-transfer'
+      preLoaderRoute: typeof BookTransferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competition': {
+      id: '/competition'
+      path: '/competition'
+      fullPath: '/competition'
+      preLoaderRoute: typeof CompetitionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hotel': {
+      id: '/hotel'
+      path: '/hotel'
+      fullPath: '/hotel'
+      preLoaderRoute: typeof HotelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/packs': {
+      id: '/packs'
+      path: '/packs'
+      fullPath: '/packs'
+      preLoaderRoute: typeof PacksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner': {
+      id: '/partner'
+      path: '/partner'
+      fullPath: '/partner'
+      preLoaderRoute: typeof PartnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partners': {
+      id: '/partners'
+      path: '/partners'
+      fullPath: '/partners'
+      preLoaderRoute: typeof PartnersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/program': {
+      id: '/program'
+      path: '/program'
+      fullPath: '/program'
+      preLoaderRoute: typeof ProgramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/redeem': {
+      id: '/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof RedeemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reels': {
+      id: '/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ticket': {
+      id: '/ticket'
+      path: '/ticket'
+      fullPath: '/ticket'
+      preLoaderRoute: typeof TicketRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tourism': {
+      id: '/tourism'
+      path: '/tourism'
+      fullPath: '/tourism'
+      preLoaderRoute: typeof TourismRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -589,95 +589,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/tourism': {
-      id: '/admin/tourism'
-      path: '/tourism'
-      fullPath: '/admin/tourism'
-      preLoaderRoute: typeof AdminTourismRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/shuttle': {
-      id: '/admin/shuttle'
-      path: '/shuttle'
-      fullPath: '/admin/shuttle'
-      preLoaderRoute: typeof AdminShuttleRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/scanner': {
-      id: '/admin/scanner'
-      path: '/scanner'
-      fullPath: '/admin/scanner'
-      preLoaderRoute: typeof AdminScannerRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/payments': {
-      id: '/admin/payments'
-      path: '/payments'
-      fullPath: '/admin/payments'
-      preLoaderRoute: typeof AdminPaymentsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/packs': {
-      id: '/admin/packs'
-      path: '/packs'
-      fullPath: '/admin/packs'
-      preLoaderRoute: typeof AdminPacksRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/logs': {
-      id: '/admin/logs'
-      path: '/logs'
-      fullPath: '/admin/logs'
-      preLoaderRoute: typeof AdminLogsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/login': {
-      id: '/admin/login'
-      path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/invite': {
-      id: '/admin/invite'
-      path: '/invite'
-      fullPath: '/admin/invite'
-      preLoaderRoute: typeof AdminInviteRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/hotel': {
-      id: '/admin/hotel'
-      path: '/hotel'
-      fullPath: '/admin/hotel'
-      preLoaderRoute: typeof AdminHotelRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/discounts': {
-      id: '/admin/discounts'
-      path: '/discounts'
-      fullPath: '/admin/discounts'
-      preLoaderRoute: typeof AdminDiscountsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/collaborators': {
-      id: '/admin/collaborators'
-      path: '/collaborators'
-      fullPath: '/admin/collaborators'
-      preLoaderRoute: typeof AdminCollaboratorsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/clients': {
-      id: '/admin/clients'
-      path: '/clients'
-      fullPath: '/admin/clients'
-      preLoaderRoute: typeof AdminClientsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/bracelets': {
-      id: '/admin/bracelets'
-      path: '/bracelets'
-      fullPath: '/admin/bracelets'
-      preLoaderRoute: typeof AdminBraceletsRouteImport
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/bracelet-scanner': {
@@ -687,11 +603,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBraceletScannerRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/bookings': {
-      id: '/admin/bookings'
-      path: '/bookings'
-      fullPath: '/admin/bookings'
-      preLoaderRoute: typeof AdminBookingsRouteImport
+    '/admin/bracelets': {
+      id: '/admin/bracelets'
+      path: '/bracelets'
+      fullPath: '/admin/bracelets'
+      preLoaderRoute: typeof AdminBraceletsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/clients': {
+      id: '/admin/clients'
+      path: '/clients'
+      fullPath: '/admin/clients'
+      preLoaderRoute: typeof AdminClientsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/collaborators': {
+      id: '/admin/collaborators'
+      path: '/collaborators'
+      fullPath: '/admin/collaborators'
+      preLoaderRoute: typeof AdminCollaboratorsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/discounts': {
+      id: '/admin/discounts'
+      path: '/discounts'
+      fullPath: '/admin/discounts'
+      preLoaderRoute: typeof AdminDiscountsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/hotel': {
+      id: '/admin/hotel'
+      path: '/hotel'
+      fullPath: '/admin/hotel'
+      preLoaderRoute: typeof AdminHotelRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/invite': {
+      id: '/admin/invite'
+      path: '/invite'
+      fullPath: '/admin/invite'
+      preLoaderRoute: typeof AdminInviteRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/packs': {
+      id: '/admin/packs'
+      path: '/packs'
+      fullPath: '/admin/packs'
+      preLoaderRoute: typeof AdminPacksRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/scanner': {
+      id: '/admin/scanner'
+      path: '/scanner'
+      fullPath: '/admin/scanner'
+      preLoaderRoute: typeof AdminScannerRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/shuttle': {
+      id: '/admin/shuttle'
+      path: '/shuttle'
+      fullPath: '/admin/shuttle'
+      preLoaderRoute: typeof AdminShuttleRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tourism': {
+      id: '/admin/tourism'
+      path: '/tourism'
+      fullPath: '/admin/tourism'
+      preLoaderRoute: typeof AdminTourismRouteImport
       parentRoute: typeof AdminRoute
     }
   }
