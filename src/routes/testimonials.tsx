@@ -340,6 +340,18 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  // isPlaying follows the <video> events, so a rejected play() (iOS without a
+  // gesture, slow network) never leaves the UI thinking the video is running.
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => setIsPlaying(false));
+    else v.pause();
+  };
+
+  const tapToPlay =
+    lang === "fr" ? "Appuyez pour lire" : lang === "es" ? "Toca para reproducir" : "Tap to play";
+
   return (
     <div className="relative mx-auto w-full max-w-[240px] md:max-w-[320px] aspect-[9/19] rounded-[2rem] md:rounded-[3rem] border-[6px] md:border-[8px] border-slate-900 bg-slate-950 shadow-2xl overflow-hidden ring-4 ring-gold/20 group">
       {/* Dynamic Island / Notch */}
@@ -350,22 +362,17 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
       <video
         ref={videoRef}
         src="/mot_sur_le_festival.mp4"
+        poster="/mot_sur_le_festival-poster.jpg"
+        preload="metadata"
         className="absolute inset-0 w-full h-full object-cover rounded-[2.5rem]"
         loop
         playsInline
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
       />
       
       {/* Click-to-play overlay */}
-      <div 
-        className="absolute inset-0 z-20 cursor-pointer" 
-        onClick={() => {
-          if (videoRef.current) {
-            if (isPlaying) videoRef.current.pause();
-            else videoRef.current.play();
-            setIsPlaying(!isPlaying);
-          }
-        }} 
-      />
+      <div className="absolute inset-0 z-20 cursor-pointer" onClick={togglePlay} />
       
       {/* Reactions Overlay */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
@@ -387,7 +394,7 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
       <div className="absolute inset-x-0 bottom-0 p-6 z-30 flex items-end justify-between pointer-events-none">
         <div className="flex-1 pointer-events-auto pr-4">
           <div className="flex items-center gap-2 mb-2">
-             <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-black font-bold text-xs">TLF</div>
+             <div className="w-8 h-8 rounded-full bg-amber-400 flex items-center justify-center text-black font-bold text-xs">TLF</div>
              <p className="text-white font-bold text-sm drop-shadow-md">@tangierlatinfestival</p>
           </div>
           <p className="text-white/90 text-sm leading-snug drop-shadow-md">
@@ -397,17 +404,12 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
         <div className="flex flex-col gap-4 pointer-events-auto">
           <div className="relative">
             {!isPlaying && (
-              <span className="absolute inset-0 rounded-full animate-ping bg-gold/60" />
+              <span className="absolute inset-0 rounded-full animate-ping bg-amber-400/60" />
             )}
             <button
-              onClick={() => {
-                if (videoRef.current) {
-                  if (isPlaying) videoRef.current.pause();
-                  else videoRef.current.play();
-                  setIsPlaying(!isPlaying);
-                }
-              }}
-              className="relative flex items-center justify-center bg-white/20 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-gold hover:text-black hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.2)]"
+              onClick={togglePlay}
+              aria-label={isPlaying ? "Pause" : "Play"}
+              className="relative flex items-center justify-center bg-white/25 backdrop-blur-xl rounded-full w-12 h-12 text-white hover:bg-amber-400 hover:text-slate-950 hover:scale-110 transition-all duration-300 shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
             >
               {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
             </button>
@@ -428,19 +430,18 @@ function VideoTestimonialPhone({ lang }: { lang: string }) {
 
       {/* Giant Play button when paused */}
       {!isPlaying && (
-         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none bg-black/10 backdrop-blur-[1px] transition-all">
-            <button
-               onClick={() => {
-                  if (videoRef.current) {
-                     videoRef.current.play();
-                     setIsPlaying(true);
-                  }
-               }}
-               className="bg-gold/90 text-slate-950 w-24 h-24 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-110 active:scale-95 transition-all duration-300 pointer-events-auto"
-            >
-               <Play className="h-10 w-10 ml-2" />
-            </button>
-         </div>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 pointer-events-none bg-black/20 transition-all">
+          <button
+            onClick={togglePlay}
+            aria-label={tapToPlay}
+            className="animate-play-pulse bg-amber-400 text-slate-950 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center ring-4 ring-white/80 hover:scale-110 active:scale-95 transition-transform duration-300 pointer-events-auto"
+          >
+            <Play className="h-9 w-9 md:h-10 md:w-10 ml-1.5 fill-current" />
+          </button>
+          <span className="text-white text-xs md:text-sm font-semibold tracking-widest uppercase drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+            {tapToPlay}
+          </span>
+        </div>
       )}
     </div>
   );
