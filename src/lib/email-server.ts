@@ -40,10 +40,21 @@ export interface EmailPayload {
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
+// Turn bare URLs (ticket links, password-reset links) into real anchors so
+// every mail client shows them as clickable, not just the ones that auto-link.
+const linkify = (escaped: string) =>
+  escaped.replace(
+    /https?:\/\/[^\s<]+/g,
+    (url) => `<a href="${url}" style="color:#b45309;word-break:break-all">${url}</a>`,
+  );
+
 function guestHtml(p: EmailPayload): string {
   const paragraphs = p.message
     .split(/\n{2,}/)
-    .map((para) => `<p style="margin:0 0 16px;line-height:1.6">${esc(para).replace(/\n/g, "<br/>")}</p>`)
+    .map(
+      (para) =>
+        `<p style="margin:0 0 16px;line-height:1.6">${linkify(esc(para)).replace(/\n/g, "<br/>")}</p>`,
+    )
     .join("");
   const lang = p.lang === "fr" || p.lang === "es" ? p.lang : "en";
   const btnText =

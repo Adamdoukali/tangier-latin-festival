@@ -2357,7 +2357,7 @@ export async function partnerLogin(
 export async function requestPasswordReset(
   email: string,
   userLang?: string,
-): Promise<{ success: boolean; error?: string; resetUrl?: string }> {
+): Promise<{ success: boolean; error?: string; resetUrl?: string; emailSent?: boolean }> {
   const cleanEmail = email.trim().toLowerCase();
   const all = await getCollaborators();
   const found = all.find((c) => (c.email ?? "").toLowerCase() === cleanEmail);
@@ -2422,7 +2422,9 @@ export async function requestPasswordReset(
     `— Tangier International Latin Festival Team\n` +
     `contact@tangierlatinfestival.com · +212 6 64 01 02 79 / +212 6 64 63 06 32`;
 
-  sendFormNotification({
+  // Wait for the delivery service so the admin can see whether the e-mail
+  // really went out (before, a failed send still showed as "sent").
+  const emailSent = await sendFormNotification({
     subject,
     fields: {
       email: found.email!,
@@ -2432,9 +2434,9 @@ export async function requestPasswordReset(
     autoresponse: trilingualBody,
     guestSubject: subject,
     lang: reqLang,
-  }).catch(() => {});
+  }).catch(() => false);
 
-  return { success: true, resetUrl };
+  return { success: true, resetUrl, emailSent };
 }
 
 /** Reset or set partner password using reset token. */

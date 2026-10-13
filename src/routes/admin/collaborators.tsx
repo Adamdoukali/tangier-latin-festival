@@ -219,6 +219,28 @@ function AdminCollaborators() {
   };
 
   const [resetSentId, setResetSentId] = useState<string | null>(null);
+  const [emailNotice, setEmailNotice] = useState<{ kind: "ok" | "error"; text: string } | null>(
+    null,
+  );
+
+  const reportResetEmail = (
+    name: string,
+    email: string,
+    res: { success: boolean; error?: string; emailSent?: boolean },
+  ) => {
+    if (!res.success) {
+      setEmailNotice({ kind: "error", text: res.error || "Lien non généré." });
+      return;
+    }
+    setEmailNotice(
+      res.emailSent
+        ? { kind: "ok", text: `E-mail de création de mot de passe envoyé à ${email} (${name}). Lien copié dans le presse-papiers.` }
+        : {
+            kind: "error",
+            text: `L’e-mail n’a PAS pu être envoyé à ${email} (${name}). Le lien a été copié dans le presse-papiers : envoyez-le par WhatsApp.`,
+          },
+    );
+  };
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.code.trim()) {
@@ -245,7 +267,13 @@ function AdminCollaborators() {
         const created = await addCollaborator(payload);
         // Automatically send password setup link to partner's email
         if (created.email) {
-          requestPasswordReset(created.email).catch(() => {});
+          const res = await requestPasswordReset(created.email).catch(
+            (e: unknown) => ({ success: false, error: e instanceof Error ? e.message : String(e) }),
+          );
+          reportResetEmail(created.name, created.email, res);
+          if (res.success && "resetUrl" in res && res.resetUrl) {
+            navigator.clipboard?.writeText(res.resetUrl).catch(() => {});
+          }
         }
       }
       setShowForm(false);
@@ -263,12 +291,17 @@ function AdminCollaborators() {
 
   const handleSendResetEmail = async (c: Collaborator) => {
     if (!c.email) return;
-    const res = await requestPasswordReset(c.email);
+    setEmailNotice(null);
+    const res = await requestPasswordReset(c.email).catch((e: unknown) => ({
+      success: false,
+      error: e instanceof Error ? e.message : String(e),
+    }));
+    reportResetEmail(c.name, c.email, res);
     if (res.success) {
       setResetSentId(c.id);
       setTimeout(() => setResetSentId(null), 3000);
-      if (res.resetUrl) {
-        navigator.clipboard.writeText(res.resetUrl);
+      if ("resetUrl" in res && res.resetUrl) {
+        navigator.clipboard?.writeText(res.resetUrl).catch(() => {});
       }
     }
   };
@@ -348,6 +381,31 @@ function AdminCollaborators() {
           <Plus className="h-4 w-4" /> Ajouter un collaborateur
         </button>
       </div>
+
+      {/* Result of the last password-link e-mail */}
+      {emailNotice && (
+        <div
+          className={`rounded-xl border p-4 flex gap-3 text-sm ${
+            emailNotice.kind === "ok"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              : "border-red-200 bg-red-50 text-red-800"
+          }`}
+        >
+          {emailNotice.kind === "ok" ? (
+            <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+          ) : (
+            <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+          )}
+          <p className="flex-1">{emailNotice.text}</p>
+          <button
+            onClick={() => setEmailNotice(null)}
+            className="text-current/60 hover:text-current cursor-pointer"
+            aria-label="Fermer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* DB setup notice */}
       {!ready && (
@@ -635,7 +693,7 @@ function AdminCollaborators() {
                               }`}
                               title={
                                 resetSentId === c.id
-                                  ? "Lien de mot de passe copié et e-mail envoyé !"
+                                  ? "Lien copié — voir le résultat de l’envoi en haut de page"
                                   : "Envoyer le lien de création du mot de passe par e-mail et le copier"
                               }
                             >
