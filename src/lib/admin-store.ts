@@ -154,6 +154,10 @@ export interface Booking {
   lang?: string | null;
   /** Amount a Moroccan guest must pay in dirhams; null = computed from the pack price */
   amountDueMad?: number | null;
+  /** Per-person price locked when the booking was made (pack price at that time).
+   *  Null on legacy rows → falls back to the pack's current price. */
+  unitPrice?: number | null;
+  priceCurrency?: CommissionCurrency | null;
   status: BookingStatus;
   source?: BookingSource;
   collaboratorId?: string | null;
@@ -606,6 +610,8 @@ const bookingFromRow = (r: any): Booking => ({
   roomNumber: r.room_number ?? null,
   roomType: r.room_type ?? null,
   amountDueMad: r.amount_due_mad != null ? Number(r.amount_due_mad) : null,
+  unitPrice: r.unit_price != null ? Number(r.unit_price) : null,
+  priceCurrency: r.price_currency === "MAD" ? "MAD" : r.price_currency === "EUR" ? "EUR" : null,
   guestDetails:
     typeof r.guest_details === "string"
       ? r.guest_details
@@ -1272,6 +1278,23 @@ export async function addBooking(
     }
   }
 
+  // Lock the price the guest is buying at. Pack prices rise over time, and
+  // earlier bookings must keep the price they were sold for.
+  let unitPrice = booking.unitPrice ?? null;
+  let priceCurrency: CommissionCurrency | null = booking.priceCurrency ?? null;
+  if (unitPrice == null && !autoConfirmService) {
+    try {
+      const pack = (await getPacks()).find((p) => p.id === booking.packId);
+      if (pack) {
+        const pp = packPrice(pack);
+        unitPrice = pp.amount;
+        priceCurrency = pp.currency;
+      }
+    } catch {
+      /* no pack list available: the row falls back to the live price */
+    }
+  }
+
   if (useDb()) {
     try {
       const data = await insertRow(
@@ -1307,8 +1330,12 @@ export async function addBooking(
           transfer_location: booking.transferLocation ?? null,
           transfer_details: booking.transferDetails ?? null,
           transfer_cost: booking.transferCost ?? 0,
+          unit_price: unitPrice,
+          price_currency: priceCurrency,
         },
         [
+          "unit_price",
+          "price_currency",
           "source",
           "collaborator_id",
           "room_number",
@@ -1367,6 +1394,8 @@ export async function addBooking(
     ...booking,
     email,
     status,
+    unitPrice,
+    priceCurrency,
     id: generateId(),
     ticketCode,
     createdAt: new Date().toISOString(),
@@ -1471,6 +1500,8 @@ export async function updateBooking(
       if (updates.roomNumber !== undefined) rowUpdates.room_number = updates.roomNumber;
       if (updates.roomType !== undefined) rowUpdates.room_type = updates.roomType;
       if (updates.amountDueMad !== undefined) rowUpdates.amount_due_mad = updates.amountDueMad;
+      if (updates.unitPrice !== undefined) rowUpdates.unit_price = updates.unitPrice;
+      if (updates.priceCurrency !== undefined) rowUpdates.price_currency = updates.priceCurrency;
       if (updates.notes !== undefined) rowUpdates.notes = updates.notes;
       if (updates.status !== undefined) rowUpdates.status = updates.status;
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
@@ -3403,6 +3434,23 @@ export function packPrice(pack: Pack | undefined): {
   };
 }
 
+/** The per-person price a booking was sold at: the price locked on the
+ *  booking when it was created, or, for legacy rows without one, the
+ *  pack's current price. Always use this instead of packPrice() when a
+ *  booking is involved, so later price increases never touch old sales. */
+export function bookingUnitPrice(
+  booking: Pick<Booking, "unitPrice" | "priceCurrency">,
+  pack?: Pack | null,
+): { amount: number; currency: CommissionCurrency } {
+  if (booking.unitPrice != null && booking.unitPrice >= 0) {
+    return {
+      amount: booking.unitPrice,
+      currency: booking.priceCurrency ?? packPrice(pack ?? undefined).currency,
+    };
+  }
+  return packPrice(pack ?? undefined);
+}
+
 /** "€1,234" or "1,234 MAD" */
 export function formatMoney(value: number, currency: CommissionCurrency = "EUR"): string {
   const n = value.toLocaleString();
@@ -3794,7 +3842,7 @@ export function collaboratorCommission(
       const type = disc.commissionType ?? "fixed";
       if (type === "percent") {
         const pack = packs.find((x) => x.id === b.packId);
-        const { amount, currency } = packPrice(pack);
+        const { amount, currency } = bookingUnitPrice(b, pack);
         const perPersonDiscount = (b.discountAmount || 0) / totalPeopleInBooking;
         const netPerPerson = Math.max(0, amount - perPersonDiscount);
         const saleValue = netPerPerson * commissionablePeople;
@@ -3821,7 +3869,7 @@ export function collaboratorCommission(
     } else {
       const pct = (c.commission ?? 0) / 100;
       const pack = packs.find((x) => x.id === b.packId);
-      const { amount, currency } = packPrice(pack);
+      const { amount, currency } = bookingUnitPrice(b, pack);
       const perPersonDiscount = (b.discountAmount || 0) / totalPeopleInBooking;
       const netPerPerson = Math.max(0, amount - perPersonDiscount);
       const value = netPerPerson * commissionablePeople;
@@ -3879,7 +3927,10 @@ function salesOf(bookings: Booking[], packs: Pack[]): Money {
       const value = unitPrice * (b.numPeople || 1);
       return { ...acc, eur: acc.eur + value };
     }
-    const { amount, currency } = packPrice(packs.find((p) => p.id === b.packId));
+    const { amount, currency } = bookingUnitPrice(
+      b,
+      packs.find((p) => p.id === b.packId),
+    );
     const grossValue = amount * (b.numPeople || 1);
     const value = Math.max(0, grossValue - (b.discountAmount || 0));
     return currency === "MAD" ? { ...acc, mad: acc.mad + value } : { ...acc, eur: acc.eur + value };
@@ -4454,7 +4505,7 @@ export async function deletePayment(
  *  euros at EUR_TO_MAD when the pack is priced in euros. */
 export function bookingAmountDueMad(booking: Booking, pack?: Pack | null): number {
   if (booking.amountDueMad != null && booking.amountDueMad >= 0) return booking.amountDueMad;
-  const { amount, currency } = packPrice(pack ?? undefined);
+  const { amount, currency } = bookingUnitPrice(booking, pack);
   const count = booking.numPeople || 1;
   const total = Math.max(amount * count - (booking.discountAmount || 0), 0);
   return Math.round(currency === "MAD" ? total : total * EUR_TO_MAD);

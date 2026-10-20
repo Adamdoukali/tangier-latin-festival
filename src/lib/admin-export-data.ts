@@ -7,7 +7,7 @@ import {
   isTransferBooking,
   isTourismBooking,
   moneyIn,
-  packPrice,
+  bookingUnitPrice,
   packRoomCategory,
   partnerCurrency,
   perPersonRate,
@@ -496,7 +496,7 @@ export function buildCollaboratorDetailsSpreadsheet(
       category === "fullpass"
         ? `Full Pass / ${collaborator.name}`
         : `Chambre ${roomNumber} / ${collaborator.name}`;
-    const nativePack = packPrice(pack);
+    const nativePack = bookingUnitPrice(booking, pack);
     const discountPerGuest = (booking.discountAmount ?? 0) / Math.max(1, guests.length);
     const nativeNetPack = Math.max(0, nativePack.amount - discountPerGuest);
     const packTotal = convertedAmount(nativeNetPack, nativePack.currency, collaborator);

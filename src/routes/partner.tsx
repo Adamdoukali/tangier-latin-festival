@@ -55,7 +55,6 @@ import {
   emptyMoney,
   type Money,
   packLabel,
-  packPrice,
   ticketUrl,
   partnerShareLink,
   partnerTourismShareLink,
@@ -72,6 +71,7 @@ import {
 } from "@/lib/admin-store";
 import { savePartnerSession, clearPartnerSession, restorePartnerSession } from "@/lib/partner-auth";
 import { getPartnerImpersonation } from "@/lib/auth-store";
+import { bookingUnitPrice } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
 
@@ -975,7 +975,7 @@ function buildUnifiedReservations(
     );
     const label = translateDynamicText(pack ? packLabel(pack) : fb.packName, L);
 
-    let { amount: rawFestUnitPrice, currency: rawFestCurrency } = packPrice(pack);
+    let { amount: rawFestUnitPrice, currency: rawFestCurrency } = bookingUnitPrice(fb, pack);
     if (!pack && fb.packName) {
       const match = fb.packName.match(/(\d+(?:[.,]\d+)?)\s*(€|eur|mad|dh)\b/i);
       if (match) rawFestUnitPrice = Number(match[1].replace(",", "."));
@@ -1392,7 +1392,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
       (p) =>
         p.id === b.packId || p.name === b.packName || (b.packName && b.packName.includes(p.name)),
     );
-    let { amount, currency } = packPrice(pack);
+    let { amount, currency } = bookingUnitPrice(b, pack);
     // Only recover an explicitly written historical price when the pack no
     // longer exists. A real zero-priced pack must remain zero: its title may
     // contain unrelated numbers such as "3 nights".

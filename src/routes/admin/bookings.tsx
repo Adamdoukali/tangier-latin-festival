@@ -28,6 +28,7 @@ import {
   packDepartureDateLimits,
   constrainPackDepartureDate,
   packPrice,
+  bookingUnitPrice,
   ROOM_TYPES,
   ticketUrl,
   commissionLabel,
@@ -511,8 +512,10 @@ Tangier Latin Festival`;
                       {(() => {
                         const pack = packs.find((p) => p.id === b.packId);
                         const name = pack?.name ?? b.packName;
-                        const unitPrice = pack ? parseInt(pack.price, 10) || 0 : 0;
-                        const cur = pack?.currency || "€";
+                        // Price locked at booking time (falls back to the pack's current price)
+                        const locked = bookingUnitPrice(b, pack);
+                        const unitPrice = pack || b.unitPrice != null ? locked.amount : 0;
+                        const cur = locked.currency === "MAD" ? "MAD" : "€";
                         const count = b.numPeople || 1;
                         const gross = unitPrice * count;
                         const priceInfo = pack
