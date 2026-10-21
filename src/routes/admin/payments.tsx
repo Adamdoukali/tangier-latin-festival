@@ -181,6 +181,7 @@ function AdminPayments() {
     const active = rows.filter((r) => r.booking.status !== "declined");
     return {
       clients: active.length,
+      people: active.reduce((s, r) => s + (r.booking.numPeople || 1), 0),
       due: active.reduce((s, r) => s + r.due, 0),
       received: active.reduce((s, r) => s + r.received, 0),
       remaining: active.reduce((s, r) => s + r.remaining, 0),
@@ -459,11 +460,16 @@ function AdminPayments() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold flex items-center gap-1">
-            <Wallet className="h-3.5 w-3.5" /> Clients marocains
+            <Wallet className="h-3.5 w-3.5" /> Réservations marocaines
           </p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">{totals.clients}</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">
+            {totals.clients}
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              · {totals.people} personne{totals.people > 1 ? "s" : ""}
+            </span>
+          </p>
           <p className="text-[11px] text-gray-500 mt-1">
-            {totals.paid} payés · {totals.partial} partiels · {totals.unpaid} non payés
+            {totals.paid} payées · {totals.partial} partielles · {totals.unpaid} non payées
           </p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4">
