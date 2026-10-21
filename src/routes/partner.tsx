@@ -805,22 +805,27 @@ function SignUpScreen({
 // ─── Helpers ──────────────────────────────────────────────────────────
 
 function extractGuests(b: Booking): { guest1: string; guest2: string | null; allGuests: string[] } {
-  let names: string[] = [];
+  // Names typed on the booking ("Ikram Boughamza & Basma Ouaddou")
+  const fromName = (b.customerName || "")
+    .split(/\s*&\s*|\s*,\s*|\s*\+\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  // Per-guest overrides edited in the admin Clients page. They may cover only
+  // the first guest, so merge them with the booking name instead of replacing it.
+  let fromDetails: string[] = [];
   if (b.guestDetails) {
     try {
       const parsed = JSON.parse(b.guestDetails);
       if (Array.isArray(parsed)) {
-        names = parsed
-          .map((g: any) => `${g.firstName || ""} ${g.lastName || ""}`.trim())
-          .filter(Boolean);
+        fromDetails = parsed.map((g: any) => `${g?.firstName || ""} ${g?.lastName || ""}`.trim());
       }
     } catch {}
   }
-  if (names.length === 0 && b.customerName) {
-    names = b.customerName
-      .split(/\s*&\s*|\s*,\s*|\s*\+\s*/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+  const count = Math.max(fromName.length, fromDetails.length);
+  const names: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const n = fromDetails[i] || fromName[i];
+    if (n) names.push(n);
   }
   const guest1 = names[0] || b.customerName || "Guest";
   const guest2 = names[1] || null;
