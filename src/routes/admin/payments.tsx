@@ -25,6 +25,7 @@ import {
   getBookings,
   getPacks,
   getCollaborators,
+  getClients,
   getPayments,
   addPayment,
   deletePayment,
@@ -181,7 +182,13 @@ function AdminPayments() {
     const active = rows.filter((r) => r.booking.status !== "declined");
     return {
       clients: active.length,
-      people: active.reduce((s, r) => s + (r.booking.numPeople || 1), 0),
+      // Same rule as the Clients page: one entry per person, each with their
+      // own nationality, so both pages show the identical Moroccan count.
+      people: getClients(
+        active.map((r) => r.booking),
+        packs,
+        collaborators,
+      ).filter((c) => c.origin === "morocco").length,
       due: active.reduce((s, r) => s + r.due, 0),
       received: active.reduce((s, r) => s + r.received, 0),
       remaining: active.reduce((s, r) => s + r.remaining, 0),
@@ -189,7 +196,7 @@ function AdminPayments() {
       partial: active.filter((r) => r.status === "partial").length,
       paid: active.filter((r) => r.status === "paid").length,
     };
-  }, [rows]);
+  }, [rows, packs, collaborators]);
 
   const toggleExpanded = (id: string) => {
     setExpanded((prev) => {
