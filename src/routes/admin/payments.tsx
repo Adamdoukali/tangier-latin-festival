@@ -460,16 +460,22 @@ function AdminPayments() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold flex items-center gap-1">
-            <Wallet className="h-3.5 w-3.5" /> Réservations marocaines
+            <Wallet className="h-3.5 w-3.5" /> Clients marocains
           </p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">
-            {totals.clients}
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              · {totals.people} personne{totals.people > 1 ? "s" : ""}
+          <p className="text-2xl font-semibold text-gray-900 mt-1">{totals.people}</p>
+          <p className="text-[11px] text-gray-700 mt-1 font-medium">
+            {totals.clients} réservation{totals.clients > 1 ? "s" : ""}
+          </p>
+          <p className="text-[11px] text-gray-500">
+            <span className="text-emerald-700">{totals.paid} payée{totals.paid > 1 ? "s" : ""}</span>
+            {" · "}
+            <span className="text-amber-700">
+              {totals.partial} partielle{totals.partial > 1 ? "s" : ""}
             </span>
-          </p>
-          <p className="text-[11px] text-gray-500 mt-1">
-            {totals.paid} payées · {totals.partial} partielles · {totals.unpaid} non payées
+            {" · "}
+            <span className="text-red-700">
+              {totals.unpaid} non payée{totals.unpaid > 1 ? "s" : ""}
+            </span>
           </p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4">
