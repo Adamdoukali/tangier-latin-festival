@@ -60,6 +60,9 @@ interface PackFormData {
   active: boolean;
   numGuests: number;
   isPrivate: boolean;
+  /** Optional partner prices (empty = same as the public price) */
+  partnerPriceEur: string;
+  partnerPriceMad: string;
 }
 
 const emptyForm: PackFormData = {
@@ -73,6 +76,8 @@ const emptyForm: PackFormData = {
   active: true,
   numGuests: 2,
   isPrivate: false,
+  partnerPriceEur: "",
+  partnerPriceMad: "",
 };
 
 function AdminPacks() {
@@ -179,6 +184,8 @@ function AdminPacks() {
         pack.numGuests ??
         (/double|doble|couple/i.test(`${pack.name} ${pack.sub} ${pack.category}`) ? 2 : 1),
       isPrivate: !!pack.isPrivate,
+      partnerPriceEur: pack.partnerPriceEur != null ? String(pack.partnerPriceEur) : "",
+      partnerPriceMad: pack.partnerPriceMad != null ? String(pack.partnerPriceMad) : "",
     });
     setShowForm(true);
   };
@@ -194,10 +201,17 @@ function AdminPacks() {
           ? "Forfait spécial"
           : "Chambre individuelle";
 
+    // Partner prices: empty field = null = "use the public price"
+    const toPrice = (raw: string): number | null => {
+      const n = Number(raw.replace(/\s/g, "").replace(",", "."));
+      return raw.trim() === "" || !Number.isFinite(n) || n < 0 ? null : n;
+    };
     const clean = {
       ...form,
       category: form.category.trim() || defaultCat,
       features: cleanFeatures,
+      partnerPriceEur: toPrice(form.partnerPriceEur),
+      partnerPriceMad: toPrice(form.partnerPriceMad),
     };
     if (editingId) {
       await updatePack(editingId, clean);
@@ -708,6 +722,46 @@ function AdminPacks() {
                     <option value="$">USD ($)</option>
                     <option value="MAD">MAD</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Partner prices (locked on each booking at creation) */}
+              <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3">
+                <p className="text-xs tracking-widest uppercase text-violet-700 font-semibold mb-1">
+                  Prix partenaires
+                </p>
+                <p className="text-[11px] text-gray-500 mb-3">
+                  Appliqués aux réservations faites via le lien ou l’invitation d’un collaborateur.
+                  Laissez vide pour utiliser le prix public. Chaque réservation garde le prix du
+                  moment où elle a été faite.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                      Partenaires internationaux (€)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.partnerPriceEur}
+                      onChange={(e) => setForm({ ...form, partnerPriceEur: e.target.value })}
+                      placeholder="vide = prix public"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs tracking-widest uppercase text-gray-500 mb-1.5">
+                      Partenaires marocains (MAD)
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.partnerPriceMad}
+                      onChange={(e) => setForm({ ...form, partnerPriceMad: e.target.value })}
+                      placeholder="vide = prix public × 10"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
                 </div>
               </div>
 

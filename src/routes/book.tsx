@@ -36,6 +36,7 @@ import {
   ticketUrl,
   EUR_TO_MAD,
   partnerCurrency,
+  packPriceFor,
   type Pack,
   type Booking,
   type Collaborator,
@@ -76,6 +77,21 @@ function BookPage() {
   const isMadReferral = referralPartner ? partnerCurrency(referralPartner) === "MAD" : false;
   const displayRate = isMadReferral ? EUR_TO_MAD : 1;
   const displayCurrency = isMadReferral ? "MAD" : "€";
+
+  // Per-person price for THIS visitor: a partner's price tier when they came
+  // through a partner link, the public price otherwise. Locked on the booking.
+  const unitFor = (p: Pack) => packPriceFor(p, referralPartner);
+  // …in euros, for discount maths (a dirham partner price is converted back)
+  const eurUnit = (p: Pack) => {
+    const u = unitFor(p);
+    return u.currency === "MAD" ? u.amount / EUR_TO_MAD : u.amount;
+  };
+  // …in the currency shown on this page
+  const displayUnit = (p: Pack) => {
+    const u = unitFor(p);
+    if (!isMadReferral) return u.amount;
+    return u.currency === "MAD" ? u.amount : u.amount * EUR_TO_MAD;
+  };
 
   // Legacy transfer controls remain non-rendered while existing pack records
   // continue to load safely. New transfers use the standalone /book-transfer form.
@@ -156,7 +172,7 @@ function BookPage() {
         setDiscountAmount(0);
       } else {
         const count = getGuestCount(selected);
-        const singleP = parseInt(selected.price, 10) || 0;
+        const singleP = eurUnit(selected);
         const totalP = singleP * count;
         const cur = selected.currency || "€";
         const amt = calculateDiscountAmount(
@@ -202,7 +218,7 @@ function BookPage() {
     setValidatingCode(true);
     setDiscountMsg(null);
     const count = selected ? getGuestCount(selected) : 1;
-    const singleP = selected ? parseInt(selected.price, 10) || 0 : 0;
+    const singleP = selected ? eurUnit(selected) : 0;
     const totalP = singleP * count;
     const cur = selected?.currency || "€";
     const result = await validateDiscountCode(
@@ -287,7 +303,7 @@ function BookPage() {
       if (!isDiscountApplicableToPack(appliedDiscount, p.id)) {
         setDiscountAmount(0);
       } else {
-        const singleP = parseInt(p.price, 10) || 0;
+        const singleP = eurUnit(p);
         const totalP = singleP * count;
         const cur = p.currency || "€";
         setDiscountAmount(
@@ -492,8 +508,7 @@ function BookPage() {
   // ── Step 2: registration form ──
   if (selected) {
     const guestCount = getGuestCount(selected);
-    const baseSinglePrice = parseInt(selected.price, 10) || 0;
-    const singlePrice = baseSinglePrice * displayRate;
+    const singlePrice = displayUnit(selected);
     const totalBasePrice = singlePrice * guestCount;
     const currency = displayCurrency;
     const transferPassengersCount = guestCount > 1 ? selectedTransferGuests.length : 1;
@@ -1334,7 +1349,7 @@ function BookPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {packs.map((p) => {
             const unit = priceUnitLabel(p, L);
-            const baseP = parseInt(p.price, 10) || 0;
+            const baseP = eurUnit(p);
             const isApplicable = isDiscountApplicableToPack(appliedDiscount, p.id);
             const discAmt =
               isApplicable && appliedDiscount
@@ -1347,7 +1362,7 @@ function BookPage() {
                     p.id,
                   )
                 : 0;
-            const displayBaseP = baseP * displayRate;
+            const displayBaseP = displayUnit(p);
             const displayDiscAmt = discAmt * displayRate;
             const finalP = Math.max(0, displayBaseP - displayDiscAmt);
             const hasDiscount = isApplicable && discAmt > 0;

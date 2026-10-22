@@ -21,6 +21,7 @@ import {
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
+  packPriceFor,
   validateDiscountCode,
   calculateDiscountAmount,
   isDiscountApplicableToPack,
@@ -112,6 +113,8 @@ export function PackBookingModal({
     price: string;
     currency?: string;
     numGuests?: number;
+    partnerPriceEur?: number | null;
+    partnerPriceMad?: number | null;
   };
   onClose: () => void;
   initialDiscountCode?: string;
@@ -125,9 +128,25 @@ export function PackBookingModal({
 
   const numGuests =
     pack.numGuests ?? (/double|doble|couple/i.test(`${pack.name} ${pack.sub}`) ? 2 : 1);
-  const singlePrice = parseInt(pack.price, 10) || 0;
+
+  // Visitors who arrived through a partner link get that partner's price tier
+  // (the same price gets locked on the booking at creation).
+  const [referralPartner, setReferralPartner] = useState<Awaited<
+    ReturnType<typeof getCollaboratorByCode>
+  > | null>(null);
+  useEffect(() => {
+    const refCode = getRememberedReferral();
+    if (!refCode) return;
+    getCollaboratorByCode(refCode)
+      .then((c) => setReferralPartner(c ?? null))
+      .catch(() => {});
+  }, []);
+  const unit = packPriceFor(pack, referralPartner);
+  const singlePrice = unit.amount;
   const totalBasePrice = singlePrice * numGuests;
-  const currency = pack.currency || "€";
+  const currency = unit.currency === "MAD" ? "MAD" : pack.currency || "€";
+  // Transfers are priced in euros; show them in dirhams next to a dirham price
+  const priceRate = unit.currency === "MAD" && !/mad|dh/i.test(pack.currency || "") ? EUR_TO_MAD : 1;
   const [arrivalDate, setArrivalDate] = useState("2027-01-07");
   const [departureDate, setDepartureDate] = useState(() =>
     constrainPackDepartureDate("2027-01-07", "2027-01-11", pack),
@@ -154,6 +173,7 @@ export function PackBookingModal({
   const transferCost = needsTransfer
     ? calculateTransferCost(transferType, transferOption, transferPassengersCount, transferLocation)
     : 0;
+  const transferCostDisplay = transferCost * priceRate;
 
   const isInitialApplicable = isDiscountApplicableToPack(initialDiscount, pack.id);
 
@@ -282,7 +302,7 @@ export function PackBookingModal({
     currency,
   ]);
 
-  const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCost;
+  const finalTotalPrice = Math.max(0, totalBasePrice - discountAmount) + transferCostDisplay;
 
   const handleApplyDiscount = async () => {
     if (!discountInput.trim()) return;
@@ -498,7 +518,7 @@ export function PackBookingModal({
                         : `Shuttle Transfer (${transferType === "port" ? "Port" : "Airport"} · ${formatTransferOptionLabel(transferOption, lang)}):`}
                   </span>
                   <span>
-                    +{transferCost} {currency}
+                    +{transferCostDisplay} {currency}
                   </span>
                 </div>
               )}
@@ -1376,7 +1396,7 @@ export function PackBookingModal({
                       </span>
                     </span>
                     <span className="text-sm font-extrabold text-blue-700">
-                      +{transferCost} {currency}
+                      +{transferCostDisplay} {currency}
                     </span>
                   </div>
                 </div>

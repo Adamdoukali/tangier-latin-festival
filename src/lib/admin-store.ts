@@ -26,6 +26,10 @@ export interface Pack {
   isPrivate?: boolean;
   /** Display position on the website (lower = earlier); null = unordered */
   sortOrder?: number | null;
+  /** Per-person price for bookings through a euro partner's link/invite (EUR). Null = public price. */
+  partnerPriceEur?: number | null;
+  /** Per-person price for bookings through a Moroccan (dirham) partner's link/invite (MAD). Null = public price. */
+  partnerPriceMad?: number | null;
   createdAt: string;
 }
 
@@ -542,6 +546,8 @@ const packFromRow = (r: any): Pack => ({
         : (r.num_guests ?? 1),
   isPrivate: !!r.is_private,
   sortOrder: r.sort_order ?? null,
+  partnerPriceEur: r.partner_price_eur != null ? Number(r.partner_price_eur) : null,
+  partnerPriceMad: r.partner_price_mad != null ? Number(r.partner_price_mad) : null,
   createdAt: r.created_at,
 });
 
@@ -567,8 +573,13 @@ const packToRow = (p: Partial<Omit<Pack, "id" | "createdAt">>) => {
   if (p.numGuests !== undefined) row.num_guests = p.numGuests;
   if (p.isPrivate !== undefined) row.is_private = p.isPrivate;
   if (p.sortOrder !== undefined) row.sort_order = p.sortOrder;
+  if (p.partnerPriceEur !== undefined) row.partner_price_eur = p.partnerPriceEur;
+  if (p.partnerPriceMad !== undefined) row.partner_price_mad = p.partnerPriceMad;
   return row;
 };
+
+/** Columns added by supabase/pack-partner-prices.sql; tolerated when missing. */
+const PACK_OPTIONAL_COLS = ["partner_price_eur", "partner_price_mad"];
 
 export function getTourIdFromName(packName?: string | null): string | null {
   if (!packName) return null;
@@ -976,7 +987,7 @@ export async function getPackById(id: string): Promise<Pack | undefined> {
 export async function addPack(pack: Omit<Pack, "id" | "createdAt">): Promise<Pack> {
   if (useDb()) {
     try {
-      const data = await insertRow("packs", packToRow(pack));
+      const data = await insertRow("packs", packToRow(pack), PACK_OPTIONAL_COLS);
       const created = packFromRow(data);
       await recordAdminAction({
         action: "create",
@@ -1013,12 +1024,23 @@ export async function updatePack(
   const before = await getPackById(id);
   if (useDb()) {
     try {
-      const { data, error } = await supabase!
+      const row = packToRow(updates);
+      let { data, error } = await supabase!
         .from("packs")
-        .update(packToRow(updates))
+        .update(row)
         .eq("id", id)
         .select()
         .single();
+      // Tolerate a database that has not run supabase/pack-partner-prices.sql yet.
+      if (error && PACK_OPTIONAL_COLS.some((c) => error!.message?.includes(c))) {
+        for (const c of PACK_OPTIONAL_COLS) delete row[c];
+        ({ data, error } = await supabase!
+          .from("packs")
+          .update(row)
+          .eq("id", id)
+          .select()
+          .single());
+      }
       if (error) throw error;
       const updated = packFromRow(data);
       await recordAdminAction({
@@ -1286,7 +1308,11 @@ export async function addBooking(
     try {
       const pack = (await getPacks()).find((p) => p.id === booking.packId);
       if (pack) {
-        const pp = packPrice(pack);
+        // Through a partner link/invite the partner's price tier applies
+        const partner = resolvedCollabId
+          ? ((await getCollaborators()).find((c) => c.id === resolvedCollabId) ?? null)
+          : null;
+        const pp = packPriceFor(pack, partner);
         unitPrice = pp.amount;
         priceCurrency = pp.currency;
       }
@@ -3432,6 +3458,35 @@ export function packPrice(pack: Pack | undefined): {
     amount,
     currency: /mad|dh/i.test(pack.currency ?? "") ? "MAD" : "EUR",
   };
+}
+
+/** The per-person price a given seller charges for a pack:
+ *  - through a Moroccan (dirham) partner → the pack's MAD partner price, if set
+ *  - through a euro partner → the pack's EUR partner price, if set
+ *  - otherwise (public website, or no partner price set) → the public price.
+ *  The result is what gets locked on the booking at creation. */
+export function packPriceFor(
+  pack:
+    | {
+        price: string;
+        currency?: string;
+        partnerPriceEur?: number | null;
+        partnerPriceMad?: number | null;
+      }
+    | null
+    | undefined,
+  partner?: Collaborator | null,
+): { amount: number; currency: CommissionCurrency } {
+  const base = packPrice((pack ?? undefined) as Pack | undefined);
+  if (!pack || !partner) return base;
+  if (partnerCurrency(partner) === "MAD") {
+    if (pack.partnerPriceMad != null && pack.partnerPriceMad >= 0)
+      return { amount: pack.partnerPriceMad, currency: "MAD" };
+    return base;
+  }
+  if (pack.partnerPriceEur != null && pack.partnerPriceEur >= 0)
+    return { amount: pack.partnerPriceEur, currency: "EUR" };
+  return base;
 }
 
 /** The per-person price a booking was sold at: the price locked on the

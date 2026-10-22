@@ -21,6 +21,8 @@ import {
 import {
   getInviteByCode,
   getPackById,
+  getCollaboratorById,
+  packPriceFor,
   redeemInvite,
   packGuestCount,
   packDepartureDateLimits,
@@ -62,6 +64,10 @@ function RedeemPage() {
     notes: "",
   });
   const departureLimits = pack ? packDepartureDateLimits(form.arrival, pack) : null;
+  // The partner who issued this invite: their price tier applies to the guest
+  const [invitePartner, setInvitePartner] = useState<Awaited<
+    ReturnType<typeof getCollaboratorById>
+  > | null>(null);
 
   // Look up invite on load
   useEffect(() => {
@@ -89,6 +95,13 @@ function RedeemPage() {
       }
       setInvite(found);
       setPack(foundPack);
+      if (found.collaboratorId) {
+        getCollaboratorById(found.collaboratorId)
+          .then((c) => {
+            if (!cancelled) setInvitePartner(c ?? null);
+          })
+          .catch(() => {});
+      }
       const count = packGuestCount(foundPack);
       setForm((f) => ({
         ...f,
@@ -375,9 +388,11 @@ function RedeemPage() {
 
   // ── Registration Form ──
   const guestCount = form.guests.length;
-  const singlePrice = parseInt(pack.price, 10) || 0;
+  // Partner's price tier when the invite came from a partner (locked on the booking)
+  const unit = packPriceFor(pack, invitePartner);
+  const singlePrice = unit.amount;
   const totalBasePrice = singlePrice * guestCount;
-  const currency = pack.currency || "€";
+  const currency = unit.currency === "MAD" ? "MAD" : pack.currency || "€";
 
   return (
 
