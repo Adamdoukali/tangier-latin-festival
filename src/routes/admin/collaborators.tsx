@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   Bus,
   Eye,
+  Clock,
+  Ticket,
+  CreditCard,
 } from "lucide-react";
 import {
   getCollaboratorStats,
@@ -35,11 +38,14 @@ import {
   languageColumnReady,
   missionColumnsReady,
   formatMoney,
+  formatMoneyPair,
   formatForPartner,
   commissionLabel,
   collaboratorMissionProgress,
   partnerShareLink,
   partnerTransferShareLink,
+  isConfirmedBooking,
+  isTourismBooking,
   type Collaborator,
   type CollaboratorStats,
   type Booking,
@@ -48,6 +54,7 @@ import {
   type CommissionCurrency,
   type PartnerLanguage,
 } from "@/lib/admin-store";
+import { translateDynamicText } from "@/lib/translations";
 import {
   buildCollaboratorDetailsSpreadsheet,
   buildCollaboratorSummarySpreadsheet,
@@ -155,6 +162,15 @@ function AdminCollaborators() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [selectedCollabForDetails, setSelectedCollabForDetails] = useState<CollaboratorStats | null>(null);
+  const [detailsTab, setDetailsTab] = useState<"passes" | "all">("passes");
+  const [detailsStatusFilter, setDetailsStatusFilter] = useState<"all" | "confirmed" | "pending">("all");
+
+  const openDetailsModal = (collabStats: CollaboratorStats, tab: "passes" | "all" = "passes") => {
+    setSelectedCollabForDetails(collabStats);
+    setDetailsTab(tab);
+    setDetailsStatusFilter("all");
+  };
 
   const reload = useCallback(async () => {
     const [ok, commOk, langOk, missionOk, ratesOk, s, b, p] = await Promise.all([
@@ -363,6 +379,23 @@ function AdminCollaborators() {
     );
   };
 
+  // Summary totals for cards
+  const totalConfirmedTickets = stats.reduce((sum, s) => sum + s.ticketsSold, 0);
+  const totalPendingTickets = stats.reduce((sum, s) => sum + (s.pendingTicketsSold || 0), 0);
+  const totalConfirmedRevenue = stats.reduce(
+    (acc, s) => ({ eur: acc.eur + s.revenue.eur, mad: acc.mad + s.revenue.mad }),
+    { eur: 0, mad: 0 },
+  );
+  const totalPendingRevenue = stats.reduce(
+    (acc, s) => ({
+      eur: acc.eur + (s.pendingRevenue?.eur || 0),
+      mad: acc.mad + (s.pendingRevenue?.mad || 0),
+    }),
+    { eur: 0, mad: 0 },
+  );
+  const totalConfirmedPasses = stats.reduce((sum, s) => sum + s.fullPass, 0);
+  const totalPendingPasses = stats.reduce((sum, s) => sum + (s.pendingPassesCount || 0), 0);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -380,6 +413,63 @@ function AdminCollaborators() {
         >
           <Plus className="h-4 w-4" /> Ajouter un collaborateur
         </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center justify-between">
+            Partenaires
+            <Users className="h-4 w-4 text-violet-500" />
+          </p>
+          <p className="mt-2 text-2xl font-bold font-display text-gray-900">
+            {stats.filter((s) => s.collaborator.active).length}
+            <span className="text-xs font-normal text-gray-400 ml-1.5">/ {stats.length} total</span>
+          </p>
+          <p className="text-xs text-gray-500 mt-1">comptes collaborateurs</p>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center justify-between">
+            Billets vendus
+            <Ticket className="h-4 w-4 text-blue-500" />
+          </p>
+          <p className="mt-2 text-2xl font-bold font-display text-gray-900">
+            {totalConfirmedTickets}
+            {totalPendingTickets > 0 && (
+              <span className="text-xs font-semibold text-amber-600 ml-1.5">
+                (+{totalPendingTickets} en attente)
+              </span>
+            )}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            {totalConfirmedPasses} pass confirmés {totalPendingPasses > 0 ? `(+${totalPendingPasses} att.)` : ""}
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 flex items-center justify-between">
+            Ventes confirmées
+            <CreditCard className="h-4 w-4 text-emerald-600" />
+          </p>
+          <p className="mt-2 text-2xl font-bold font-display text-emerald-700">
+            {formatMoneyPair(totalConfirmedRevenue)}
+          </p>
+          <p className="text-xs text-emerald-600/80 mt-1">chiffre d’affaires payé</p>
+        </div>
+
+        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
+          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 flex items-center justify-between">
+            Paiements en attente
+            <Clock className="h-4 w-4 text-amber-600" />
+          </p>
+          <p className="mt-2 text-2xl font-bold font-display text-amber-800">
+            {formatMoneyPair(totalPendingRevenue)}
+          </p>
+          <p className="text-xs text-amber-700 mt-1">
+            {totalPendingTickets} billet(s) en attente de paiement
+          </p>
+        </div>
       </div>
 
       {/* Result of the last password-link e-mail */}
@@ -558,7 +648,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-left font-medium">Code / lien</th>
                   <th className="px-5 py-3 text-right font-medium">Chambres individuelles</th>
                   <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
-                  <th className="px-5 py-3 text-right font-medium">Pass complet</th>
+                  <th className="px-5 py-3 text-right font-medium">Pass complet / Forfaits</th>
                   <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
                   <th className="px-5 py-3 text-right font-medium">Ventes</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
@@ -621,21 +711,93 @@ function AdminCollaborators() {
                           </button>
                         </div>
                       </td>
-                      <td className="px-5 py-3 text-right text-gray-700">{s.singleRooms}</td>
-                      <td className="px-5 py-3 text-right text-gray-700">{s.doubleRooms}</td>
-                      <td className="px-5 py-3 text-right text-gray-700">{s.fullPass}</td>
-                      <td className="px-5 py-3 text-right text-gray-800 font-medium">
-                        {s.ticketsSold}
+                      <td className="px-5 py-3 text-right">
+                        <span className="text-gray-700">{s.singleRooms}</span>
+                        {s.pendingSingleRooms > 0 && (
+                          <span className="block text-[11px] text-amber-600 font-normal">
+                            +{s.pendingSingleRooms} en attente
+                          </span>
+                        )}
                       </td>
-                      <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
-                        {formatForPartner(s.revenue, c)}
+                      <td className="px-5 py-3 text-right">
+                        <span className="text-gray-700">{s.doubleRooms}</span>
+                        {s.pendingDoubleRooms > 0 && (
+                          <span className="block text-[11px] text-amber-600 font-normal">
+                            +{s.pendingDoubleRooms} en attente
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex flex-col items-end">
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <span className="text-gray-900 font-bold">{s.fullPass || s.allPassesCount}</span>
+                            {s.pendingPassesCount > 0 && (
+                              <span
+                                className="text-amber-600 font-semibold text-xs"
+                                title={`${s.pendingPassesCount} pass avec paiement en attente`}
+                              >
+                                (+{s.pendingPassesCount} att.)
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
+                              className="p-1 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                              title="Voir tous les pass en détail"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {/* Itemized Pass Breakdown */}
+                          {s.passesDetail && s.passesDetail.length > 0 && (
+                            <div className="mt-1 flex flex-col items-end gap-1">
+                              {s.passesDetail.map((p, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700"
+                                  title={`${p.packName} : ${p.confirmedCount} confirmé(s), ${p.pendingCount} en attente`}
+                                >
+                                  <span className="font-semibold text-slate-900">{p.packName}:</span>
+                                  <span>{p.confirmedCount}</span>
+                                  {p.pendingCount > 0 && (
+                                    <span className="text-amber-600 font-semibold">
+                                      (+{p.pendingCount})
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right font-medium text-gray-800">
+                        <span>{s.ticketsSold}</span>
+                        {s.pendingTicketsSold > 0 && (
+                          <span className="block text-[11px] text-amber-600 font-normal">
+                            +{s.pendingTicketsSold} en attente
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-3 text-right whitespace-nowrap">
-                        <span className="text-amber-600">{formatForPartner(s.commission, c)}</span>
+                        <span className="text-emerald-600 font-semibold">{formatForPartner(s.revenue, c)}</span>
+                        {(s.pendingRevenue?.eur > 0 || s.pendingRevenue?.mad > 0) && (
+                          <div className="text-[11px] text-amber-600 font-medium flex items-center justify-end gap-1 mt-0.5">
+                            <Clock className="h-3 w-3 shrink-0" />
+                            <span>+{formatForPartner(s.pendingRevenue, c)} en attente</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-right whitespace-nowrap">
+                        <span className="text-amber-600 font-semibold">{formatForPartner(s.commission, c)}</span>
                         <span className="ml-1.5 text-[10px] text-gray-500">
                           ({commissionLabel(c)}
                           {mission.complete ? " + mission reward" : ""})
                         </span>
+                        {(s.pendingCommission?.eur > 0 || s.pendingCommission?.mad > 0) && (
+                          <div className="text-[10px] text-amber-600/80 font-normal mt-0.5">
+                            +{formatForPartner(s.pendingCommission, c)} si payé
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-3 text-right whitespace-nowrap">
                         {mission.goal ? (
@@ -719,6 +881,13 @@ function AdminCollaborators() {
                               <Eye className="h-4 w-4" />
                             </button>
                           )}
+                          <button
+                            onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                            title="Voir tous les pass et détails des ventes"
+                          >
+                            <Ticket className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={() => openEdit(c)}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
@@ -1114,6 +1283,314 @@ function AdminCollaborators() {
               >
                 <Check className="h-4 w-4" />{" "}
                 {editingId ? "Enregistrer les modifications" : "Créer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Collaborator Passes & Bookings Details Modal */}
+      {selectedCollabForDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-5xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-[#13234d] text-white flex items-center justify-between">
+              <div>
+                <h3 className="font-display text-lg font-bold flex items-center gap-2">
+                  <Ticket className="h-5 w-5 text-amber-300" />
+                  Détail des ventes : {selectedCollabForDetails.collaborator.name}
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Code :{" "}
+                  <code className="font-mono text-amber-300">
+                    {selectedCollabForDetails.collaborator.code}
+                  </code>{" "}
+                  · E-mail :{" "}
+                  {selectedCollabForDetails.collaborator.email || "Non renseigné"} · Devise :{" "}
+                  {selectedCollabForDetails.collaborator.commissionCurrency || "EUR"}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedCollabForDetails(null)}
+                className="text-slate-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Partner Financial Overview */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-5 bg-slate-50 border-b border-gray-200">
+              <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-xs">
+                <span className="text-[11px] font-semibold text-gray-500 uppercase">
+                  Billets vendus
+                </span>
+                <p className="text-xl font-bold text-gray-900 mt-1">
+                  {selectedCollabForDetails.ticketsSold}
+                  {selectedCollabForDetails.pendingTicketsSold > 0 && (
+                    <span className="text-xs font-semibold text-amber-600 ml-1.5">
+                      (+{selectedCollabForDetails.pendingTicketsSold} att.)
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-emerald-200 shadow-xs">
+                <span className="text-[11px] font-semibold text-emerald-700 uppercase">
+                  Ventes confirmées
+                </span>
+                <p className="text-xl font-bold text-emerald-700 mt-1">
+                  {formatForPartner(
+                    selectedCollabForDetails.revenue,
+                    selectedCollabForDetails.collaborator,
+                  )}
+                </p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-amber-200 shadow-xs">
+                <span className="text-[11px] font-semibold text-amber-700 uppercase">
+                  Paiements en attente
+                </span>
+                <p className="text-xl font-bold text-amber-800 mt-1">
+                  {formatForPartner(
+                    selectedCollabForDetails.pendingRevenue,
+                    selectedCollabForDetails.collaborator,
+                  )}
+                </p>
+              </div>
+              <div className="bg-white p-3 rounded-xl border border-violet-200 shadow-xs">
+                <span className="text-[11px] font-semibold text-violet-700 uppercase">
+                  Commission totale
+                </span>
+                <p className="text-xl font-bold text-violet-700 mt-1">
+                  {formatForPartner(
+                    selectedCollabForDetails.commission,
+                    selectedCollabForDetails.collaborator,
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Pass Types Breakdown */}
+            {selectedCollabForDetails.passesDetail.length > 0 && (
+              <div className="px-6 py-3 bg-amber-50/70 border-b border-amber-100 flex items-center gap-2 flex-wrap text-xs">
+                <span className="font-semibold text-amber-900 flex items-center gap-1">
+                  <Ticket className="h-3.5 w-3.5 text-amber-600" /> Récapitulatif de tous les pass :
+                </span>
+                {selectedCollabForDetails.passesDetail.map((pd, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 bg-white border border-amber-200 px-2.5 py-1 rounded-lg text-amber-900 font-medium shadow-xs"
+                  >
+                    <span>{pd.packName}:</span>
+                    <span className="font-bold text-emerald-700">
+                      {pd.confirmedCount} confirmés
+                    </span>
+                    {pd.pendingCount > 0 && (
+                      <span className="text-amber-700 font-semibold">
+                        (+{pd.pendingCount} en attente)
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Tabs & Filter */}
+            <div className="px-6 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDetailsTab("passes")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    detailsTab === "passes"
+                      ? "bg-amber-500 text-zinc-950 font-bold"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Tous les Pass (
+                  {
+                    bookings.filter(
+                      (b) =>
+                        b.collaboratorId === selectedCollabForDetails.collaborator.id &&
+                        !isTransferBooking(b) &&
+                        !isTourismBooking(b) &&
+                        b.status !== "declined" &&
+                        ((b.packName || "").toLowerCase().includes("pass") ||
+                          packRoomCategory(
+                            packs.find((p) => p.id === b.packId) || b.packName,
+                            b.numPeople,
+                          ) === "fullpass"),
+                    ).length
+                  }
+                  )
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailsTab("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    detailsTab === "all"
+                      ? "bg-amber-500 text-zinc-950 font-bold"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  Toutes les réservations (
+                  {
+                    bookings.filter(
+                      (b) =>
+                        b.collaboratorId === selectedCollabForDetails.collaborator.id &&
+                        !isTransferBooking(b) &&
+                        b.status !== "declined",
+                    ).length
+                  }
+                  )
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="text-gray-500">Filtrer par statut :</span>
+                {(["all", "confirmed", "pending"] as const).map((filterVal) => (
+                  <button
+                    key={filterVal}
+                    type="button"
+                    onClick={() => setDetailsStatusFilter(filterVal)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
+                      detailsStatusFilter === filterVal
+                        ? filterVal === "pending"
+                          ? "bg-amber-600 text-white font-semibold"
+                          : filterVal === "confirmed"
+                            ? "bg-emerald-600 text-white font-semibold"
+                            : "bg-gray-800 text-white font-semibold"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {filterVal === "all"
+                      ? "Tous"
+                      : filterVal === "confirmed"
+                        ? "Confirmés"
+                        : "Paiements en attente"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Bookings List Table */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {(() => {
+                const partnerBookings = bookings
+                  .filter(
+                    (b) =>
+                      b.collaboratorId === selectedCollabForDetails.collaborator.id &&
+                      !isTransferBooking(b) &&
+                      b.status !== "declined",
+                  )
+                  .filter((b) => {
+                    if (detailsTab === "passes") {
+                      const p = packs.find((x) => x.id === b.packId);
+                      return (
+                        !isTourismBooking(b) &&
+                        ((b.packName || "").toLowerCase().includes("pass") ||
+                          packRoomCategory(p || b.packName, b.numPeople) === "fullpass" ||
+                          (p?.category || "").toLowerCase().includes("pass"))
+                      );
+                    }
+                    return true;
+                  })
+                  .filter((b) => {
+                    if (detailsStatusFilter === "confirmed") return isConfirmedBooking(b);
+                    if (detailsStatusFilter === "pending") return b.status === "pending";
+                    return true;
+                  })
+                  .sort(
+                    (a, b) =>
+                      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+                  );
+
+                if (partnerBookings.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-sm text-gray-400">
+                      Aucune réservation trouvée pour ce filtre.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                          <th className="px-4 py-2.5 text-left">Participant / Client</th>
+                          <th className="px-4 py-2.5 text-left">Forfait / Pass</th>
+                          <th className="px-4 py-2.5 text-left">Dates du séjour</th>
+                          <th className="px-4 py-2.5 text-left">Billet</th>
+                          <th className="px-4 py-2.5 text-center">Personnes</th>
+                          <th className="px-4 py-2.5 text-center">Statut paiement</th>
+                          <th className="px-4 py-2.5 text-right">Date création</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {partnerBookings.map((b) => {
+                          const isPend = b.status === "pending";
+                          return (
+                            <tr key={b.id} className="hover:bg-gray-50 transition">
+                              <td className="px-4 py-3">
+                                <p className="font-medium text-gray-900">{b.customerName}</p>
+                                <p className="text-xs text-gray-500">
+                                  {b.email || b.phone || "—"}
+                                </p>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className="font-semibold text-gray-800">
+                                  {translateDynamicText(b.packName, "fr")}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                                {b.arrivalDate && b.departureDate ? (
+                                  <span>
+                                    {new Date(b.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
+                                    {new Date(b.departureDate).toLocaleDateString("fr-FR")}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3">
+                                <code className="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                                  {b.ticketCode}
+                                </code>
+                              </td>
+                              <td className="px-4 py-3 text-center font-semibold text-gray-700">
+                                {b.numPeople || 1}
+                              </td>
+                              <td className="px-4 py-3 text-center whitespace-nowrap">
+                                {isPend ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                    <Clock className="h-3 w-3" /> Paiement en attente
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    <Check className="h-3 w-3" /> Confirmé
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-right text-xs text-gray-500 whitespace-nowrap">
+                                {new Date(b.createdAt).toLocaleDateString("fr-FR")}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedCollabForDetails(null)}
+                className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 text-sm font-semibold transition cursor-pointer"
+              >
+                Fermer
               </button>
             </div>
           </div>

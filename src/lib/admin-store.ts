@@ -2785,6 +2785,16 @@ export async function deleteCollaborator(id: string): Promise<boolean> {
   return true;
 }
 
+export interface PassDetailItem {
+  packName: string;
+  packId?: string;
+  confirmedCount: number;
+  pendingCount: number;
+  totalCount: number;
+  revenueEur: number;
+  revenueMad: number;
+}
+
 export interface CollaboratorStats {
   collaborator: Collaborator;
   invitesIssued: number;
@@ -2795,10 +2805,22 @@ export interface CollaboratorStats {
   singleRooms: number;
   doubleRooms: number;
   fullPass: number;
+  /** Detailed breakdown of all passes sold (confirmed & pending) */
+  passesDetail: PassDetailItem[];
+  allPassesCount: number;
+  pendingPassesCount: number;
+  /** Pending booking counts and values */
+  pendingBookings: number;
+  pendingTicketsSold: number;
+  pendingSingleRooms: number;
+  pendingDoubleRooms: number;
+  pendingFullPass: number;
   /** Sales in the currency each pack is priced in — never converted */
   revenue: Money;
+  pendingRevenue: Money;
   /** Commission earned (% of sales, or fixed amount × people) */
   commission: Money;
+  pendingCommission: Money;
 }
 
 export type GuestOrigin = "morocco" | "international" | "unknown";
@@ -2970,8 +2992,8 @@ export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategor
   const isArtist = isArtistInviteOrBooking(booking, packs);
 
   let def: BraceletCategory = "none";
-  if (isInvite) {
-    def = isArtist ? "artist" : "none";
+  if (isArtist) {
+    def = "artist";
   } else {
     def =
       packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
@@ -3183,6 +3205,8 @@ export interface ClientGuest {
   createdAt: string;
   checkedIn?: boolean;
   checkedInAt?: string;
+  arrivalDate?: string | null;
+  departureDate?: string | null;
 }
 
 /** True when the guest_details column exists (supabase/guest-details.sql). */
@@ -3322,6 +3346,8 @@ export function getClients(
         createdAt: b.createdAt,
         checkedIn,
         checkedInAt,
+        arrivalDate: b.arrivalDate,
+        departureDate: b.departureDate,
       });
     }
   }
@@ -3685,6 +3711,8 @@ export function collaboratorMissionProgress(
 export interface CollaboratorCommissionOptions {
   /** Disable only for per-reservation display rows; the reward belongs to the overall account. */
   includeMissionReward?: boolean;
+  /** Filter by booking confirmation status: "confirmed" (default), "pending", or "all" */
+  statusFilter?: "confirmed" | "pending" | "all";
 }
 
 export function getTourismPrice(tourIdOrName: string | null | undefined): number {
@@ -3847,11 +3875,16 @@ export function collaboratorCommission(
   discountCodes: DiscountCode[] = [],
   options: CollaboratorCommissionOptions = {},
 ): Money {
+  const statusFilter = options.statusFilter ?? "confirmed";
   const mine = bookings
     .filter(
       (b) =>
         b.collaboratorId === c.id &&
-        isConfirmedBooking(b) &&
+        (statusFilter === "all"
+          ? b.status !== "declined"
+          : statusFilter === "pending"
+            ? b.status === "pending"
+            : isConfirmedBooking(b)) &&
         b.source !== "invite" &&
         !isTransferBooking(b),
     )
@@ -3992,6 +4025,25 @@ function salesOf(bookings: Booking[], packs: Pack[]): Money {
   }, emptyMoney());
 }
 
+/** Sum pending bookings by the currency their pack is priced in. */
+export function pendingSalesOf(bookings: Booking[], packs: Pack[]): Money {
+  return bookings.reduce((acc, b) => {
+    if (b.status !== "pending") return acc;
+    if (isTourismBooking(b)) {
+      const unitPrice = getTourismPrice(b.packId || b.packName);
+      const value = unitPrice * (b.numPeople || 1);
+      return { ...acc, eur: acc.eur + value };
+    }
+    const { amount, currency } = bookingUnitPrice(
+      b,
+      packs.find((p) => p.id === b.packId),
+    );
+    const grossValue = amount * (b.numPeople || 1);
+    const value = Math.max(0, grossValue - (b.discountAmount || 0));
+    return currency === "MAD" ? { ...acc, mad: acc.mad + value } : { ...acc, eur: acc.eur + value };
+  }, emptyMoney());
+}
+
 /** Sales attributed to one collaborator, split by currency (never
  *  converted): confirmed, non-invite bookings × pack price. */
 export function collaboratorRevenue(
@@ -4021,29 +4073,121 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
   ]);
   return collaborators.map((c) => {
     const myInvites = invites.filter((i) => i.collaboratorId === c.id);
-    const myBookings = bookings.filter(
+    const myConfirmedBookings = bookings.filter(
       (b) => b.collaboratorId === c.id && isConfirmedBooking(b) && !isTransferBooking(b),
     );
+    const myPendingBookings = bookings.filter(
+      (b) => b.collaboratorId === c.id && b.status === "pending" && !isTransferBooking(b),
+    );
+    const myNonDeclined = bookings.filter(
+      (b) => b.collaboratorId === c.id && b.status !== "declined" && !isTransferBooking(b),
+    );
+
     const revenue = salesOf(
-      myBookings.filter((b) => b.source !== "invite"),
+      myConfirmedBookings.filter((b) => b.source !== "invite"),
       packs,
     );
+    const pendingRevenue = pendingSalesOf(
+      myPendingBookings.filter((b) => b.source !== "invite"),
+      packs,
+    );
+
     const earned = collaboratorCommission(c, bookings, packs, discountCodes);
+    const pendingEarned = collaboratorCommission(c, bookings, packs, discountCodes, {
+      statusFilter: "pending",
+      includeMissionReward: false,
+    });
+
     const catOf = (b: Booking) => {
       const p = packs.find((x) => x.id === b.packId);
-      return packRoomCategory(p?.name ?? b.packName);
+      return packRoomCategory(p || b.packName, b.numPeople);
     };
+
+    // Detailed passes breakdown
+    const passDetailsMap = new Map<
+      string,
+      {
+        packName: string;
+        packId?: string;
+        confirmedCount: number;
+        pendingCount: number;
+        totalCount: number;
+        revenueEur: number;
+        revenueMad: number;
+      }
+    >();
+
+    for (const b of myNonDeclined) {
+      const isPass =
+        !isTourismBooking(b) &&
+        (catOf(b) === "fullpass" ||
+          (b.packName || "").toLowerCase().includes("pass") ||
+          (packs.find((p) => p.id === b.packId)?.category || "").toLowerCase().includes("pass"));
+
+      if (isPass) {
+        const p = packs.find((x) => x.id === b.packId);
+        const rawName = p?.name || (b.packName ? b.packName.split("—")[0].split("-")[0].trim() : "") || "Pass";
+        const count = b.numPeople || 1;
+        const isConf = isConfirmedBooking(b);
+        const isPend = b.status === "pending";
+
+        const entry = passDetailsMap.get(rawName) || {
+          packName: rawName,
+          packId: p?.id,
+          confirmedCount: 0,
+          pendingCount: 0,
+          totalCount: 0,
+          revenueEur: 0,
+          revenueMad: 0,
+        };
+
+        if (isConf) {
+          entry.confirmedCount += count;
+        } else if (isPend) {
+          entry.pendingCount += count;
+        }
+        entry.totalCount += count;
+
+        const { amount, currency } = bookingUnitPrice(b, p);
+        const grossValue = amount * count;
+        const val = Math.max(0, grossValue - (b.discountAmount || 0));
+        if (currency === "MAD") {
+          entry.revenueMad += val;
+        } else {
+          entry.revenueEur += val;
+        }
+
+        passDetailsMap.set(rawName, entry);
+      }
+    }
+
+    const passesDetail = Array.from(passDetailsMap.values()).sort(
+      (a, b) => b.totalCount - a.totalCount,
+    );
+    const allPassesCount = passesDetail.reduce((s, p) => s + p.totalCount, 0);
+    const pendingPassesCount = passesDetail.reduce((s, p) => s + p.pendingCount, 0);
+
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
       invitesRedeemed: myInvites.filter((i) => i.used).length,
-      bookings: myBookings.length,
-      ticketsSold: myBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
-      singleRooms: myBookings.filter((b) => catOf(b) === "single").length,
-      doubleRooms: myBookings.filter((b) => catOf(b) === "double").length,
-      fullPass: myBookings.filter((b) => catOf(b) === "fullpass").length,
+      bookings: myConfirmedBookings.length,
+      ticketsSold: myConfirmedBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
+      singleRooms: myConfirmedBookings.filter((b) => catOf(b) === "single").length,
+      doubleRooms: myConfirmedBookings.filter((b) => catOf(b) === "double").length,
+      fullPass: myConfirmedBookings.filter((b) => catOf(b) === "fullpass").length,
+      passesDetail,
+      allPassesCount,
+      pendingPassesCount,
+      pendingBookings: myPendingBookings.length,
+      pendingTicketsSold: myPendingBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
+      pendingSingleRooms: myPendingBookings.filter((b) => catOf(b) === "single").length,
+      pendingDoubleRooms: myPendingBookings.filter((b) => catOf(b) === "double").length,
+      pendingFullPass: myPendingBookings.filter((b) => catOf(b) === "fullpass").length,
       revenue,
+      pendingRevenue,
       commission: earned,
+      pendingCommission: pendingEarned,
     };
   });
 }

@@ -13,6 +13,7 @@ import {
   Phone,
   Check,
   MessageCircle,
+  Calendar,
 } from "lucide-react";
 import {
   getBookings,
@@ -59,6 +60,8 @@ function AdminClients() {
     notes: string;
     /** "website" | "manual" | "collab:<collaboratorId>" — who gets the referral */
     referral: string;
+    arrivalDate: string;
+    departureDate: string;
   }>({
     firstName: "",
     lastName: "",
@@ -68,6 +71,8 @@ function AdminClients() {
     country: "Maroc",
     notes: "",
     referral: "website",
+    arrivalDate: "",
+    departureDate: "",
   });
 
   // Referral of a booking as a select value (admin can hand it to another partner)
@@ -122,6 +127,7 @@ function AdminClients() {
   });
 
   const openEditModal = (client: ClientGuest) => {
+    const targetBooking = bookings.find((b) => b.id === client.bookingId);
     setEditingClient(client);
     setEditForm({
       firstName: client.firstName,
@@ -131,7 +137,9 @@ function AdminClients() {
       origin: client.origin,
       country: client.country,
       notes: client.notes ?? "",
-      referral: referralValueOf(bookings.find((b) => b.id === client.bookingId)),
+      referral: referralValueOf(targetBooking),
+      arrivalDate: targetBooking?.arrivalDate ?? client.arrivalDate ?? "",
+      departureDate: targetBooking?.departureDate ?? client.departureDate ?? "",
     });
   };
 
@@ -163,6 +171,8 @@ function AdminClients() {
       email: primary.email ?? targetBooking.email,
       phone: primary.phone ?? targetBooking.phone,
       country: primary.country ?? targetBooking.country,
+      arrivalDate: editForm.arrivalDate || null,
+      departureDate: editForm.departureDate || null,
     });
     if (!saved) throw new Error("Les modifications du client n’ont pas été enregistrées.");
   };
@@ -594,9 +604,18 @@ function AdminClients() {
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-700">
                       <div>{translateDynamicText(client.packName, "fr")}</div>
-                      <code className="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.5 rounded font-mono">
-                        {client.ticketCode}
-                      </code>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                        <code className="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.5 rounded font-mono">
+                          {client.ticketCode}
+                        </code>
+                        {client.arrivalDate && client.departureDate && (
+                          <span className="text-[10px] text-gray-500 font-medium inline-flex items-center gap-1 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">
+                            <Calendar className="h-2.5 w-2.5 text-amber-600" />
+                            {new Date(client.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
+                            {new Date(client.departureDate).toLocaleDateString("fr-FR")}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-600">{client.collaboratorName}</td>
                     <td className="px-4 py-3 text-center">
@@ -745,6 +764,55 @@ function AdminClients() {
                     />
                   </div>
                 )}
+              </div>
+
+              <div className="col-span-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4 text-amber-600" /> Dates de la réservation (Hôtel & Réservation)
+                  </label>
+                  {editForm.arrivalDate && editForm.departureDate && (
+                    <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                      {Math.max(
+                        0,
+                        Math.round(
+                          (new Date(editForm.departureDate).getTime() -
+                            new Date(editForm.arrivalDate).getTime()) /
+                            (1000 * 60 * 60 * 24),
+                        ),
+                      )}{" "}
+                      nuit(s)
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Date d’arrivée (Check-in)
+                    </label>
+                    <input
+                      type="date"
+                      value={editForm.arrivalDate}
+                      onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Date de départ (Check-out)
+                    </label>
+                    <input
+                      type="date"
+                      value={editForm.departureDate}
+                      min={editForm.arrivalDate || undefined}
+                      onChange={(e) => setEditForm({ ...editForm, departureDate: e.target.value })}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  La modification des dates est synchronisée pour toute la réservation et s’applique immédiatement à l’hôtel et aux réservations.
+                </p>
               </div>
 
               <div className="col-span-2">

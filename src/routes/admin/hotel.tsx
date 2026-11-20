@@ -12,6 +12,9 @@ import {
   X,
   KeyRound,
   Hotel,
+  Calendar,
+  Pencil,
+  Check,
 } from "lucide-react";
 import {
   getBookings,
@@ -21,6 +24,7 @@ import {
   packRoomCategory,
   bookingPeopleCount,
   perPersonRate,
+  updateBooking,
   updateBookingStatus,
   updateBookingRoomNumber,
   updateBookingRoomType,
@@ -120,6 +124,40 @@ function AdminHotel() {
       setResetKey((k) => k + 1);
     }
     await reload();
+  };
+
+  // Date editing state
+  const [editingDatesBooking, setEditingDatesBooking] = useState<Booking | null>(null);
+  const [datesForm, setDatesForm] = useState<{ arrival: string; departure: string }>({
+    arrival: "",
+    departure: "",
+  });
+  const [savingDates, setSavingDates] = useState(false);
+
+  const openEditDates = (b: Booking) => {
+    setEditingDatesBooking(b);
+    setDatesForm({
+      arrival: b.arrivalDate ?? "",
+      departure: b.departureDate ?? "",
+    });
+  };
+
+  const saveDates = async () => {
+    if (!editingDatesBooking) return;
+    setSavingDates(true);
+    setError("");
+    try {
+      await updateBooking(editingDatesBooking.id, {
+        arrivalDate: datesForm.arrival || null,
+        departureDate: datesForm.departure || null,
+      });
+      setEditingDatesBooking(null);
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSavingDates(false);
+    }
   };
 
   // Rooms only (single + double), confirmed/checked-in by default
@@ -410,7 +448,18 @@ function AdminHotel() {
                 </td>
                 <td className="px-4 py-2.5 text-gray-600">{nightsOf(r)}</td>
                 <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                  {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
+                  <button
+                    type="button"
+                    onClick={() => openEditDates(r.booking)}
+                    className="inline-flex items-center gap-1.5 hover:text-amber-700 hover:bg-amber-50 px-2 py-1 rounded-md border border-transparent hover:border-amber-200 transition cursor-pointer text-left group"
+                    title="Cliquer pour modifier les dates d’arrivée et de départ"
+                  >
+                    <Calendar className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <span>
+                      {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
+                    </span>
+                    <Pencil className="h-3 w-3 text-gray-400 group-hover:text-amber-600 transition" />
+                  </button>
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
                   {r.booking.status === "pending" ? (
@@ -737,6 +786,96 @@ function AdminHotel() {
             </div>
           );
         })
+      )}
+
+      {/* Quick Edit Dates Modal */}
+      {editingDatesBooking && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="font-display text-base font-bold text-gray-900 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-amber-600" /> Modifier les dates du séjour
+              </h3>
+              <button
+                onClick={() => setEditingDatesBooking(null)}
+                className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="text-xs text-gray-600 bg-slate-50 p-2.5 rounded-lg space-y-1">
+              <p className="font-semibold text-gray-900">{editingDatesBooking.customerName}</p>
+              <p className="text-gray-500 font-mono">
+                Billet : {editingDatesBooking.ticketCode} · {editingDatesBooking.packName}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Date d’arrivée (Check-in)
+                </label>
+                <input
+                  type="date"
+                  value={datesForm.arrival}
+                  onChange={(e) => setDatesForm({ ...datesForm, arrival: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Date de départ (Check-out)
+                </label>
+                <input
+                  type="date"
+                  value={datesForm.departure}
+                  min={datesForm.arrival || undefined}
+                  onChange={(e) => setDatesForm({ ...datesForm, departure: e.target.value })}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+              {datesForm.arrival && datesForm.departure && (
+                <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-lg font-medium flex items-center justify-between">
+                  <span>Durée calculée :</span>
+                  <span className="font-bold">
+                    {Math.max(
+                      0,
+                      Math.round(
+                        (new Date(datesForm.departure).getTime() -
+                          new Date(datesForm.arrival).getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      ),
+                    )}{" "}
+                    nuit(s)
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-gray-500">
+              La mise à jour s’applique immédiatement à la réservation et à l’hôtel.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-3">
+              <button
+                type="button"
+                onClick={() => setEditingDatesBooking(null)}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={saveDates}
+                disabled={savingDates}
+                className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+              >
+                <Check className="h-4 w-4" /> Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
