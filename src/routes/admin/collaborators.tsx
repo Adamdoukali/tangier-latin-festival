@@ -46,6 +46,8 @@ import {
   partnerTransferShareLink,
   isConfirmedBooking,
   isTourismBooking,
+  isTransferBooking,
+  packRoomCategory,
   type Collaborator,
   type CollaboratorStats,
   type Booking,
