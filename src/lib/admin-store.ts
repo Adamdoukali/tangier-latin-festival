@@ -512,8 +512,8 @@ function warn(op: string, error: unknown) {
     setDbBlocked();
     console.warn(
       `[admin-store] Database writes are blocked by row-level security — ` +
-        `run supabase/schema.sql in the Supabase SQL Editor to fix. ` +
-        `Falling back to localStorage for this session.`,
+      `run supabase/schema.sql in the Supabase SQL Editor to fix. ` +
+      `Falling back to localStorage for this session.`,
     );
   }
   console.warn(`[admin-store] ${op} failed, using local fallback:`, error);
@@ -1276,7 +1276,7 @@ export async function addBooking(
   const email = normalizeBookingEmail(booking.email);
   if (!autoConfirmService) await assertFestivalBookingEmailAvailable(email);
   if (booking.discountCode) {
-    incrementDiscountUsage(booking.discountCode).catch(() => {});
+    incrementDiscountUsage(booking.discountCode).catch(() => { });
   }
 
   // Resolve collaboratorId to valid UUID if a partner code or ID was passed
@@ -1528,6 +1528,13 @@ export async function updateBooking(
       if (updates.amountDueMad !== undefined) rowUpdates.amount_due_mad = updates.amountDueMad;
       if (updates.unitPrice !== undefined) rowUpdates.unit_price = updates.unitPrice;
       if (updates.priceCurrency !== undefined) rowUpdates.price_currency = updates.priceCurrency;
+      if (updates.discountCode !== undefined)
+        rowUpdates.discount_code = updates.discountCode ? updates.discountCode.trim() : null;
+      if (updates.discountAmount !== undefined)
+        rowUpdates.discount_amount = updates.discountAmount != null ? Number(updates.discountAmount) : 0;
+      if (updates.discountCodeId !== undefined)
+        rowUpdates.discount_code_id =
+          updates.discountCodeId && isValidUuid(updates.discountCodeId) ? updates.discountCodeId : null;
       if (updates.notes !== undefined) rowUpdates.notes = updates.notes;
       if (updates.status !== undefined) rowUpdates.status = updates.status;
       if (updates.arrivalDate !== undefined) rowUpdates.arrival_date = updates.arrivalDate;
@@ -1603,7 +1610,7 @@ export async function updateBookingStatus(
       if (/check constraint|bookings_status/i.test(error.message ?? "")) {
         throw new Error(
           `The database still rejects the "${status}" status. ` +
-            `Run supabase/booking-status.sql in the Supabase SQL Editor to fix it.`,
+          `Run supabase/booking-status.sql in the Supabase SQL Editor to fix it.`,
         );
       }
       throw new Error(error.message || "Could not update the booking status.");
@@ -2337,7 +2344,7 @@ export async function getCollaboratorByCode(code: string): Promise<Collaborator 
   let decoded = raw;
   try {
     decoded = decodeURIComponent(code).trim().toUpperCase();
-  } catch {}
+  } catch { }
   const all = await getCollaborators();
   return all.find((c) => {
     const cCode = c.code?.trim().toUpperCase();
@@ -2406,7 +2413,7 @@ export async function partnerLogin(
   }
 
   // Best-effort "last active" stamp — ignore failures.
-  updateCollaborator(found.id, { lastSeenAt: new Date().toISOString() }).catch(() => {});
+  updateCollaborator(found.id, { lastSeenAt: new Date().toISOString() }).catch(() => { });
   return { success: true, collaborator: found };
 }
 
@@ -2956,12 +2963,12 @@ export type BraceletCategory = "artist" | "hotel" | "fullpass" | "none";
 export function isArtistInviteOrBooking(
   item:
     | {
-        packName?: string;
-        notes?: string | null;
-        customerName?: string;
-        assignee?: string;
-        packId?: string;
-      }
+      packName?: string;
+      notes?: string | null;
+      customerName?: string;
+      assignee?: string;
+      packId?: string;
+    }
     | null
     | undefined,
   packs?: Pack[],
@@ -3494,11 +3501,11 @@ export function packPrice(pack: Pack | undefined): {
 export function packPriceFor(
   pack:
     | {
-        price: string;
-        currency?: string;
-        partnerPriceEur?: number | null;
-        partnerPriceMad?: number | null;
-      }
+      price: string;
+      currency?: string;
+      partnerPriceEur?: number | null;
+      partnerPriceMad?: number | null;
+    }
     | null
     | undefined,
   partner?: Collaborator | null,
@@ -3854,7 +3861,7 @@ export async function findMatchingFestivalBooking(query: {
               return isStrongNameMatch(fullName);
             });
           }
-        } catch {}
+        } catch { }
       }
       return false;
     });
@@ -3919,9 +3926,9 @@ export function collaboratorCommission(
     // Find discount code if used on this booking
     const disc = b.discountCode
       ? discountCodes.find(
-          (d) =>
-            d.code.toUpperCase() === b.discountCode?.toUpperCase() || d.id === b.discountCodeId,
-        )
+        (d) =>
+          d.code.toUpperCase() === b.discountCode?.toUpperCase() || d.id === b.discountCodeId,
+      )
       : undefined;
 
     // Check if the discount code overrides collaborator commission (e.g. lowered to €10)

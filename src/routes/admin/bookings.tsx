@@ -15,14 +15,27 @@ import {
   Mail,
   Phone,
   MessageCircle,
+  Tag,
+  Coins,
+  Euro,
+  Pencil,
+  RotateCcw,
+  Sparkles,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import {
   getBookings,
   addBooking,
+  updateBooking,
   updateBookingStatus,
   deleteBooking,
   getPacks,
   getCollaborators,
+  getDiscountCodes,
+  EUR_TO_MAD,
+  formatMoney,
+  bookingAmountDueMad,
   packLabel,
   packGuestCount,
   packDepartureDateLimits,
@@ -38,12 +51,15 @@ import {
   type BookingStatus,
   type Collaborator,
   type Pack,
+  type DiscountCode,
+  type CommissionCurrency,
 } from "@/lib/admin-store";
 import { sendFormNotification, ticketConfirmationEmail } from "@/lib/form-notify";
 import { translateDynamicText, type Language } from "@/lib/translations";
 import { getCurrentAdmin } from "@/lib/auth-store";
 import { sendTicketConfirmationEmail } from "@/lib/ticket-confirmation";
 import { formatInternationalPhone } from "@/lib/phone";
+import { recordAdminAction } from "@/lib/admin-audit";
 
 /** "en France", "au Maroc", "aux États-Unis"… for the WhatsApp follow-up.
  * Country names may be stored in English, French or Spanish. */
@@ -82,6 +98,7 @@ function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [discountCodes, setDiscountCodes] = useState<DiscountCode[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<BookingStatus | "all">("all");
   const [showForm, setShowForm] = useState(false);
@@ -91,16 +108,155 @@ function AdminBookings() {
   const [statusError, setStatusError] = useState("");
   const [autoEmail, setAutoEmail] = useState<"sending" | "sent" | "failed" | null>(null);
 
+  // Pricing & Promo Override State
+  const [pricingModalBooking, setPricingModalBooking] = useState<Booking | null>(null);
+  const [pricingForm, setPricingForm] = useState({
+    unitPrice: "" as string | number,
+    priceCurrency: "EUR" as CommissionCurrency,
+    discountCode: "",
+    discountAmount: 0 as string | number,
+    discountCodeId: null as string | null,
+    amountDueMad: "" as string | number,
+    useCustomMad: false,
+  });
+  const [savingPricing, setSavingPricing] = useState(false);
+  const [pricingError, setPricingError] = useState("");
+  const [pricingSuccess, setPricingSuccess] = useState("");
+
   const reload = useCallback(async () => {
-    const [b, p, c] = await Promise.all([getBookings(), getPacks(), getCollaborators()]);
+    const [b, p, c, d] = await Promise.all([
+      getBookings(),
+      getPacks(),
+      getCollaborators(),
+      getDiscountCodes(),
+    ]);
     setBookings(b);
     setPacks(p);
     setCollaborators(c);
+    setDiscountCodes(d);
   }, []);
 
   useEffect(() => {
     reload();
   }, [reload]);
+
+  const openPricingModal = (b: Booking) => {
+    const pack = packs.find((p) => p.id === b.packId);
+    const locked = bookingUnitPrice(b, pack);
+    const cur = locked.currency === "MAD" ? "MAD" : "EUR";
+    const unitPrice = locked.amount;
+
+    setPricingModalBooking(b);
+    setPricingError("");
+    setPricingSuccess("");
+    setPricingForm({
+      unitPrice,
+      priceCurrency: cur,
+      discountCode: b.discountCode || "",
+      discountAmount: b.discountAmount != null ? b.discountAmount : 0,
+      discountCodeId: b.discountCodeId || null,
+      amountDueMad: b.amountDueMad != null ? b.amountDueMad : "",
+      useCustomMad: b.amountDueMad != null,
+    });
+  };
+
+  const handleRemovePromo = () => {
+    setPricingForm((prev) => ({
+      ...prev,
+      discountCode: "",
+      discountAmount: 0,
+      discountCodeId: null,
+    }));
+  };
+
+  const handleResetToCatalogPrice = () => {
+    if (!pricingModalBooking) return;
+    const pack = packs.find((p) => p.id === pricingModalBooking.packId);
+    const catPrice = packPrice(pack ?? undefined);
+    setPricingForm((prev) => ({
+      ...prev,
+      unitPrice: catPrice.amount,
+      priceCurrency: catPrice.currency === "MAD" ? "MAD" : "EUR",
+    }));
+  };
+
+  const handleSelectDiscountCode = (codeId: string) => {
+    if (!codeId) {
+      handleRemovePromo();
+      return;
+    }
+    const found = discountCodes.find((d) => d.id === codeId);
+    if (!found) return;
+    const count = pricingModalBooking?.numPeople || 1;
+    const numUnitPrice = Number(pricingForm.unitPrice) || 0;
+    let computedDiscount = 0;
+    if (found.discountType === "percent") {
+      computedDiscount = Math.round((numUnitPrice * count * (found.discountAmount / 100)) * 100) / 100;
+    } else {
+      if (found.applyScope === "per_person") {
+        computedDiscount = found.discountAmount * count;
+      } else {
+        computedDiscount = found.discountAmount;
+      }
+    }
+    setPricingForm((prev) => ({
+      ...prev,
+      discountCode: found.code,
+      discountAmount: computedDiscount,
+      discountCodeId: found.id,
+    }));
+  };
+
+  const handleSavePricing = async () => {
+    if (!pricingModalBooking) return;
+    setSavingPricing(true);
+    setPricingError("");
+    try {
+      const unitPriceNum = Number(pricingForm.unitPrice);
+      if (isNaN(unitPriceNum) || unitPriceNum < 0) {
+        throw new Error("Veuillez saisir un tarif unitaire valide supérieur ou égal à 0.");
+      }
+      const discountAmountNum = Math.max(0, Number(pricingForm.discountAmount) || 0);
+      const amountDueMadVal =
+        pricingForm.useCustomMad && pricingForm.amountDueMad !== ""
+          ? Math.max(0, Number(pricingForm.amountDueMad))
+          : null;
+
+      const updates = {
+        unitPrice: unitPriceNum,
+        priceCurrency: pricingForm.priceCurrency,
+        discountCode: pricingForm.discountCode.trim() || null,
+        discountAmount: discountAmountNum,
+        discountCodeId: pricingForm.discountCodeId || null,
+        amountDueMad: amountDueMadVal,
+      };
+
+      const saved = await updateBooking(pricingModalBooking.id, updates);
+      if (!saved) throw new Error("Échec de la mise à jour de la réservation.");
+
+      await recordAdminAction({
+        action: "price_override",
+        section: "Bookings",
+        entityId: pricingModalBooking.id,
+        entityLabel: `${pricingModalBooking.customerName} (${pricingModalBooking.ticketCode})`,
+        summary: `Tarif et promo modifiés pour ${pricingModalBooking.ticketCode}: tarif ${unitPriceNum} ${pricingForm.priceCurrency}/pers, promo ${pricingForm.discountCode || "aucune"} (-${discountAmountNum} ${pricingForm.priceCurrency})`,
+        before: pricingModalBooking,
+        after: saved,
+        changes: updates,
+      });
+
+      setPricingSuccess("Tarification et code promo enregistrés avec succès !");
+      await reload();
+      setTimeout(() => {
+        setPricingModalBooking(null);
+        setPricingSuccess("");
+      }, 900);
+    } catch (err: any) {
+      setPricingError(err.message || "Erreur lors de la sauvegarde.");
+    } finally {
+      setSavingPricing(false);
+    }
+  };
 
   // Form state
   const [form, setForm] = useState({
@@ -547,12 +703,27 @@ Tangier Latin Festival`;
                                 {detail}
                               </p>
                             )}
-                            {b.discountCode && (
-                              <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono font-semibold">
-                                Code: {b.discountCode} (
-                                {b.discountAmount ? `-€${b.discountAmount}` : "Réduction"})
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                              {b.unitPrice != null && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200 text-[10px] font-semibold">
+                                  Tarif fixé : {b.unitPrice} {b.priceCurrency || "€"}
+                                </span>
+                              )}
+                              {b.discountCode || (b.discountAmount || 0) > 0 ? (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-mono font-semibold">
+                                  <Tag className="h-2.5 w-2.5" />
+                                  {b.discountCode || "Promo"} : -{b.discountAmount || 0} {cur}
+                                </span>
+                              ) : null}
+                              <button
+                                type="button"
+                                onClick={() => openPricingModal(b)}
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 transition cursor-pointer"
+                                title="Modifier le tarif du pack ou la promo"
+                              >
+                                <Pencil className="h-2.5 w-2.5" /> Modifier tarif / promo
+                              </button>
+                            </div>
                           </>
                         );
                       })()}
@@ -628,6 +799,13 @@ Tangier Latin Festival`;
                           }
                         >
                           <Mail className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => openPricingModal(b)}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                          title="Modifier le tarif du pack et le code promo"
+                        >
+                          <Tag className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => showQr(b)}
@@ -1145,6 +1323,346 @@ Tangier Latin Festival`;
           </div>
         </div>
       )}
+
+      {/* Price & Promo Override Modal */}
+      {pricingModalBooking && (() => {
+        const targetPack = packs.find((p) => p.id === pricingModalBooking.packId);
+        const catalogPrice = packPrice(targetPack ?? undefined);
+        const count = pricingModalBooking.numPeople || 1;
+        const cur = pricingForm.priceCurrency;
+        const unitVal = Math.max(0, Number(pricingForm.unitPrice) || 0);
+        const grossTotal = unitVal * count;
+        const discountVal = Math.max(0, Number(pricingForm.discountAmount) || 0);
+        const netPackTotal = Math.max(0, grossTotal - discountVal);
+        const transferCost = pricingModalBooking.transferCost || 0;
+        const finalNetTotal = netPackTotal + transferCost;
+        const autoMad = cur === "MAD" ? finalNetTotal : Math.round(finalNetTotal * EUR_TO_MAD);
+        const finalMad = pricingForm.useCustomMad && pricingForm.amountDueMad !== ""
+          ? Math.max(0, Number(pricingForm.amountDueMad))
+          : autoMad;
+        const hasPromo = Boolean(pricingForm.discountCode || discountVal > 0);
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+            <div className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-8">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-gray-100 bg-slate-900 px-6 py-4 text-white">
+                <div>
+                  <h3 className="font-display text-lg font-bold flex items-center gap-2">
+                    <Tag className="h-5 w-5 text-amber-400" />
+                    Modifier la tarification & le code promo
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Réservation #{pricingModalBooking.ticketCode} · {pricingModalBooking.customerName}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPricingModalBooking(null)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+                {pricingError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                    <span>{pricingError}</span>
+                  </div>
+                )}
+                {pricingSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 flex items-center gap-2 font-semibold">
+                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                    <span>{pricingSuccess}</span>
+                  </div>
+                )}
+
+                {/* Pack Info Card */}
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Forfait réservé</span>
+                    <p className="text-sm font-bold text-slate-900">{targetPack?.name || pricingModalBooking.packName}</p>
+                    <p className="text-xs text-slate-500">
+                      {count} participant{count > 1 ? "s" : ""} · Tarif catalogue : {catalogPrice.amount} {catalogPrice.currency === "MAD" ? "MAD" : "€"} / personne
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleResetToCatalogPrice}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer shadow-xs"
+                    title="Rétablir le tarif catalogue officiel"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 text-slate-500" />
+                    Rétablir prix catalogue
+                  </button>
+                </div>
+
+                {/* 1. Unit Price Section */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Prix du forfait par personne
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2 relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={pricingForm.unitPrice}
+                        onChange={(e) =>
+                          setPricingForm((prev) => ({ ...prev, unitPrice: e.target.value }))
+                        }
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-bold text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        placeholder="Ex: 180"
+                      />
+                      <span className="absolute right-3.5 top-2.5 text-sm font-semibold text-gray-400">
+                        {cur === "MAD" ? "MAD / pers." : "€ / pers."}
+                      </span>
+                    </div>
+
+                    <select
+                      value={pricingForm.priceCurrency}
+                      onChange={(e) =>
+                        setPricingForm((prev) => ({
+                          ...prev,
+                          priceCurrency: e.target.value as CommissionCurrency,
+                        }))
+                      }
+                      className="rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                    >
+                      <option value="EUR">Euros (€)</option>
+                      <option value="MAD">Dirhams (MAD)</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Sous-total brut ({count} pers.) :{" "}
+                    <span className="font-semibold text-gray-800">
+                      {unitVal} {cur} × {count} = {grossTotal} {cur}
+                    </span>
+                  </p>
+                </div>
+
+                {/* 2. Promo / Discount Section */}
+                <div className="space-y-3 pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5 text-amber-600" />
+                      Code Promo & Réduction
+                    </label>
+
+                    {hasPromo && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePromo}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition cursor-pointer shadow-xs"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                        Supprimer la promo
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Active promo banner */}
+                  {hasPromo ? (
+                    <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-amber-900">
+                            Code appliqué : <code className="bg-white px-1.5 py-0.5 rounded border border-amber-300 text-amber-800">{pricingForm.discountCode || "Réduction personnalisée"}</code>
+                          </span>
+                        </div>
+                        <p className="text-xs text-amber-700 mt-0.5 font-medium">
+                          Remise déduite du forfait : -{discountVal} {cur}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-emerald-700 bg-white px-2 py-1 rounded-lg border border-amber-200 shadow-2xs">
+                        -{discountVal} {cur}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-500 flex items-center justify-between">
+                      <span>Aucun code promo appliqué à cette réservation.</span>
+                      <span className="text-[11px] font-semibold text-gray-400">Plein tarif</span>
+                    </div>
+                  )}
+
+                  {/* Quick Select existing promo code or custom amount */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                        Appliquer un code promo existant
+                      </label>
+                      <select
+                        value={pricingForm.discountCodeId || ""}
+                        onChange={(e) => handleSelectDiscountCode(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+                      >
+                        <option value="">Sélectionner un code (ou aucun)...</option>
+                        {discountCodes.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.code} ({d.discountType === "percent" ? `-${d.discountAmount}%` : `-${d.discountAmount}€`})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                        Montant de la réduction ({cur})
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={pricingForm.discountAmount}
+                        onChange={(e) =>
+                          setPricingForm((prev) => ({
+                            ...prev,
+                            discountAmount: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-bold text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        placeholder="Ex: 50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transfer Info (if booked) */}
+                {transferCost > 0 && (
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600 bg-blue-50/50 p-2.5 rounded-xl border border-blue-100">
+                    <span className="font-medium text-blue-900">Navette / Transfert aéroport ou port</span>
+                    <span className="font-bold text-blue-800">+{transferCost} €</span>
+                  </div>
+                )}
+
+                {/* 3. Moroccan Dirhams Override */}
+                <div className="pt-3 border-t border-gray-100 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-1.5">
+                      <Coins className="h-3.5 w-3.5 text-emerald-600" />
+                      Paiements Maroc (Montant dû en Dirhams)
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={pricingForm.useCustomMad}
+                        onChange={(e) =>
+                          setPricingForm((prev) => ({
+                            ...prev,
+                            useCustomMad: e.target.checked,
+                            amountDueMad: e.target.checked
+                              ? prev.amountDueMad || String(autoMad)
+                              : "",
+                          }))
+                        }
+                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                      />
+                      <span>Montant MAD personnalisé</span>
+                    </label>
+                  </div>
+
+                  {pricingForm.useCustomMad ? (
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={pricingForm.amountDueMad}
+                        onChange={(e) =>
+                          setPricingForm((prev) => ({ ...prev, amountDueMad: e.target.value }))
+                        }
+                        className="w-full rounded-xl border border-emerald-300 bg-emerald-50/30 px-3.5 py-2 text-sm font-bold text-emerald-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        placeholder={`Ex: ${autoMad}`}
+                      />
+                      <span className="absolute right-3.5 top-2 text-xs font-bold text-emerald-700">
+                        MAD fixé manuellement
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500">
+                      Calcul automatique pour le Maroc :{" "}
+                      <span className="font-bold text-emerald-700">{autoMad} MAD</span>{" "}
+                      {cur === "EUR" ? "(converti à 1€ = 10 MAD)" : ""}
+                    </p>
+                  )}
+                </div>
+
+                {/* 4. Live Calculation & Total Box */}
+                <div className="p-4 rounded-xl bg-slate-900 text-white space-y-2 shadow-inner">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    Récapitulatif financier de la réservation
+                  </span>
+                  <div className="space-y-1 text-xs text-slate-300">
+                    <div className="flex justify-between">
+                      <span>Sous-total forfait ({count} pers. à {unitVal} {cur}) :</span>
+                      <span className="font-semibold text-white">{grossTotal} {cur}</span>
+                    </div>
+                    {discountVal > 0 ? (
+                      <div className="flex justify-between text-amber-300">
+                        <span>Réduction code promo ({pricingForm.discountCode || "Promo"}) :</span>
+                        <span className="font-semibold">-{discountVal} {cur}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-slate-400">
+                        <span>Réduction code promo :</span>
+                        <span>0 {cur} (Aucune promo)</span>
+                      </div>
+                    )}
+                    {transferCost > 0 && (
+                      <div className="flex justify-between text-blue-300">
+                        <span>Navette / Transfert :</span>
+                        <span className="font-semibold">+{transferCost} €</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-700 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs uppercase font-semibold text-slate-400">TOTAL NET CLIENT</span>
+                      <p className="text-2xl font-black text-amber-400">
+                        {finalNetTotal} {cur}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] text-slate-400 block uppercase">Équivalent Maroc</span>
+                      <span className="text-lg font-bold text-emerald-400">{finalMad} MAD</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-gray-100 bg-gray-50 px-6 py-3.5 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setPricingModalBooking(null)}
+                  disabled={savingPricing}
+                  className="rounded-xl border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-white hover:text-gray-900 transition cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSavePricing}
+                  disabled={savingPricing}
+                  className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 transition cursor-pointer disabled:opacity-50"
+                >
+                  {savingPricing ? (
+                    <span>Enregistrement en cours…</span>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" /> Enregistrer les modifications
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Delete Confirmation */}
       {deleteConfirm && (

@@ -14,6 +14,8 @@ import {
   Check,
   MessageCircle,
   Calendar,
+  Tag,
+  Trash2,
 } from "lucide-react";
 import {
   getBookings,
@@ -23,6 +25,8 @@ import {
   updateBooking,
   getClients,
   parseGuestDetails,
+  bookingUnitPrice,
+  packPrice,
   type Booking,
   type Pack,
   type Collaborator,
@@ -128,6 +132,11 @@ function AdminClients() {
 
   const openEditModal = (client: ClientGuest) => {
     const targetBooking = bookings.find((b) => b.id === client.bookingId);
+    const targetPack = targetBooking ? packs.find((p) => p.id === targetBooking.packId) : null;
+    const lockedPrice = targetBooking
+      ? bookingUnitPrice(targetBooking, targetPack)
+      : { amount: 0, currency: "EUR" as const };
+
     setEditingClient(client);
     setEditForm({
       firstName: client.firstName,
@@ -140,6 +149,11 @@ function AdminClients() {
       referral: referralValueOf(targetBooking),
       arrivalDate: targetBooking?.arrivalDate ?? client.arrivalDate ?? "",
       departureDate: targetBooking?.departureDate ?? client.departureDate ?? "",
+      unitPrice:
+        targetBooking?.unitPrice != null ? targetBooking.unitPrice : lockedPrice.amount,
+      priceCurrency: (targetBooking?.priceCurrency || lockedPrice.currency || "EUR") as "EUR" | "MAD",
+      discountCode: targetBooking?.discountCode ?? "",
+      discountAmount: targetBooking?.discountAmount ?? 0,
     });
   };
 
@@ -173,6 +187,11 @@ function AdminClients() {
       country: primary.country ?? targetBooking.country,
       arrivalDate: editForm.arrivalDate || null,
       departureDate: editForm.departureDate || null,
+      unitPrice:
+        editForm.unitPrice !== "" ? Math.max(0, Number(editForm.unitPrice)) : null,
+      priceCurrency: editForm.priceCurrency,
+      discountCode: editForm.discountCode.trim() || null,
+      discountAmount: Math.max(0, Number(editForm.discountAmount) || 0),
     });
     if (!saved) throw new Error("Les modifications du client n’ont pas été enregistrées.");
   };
@@ -812,6 +831,93 @@ function AdminClients() {
                 </div>
                 <p className="text-[11px] text-gray-500">
                   La modification des dates est synchronisée pour toute la réservation et s’applique immédiatement à l’hôtel et aux réservations.
+                </p>
+              </div>
+
+              {/* Tarification & Code Promo */}
+              <div className="col-span-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-amber-700" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                      Tarification & Code Promo
+                    </h4>
+                  </div>
+                  {(editForm.discountCode || Number(editForm.discountAmount) > 0) && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditForm((prev) => ({
+                          ...prev,
+                          discountCode: "",
+                          discountAmount: 0,
+                        }))
+                      }
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold text-red-700 bg-red-100/80 hover:bg-red-200 transition cursor-pointer"
+                    >
+                      <Trash2 className="h-3 w-3" /> Supprimer la promo
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Prix du forfait par personne
+                    </label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={editForm.unitPrice}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, unitPrice: e.target.value })
+                        }
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-amber-500"
+                        placeholder="Ex: 180"
+                      />
+                      <select
+                        value={editForm.priceCurrency}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            priceCurrency: e.target.value as "EUR" | "MAD",
+                          })
+                        }
+                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-amber-500 cursor-pointer"
+                      >
+                        <option value="EUR">€</option>
+                        <option value="MAD">MAD</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Montant de la réduction ({editForm.priceCurrency})
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={editForm.discountAmount}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, discountAmount: e.target.value })
+                      }
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-amber-500"
+                      placeholder="Ex: 50"
+                    />
+                  </div>
+                </div>
+
+                {editForm.discountCode && (
+                  <p className="text-[11px] text-amber-800 font-mono">
+                    Code promo actuel : <strong>{editForm.discountCode}</strong> (-{editForm.discountAmount} {editForm.priceCurrency})
+                  </p>
+                )}
+                <p className="text-[10px] text-gray-500">
+                  Modifie le prix unitaire et la promo appliqués à la réservation ({editingClient.ticketCode}).
                 </p>
               </div>
 
