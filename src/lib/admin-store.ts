@@ -3189,6 +3189,7 @@ export interface GuestDetail {
   notes?: string;
   checkedIn?: boolean;
   checkedInAt?: string;
+  isArtist?: boolean;
 }
 
 export interface ClientGuest {
@@ -3214,6 +3215,8 @@ export interface ClientGuest {
   checkedInAt?: string;
   arrivalDate?: string | null;
   departureDate?: string | null;
+  isArtist: boolean;
+  braceletCategory?: BraceletCategory;
 }
 
 /** True when the guest_details column exists (supabase/guest-details.sql). */
@@ -3332,6 +3335,13 @@ export function getClients(
       const checkedInAt = ov.checkedInAt || (b.status === "checked-in" ? b.createdAt : undefined);
       const notes = ov.notes !== undefined ? ov.notes : gi === 0 ? b.notes || "" : "";
 
+      const bracelets = guestBracelets(b, packs);
+      const guestBracelet = bracelets[gi] || "none";
+      const isArtist =
+        ov.isArtist !== undefined
+          ? Boolean(ov.isArtist)
+          : guestBracelet === "artist" || isArtistInviteOrBooking(b, packs);
+
       clients.push({
         id: `${b.id}-${gi}`,
         bookingId: b.id,
@@ -3355,11 +3365,48 @@ export function getClients(
         checkedInAt,
         arrivalDate: b.arrivalDate,
         departureDate: b.departureDate,
+        isArtist,
+        braceletCategory: guestBracelet,
       });
     }
   }
 
   return clients.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+/** Explicitly mark or unmark a client guest as an Artist, updating guest details and bracelet */
+export async function setClientArtistStatus(
+  booking: Booking,
+  guestIndex: number,
+  isArtist: boolean,
+  packs: Pack[] = [],
+): Promise<Booking | null> {
+  const details = parseGuestDetails(booking.guestDetails);
+  while (details.length <= guestIndex) {
+    details.push({});
+  }
+  details[guestIndex] = {
+    ...details[guestIndex],
+    isArtist,
+  };
+
+  const braceletArr = guestBracelets(booking, packs);
+  if (isArtist) {
+    braceletArr[guestIndex] = "artist";
+  } else if (braceletArr[guestIndex] === "artist") {
+    const pack = packs.find((p) => p.id === booking.packId);
+    braceletArr[guestIndex] =
+      packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
+        ? "fullpass"
+        : "hotel";
+  }
+
+  const saved = await updateBooking(booking.id, {
+    guestDetails: JSON.stringify(details),
+    bracelet: JSON.stringify(braceletArr),
+  });
+
+  return saved;
 }
 
 /** Toggle one guest's "bracelet received" flag. */

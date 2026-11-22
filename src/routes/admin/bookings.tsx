@@ -318,7 +318,7 @@ function AdminBookings() {
       ...prev,
       packId,
       numPeople: guests > 0 ? guests : prev.numPeople,
-      departure: constrainPackDepartureDate(prev.arrival, prev.departure, p),
+      departure: prev.departure || constrainPackDepartureDate(prev.arrival, prev.departure, p),
     }));
   };
 
@@ -334,9 +334,7 @@ function AdminBookings() {
     )
       return;
     const pack = packs.find((p) => p.id === form.packId);
-    const departureDate = pack
-      ? constrainPackDepartureDate(form.arrival, form.departure, pack)
-      : form.departure;
+    const departureDate = form.departure;
 
     const leadName = `${form.firstName.trim()} ${form.lastName.trim()}`;
     const extraNames = form.additionalGuests
@@ -683,11 +681,10 @@ Tangier Latin Festival`;
                           pack?.sub,
                           priceInfo,
                           b.arrivalDate
-                            ? `${new Date(b.arrivalDate).toLocaleDateString("fr-FR")} → ${
-                                b.departureDate
-                                  ? new Date(b.departureDate).toLocaleDateString("fr-FR")
-                                  : "?"
-                              }`
+                            ? `${new Date(b.arrivalDate).toLocaleDateString("fr-FR")} → ${b.departureDate
+                              ? new Date(b.departureDate).toLocaleDateString("fr-FR")
+                              : "?"
+                            }`
                             : null,
                         ]
                           .filter(Boolean)
@@ -1083,9 +1080,13 @@ Tangier Latin Festival`;
                     max="2027-01-30"
                     onChange={(e) => {
                       const arrival = e.target.value;
-                      const departure = selectedFormPack
-                        ? constrainPackDepartureDate(arrival, form.departure, selectedFormPack)
-                        : form.departure;
+                      let departure = form.departure;
+                      if (!departure || departure <= arrival) {
+                        const nights = selectedFormPack ? packNightCount(selectedFormPack) : 3;
+                        const arrD = new Date(arrival);
+                        arrD.setDate(arrD.getDate() + (nights || 3));
+                        departure = arrD.toISOString().slice(0, 10);
+                      }
                       setForm({ ...form, arrival, departure });
                     }}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
@@ -1115,13 +1116,10 @@ Tangier Latin Festival`;
                     type="date"
                     required
                     value={form.departure}
-                    min={formDepartureLimits?.min || form.arrival || "2027-01-01"}
-                    max={formDepartureLimits?.max || "2027-01-30"}
+                    min={form.arrival || "2027-01-01"}
+                    max="2027-01-31"
                     onChange={(e) => {
-                      const departure = selectedFormPack
-                        ? constrainPackDepartureDate(form.arrival, e.target.value, selectedFormPack)
-                        : e.target.value;
-                      setForm({ ...form, departure });
+                      setForm({ ...form, departure: e.target.value });
                     }}
                     className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
                   />
@@ -1139,6 +1137,30 @@ Tangier Latin Festival`;
                   />
                 </div>
               </div>
+
+              {/* Calculated stay duration badge */}
+              {form.arrival && form.departure && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 text-xs text-amber-900 flex items-center justify-between">
+                  <span className="font-medium text-amber-800">
+                    Durée du séjour sélectionnée :
+                  </span>
+                  <span className="font-bold inline-flex items-center gap-1.5">
+                    {Math.max(
+                      0,
+                      Math.round(
+                        (new Date(form.departure).getTime() - new Date(form.arrival).getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      ),
+                    )}{" "}
+                    nuits
+                    {selectedFormPack && (
+                      <span className="text-[11px] font-normal text-amber-700">
+                        (Pack : {packNightCount(selectedFormPack)} nuits)
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
 
               {/* Dance Level & Statut initial */}
               <div className="grid grid-cols-2 gap-3">
@@ -1228,13 +1250,12 @@ Tangier Latin Festival`;
             {/* Automatic confirmation email status */}
             {autoEmail && (
               <div
-                className={`mb-4 rounded-lg border px-3 py-2 text-xs ${
-                  autoEmail === "sent"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : autoEmail === "failed"
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-gray-300 bg-gray-50 text-gray-600"
-                }`}
+                className={`mb-4 rounded-lg border px-3 py-2 text-xs ${autoEmail === "sent"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : autoEmail === "failed"
+                    ? "border-red-200 bg-red-50 text-red-700"
+                    : "border-gray-300 bg-gray-50 text-gray-600"
+                  }`}
               >
                 {autoEmail === "sent"
                   ? "✓ E-mail de confirmation avec le billet envoyé automatiquement."

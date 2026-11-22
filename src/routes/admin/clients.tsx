@@ -16,6 +16,7 @@ import {
   Calendar,
   Tag,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import {
   getBookings,
@@ -27,6 +28,9 @@ import {
   parseGuestDetails,
   bookingUnitPrice,
   packPrice,
+  guestBracelets,
+  packRoomCategory,
+  setClientArtistStatus,
   type Booking,
   type Pack,
   type Collaborator,
@@ -49,7 +53,7 @@ function AdminClients() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [originFilter, setOriginFilter] = useState<"all" | "morocco" | "international">("all");
+  const [originFilter, setOriginFilter] = useState<"all" | "morocco" | "international" | "artist">("all");
   const [missingContactOnly, setMissingContactOnly] = useState(false);
 
   // Edit Modal State
@@ -66,6 +70,11 @@ function AdminClients() {
     referral: string;
     arrivalDate: string;
     departureDate: string;
+    unitPrice: string | number;
+    priceCurrency: "EUR" | "MAD";
+    discountCode: string;
+    discountAmount: string | number;
+    isArtist: boolean;
   }>({
     firstName: "",
     lastName: "",
@@ -77,6 +86,11 @@ function AdminClients() {
     referral: "website",
     arrivalDate: "",
     departureDate: "",
+    unitPrice: "",
+    priceCurrency: "EUR",
+    discountCode: "",
+    discountAmount: 0,
+    isArtist: false,
   });
 
   // Referral of a booking as a select value (admin can hand it to another partner)
@@ -106,12 +120,14 @@ function AdminClients() {
   // Quick stats
   const moroccanCount = allClients.filter((c) => c.origin === "morocco").length;
   const internationalCount = allClients.filter((c) => c.origin === "international").length;
+  const artistCount = allClients.filter((c) => c.isArtist).length;
   const missingContactCount = allClients.filter((c) => !c.email.trim() || !c.phone.trim()).length;
 
   // Filtered Clients
   const filteredClients = allClients.filter((c) => {
     if (originFilter === "morocco" && c.origin !== "morocco") return false;
     if (originFilter === "international" && c.origin !== "international") return false;
+    if (originFilter === "artist" && !c.isArtist) return false;
     if (missingContactOnly && c.email.trim() && c.phone.trim()) return false;
 
     if (!search.trim()) return true;
@@ -129,6 +145,17 @@ function AdminClients() {
       (c.collaboratorName ?? "").toLowerCase().includes(q)
     );
   });
+
+  const handleToggleArtist = async (client: ClientGuest) => {
+    const targetBooking = bookings.find((b) => b.id === client.bookingId);
+    if (!targetBooking) return;
+    try {
+      await setClientArtistStatus(targetBooking, client.guestIndex, !client.isArtist, packs);
+      await reload();
+    } catch (e: any) {
+      setError(e.message || "Erreur lors de la mise à jour du statut d'artiste.");
+    }
+  };
 
   const openEditModal = (client: ClientGuest) => {
     const targetBooking = bookings.find((b) => b.id === client.bookingId);
@@ -154,6 +181,7 @@ function AdminClients() {
       priceCurrency: (targetBooking?.priceCurrency || lockedPrice.currency || "EUR") as "EUR" | "MAD",
       discountCode: targetBooking?.discountCode ?? "",
       discountAmount: targetBooking?.discountAmount ?? 0,
+      isArtist: client.isArtist,
     });
   };
 
@@ -179,8 +207,23 @@ function AdminClients() {
       return `${firstName} ${lastName}`.trim() || guest.fullName;
     });
     const primary = updatedDetails[0] ?? {};
+
+    const currentBracelets = guestBracelets(targetBooking, packs);
+    if (editingClient) {
+      if (editForm.isArtist) {
+        currentBracelets[editingClient.guestIndex] = "artist";
+      } else if (currentBracelets[editingClient.guestIndex] === "artist") {
+        const p = packs.find((x) => x.id === targetBooking.packId);
+        currentBracelets[editingClient.guestIndex] =
+          packRoomCategory(p || targetBooking.packName, targetBooking.numPeople) === "fullpass"
+            ? "fullpass"
+            : "hotel";
+      }
+    }
+
     const saved = await updateBooking(targetBooking.id, {
       guestDetails: JSON.stringify(updatedDetails),
+      bracelet: JSON.stringify(currentBracelets),
       customerName: synchronizedNames.join(" & ") || targetBooking.customerName,
       email: primary.email ?? targetBooking.email,
       phone: primary.phone ?? targetBooking.phone,
@@ -219,6 +262,7 @@ function AdminClients() {
       origin: editForm.origin,
       country: countryForOrigin(editForm.country, editForm.origin),
       notes: editForm.notes.trim(),
+      isArtist: editForm.isArtist,
     };
 
     try {
@@ -401,15 +445,15 @@ function AdminClients() {
       )}
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <p className="text-xs tracking-widest uppercase text-gray-500">Total clients</p>
             <Users className="h-4 w-4 text-slate-600" />
           </div>
           <p className="mt-1 font-display text-2xl text-gray-900">{allClients.length}</p>
         </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm p-4">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">
               Morocco 🇲🇦
@@ -418,7 +462,7 @@ function AdminClients() {
           </div>
           <p className="mt-1 font-display text-2xl text-emerald-900">{moroccanCount}</p>
         </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50/30 shadow-sm p-4">
+        <div className="rounded-xl border border-blue-200 bg-blue-50/30 shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <p className="text-xs tracking-widest uppercase text-blue-700 font-semibold">
               Étranger 🌐
@@ -427,10 +471,19 @@ function AdminClients() {
           </div>
           <p className="mt-1 font-display text-2xl text-blue-900">{internationalCount}</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50/30 shadow-sm p-4">
+        <div className="rounded-xl border border-purple-200 bg-purple-50/40 shadow-sm p-3.5">
+          <div className="flex items-center justify-between">
+            <p className="text-xs tracking-widest uppercase text-purple-700 font-semibold">
+              Artistes 🎵
+            </p>
+            <Sparkles className="h-4 w-4 text-purple-600" />
+          </div>
+          <p className="mt-1 font-display text-2xl text-purple-900">{artistCount}</p>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50/30 shadow-sm p-3.5">
           <div className="flex items-center justify-between">
             <p className="text-xs tracking-widest uppercase text-amber-700 font-semibold">
-              Coordonnées manquantes
+              Contacts manquants
             </p>
             <Mail className="h-4 w-4 text-amber-600" />
           </div>
@@ -442,7 +495,7 @@ function AdminClients() {
       <div className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">
-            Filtrer par origine :
+            Filtrer par statut / origine :
           </span>
           <button
             onClick={() => setOriginFilter("all")}
@@ -473,6 +526,16 @@ function AdminClients() {
             }`}
           >
             <span>🌐</span> Étranger ({internationalCount})
+          </button>
+          <button
+            onClick={() => setOriginFilter("artist")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+              originFilter === "artist"
+                ? "bg-purple-600 text-white shadow-xs"
+                : "bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100"
+            }`}
+          >
+            <span>🎵</span> Artistes ({artistCount})
           </button>
         </div>
 
@@ -582,23 +645,46 @@ function AdminClients() {
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <select
-                        value={client.origin}
-                        onChange={(e) =>
-                          handleInlineOriginChange(
-                            client,
-                            e.target.value as "morocco" | "international",
-                          )
-                        }
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold border focus:outline-none transition cursor-pointer ${
-                          client.origin === "morocco"
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                            : "bg-blue-50 text-blue-800 border-blue-200"
-                        }`}
-                      >
-                        <option value="morocco">🇲🇦 Maroc</option>
-                        <option value="international">🌐 Étranger</option>
-                      </select>
+                      <div className="flex flex-col gap-1 items-start">
+                        <select
+                          value={client.origin}
+                          onChange={(e) =>
+                            handleInlineOriginChange(
+                              client,
+                              e.target.value as "morocco" | "international",
+                            )
+                          }
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border focus:outline-none transition cursor-pointer ${
+                            client.origin === "morocco"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}
+                        >
+                          <option value="morocco">🇲🇦 Maroc</option>
+                          <option value="international">🌐 Étranger</option>
+                        </select>
+
+                        {client.isArtist ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleArtist(client)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 transition cursor-pointer shadow-2xs"
+                            title="Artiste — Cliquer pour retirer le statut d'artiste"
+                          >
+                            <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                            Artiste ✓
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleArtist(client)}
+                            className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-1 font-medium"
+                            title="Marquer ce client comme Artiste"
+                          >
+                            + Artiste
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {client.roomNumber || client.roomType ? (
@@ -832,6 +918,30 @@ function AdminClients() {
                 <p className="text-[11px] text-gray-500">
                   La modification des dates est synchronisée pour toute la réservation et s’applique immédiatement à l’hôtel et aux réservations.
                 </p>
+              </div>
+
+              {/* Statut Artiste */}
+              <div className="col-span-2 flex items-center justify-between p-3.5 rounded-xl border border-purple-200 bg-purple-50/70">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="h-5 w-5 text-purple-600 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-purple-950">Statut du participant : Artiste</p>
+                    <p className="text-[11px] text-purple-700">
+                      Comptabilisé dans les statistiques Artistes et synchronisé avec le bracelet Artiste
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditForm((prev) => ({ ...prev, isArtist: !prev.isArtist }))}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    editForm.isArtist
+                      ? "bg-purple-600 text-white shadow-xs"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {editForm.isArtist ? "✓ Artiste actif" : "Non-artiste"}
+                </button>
               </div>
 
               {/* Tarification & Code Promo */}

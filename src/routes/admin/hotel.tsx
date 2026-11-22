@@ -415,21 +415,44 @@ function AdminHotel() {
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-2.5 font-medium text-gray-900">{r.guests[0] ?? "—"}</td>
+                <td className="px-4 py-2.5 font-medium text-gray-900">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span>{r.guests[0] ?? "—"}</span>
+                    {r.clients[0]?.isArtist && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                        🎵 Artiste
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-2.5 text-gray-700">
                   {r.category === "double" ? (
                     r.guests.length > 2 ? (
                       <div>
-                        <span>{r.guests[1]}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>{r.guests[1]}</span>
+                          {r.clients[1]?.isArtist && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                              🎵 Artiste
+                            </span>
+                          )}
+                        </div>
                         <span
-                          className="ml-1.5 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
+                          className="mt-1 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
                           title={r.guests.slice(2).join(" & ")}
                         >
                           +{r.guests.length - 2} more ({r.guests.slice(2).join(", ")})
                         </span>
                       </div>
                     ) : (
-                      (r.guests[1] ?? (r.booking.numPeople > 1 ? "Participant 2" : "—"))
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span>{r.guests[1] ?? (r.booking.numPeople > 1 ? "Participant 2" : "—")}</span>
+                        {r.clients[1]?.isArtist && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                            🎵 Artiste
+                          </span>
+                        )}
+                      </div>
                     )
                   ) : (
                     ""
