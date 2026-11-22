@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Bus,
+  Compass,
   Eye,
   Clock,
   Ticket,
@@ -44,6 +45,7 @@ import {
   collaboratorMissionProgress,
   partnerShareLink,
   partnerTransferShareLink,
+  partnerTourismShareLink,
   isConfirmedBooking,
   isTourismBooking,
   isTransferBooking,
@@ -145,6 +147,10 @@ function transferReferralUrl(code: string, lang?: PartnerLanguage): string {
   return partnerTransferShareLink(code, lang);
 }
 
+function tourismReferralUrl(code: string, lang?: PartnerLanguage): string {
+  return partnerTourismShareLink(code, lang);
+}
+
 function AdminCollaborators() {
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -165,10 +171,10 @@ function AdminCollaborators() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [selectedCollabForDetails, setSelectedCollabForDetails] = useState<CollaboratorStats | null>(null);
-  const [detailsTab, setDetailsTab] = useState<"passes" | "all">("passes");
+  const [detailsTab, setDetailsTab] = useState<"passes" | "excursions" | "all">("passes");
   const [detailsStatusFilter, setDetailsStatusFilter] = useState<"all" | "confirmed" | "pending">("all");
 
-  const openDetailsModal = (collabStats: CollaboratorStats, tab: "passes" | "all" = "passes") => {
+  const openDetailsModal = (collabStats: CollaboratorStats, tab: "passes" | "excursions" | "all" = "passes") => {
     setSelectedCollabForDetails(collabStats);
     setDetailsTab(tab);
     setDetailsStatusFilter("all");
@@ -347,6 +353,12 @@ function AdminCollaborators() {
     setTimeout(() => setCopiedId(null), 1500);
   };
 
+  const copyTourismLink = (c: Collaborator) => {
+    navigator.clipboard.writeText(tourismReferralUrl(c.code, c.language));
+    setCopiedId(`tourism-${c.id}`);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
   // Search filters the table and both collaborator workbook exports.
   const visibleStats = stats.filter(({ collaborator: c }) => {
     if (!search.trim()) return true;
@@ -397,6 +409,8 @@ function AdminCollaborators() {
   );
   const totalConfirmedPasses = stats.reduce((sum, s) => sum + s.fullPass, 0);
   const totalPendingPasses = stats.reduce((sum, s) => sum + (s.pendingPassesCount || 0), 0);
+  const totalConfirmedExcursions = stats.reduce((sum, s) => sum + (s.excursions || 0), 0);
+  const totalPendingExcursions = stats.reduce((sum, s) => sum + (s.pendingExcursions || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -445,7 +459,10 @@ function AdminCollaborators() {
             )}
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            {totalConfirmedPasses} pass confirmés {totalPendingPasses > 0 ? `(+${totalPendingPasses} att.)` : ""}
+            {totalConfirmedPasses} pass · {totalConfirmedExcursions} excursion{totalConfirmedExcursions > 1 ? "s" : ""}
+            {totalPendingPasses + totalPendingExcursions > 0
+              ? ` (+${totalPendingPasses + totalPendingExcursions} att.)`
+              : ""}
           </p>
         </div>
 
@@ -651,6 +668,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Chambres individuelles</th>
                   <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
                   <th className="px-5 py-3 text-right font-medium">Pass complet / Forfaits</th>
+                  <th className="px-5 py-3 text-right font-medium">Excursions</th>
                   <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
                   <th className="px-5 py-3 text-right font-medium">Ventes</th>
                   <th className="px-5 py-3 text-right font-medium">Commission</th>
@@ -711,6 +729,21 @@ function AdminCollaborators() {
                               <Bus className="h-3.5 w-3.5" />
                             )}
                           </button>
+                          <button
+                            onClick={() => copyTourismLink(c)}
+                            className={`p-1 rounded transition cursor-pointer ${
+                              copiedId === `tourism-${c.id}`
+                                ? "text-emerald-600"
+                                : "text-teal-600 hover:text-teal-800"
+                            }`}
+                            title={`Copier le lien d'excursion du partenaire: ${tourismReferralUrl(c.code, c.language)}`}
+                          >
+                            {copiedId === `tourism-${c.id}` ? (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            ) : (
+                              <Compass className="h-3.5 w-3.5" />
+                            )}
+                          </button>
                         </div>
                       </td>
                       <td className="px-5 py-3 text-right">
@@ -764,6 +797,49 @@ function AdminCollaborators() {
                                   {p.pendingCount > 0 && (
                                     <span className="text-amber-600 font-semibold">
                                       (+{p.pendingCount})
+                                    </span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex flex-col items-end">
+                          <div className="flex items-center gap-1.5 justify-end">
+                            <span className="text-teal-900 font-bold">{s.excursions || 0}</span>
+                            {(s.pendingExcursions || 0) > 0 && (
+                              <span
+                                className="text-amber-600 font-semibold text-xs"
+                                title={`${s.pendingExcursions} excursion(s) avec paiement en attente`}
+                              >
+                                (+{s.pendingExcursions} att.)
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => openDetailsModal({ collaborator: c, ...s }, "excursions")}
+                              className="p-1 rounded text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition cursor-pointer"
+                              title="Voir les excursions de ce collaborateur en détail"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                          {/* Itemized Excursion Breakdown */}
+                          {s.excursionsDetail && s.excursionsDetail.length > 0 && (
+                            <div className="mt-1 flex flex-col items-end gap-1">
+                              {s.excursionsDetail.map((e, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded bg-teal-50 border border-teal-200 px-1.5 py-0.5 text-[10px] text-teal-800"
+                                  title={`${e.tourName} : ${e.confirmedCount} confirmé(s), ${e.pendingCount} en attente`}
+                                >
+                                  <span className="font-semibold text-teal-950">{e.tourName}:</span>
+                                  <span>{e.confirmedCount}</span>
+                                  {e.pendingCount > 0 && (
+                                    <span className="text-amber-600 font-semibold">
+                                      (+{e.pendingCount})
                                     </span>
                                   )}
                                 </span>
@@ -1395,6 +1471,31 @@ function AdminCollaborators() {
               </div>
             )}
 
+            {/* Excursions Breakdown */}
+            {selectedCollabForDetails.excursionsDetail && selectedCollabForDetails.excursionsDetail.length > 0 && (
+              <div className="px-6 py-2.5 bg-teal-50/70 border-b border-teal-100 flex items-center gap-2 flex-wrap text-xs">
+                <span className="font-semibold text-teal-900 flex items-center gap-1">
+                  <Compass className="h-3.5 w-3.5 text-teal-600" /> Récapitulatif des excursions :
+                </span>
+                {selectedCollabForDetails.excursionsDetail.map((ed, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 bg-white border border-teal-200 px-2.5 py-1 rounded-lg text-teal-900 font-medium shadow-xs"
+                  >
+                    <span>{ed.tourName}:</span>
+                    <span className="font-bold text-teal-700">
+                      {ed.confirmedCount} confirmés
+                    </span>
+                    {ed.pendingCount > 0 && (
+                      <span className="text-amber-700 font-semibold">
+                        (+{ed.pendingCount} en attente)
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Tabs & Filter */}
             <div className="px-6 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -1414,12 +1515,39 @@ function AdminCollaborators() {
                         b.collaboratorId === selectedCollabForDetails.collaborator.id &&
                         !isTransferBooking(b) &&
                         !isTourismBooking(b) &&
+                        packRoomCategory(packs.find((p) => p.id === b.packId) || b.packName, b.numPeople) !== "excursion" &&
                         b.status !== "declined" &&
                         ((b.packName || "").toLowerCase().includes("pass") ||
                           packRoomCategory(
                             packs.find((p) => p.id === b.packId) || b.packName,
                             b.numPeople,
                           ) === "fullpass"),
+                    ).length
+                  }
+                  )
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDetailsTab("excursions")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
+                    detailsTab === "excursions"
+                      ? "bg-teal-600 text-white font-bold"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  <Compass className="h-3 w-3" />
+                  Excursions (
+                  {
+                    bookings.filter(
+                      (b) =>
+                        b.collaboratorId === selectedCollabForDetails.collaborator.id &&
+                        !isTransferBooking(b) &&
+                        b.status !== "declined" &&
+                        (isTourismBooking(b) ||
+                          packRoomCategory(
+                            packs.find((p) => p.id === b.packId) || b.packName,
+                            b.numPeople,
+                          ) === "excursion"),
                     ).length
                   }
                   )
@@ -1488,9 +1616,17 @@ function AdminCollaborators() {
                       const p = packs.find((x) => x.id === b.packId);
                       return (
                         !isTourismBooking(b) &&
+                        packRoomCategory(p || b.packName, b.numPeople) !== "excursion" &&
                         ((b.packName || "").toLowerCase().includes("pass") ||
                           packRoomCategory(p || b.packName, b.numPeople) === "fullpass" ||
                           (p?.category || "").toLowerCase().includes("pass"))
+                      );
+                    }
+                    if (detailsTab === "excursions") {
+                      const p = packs.find((x) => x.id === b.packId);
+                      return (
+                        isTourismBooking(b) ||
+                        packRoomCategory(p || b.packName, b.numPeople) === "excursion"
                       );
                     }
                     return true;

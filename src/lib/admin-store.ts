@@ -2812,7 +2812,13 @@ export interface CollaboratorStats {
   singleRooms: number;
   doubleRooms: number;
   fullPass: number;
-  excursions?: number;
+  excursions: number;
+  excursionsDetail?: {
+    tourName: string;
+    confirmedCount: number;
+    pendingCount: number;
+    totalCount: number;
+  }[];
   /** Detailed breakdown of all passes sold (confirmed & pending) */
   passesDetail: PassDetailItem[];
   allPassesCount: number;
@@ -2823,7 +2829,7 @@ export interface CollaboratorStats {
   pendingSingleRooms: number;
   pendingDoubleRooms: number;
   pendingFullPass: number;
-  pendingExcursions?: number;
+  pendingExcursions: number;
   /** Sales in the currency each pack is priced in — never converted */
   revenue: Money;
   pendingRevenue: Money;
@@ -4268,6 +4274,57 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
     const allPassesCount = passesDetail.reduce((s, p) => s + p.totalCount, 0);
     const pendingPassesCount = passesDetail.reduce((s, p) => s + p.pendingCount, 0);
 
+    // Detailed excursions breakdown
+    const excursionDetailsMap = new Map<
+      string,
+      {
+        tourName: string;
+        confirmedCount: number;
+        pendingCount: number;
+        totalCount: number;
+      }
+    >();
+
+    for (const b of myNonDeclined) {
+      const isExcursion = isTourismBooking(b) || catOf(b) === "excursion";
+      if (isExcursion) {
+        let rawName = b.packName || "Excursion";
+        if (rawName.toLowerCase().includes("asilah") || rawName.toLowerCase().includes("asella")) {
+          rawName = "Asilah";
+        } else if (rawName.toLowerCase().includes("chefchaouen") || rawName.toLowerCase().includes("chaouen") || rawName.toLowerCase().includes("chawan")) {
+          rawName = "Chefchaouen";
+        } else if (rawName.toLowerCase().includes("tangier") || rawName.toLowerCase().includes("tanger")) {
+          rawName = "Tanger";
+        } else {
+          rawName = rawName.replace(/^tourism:\s*/i, "").split("(")[0].trim() || "Excursion";
+        }
+
+        const count = b.numPeople || 1;
+        const isConf = isConfirmedBooking(b);
+        const isPend = b.status === "pending";
+
+        const entry = excursionDetailsMap.get(rawName) || {
+          tourName: rawName,
+          confirmedCount: 0,
+          pendingCount: 0,
+          totalCount: 0,
+        };
+
+        if (isConf) {
+          entry.confirmedCount += count;
+        } else if (isPend) {
+          entry.pendingCount += count;
+        }
+        entry.totalCount += count;
+
+        excursionDetailsMap.set(rawName, entry);
+      }
+    }
+
+    const excursionsDetail = Array.from(excursionDetailsMap.values()).sort(
+      (a, b) => b.totalCount - a.totalCount,
+    );
+
     return {
       collaborator: c,
       invitesIssued: myInvites.length,
@@ -4277,7 +4334,10 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       singleRooms: myConfirmedBookings.filter((b) => catOf(b) === "single").length,
       doubleRooms: myConfirmedBookings.filter((b) => catOf(b) === "double").length,
       fullPass: myConfirmedBookings.filter((b) => !isTourismBooking(b) && catOf(b) === "fullpass").length,
-      excursions: myConfirmedBookings.filter((b) => isTourismBooking(b) || catOf(b) === "excursion").length,
+      excursions: myConfirmedBookings
+        .filter((b) => isTourismBooking(b) || catOf(b) === "excursion")
+        .reduce((s, b) => s + (b.numPeople || 1), 0),
+      excursionsDetail,
       passesDetail,
       allPassesCount,
       pendingPassesCount,
@@ -4286,7 +4346,9 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       pendingSingleRooms: myPendingBookings.filter((b) => catOf(b) === "single").length,
       pendingDoubleRooms: myPendingBookings.filter((b) => catOf(b) === "double").length,
       pendingFullPass: myPendingBookings.filter((b) => !isTourismBooking(b) && catOf(b) === "fullpass").length,
-      pendingExcursions: myPendingBookings.filter((b) => isTourismBooking(b) || catOf(b) === "excursion").length,
+      pendingExcursions: myPendingBookings
+        .filter((b) => isTourismBooking(b) || catOf(b) === "excursion")
+        .reduce((s, b) => s + (b.numPeople || 1), 0),
       revenue,
       pendingRevenue,
       commission: earned,
