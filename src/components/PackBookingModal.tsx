@@ -22,6 +22,7 @@ import {
   getCollaboratorByCode,
   getRememberedReferral,
   packPriceFor,
+  isModifierPack,
   validateDiscountCode,
   calculateDiscountAmount,
   isDiscountApplicableToPack,
@@ -411,33 +412,40 @@ export function PackBookingModal({
           <X className="h-4 w-4" />
         </button>
 
-        {/* Header with golden accent */}
+        {/* Header with golden or blue accent */}
         <div className="relative overflow-hidden px-4 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-amber-500" />
+          <div className={`absolute top-0 left-0 right-0 h-1.5 ${isModifierPack(pack) ? "bg-blue-600" : "bg-amber-500"}`} />
 
           <div className="relative">
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <p className="text-xs tracking-[0.3em] uppercase text-amber-600 font-semibold">
-                {t("packFormTitle")}
+              <Sparkles className={`h-4 w-4 ${isModifierPack(pack) ? "text-blue-600" : "text-amber-500"}`} />
+              <p className={`text-xs tracking-[0.3em] uppercase font-semibold ${isModifierPack(pack) ? "text-blue-700" : "text-amber-600"}`}>
+                {isModifierPack(pack) ? (lang === "fr" ? "Réservation Pack Modifiable" : "Modifier Pack Booking") : t("packFormTitle")}
               </p>
             </div>
             <p className="text-sm text-gray-500">{t("packFormDesc")}</p>
           </div>
 
           {/* Selected pack badge & pricing breakdown */}
-          <div className="mt-5 p-4 rounded-2xl border border-amber-200 bg-amber-50/70 space-y-3">
+          <div className={`mt-5 p-4 rounded-2xl border space-y-3 ${isModifierPack(pack) ? "border-blue-300 bg-blue-50/80 ring-2 ring-blue-400/20" : "border-amber-200 bg-amber-50/70"}`}>
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-amber-500 grid place-items-center shrink-0 shadow-sm">
-                <span className="text-slate-950 font-display text-lg font-bold">
+              <div className={`h-12 w-12 rounded-xl grid place-items-center shrink-0 shadow-sm ${isModifierPack(pack) ? "bg-blue-600 text-white" : "bg-amber-500 text-slate-950"}`}>
+                <span className="font-display text-lg font-bold">
                   {pack.name.charAt(0)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs tracking-[0.2em] uppercase text-gray-500 font-medium">
-                  {t("packFormSelectedPack")}
-                </p>
-                <p className="font-display text-xl truncate text-gray-900 font-semibold">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs tracking-[0.2em] uppercase text-gray-500 font-medium">
+                    {t("packFormSelectedPack")}
+                  </p>
+                  {isModifierPack(pack) && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-600 text-white">
+                      Modifier Pack
+                    </span>
+                  )}
+                </div>
+                <p className={`font-display text-xl truncate font-semibold ${isModifierPack(pack) ? "text-blue-950" : "text-gray-900"}`}>
                   {translateDynamicText(pack.name, lang)}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
@@ -445,7 +453,7 @@ export function PackBookingModal({
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-xs font-semibold text-amber-600 block">
+                <span className={`text-xs font-semibold block ${isModifierPack(pack) ? "text-blue-600" : "text-amber-600"}`}>
                   {singlePrice > 0
                     ? `${singlePrice} ${currency} / ${lang === "fr" ? "pers." : lang === "es" ? "pers." : "person"}`
                     : pack.price}

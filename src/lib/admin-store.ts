@@ -977,7 +977,7 @@ export async function reorderPacks(orderedIds: string[]): Promise<boolean> {
 }
 
 export async function getActivePacks(): Promise<Pack[]> {
-  return (await getPacks()).filter((p) => p.active && !p.isPrivate);
+  return (await getPacks()).filter((p) => p.active && (!p.isPrivate || isModifierPack(p)));
 }
 
 export async function getPackById(id: string): Promise<Pack | undefined> {

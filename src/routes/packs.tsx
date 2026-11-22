@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Check, Tag, AlertCircle, X, Sparkles, Search, Ticket } from "lucide-react";
+import { Check, Tag, AlertCircle, X, Sparkles, Search, Ticket, Link2, Copy } from "lucide-react";
 import { Nav } from "@/components/Nav";
 import { useLanguage } from "@/hooks/useLanguage";
 import { translateDynamicText, priceUnitLabel } from "@/lib/translations";
 import {
   getActivePacks,
+  isModifierPack,
   validateDiscountCode,
   calculateDiscountAmount,
   isDiscountApplicableToPack,
@@ -42,6 +43,16 @@ function PacksPage() {
   const [appliedDiscount, setAppliedDiscount] = useState<DiscountCode | null>(null);
   const [discountMsg, setDiscountMsg] = useState<{ success: boolean; text: string } | null>(null);
   const [validatingCode, setValidatingCode] = useState(false);
+  const [copiedPackId, setCopiedPackId] = useState<string | null>(null);
+
+  const copyPackLink = (packId: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const link = `${origin}/book?packId=${packId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedPackId(packId);
+      setTimeout(() => setCopiedPackId(null), 2000);
+    });
+  };
 
   // Ticket Tracker State
   const [ticketSearch, setTicketSearch] = useState("");
@@ -355,6 +366,7 @@ function PacksPage() {
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 {catPacks.map((p) => {
+                  const isModifier = isModifierPack(p);
                   const isPopular = p.popular;
                   const basePriceNum = parseInt(p.price, 10) || 0;
                   const guestCount = p.numGuests ?? (/double|doble|couple|pareja/i.test(`${p.name} ${p.sub}`) ? 2 : 1);
@@ -369,7 +381,9 @@ function PacksPage() {
                     <div
                       key={p.id || `${translateDynamic(p.name)}-${translateDynamic(p.sub)}`}
                       className={`group relative rounded-[2rem] p-8 md:p-10 flex flex-col transition-all duration-500 hover:-translate-y-2 ${
-                        isPopular
+                        isModifier
+                          ? "bg-gradient-to-b from-blue-950/70 via-card/85 to-blue-950/40 backdrop-blur-xl border-2 border-blue-500 shadow-2xl shadow-blue-500/25 ring-2 ring-blue-400/40 z-10"
+                          : isPopular
                           ? "bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-xl border-2 border-primary/50 shadow-2xl shadow-primary/20 z-10 md:-mt-4 md:mb-[-16px]"
                           : "bg-card/30 backdrop-blur-md border border-border/60 hover:border-primary/40 shadow-xl hover:shadow-2xl hover:shadow-primary/10"
                       }`}
@@ -377,11 +391,16 @@ function PacksPage() {
                       {/* Glassmorphism reflection highlight */}
                       <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-                      {isPopular && (
+                      {isModifier ? (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 text-white text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-blue-500/50 flex items-center gap-1.5 border border-blue-300/40 whitespace-nowrap">
+                          <Sparkles className="h-3.5 w-3.5 text-blue-200" />
+                          {lang === "fr" ? "Modifier Pack" : lang === "es" ? "Pack Modificable" : "Modifier Pack"}
+                        </div>
+                      ) : isPopular ? (
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-amber-500 text-primary-foreground text-[10px] md:text-xs font-black tracking-widest uppercase px-5 py-2 rounded-full shadow-lg shadow-primary/40">
                           {t("popularBadge")}
                         </div>
-                      )}
+                      ) : null}
 
                       {/* RED DISCOUNT GRAPHIC BADGE */}
                       {hasDiscount && (
@@ -394,12 +413,47 @@ function PacksPage() {
                       )}
 
                       <div className="relative z-10 flex flex-col flex-1 text-left">
-                        <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                        <h3 className={`font-display text-3xl md:text-4xl font-bold transition-colors duration-300 ${
+                          isModifier
+                            ? "text-blue-400 group-hover:text-blue-300"
+                            : "text-foreground group-hover:text-primary"
+                        }`}>
                           {translateDynamic(p.name)}
                         </h3>
                         <p className="text-[10px] md:text-xs tracking-[0.25em] uppercase text-muted-foreground mt-3 font-semibold">
                           {translateDynamic(p.sub)}
                         </p>
+
+                        {/* Direct Link Share Box for Modifier Pack */}
+                        {isModifier && p.id && (
+                          <div className="mt-5 p-3 rounded-2xl bg-blue-950/70 border border-blue-400/40 flex items-center justify-between gap-2 shadow-inner">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Link2 className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                              <span className="text-[11px] font-mono text-blue-200 truncate select-all">
+                                /book?packId={p.id}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyPackLink(p.id);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold transition cursor-pointer shrink-0 shadow-md shadow-blue-900/30 active:scale-95"
+                              title="Copier le lien direct de réservation de ce pack"
+                            >
+                              {copiedPackId === p.id ? (
+                                <>
+                                  <Check className="h-3 w-3" /> {lang === "fr" ? "Copié !" : lang === "es" ? "¡Copiado!" : "Copied!"}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-3 w-3" /> {lang === "fr" ? "Copier" : lang === "es" ? "Copiar" : "Copy"}
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
 
                         {/* PRICE SECTION WITH RED DISCOUNT GRAPHICS */}
                         {hasDiscount ? (
@@ -415,7 +469,9 @@ function PacksPage() {
                               </span>
                             </div>
                             <div className="flex items-end gap-2">
-                              <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-gold leading-none">
+                              <span className={`font-display text-5xl md:text-6xl font-black tracking-tighter leading-none ${
+                                isModifier ? "text-blue-400" : "text-gold"
+                              }`}>
                                 {finalPriceNum}
                               </span>
                               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
@@ -428,7 +484,9 @@ function PacksPage() {
                           </div>
                         ) : (
                           <div className="mt-8 md:mt-10 flex items-end gap-2">
-                            <span className="font-display text-5xl md:text-6xl font-black tracking-tighter text-foreground leading-none">
+                            <span className={`font-display text-5xl md:text-6xl font-black tracking-tighter leading-none ${
+                              isModifier ? "text-blue-400" : "text-foreground"
+                            }`}>
                               {p.price}
                             </span>
                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1 md:mb-2">
@@ -447,7 +505,9 @@ function PacksPage() {
                             <li key={i} className="flex items-start gap-4">
                               <div
                                 className={`mt-0.5 shrink-0 rounded-full p-1.5 transition-colors duration-300 ${
-                                  isPopular
+                                  isModifier
+                                    ? "bg-blue-500/20 text-blue-400"
+                                    : isPopular
                                     ? "bg-primary/20 text-primary"
                                     : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
                                 }`}
@@ -473,7 +533,9 @@ function PacksPage() {
                             })
                           }
                           className={`mt-10 md:mt-12 w-full rounded-2xl py-4 md:py-5 text-sm md:text-base font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer overflow-hidden relative ${
-                            isPopular
+                            isModifier
+                              ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 text-white shadow-[0_0_30px_-5px_rgba(59,130,246,0.5)] hover:shadow-[0_0_40px_-5px_rgba(59,130,246,0.7)] hover:scale-[1.03]"
+                              : isPopular
                               ? "bg-primary text-primary-foreground shadow-[0_0_30px_-5px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_-5px_rgba(212,175,55,0.6)] hover:scale-[1.03]"
                               : "bg-card border border-border/80 text-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground hover:shadow-lg hover:shadow-primary/30 hover:scale-[1.03]"
                           }`}

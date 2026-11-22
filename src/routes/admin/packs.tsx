@@ -188,7 +188,7 @@ function AdminPacks() {
       popular: false,
       active: true,
       numGuests: 1,
-      isPrivate: true,
+      isPrivate: false,
       partnerPriceEur: "",
       partnerPriceMad: "",
     });

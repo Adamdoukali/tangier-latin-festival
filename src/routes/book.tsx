@@ -14,12 +14,16 @@ import {
   Bus,
   Plane,
   Ship,
+  Sparkles,
+  Link2,
+  Copy,
 } from "lucide-react";
 import { PhoneCountrySelect } from "@/components/PhoneCountrySelect";
 import { formatInternationalPhone } from "@/lib/phone";
 import {
   getActivePacks,
   getPackById,
+  isModifierPack,
   addBooking,
   getCollaboratorByCode,
   getRememberedReferral,
@@ -73,6 +77,17 @@ function BookPage() {
   const [done, setDone] = useState(false);
   const [reservation, setReservation] = useState<Booking | null>(null);
   const [error, setError] = useState("");
+  const [copiedPackId, setCopiedPackId] = useState<string | null>(null);
+
+  const copyPackLink = (packId: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const link = `${origin}/book?packId=${packId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedPackId(packId);
+      setTimeout(() => setCopiedPackId(null), 2000);
+    });
+  };
+
   const [referralPartner, setReferralPartner] = useState<Collaborator | null>(null);
   const isMadReferral = referralPartner ? partnerCurrency(referralPartner) === "MAD" : false;
   const displayRate = isMadReferral ? EUR_TO_MAD : 1;
@@ -533,16 +548,31 @@ function BookPage() {
         </button>
 
         {/* Selected pack summary & pricing breakdown */}
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 mb-6 max-w-lg mx-auto shadow-sm space-y-3">
+        <div className={`rounded-2xl border p-5 mb-6 max-w-lg mx-auto shadow-sm space-y-3 ${
+          isModifierPack(selected)
+            ? "border-blue-400 bg-blue-50/90 ring-2 ring-blue-400/20"
+            : "border-amber-200 bg-amber-50/80"
+        }`}>
+          {isModifierPack(selected) && (
+            <div className="flex items-center justify-between pb-2 border-b border-blue-200/80">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white shadow-2xs">
+                <Sparkles className="h-3 w-3" />
+                {tr("Modifier Pack", "Pack Modifiable", "Pack Modificable")}
+              </span>
+              <span className="text-[11px] font-mono text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded">
+                ID: {selected.id}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-lg text-gray-900 font-bold">
+              <h2 className={`font-display text-lg font-bold ${isModifierPack(selected) ? "text-blue-950" : "text-gray-900"}`}>
                 {translateDynamicText(selected.name, L)}
               </h2>
               <p className="text-xs text-gray-500">{translateDynamicText(selected.sub, L)}</p>
             </div>
             <div className="text-right">
-              <span className="text-xs font-semibold text-amber-600 block">
+              <span className={`text-xs font-semibold block ${isModifierPack(selected) ? "text-blue-600" : "text-amber-600"}`}>
                 {singlePrice > 0
                   ? `${singlePrice} ${currency} / ${L === "fr" ? "pers." : L === "es" ? "pers." : "person"}`
                   : selected.price}
@@ -1348,6 +1378,7 @@ function BookPage() {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {packs.map((p) => {
+            const isModifier = isModifierPack(p);
             const unit = priceUnitLabel(p, L);
             const baseP = eurUnit(p);
             const isApplicable = isDiscountApplicableToPack(appliedDiscount, p.id);
@@ -1372,17 +1403,24 @@ function BookPage() {
                 key={p.id}
                 onClick={() => choosePack(p)}
                 className={`relative text-left rounded-2xl p-5 border transition-all duration-300 cursor-pointer hover:-translate-y-1 ${
-                  p.popular
+                  isModifier
+                    ? "border-2 border-blue-500 bg-blue-50/70 shadow-md shadow-blue-100/60 hover:border-blue-600 hover:bg-blue-50"
+                    : p.popular
                     ? "border-amber-500/60 bg-gradient-to-b from-amber-50 to-transparent shadow-lg shadow-amber-50"
                     : "border-gray-300 bg-white/60 hover:border-amber-300"
                 }`}
               >
-                {p.popular && (
+                {isModifier ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full shadow-sm border border-blue-300/30 whitespace-nowrap">
+                    <Sparkles className="h-2.5 w-2.5 text-blue-200" />
+                    {tr("Modifier Pack", "Pack Modifiable", "Pack Modificable")}
+                  </span>
+                ) : p.popular ? (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-amber-500 text-zinc-950 text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full">
                     <Star className="h-2.5 w-2.5" />
                     {tr("Popular", "Populaire", "Popular")}
                   </span>
-                )}
+                ) : null}
 
                 {/* RED DISCOUNT GRAPHIC BADGE */}
                 {hasDiscount && (
@@ -1394,12 +1432,32 @@ function BookPage() {
                   </span>
                 )}
 
-                <p className="font-display text-lg text-gray-900">
+                <p className={`font-display text-lg ${isModifier ? "text-blue-950 font-bold" : "text-gray-900"}`}>
                   {translateDynamicText(p.name, L)}
                 </p>
                 <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
                   {translateDynamicText(p.sub, L)}
                 </p>
+
+                {/* Direct link box for Modifier Pack */}
+                {isModifier && p.id && (
+                  <div className="mt-3 pt-2.5 border-t border-blue-200/80 flex items-center justify-between gap-1 text-[11px]">
+                    <span className="text-blue-800 font-medium truncate">
+                      Lien direct : <code className="font-mono bg-blue-100/80 px-1 py-0.5 rounded text-blue-900 font-semibold">/book?packId={p.id}</code>
+                    </span>
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyPackLink(p.id);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] transition cursor-pointer shrink-0 shadow-xs active:scale-95"
+                      title="Copier le lien direct de réservation"
+                    >
+                      {copiedPackId === p.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                      {copiedPackId === p.id ? tr("Copied", "Copié !", "Copiado") : tr("Copy", "Copier", "Copiar")}
+                    </span>
+                  </div>
+                )}
 
                 {/* PRICE DISPLAY WITH RED DISCOUNT GRAPHICS */}
                 {hasDiscount ? (
@@ -1412,7 +1470,7 @@ function BookPage() {
                         {tr("Save", "Économisez", "Ahorra")} {displayDiscAmt} {displayCurrency}
                       </span>
                     </div>
-                    <p className="font-display text-3xl text-amber-600 font-bold">
+                    <p className={`font-display text-3xl font-bold ${isModifier ? "text-blue-600" : "text-amber-600"}`}>
                       {finalP}
                       <span className="text-xs text-gray-500 ml-1">
                         {displayCurrency}
@@ -1421,7 +1479,7 @@ function BookPage() {
                     </p>
                   </div>
                 ) : (
-                  <p className="mt-3 font-display text-3xl text-amber-600">
+                  <p className={`mt-3 font-display text-3xl font-bold ${isModifier ? "text-blue-600" : "text-amber-600"}`}>
                     {displayBaseP}
                     <span className="text-xs text-gray-500 ml-1">
                       {displayCurrency}
@@ -1433,12 +1491,12 @@ function BookPage() {
                 <ul className="mt-3 space-y-1">
                   {p.features.slice(0, 4).map((f, fi) => (
                     <li key={fi} className="flex items-start gap-1.5 text-[11px] text-gray-600">
-                      <Check className="h-3 w-3 text-amber-500/70 mt-0.5 shrink-0" />
+                      <Check className={`h-3 w-3 mt-0.5 shrink-0 ${isModifier ? "text-blue-600" : "text-amber-500/70"}`} />
                       {translateDynamicText(f, L)}
                     </li>
                   ))}
                 </ul>
-                <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                <span className={`mt-4 inline-flex items-center gap-1.5 text-xs font-semibold ${isModifier ? "text-blue-600" : "text-amber-600"}`}>
                   <Ticket className="h-3.5 w-3.5" />
                   {tr("Choose this pack →", "Choisir ce pack →", "Elegir este pack →")}
                   {hasDiscount
