@@ -8,6 +8,7 @@ import {
   BedDouble,
   Bed,
   TrendingUp,
+  Compass,
   ArrowRight,
 } from "lucide-react";
 import {
@@ -24,6 +25,7 @@ import {
   bookingPeopleCount,
   emptyMoney,
   isConfirmedBooking,
+  isTourismBooking,
   formatMoneyPair,
   formatForPartner,
   partnerCurrency,
@@ -50,7 +52,7 @@ function AdminDashboard() {
     totalPacks: 0,
     activePacks: 0,
   });
-  const [roomCounts, setRoomCounts] = useState({ double: 0, single: 0, fullpass: 0 });
+  const [roomCounts, setRoomCounts] = useState({ double: 0, single: 0, fullpass: 0, excursion: 0 });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
   const [collabStats, setCollabStats] = useState<CollaboratorStats[]>([]);
   const [liveBookings, setLiveBookings] = useState<Booking[]>([]);
@@ -72,6 +74,7 @@ function AdminDashboard() {
       setStats(s);
       // Confirmed bookings split by pack type — unconfirmed/pending are counted as zero
       const catOf = (b: Booking) => {
+        if (isTourismBooking(b)) return "excursion";
         const p = packs.find((x) => x.id === b.packId);
         return packRoomCategory(p || b.packName, b.numPeople);
       };
@@ -86,7 +89,8 @@ function AdminDashboard() {
       setRoomCounts({
         double: live.filter((b) => catOf(b) === "double").length,
         single: live.filter((b) => catOf(b) === "single").length,
-        fullpass: live.filter((b) => catOf(b) === "fullpass").length,
+        fullpass: live.filter((b) => !isTourismBooking(b) && catOf(b) === "fullpass").length,
+        excursion: live.filter((b) => isTourismBooking(b) || catOf(b) === "excursion").length,
       });
       setRecentBookings(
         bookings
@@ -124,6 +128,14 @@ function AdminDashboard() {
       color: "from-cyan-500 to-cyan-700",
       iconBg: "bg-cyan-100",
       iconColor: "text-cyan-700",
+    },
+    {
+      label: "Excursions (Asilah / Chaouen)",
+      value: roomCounts.excursion,
+      icon: Compass,
+      color: "from-teal-500 to-teal-700",
+      iconBg: "bg-teal-100",
+      iconColor: "text-teal-700",
     },
     {
       label: "En attente",
@@ -195,6 +207,8 @@ function AdminDashboard() {
       {/* guests by origin — Morocco vs international, per pack type */}
       {(() => {
         const catOfClient = (c: ClientGuest) => {
+          const b = liveBookings.find((x) => x.id === c.bookingId);
+          if (b && isTourismBooking(b)) return "excursion";
           const p = allPacks.find((x) => x.id === c.packName || x.name === c.packName);
           return packRoomCategory(p || c.packName, 1);
         };
@@ -218,6 +232,7 @@ function AdminDashboard() {
             double: mine.filter((c) => catOfClient(c) === "double").length,
             single: mine.filter((c) => catOfClient(c) === "single").length,
             fullpass: mine.filter((c) => catOfClient(c) === "fullpass").length,
+            excursion: mine.filter((c) => catOfClient(c) === "excursion").length,
             total: mine.length,
           };
         });
@@ -238,6 +253,7 @@ function AdminDashboard() {
                     <th className="px-5 py-3 text-right">Chambres doubles</th>
                     <th className="px-5 py-3 text-right">Chambres individuelles</th>
                     <th className="px-5 py-3 text-right">Pass complet</th>
+                    <th className="px-5 py-3 text-right">Excursions</th>
                     <th className="px-5 py-3 text-right">Total</th>
                   </tr>
                 </thead>
@@ -253,6 +269,7 @@ function AdminDashboard() {
                       <td className="px-5 py-3 text-right text-gray-800">{r.double}</td>
                       <td className="px-5 py-3 text-right text-gray-800">{r.single}</td>
                       <td className="px-5 py-3 text-right text-gray-800">{r.fullpass}</td>
+                      <td className="px-5 py-3 text-right text-teal-700 font-medium">{r.excursion}</td>
                       <td className="px-5 py-3 text-right font-semibold text-gray-900">
                         {r.total}
                       </td>
@@ -262,7 +279,7 @@ function AdminDashboard() {
                     <td className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500">
                       Total
                     </td>
-                    {(["double", "single", "fullpass", "total"] as const).map((k) => (
+                    {(["double", "single", "fullpass", "excursion", "total"] as const).map((k) => (
                       <td key={k} className="px-5 py-3 text-right font-medium text-gray-900">
                         {rowsData.reduce((s, r) => s + r[k], 0)}
                       </td>

@@ -19,6 +19,7 @@ import {
   Users,
   Copy,
   Link as LinkIcon,
+  Sparkles,
 } from "lucide-react";
 import {
   getPacks,
@@ -27,6 +28,7 @@ import {
   deletePack,
   seedPacksToDb,
   reorderPacks,
+  isModifierPack,
   type Pack,
 } from "@/lib/admin-store";
 import { supabase } from "@/lib/supabase";
@@ -38,6 +40,7 @@ export const Route = createFileRoute("/admin/packs")({
 
 function formatCategoryTitle(cat: string): string {
   const c = (cat || "").trim();
+  if (/modifier\s*pack|pack\s*modifiable/i.test(c)) return "Modifier Pack";
   if (/hotel\s*packs?\s*\(single\)|chambre\s*single|single\s*room|single\s*pass/i.test(c))
     return "Chambre individuelle";
   if (/hotel\s*packs?\s*\(double\)|chambre\s*double|double\s*room/i.test(c))
@@ -169,6 +172,29 @@ function AdminPacks() {
     setShowForm(true);
   };
 
+  const openNewModifierPack = () => {
+    setEditingId(null);
+    setForm({
+      name: "Modifier Pack",
+      sub: "Forfait sur mesure modifiable",
+      category: "Modifier Pack",
+      price: "250",
+      currency: "€",
+      features: [
+        "Full Pass Festival inclus",
+        "Hébergement Solazur inclus",
+        "Accès à toutes les soirées & workshops",
+      ],
+      popular: false,
+      active: true,
+      numGuests: 1,
+      isPrivate: true,
+      partnerPriceEur: "",
+      partnerPriceMad: "",
+    });
+    setShowForm(true);
+  };
+
   const openEdit = (pack: Pack) => {
     setEditingId(pack.id);
     setForm({
@@ -285,12 +311,21 @@ function AdminPacks() {
             à partager directement.
           </p>
         </div>
-        <button
-          onClick={openNew}
-          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
-        >
-          <Plus className="h-4 w-4" /> Ajouter un forfait
-        </button>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={openNewModifierPack}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition cursor-pointer shadow-sm"
+            title="Créer un forfait modifiable avec lien direct dédié à partager"
+          >
+            <Sparkles className="h-4 w-4" /> + Créer un Modifier Pack
+          </button>
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
+          >
+            <Plus className="h-4 w-4" /> Ajouter un forfait
+          </button>
+        </div>
       </div>
 
       {/* DB seed banner */}
@@ -323,10 +358,25 @@ function AdminPacks() {
       )}
 
       {/* Category sections */}
-      {categories.map((cat, catIdx) => (
-        <section key={cat} className="rounded-2xl border border-gray-200 bg-white/30">
+      {categories.map((cat, catIdx) => {
+        const isModifierCat = cat === "Modifier Pack" || formatCategoryTitle(cat) === "Modifier Pack";
+        return (
+        <section
+          key={cat}
+          className={`rounded-2xl border overflow-hidden shadow-sm ${
+            isModifierCat
+              ? "border-blue-300 bg-blue-50/15 ring-1 ring-blue-300/30"
+              : "border-gray-200 bg-white/30"
+          }`}
+        >
           {/* Category header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200">
+          <div
+            className={`flex items-center gap-3 px-5 py-4 border-b ${
+              isModifierCat
+                ? "bg-gradient-to-r from-blue-700 to-indigo-800 text-white border-blue-400"
+                : "border-gray-200 bg-slate-50"
+            }`}
+          >
             <div className="flex items-center gap-1">
               <button
                 onClick={() => moveCategory(cat, -1)}
@@ -345,12 +395,24 @@ function AdminPacks() {
                 <ChevronDown className="h-4 w-4" />
               </button>
             </div>
-            <h3 className="font-display text-base tracking-wide text-gray-900 uppercase">
+            <h3
+              className={`font-display text-base tracking-wide uppercase ${
+                isModifierCat ? "text-white flex items-center gap-2" : "text-gray-900"
+              }`}
+            >
+              {isModifierCat && <Sparkles className="h-4 w-4 text-blue-300" />}
               {formatCategoryTitle(cat)}
             </h3>
-            <span className="text-xs text-gray-400">
+            <span
+              className={`text-xs ${isModifierCat ? "text-blue-200" : "text-gray-400"}`}
+            >
               {groups[cat].length} forfait{groups[cat].length === 1 ? "" : "s"}
             </span>
+            {isModifierCat && (
+              <span className="hidden sm:inline-block text-xs bg-blue-900/60 text-blue-200 border border-blue-400/40 px-2.5 py-0.5 rounded-full font-medium ml-2">
+                🔵 Forfaits sur mesure modifiables — lien direct dynamique
+              </span>
+            )}
             <button
               onClick={() => setPreviewCategory(cat)}
               className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-200 transition cursor-pointer"
@@ -362,20 +424,29 @@ function AdminPacks() {
 
           {/* Packs in this category, in website order (left → right) */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4">
-            {groups[cat].map((pack, i) => (
+            {groups[cat].map((pack, i) => {
+              const isModifier = isModifierPack(pack);
+              return (
               <div
                 key={pack.id}
-                className={`relative rounded-xl border bg-white shadow-sm p-5 transition-all duration-300 ${
-                  pack.active
-                    ? "border-gray-200 hover:border-gray-300"
-                    : "border-gray-100 opacity-60"
+                className={`relative rounded-xl border p-5 transition-all duration-300 ${
+                  isModifier
+                    ? "border-blue-400 bg-blue-50/30 ring-2 ring-blue-400/30 hover:border-blue-500 shadow-md"
+                    : pack.active
+                      ? "border-gray-200 bg-white hover:border-gray-300 shadow-sm"
+                      : "border-gray-100 bg-white opacity-60"
                 }`}
               >
                 {/* Position + badges + order controls */}
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 flex-wrap">
                   <span className="h-6 w-6 grid place-items-center rounded-full bg-gray-100/80 text-[11px] font-bold text-gray-600 border border-gray-300/50">
                     {i + 1}
                   </span>
+                  {isModifier && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-bold bg-blue-100 text-blue-800 border border-blue-300 shadow-2xs">
+                      <Sparkles className="h-3 w-3 text-blue-600" /> Modifier Pack
+                    </span>
+                  )}
                   {pack.popular && (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 text-[10px] tracking-widest uppercase font-medium border border-amber-200">
                       <Star className="h-3 w-3" /> Populaire
@@ -439,12 +510,33 @@ function AdminPacks() {
                 <p className="text-xs text-gray-500 tracking-wide uppercase mt-0.5">
                   {translateDynamicText(pack.sub, "fr")}
                 </p>
-                <p className="mt-3 font-display text-3xl text-amber-600">
+                <p className={`mt-3 font-display text-3xl ${isModifier ? "text-blue-600 font-bold" : "text-amber-600"}`}>
                   {pack.price}{" "}
                   <span className="text-xs text-gray-500 font-normal tracking-widest uppercase">
                     {pack.currency || "€"}
                   </span>
                 </p>
+
+                {/* Direct link box on card for Modifier Pack */}
+                {isModifier && (
+                  <div className="mt-3 p-2.5 bg-blue-100/70 rounded-lg border border-blue-300 text-xs text-blue-950 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-[11px] uppercase tracking-wide text-blue-800 flex items-center gap-1">
+                        <LinkIcon className="h-3 w-3" /> Lien direct du pack :
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => copyPackLink(pack.id)}
+                        className="text-blue-700 hover:text-blue-900 font-bold underline cursor-pointer text-xs shrink-0"
+                      >
+                        {copiedPackId === pack.id ? "✓ Copié !" : "Copier"}
+                      </button>
+                    </div>
+                    <code className="text-[10px] font-mono bg-white px-2 py-1 rounded border border-blue-200 truncate select-all">
+                      {typeof window !== "undefined" ? window.location.origin : ""}/book?packId={pack.id}
+                    </code>
+                  </div>
+                )}
 
                 {/* Features */}
                 <ul className="mt-4 space-y-1.5">
@@ -466,17 +558,19 @@ function AdminPacks() {
                   </button>
                   <button
                     onClick={() => copyPackLink(pack.id)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer border ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border ${
                       copiedPackId === pack.id
-                        ? "bg-emerald-100 text-emerald-700 border-emerald-300"
-                        : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                        : isModifier
+                          ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-xs"
+                          : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
                     }`}
                     title="Copier le lien de réservation directe de ce forfait"
                   >
                     {copiedPackId === pack.id ? (
-                      <Check className="h-3.5 w-3.5 text-emerald-600" />
+                      <Check className="h-3.5 w-3.5 text-white" />
                     ) : (
-                      <Copy className="h-3.5 w-3.5 text-amber-600" />
+                      <Copy className="h-3.5 w-3.5" />
                     )}
                     {copiedPackId === pack.id ? "Lien copié !" : "Copier le lien direct"}
                   </button>
@@ -499,10 +593,12 @@ function AdminPacks() {
                   </button>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         </section>
-      ))}
+        );
+      })}
 
       {packs.length === 0 && (
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
@@ -664,6 +760,7 @@ function AdminPacks() {
                 <datalist id="pack-category-options">
                   {Array.from(
                     new Set([
+                      "Modifier Pack",
                       "Chambre double",
                       "Chambre individuelle",
                       "Forfait spécial",
@@ -676,10 +773,23 @@ function AdminPacks() {
                   ))}
                 </datalist>
                 <p className="mt-1.5 text-[11px] text-gray-500">
-                  Saisissez un nom pour créer une catégorie. Elle deviendra une section distincte
+                  Saisissez un nom pour créer une catégorie (ex. « Modifier Pack »). Elle deviendra une section distincte
                   ici et sur le site, pour les forfaits visibles uniquement.
                 </p>
               </div>
+
+              {/* Notice for Modifier Pack */}
+              {(form.category === "Modifier Pack" || form.name.toLowerCase().includes("modifier pack")) && (
+                <div className="rounded-xl border border-blue-300 bg-blue-50/70 p-3.5 text-xs text-blue-900 flex items-start gap-2.5">
+                  <Sparkles className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-blue-950">Pack Modifiable (Modifier Pack)</p>
+                    <p className="mt-0.5 text-blue-800 leading-relaxed">
+                      Ce forfait est spécialement conçu pour être personnalisé à tout moment. Vous pouvez donner son lien direct au client, puis modifier son prix, son nom, ses participants ou ses options pour la réservation suivante.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Subtitle */}
               <div>

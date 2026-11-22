@@ -2812,6 +2812,7 @@ export interface CollaboratorStats {
   singleRooms: number;
   doubleRooms: number;
   fullPass: number;
+  excursions?: number;
   /** Detailed breakdown of all passes sold (confirmed & pending) */
   passesDetail: PassDetailItem[];
   allPassesCount: number;
@@ -2822,6 +2823,7 @@ export interface CollaboratorStats {
   pendingSingleRooms: number;
   pendingDoubleRooms: number;
   pendingFullPass: number;
+  pendingExcursions?: number;
   /** Sales in the currency each pack is priced in — never converted */
   revenue: Money;
   pendingRevenue: Money;
@@ -2853,7 +2855,20 @@ export function guestOrigin(booking: Booking): GuestOrigin {
   return "morocco";
 }
 
-export type PackRoomCategory = "single" | "double" | "special" | "fullpass";
+export type PackRoomCategory = "single" | "double" | "special" | "fullpass" | "excursion";
+
+/** Check if a pack is a modifiable custom pack ("Modifier Pack") */
+export function isModifierPack(
+  pack?: { name?: string; category?: string; sub?: string } | null,
+): boolean {
+  if (!pack) return false;
+  const c = `${pack.name || ""} ${pack.category || ""} ${pack.sub || ""}`.toLowerCase();
+  return (
+    c.includes("modifier pack") ||
+    c.includes("pack modifiable") ||
+    (pack.category || "").toLowerCase() === "modifier pack"
+  );
+}
 
 /** Calculate the expected number of guests for a pack (1, 2, 3, 4, etc.) */
 export function packGuestCount(p?: Pack | null): number {
@@ -2872,6 +2887,7 @@ export function packGuestCount(p?: Pack | null): number {
 }
 
 /** Classify a pack by its name, category, subtitle, or guest count:
+ *  - Excursion / Tourism (Asilah, Chefchaouen, etc.) -> "excursion"
  *  - 2 people / "Double Room" / "Chambre Double" / "Couple" -> "double"
  *  - 1 person with hotel/room / "Single Room" / "Chambre Single" -> "single"
  *  - 3+ people / "Special Pack" / "Triple" / "Quad" -> "special"
@@ -2905,6 +2921,14 @@ export function packRoomCategory(
   }
 
   const combined = `${name} ${sub} ${category}`.toLowerCase();
+
+  // 0. Excursions / tourism (Asilah, Chefchaouen, Tangier tour)
+  if (
+    /asilah|asella|chefchaouen|chaouen|chawan|excursion|tourisme|tourism/i.test(combined) ||
+    (typeof packOrName === "object" && packOrName && isTourismBooking(packOrName as any))
+  ) {
+    return "excursion";
+  }
 
   // 1. 3+ guests or triple/quad/special -> assign to double room
   if (
@@ -3001,6 +3025,11 @@ export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategor
   let def: BraceletCategory = "none";
   if (isArtist) {
     def = "artist";
+  } else if (
+    isTourismBooking(booking) ||
+    packRoomCategory(pack || booking.packName, booking.numPeople) === "excursion"
+  ) {
+    def = "none";
   } else {
     def =
       packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
@@ -3021,7 +3050,7 @@ export function guestBracelets(booking: Booking, packs: Pack[]): BraceletCategor
   return Array.from({ length: count }, (_, i) => overrides[i] ?? def);
 }
 
-/** Set one guest's bracelet; the whole per-guest array is persisted. */
+/** Set one guest's bracelet; the whole per-guest array is persisted and synchronized with guestDetails. */
 export async function setGuestBracelet(
   booking: Booking,
   guestIndex: number,
@@ -3030,7 +3059,20 @@ export async function setGuestBracelet(
 ): Promise<void> {
   const arr = guestBracelets(booking, packs);
   arr[guestIndex] = value;
-  await updateBookingBracelet(booking.id, JSON.stringify(arr));
+
+  const details = parseGuestDetails(booking.guestDetails);
+  while (details.length <= guestIndex) {
+    details.push({});
+  }
+  details[guestIndex] = {
+    ...details[guestIndex],
+    isArtist: value === "artist",
+  };
+
+  await updateBooking(booking.id, {
+    bracelet: JSON.stringify(arr),
+    guestDetails: JSON.stringify(details),
+  });
 }
 
 /** Has each guest of the booking received their bracelet? */
@@ -3338,9 +3380,11 @@ export function getClients(
       const bracelets = guestBracelets(b, packs);
       const guestBracelet = bracelets[gi] || "none";
       const isArtist =
-        ov.isArtist !== undefined
-          ? Boolean(ov.isArtist)
-          : guestBracelet === "artist" || isArtistInviteOrBooking(b, packs);
+        guestBracelet === "artist"
+          ? true
+          : ov.isArtist !== undefined
+            ? Boolean(ov.isArtist)
+            : isArtistInviteOrBooking(b, packs);
 
       clients.push({
         id: `${b.id}-${gi}`,
@@ -3395,10 +3439,13 @@ export async function setClientArtistStatus(
     braceletArr[guestIndex] = "artist";
   } else if (braceletArr[guestIndex] === "artist") {
     const pack = packs.find((p) => p.id === booking.packId);
+    const cat = packRoomCategory(pack || booking.packName, booking.numPeople);
     braceletArr[guestIndex] =
-      packRoomCategory(pack || booking.packName, booking.numPeople) === "fullpass"
-        ? "fullpass"
-        : "hotel";
+      isTourismBooking(booking) || cat === "excursion"
+        ? "none"
+        : cat === "fullpass"
+          ? "fullpass"
+          : "hotel";
   }
 
   const saved = await updateBooking(booking.id, {
@@ -4229,7 +4276,8 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       ticketsSold: myConfirmedBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
       singleRooms: myConfirmedBookings.filter((b) => catOf(b) === "single").length,
       doubleRooms: myConfirmedBookings.filter((b) => catOf(b) === "double").length,
-      fullPass: myConfirmedBookings.filter((b) => catOf(b) === "fullpass").length,
+      fullPass: myConfirmedBookings.filter((b) => !isTourismBooking(b) && catOf(b) === "fullpass").length,
+      excursions: myConfirmedBookings.filter((b) => isTourismBooking(b) || catOf(b) === "excursion").length,
       passesDetail,
       allPassesCount,
       pendingPassesCount,
@@ -4237,7 +4285,8 @@ export async function getCollaboratorStats(): Promise<CollaboratorStats[]> {
       pendingTicketsSold: myPendingBookings.reduce((s, b) => s + (b.numPeople || 1), 0),
       pendingSingleRooms: myPendingBookings.filter((b) => catOf(b) === "single").length,
       pendingDoubleRooms: myPendingBookings.filter((b) => catOf(b) === "double").length,
-      pendingFullPass: myPendingBookings.filter((b) => catOf(b) === "fullpass").length,
+      pendingFullPass: myPendingBookings.filter((b) => !isTourismBooking(b) && catOf(b) === "fullpass").length,
+      pendingExcursions: myPendingBookings.filter((b) => isTourismBooking(b) || catOf(b) === "excursion").length,
       revenue,
       pendingRevenue,
       commission: earned,

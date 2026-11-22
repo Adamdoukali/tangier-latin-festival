@@ -28,6 +28,7 @@ import {
   updateBookingStatus,
   updateBookingRoomNumber,
   updateBookingRoomType,
+  setClientArtistStatus,
   roomNumberColumnReady,
   roomTypeColumnReady,
   ROOM_TYPES,
@@ -203,10 +204,23 @@ function AdminHotel() {
           : undefined,
       };
     })
-    .filter((r): r is Room => r.category !== "fullpass")
+    .filter((r): r is Room => r.category !== "fullpass" && (r.category as any) !== "excursion")
     .sort(
       (a, b) => new Date(a.booking.createdAt).getTime() - new Date(b.booking.createdAt).getTime(),
     );
+
+  const handleToggleArtist = async (
+    booking: Booking,
+    guestIndex: number,
+    currentIsArtist: boolean,
+  ) => {
+    try {
+      await setClientArtistStatus(booking, guestIndex, !currentIsArtist, packs);
+      await reload();
+    } catch (e: any) {
+      alert(e?.message || "Erreur lors de la mise à jour du statut d'artiste.");
+    }
+  };
 
   const roomOrigin = (room: Room): "morocco" | "international" =>
     room.clients.some((client) => client.origin === "international") ? "international" : "morocco";
@@ -267,7 +281,7 @@ function AdminHotel() {
         const n = Math.round(
           (new Date(r.booking.departureDate).getTime() -
             new Date(r.booking.arrivalDate).getTime()) /
-            86400000,
+          86400000,
         );
         if (n > 0) return n;
       }
@@ -384,11 +398,10 @@ function AdminHotel() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                       }}
-                      className={`w-24 rounded-md border pl-7 pr-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-amber-500 transition ${
-                        r.booking.roomNumber
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-gray-300 bg-white text-gray-900"
-                      }`}
+                      className={`w-24 rounded-md border pl-7 pr-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-amber-500 transition ${r.booking.roomNumber
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border-gray-300 bg-white text-gray-900"
+                        }`}
                       title="Numéro de chambre d’hôtel — appuyez sur Entrée pour enregistrer"
                     />
                   </div>
@@ -397,11 +410,10 @@ function AdminHotel() {
                   <select
                     value={r.booking.roomType ?? ""}
                     onChange={(e) => saveRoomType(r.booking, e.target.value)}
-                    className={`rounded-md border px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500 transition cursor-pointer ${
-                      r.booking.roomType
-                        ? "border-amber-200 bg-amber-50 text-amber-900 font-bold"
-                        : "border-gray-300 bg-white text-gray-400 font-normal"
-                    }`}
+                    className={`rounded-md border px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500 transition cursor-pointer ${r.booking.roomType
+                      ? "border-amber-200 bg-amber-50 text-amber-900 font-bold"
+                      : "border-gray-300 bg-white text-gray-400 font-normal"
+                      }`}
                     title="Sélectionner le type de chambre"
                   >
                     <option value="" className="text-gray-400">
@@ -418,10 +430,24 @@ function AdminHotel() {
                 <td className="px-4 py-2.5 font-medium text-gray-900">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span>{r.guests[0] ?? "—"}</span>
-                    {r.clients[0]?.isArtist && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                        🎵 Artiste
-                      </span>
+                    {r.clients[0]?.isArtist ? (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleArtist(r.booking, 0, true)}
+                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                        title="Artiste — Cliquer pour retirer le statut d'artiste"
+                      >
+                        🎵 Artiste ✓
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleArtist(r.booking, 0, false)}
+                        className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                        title="Marquer comme Artiste"
+                      >
+                        + Artiste
+                      </button>
                     )}
                   </div>
                 </td>
@@ -431,10 +457,24 @@ function AdminHotel() {
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span>{r.guests[1]}</span>
-                          {r.clients[1]?.isArtist && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                              🎵 Artiste
-                            </span>
+                          {r.clients[1]?.isArtist ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleArtist(r.booking, 1, true)}
+                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                              title="Artiste — Cliquer pour retirer le statut d'artiste"
+                            >
+                              🎵 Artiste ✓
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleArtist(r.booking, 1, false)}
+                              className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                              title="Marquer comme Artiste"
+                            >
+                              + Artiste
+                            </button>
                           )}
                         </div>
                         <span
@@ -447,10 +487,24 @@ function AdminHotel() {
                     ) : (
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span>{r.guests[1] ?? (r.booking.numPeople > 1 ? "Participant 2" : "—")}</span>
-                        {r.clients[1]?.isArtist && (
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                            🎵 Artiste
-                          </span>
+                        {r.clients[1]?.isArtist ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleArtist(r.booking, 1, true)}
+                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                            title="Artiste — Cliquer pour retirer le statut d'artiste"
+                          >
+                            🎵 Artiste ✓
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleArtist(r.booking, 1, false)}
+                            className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                            title="Marquer comme Artiste"
+                          >
+                            + Artiste
+                          </button>
                         )}
                       </div>
                     )
@@ -494,11 +548,10 @@ function AdminHotel() {
                   ) : (
                     <button
                       onClick={() => toggleArrived(r.booking)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wide uppercase font-semibold border transition cursor-pointer ${
-                        arrived
-                          ? "bg-cyan-100 text-cyan-700 border-cyan-300 hover:bg-cyan-200"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-cyan-400 hover:text-cyan-700"
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wide uppercase font-semibold border transition cursor-pointer ${arrived
+                        ? "bg-cyan-100 text-cyan-700 border-cyan-300 hover:bg-cyan-200"
+                        : "bg-white text-gray-600 border-gray-300 hover:border-cyan-400 hover:text-cyan-700"
+                        }`}
                       title={
                         arrived
                           ? "Participant arrivé — cliquer pour annuler"
@@ -668,9 +721,8 @@ function AdminHotel() {
             return (
               <div
                 key={rt.id}
-                className={`p-2.5 rounded-lg border flex flex-col justify-between transition ${
-                  count > 0 ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-gray-50/50"
-                }`}
+                className={`p-2.5 rounded-lg border flex flex-col justify-between transition ${count > 0 ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-gray-50/50"
+                  }`}
               >
                 <span className="font-medium text-gray-800 truncate">{rt.label}</span>
                 <div className="mt-1 flex items-baseline justify-between">
@@ -704,32 +756,29 @@ function AdminHotel() {
           </span>
           <button
             onClick={() => setOriginFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-              originFilter === "all"
-                ? "bg-gray-900 text-white shadow-xs"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${originFilter === "all"
+              ? "bg-gray-900 text-white shadow-xs"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              }`}
           >
             Toutes les chambres ({rooms.length} chambres ·{" "}
             {rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)} participants)
           </button>
           <button
             onClick={() => setOriginFilter("morocco")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
-              originFilter === "morocco"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${originFilter === "morocco"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+              }`}
           >
             <span>🇲🇦</span> Maroc ({moroccanRooms.length} chambres · {moroccanGuests} participants)
           </button>
           <button
             onClick={() => setOriginFilter("international")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
-              originFilter === "international"
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${originFilter === "international"
+              ? "bg-blue-600 text-white shadow-xs"
+              : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
+              }`}
           >
             <span>🌐</span> Étranger ({internationalRooms.length} chambres · {internationalGuests}{" "}
             participants)
@@ -867,7 +916,7 @@ function AdminHotel() {
                       Math.round(
                         (new Date(datesForm.departure).getTime() -
                           new Date(datesForm.arrival).getTime()) /
-                          (1000 * 60 * 60 * 24),
+                        (1000 * 60 * 60 * 24),
                       ),
                     )}{" "}
                     nuit(s)
