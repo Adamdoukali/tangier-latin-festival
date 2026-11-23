@@ -490,27 +490,27 @@ function AdminBraceletScannerPage() {
       className={`p-4 md:p-8 space-y-6 ${fullScreen ? "fixed inset-0 z-50 bg-slate-900 overflow-y-auto" : ""}`}
     >
       {/* ─── Header ──────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-fuchsia-950 via-[#1a134d] to-indigo-950 text-white p-6 rounded-2xl shadow-lg border border-fuchsia-500/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-xl shadow-xs border border-slate-800">
         <div>
-          <div className="flex items-center gap-2 text-fuchsia-400 text-xs font-semibold uppercase tracking-widest">
-            <Watch className="h-4 w-4" />
-            Station Dédiée · Distribution des Bracelets
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <Watch className="h-3.5 w-3.5 text-slate-300" />
+            Station dédiée · distribution des bracelets
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-1 text-white">
-            Scanner des Bracelets Festival
+          <h1 className="text-xl font-semibold tracking-tight mt-1 text-white">
+            Scanner des bracelets festival
           </h1>
-          <p className="text-sm text-slate-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
             Scannez les billets pour délivrer immédiatement les bracelets physiques (Artistes, Hôtel
             Kenzi, Full Pass).
           </p>
 
-          <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center gap-2 mt-3">
             <Link
               to="/admin/scanner"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-semibold text-white border border-white/20 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 transition"
             >
               <ScanLine className="h-3.5 w-3.5 text-amber-400" />
-              Basculer vers Check-in Entrées
+              Basculer vers check-in entrées
             </Link>
           </div>
         </div>
@@ -519,10 +519,10 @@ function AdminBraceletScannerPage() {
           <button
             type="button"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center gap-1.5 text-xs font-medium ${
+            className={`p-2 rounded-lg border transition cursor-pointer flex items-center gap-1.5 text-xs font-medium ${
               soundEnabled
-                ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-400/40"
-                : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-slate-800 text-slate-200 border-slate-700"
+                : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-white"
             }`}
             title={soundEnabled ? "Sons activés" : "Sons coupés"}
           >
@@ -533,7 +533,7 @@ function AdminBraceletScannerPage() {
           <button
             type="button"
             onClick={() => setFullScreen(!fullScreen)}
-            className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+            className="p-2 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
             title={fullScreen ? "Quitter plein écran" : "Mode plein écran"}
           >
             {fullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -543,70 +543,70 @@ function AdminBraceletScannerPage() {
       </div>
 
       {/* ─── Statistics Grid ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-              Bracelets Donnés
+            <span className="text-xs font-medium text-slate-500">
+              Bracelets donnés
             </span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-600">
+            <span className="text-2xl font-semibold text-emerald-700 tabular-nums">
               {totalPhysicalBraceletsGiven}
             </span>
             <span className="text-xs text-slate-500">/ {totalPhysicalBraceletsNeeded} remis</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/40 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-fuchsia-700 uppercase tracking-wide">
-              Bracelets Artistes
+            <span className="text-xs font-medium text-slate-500">
+              Bracelets artistes
             </span>
-            <Mic2 className="h-4 w-4 text-fuchsia-600" />
+            <Mic2 className="h-4 w-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-fuchsia-700">{artistBraceletsCount}</span>
-            <span className="text-xs text-fuchsia-600 font-medium">artistes</span>
+            <span className="text-2xl font-semibold text-slate-900 tabular-nums">{artistBraceletsCount}</span>
+            <span className="text-xs text-slate-500">artistes</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-blue-200 bg-blue-50/40 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-              Bracelets Hôtel
+            <span className="text-xs font-medium text-slate-500">
+              Bracelets hôtel
             </span>
-            <Building2 className="h-4 w-4 text-blue-600" />
+            <Building2 className="h-4 w-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-blue-700">{hotelBraceletsCount}</span>
-            <span className="text-xs text-blue-600 font-medium">chambres</span>
+            <span className="text-2xl font-semibold text-slate-900 tabular-nums">{hotelBraceletsCount}</span>
+            <span className="text-xs text-slate-500">chambres</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/40 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
+            <span className="text-xs font-medium text-slate-500">
               Bracelets Full Pass
             </span>
-            <Ticket className="h-4 w-4 text-emerald-600" />
+            <Ticket className="h-4 w-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-700">{fullpassBraceletsCount}</span>
-            <span className="text-xs text-emerald-600 font-medium">participants</span>
+            <span className="text-2xl font-semibold text-slate-900 tabular-nums">{fullpassBraceletsCount}</span>
+            <span className="text-xs text-slate-500">participants</span>
           </div>
         </div>
       </div>
 
       {/* ─── Scanner View & Manual Lookup ────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Camera (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200/80 shadow-xs p-4.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Camera className="h-5 w-5 text-fuchsia-600" />
-              <h2 className="font-bold text-slate-900 text-base">Caméra Scanner de Bracelets</h2>
+              <Camera className="h-4 w-4 text-slate-700" />
+              <h2 className="font-semibold text-slate-900 text-sm">Caméra scanner de bracelets</h2>
             </div>
             <div className="flex items-center gap-2">
               {cameraActive && (
@@ -621,10 +621,10 @@ function AdminBraceletScannerPage() {
               <button
                 type="button"
                 onClick={toggleCamera}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   cameraActive
-                    ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                    : "bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white shadow hover:brightness-105"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                    : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
               >
                 {cameraActive ? (
@@ -645,10 +645,10 @@ function AdminBraceletScannerPage() {
 
             {!cameraActive && (
               <div className="p-8 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-fuchsia-400">
-                  <Watch className="h-8 w-8" />
+                <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-slate-300">
+                  <Watch className="h-7 w-7" />
                 </div>
-                <h3 className="text-white font-medium text-sm">Scanner Bracelets Inactif</h3>
+                <h3 className="text-white font-medium text-xs">Scanner de bracelets inactif</h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto">
                   Présentez le QR code devant la caméra pour afficher immédiatement le bracelet à
                   donner.
@@ -656,16 +656,16 @@ function AdminBraceletScannerPage() {
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white font-semibold text-xs shadow-md hover:brightness-110 active:scale-95 transition cursor-pointer"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white text-slate-900 font-medium text-xs shadow-xs hover:bg-slate-100 active:scale-[0.99] transition cursor-pointer"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3.5 w-3.5" />
                   Activer la caméra
                 </button>
               </div>
             )}
 
             {cameraError && (
-              <div className="absolute inset-x-4 bottom-4 p-3 rounded-lg bg-red-500/90 text-white text-xs flex items-center gap-2">
+              <div className="absolute inset-x-4 bottom-4 p-3 rounded-lg bg-rose-600 text-white text-xs flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>{cameraError}</span>
               </div>
@@ -674,10 +674,10 @@ function AdminBraceletScannerPage() {
         </div>
 
         {/* Manual Lookup (5 cols) */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200/80 shadow-xs p-4.5 space-y-3">
           <div className="flex items-center gap-2">
-            <Search className="h-5 w-5 text-fuchsia-600" />
-            <h2 className="font-bold text-slate-900 text-base">Recherche Manuelle</h2>
+            <Search className="h-4 w-4 text-slate-700" />
+            <h2 className="font-semibold text-slate-900 text-sm">Recherche manuelle</h2>
           </div>
 
           <form onSubmit={handleManualSearch} className="space-y-3">
@@ -695,20 +695,20 @@ function AdminBraceletScannerPage() {
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Ex: TLF-ABC12 ou nom..."
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500 focus:border-fuchsia-500 font-mono uppercase placeholder:normal-case placeholder:font-sans"
+                  className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 font-mono uppercase placeholder:normal-case placeholder:font-sans"
                   autoComplete="off"
                 />
-                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+                <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
               </div>
             </div>
 
             <button
               type="submit"
               disabled={!manualCode.trim() || processing}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-fuchsia-700 to-indigo-700 text-white font-semibold text-sm shadow hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-xs active:scale-[0.99] transition disabled:opacity-50 flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Watch className="h-4 w-4 text-fuchsia-200" />
-              Afficher les Bracelets du Billet
+              <Watch className="h-3.5 w-3.5 text-slate-300" />
+              Afficher les bracelets du billet
             </button>
           </form>
 
@@ -1073,11 +1073,11 @@ function AdminBraceletScannerPage() {
       )}
 
       {/* ─── Directory Table (Bracelets only) ─────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden space-y-3">
+        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-              <Watch className="h-5 w-5 text-fuchsia-600" />
+            <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+              <Watch className="h-4 w-4 text-slate-600" />
               Répertoire des bracelets à distribuer
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -1092,18 +1092,18 @@ function AdminBraceletScannerPage() {
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
                 placeholder="Rechercher nom, code, chambre..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-fuchsia-500"
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400"
               />
               <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setTableFilter("all")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "all"
-                    ? "bg-white text-slate-900 shadow-sm font-semibold"
+                    ? "bg-white text-slate-900 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1112,9 +1112,9 @@ function AdminBraceletScannerPage() {
               <button
                 type="button"
                 onClick={() => setTableFilter("pending")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "pending"
-                    ? "bg-fuchsia-600 text-white font-semibold"
+                    ? "bg-white text-amber-800 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1123,9 +1123,9 @@ function AdminBraceletScannerPage() {
               <button
                 type="button"
                 onClick={() => setTableFilter("given")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "given"
-                    ? "bg-emerald-600 text-white font-semibold"
+                    ? "bg-white text-emerald-800 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1137,14 +1137,14 @@ function AdminBraceletScannerPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
+            <thead className="bg-slate-50/75 text-slate-500 border-b border-slate-200/80">
               <tr>
-                <th className="px-5 py-3">Code Billet</th>
-                <th className="px-5 py-3">Participant</th>
-                <th className="px-5 py-3">Chambre</th>
-                <th className="px-5 py-3">Bracelets Requis</th>
-                <th className="px-5 py-3">Statut Remise</th>
-                <th className="px-5 py-3 text-right">Action</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Code billet</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Participant</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Chambre</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Bracelets requis</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Statut remise</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

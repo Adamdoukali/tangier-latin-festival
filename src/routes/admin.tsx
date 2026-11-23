@@ -93,58 +93,63 @@ function AdminLayout() {
     // translate="no": browser auto-translate rewrites React's DOM and used to
     // crash the panel; the back office is internal, so opt out entirely.
     <div
-      className="min-h-screen bg-slate-100 text-gray-900 flex notranslate"
+      className="min-h-screen bg-slate-50 text-slate-900 flex notranslate antialiased"
       lang="fr"
       translate="no"
-      style={{ fontFamily: "'Poppins','Segoe UI',system-ui,sans-serif" }}
+      style={{
+        fontFamily:
+          "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}
     >
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');`}</style>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar — classic navy like the exhibitor portals */}
+      {/* Sidebar — unslop quiet dark graphite chrome */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#13234d] flex flex-col transition-transform duration-300 lg:sticky lg:top-0 lg:h-screen lg:self-start shrink-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0e17] border-r border-slate-800/80 flex flex-col transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:self-start shrink-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center">
-              <span className="font-display text-sm text-white font-bold">
-                {currentAdmin?.name.trim().charAt(0).toUpperCase() || "T"}
-              </span>
+        <div className="flex items-center justify-between px-5 h-14 border-b border-slate-800/80 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700/80 grid place-items-center text-white font-semibold text-xs shadow-xs">
+              {currentAdmin?.name.trim().charAt(0).toUpperCase() || "T"}
             </div>
             <div className="min-w-0 leading-tight">
-              <div className="max-w-36 truncate font-display text-sm tracking-wide text-white">
+              <div className="max-w-36 truncate text-xs font-semibold text-slate-100">
                 {currentAdmin?.name || "TLF Admin"}
               </div>
-              <div className="text-[10px] tracking-widest text-slate-400 uppercase">
+              <div className="text-[11px] text-slate-400 font-normal">
                 Administration
               </div>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white transition cursor-pointer"
+            className="lg:hidden text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-md"
+            aria-label="Fermer le menu"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          <div className="px-2 pt-1 pb-1 text-[11px] font-medium text-slate-400">
+            Gestion du festival
+          </div>
           {(!currentAdmin
             ? []
             : currentAdmin.role === "scanner"
-              ? scannerNavItems
-              : [...navItems, ...scannerNavItems]
+              ? []
+              : navItems
           ).map((item) => {
             const active = isActive(item.to, item.exact);
             return (
@@ -152,26 +157,48 @@ function AdminLayout() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`h-9 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium transition-colors duration-150 ${
                   active
-                    ? "bg-white/10 text-amber-300 border border-amber-400/30"
-                    : "text-slate-300 hover:text-white hover:bg-white/5 border border-transparent"
+                    ? "bg-slate-800 text-white border border-slate-700/80 shadow-xs"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent"
                 }`}
               >
-                <item.icon className={`h-4.5 w-4.5 ${active ? "text-amber-300" : ""}`} />
-                {item.label}
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-100" : "text-slate-400"}`} />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+
+          <div className="px-2 pt-5 pb-1 text-[11px] font-medium text-slate-400">
+            Contrôle d’accès
+          </div>
+          {scannerNavItems.map((item) => {
+            const active = isActive(item.to, item.exact);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setSidebarOpen(false)}
+                className={`h-9 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium transition-colors duration-150 ${
+                  active
+                    ? "bg-slate-800 text-white border border-slate-700/80 shadow-xs"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent"
+                }`}
+              >
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-100" : "text-slate-400"}`} />
+                <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Back to site */}
-        <div className="px-3 py-4 border-t border-white/10 space-y-1 shrink-0">
+        <div className="px-3 py-3 border-t border-slate-800/80 space-y-1 shrink-0">
           <Link
             to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 transition"
+            className="h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 shrink-0" />
             Retour au site
           </Link>
           <button
@@ -179,39 +206,48 @@ function AdminLayout() {
               logoutAdmin();
               navigate({ to: "/admin/login", replace: true });
             }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-300 hover:text-red-200 hover:bg-red-500/10 transition cursor-pointer"
+            className="w-full h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-rose-400/90 hover:text-rose-300 hover:bg-rose-950/30 transition-colors cursor-pointer"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4 shrink-0" />
             Déconnexion
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-slate-50">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 py-4 flex items-center gap-4">
+        <header className="sticky top-0 z-30 h-14 bg-white/85 backdrop-blur-md border-b border-slate-200/80 px-6 flex items-center gap-4 shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-gray-600 hover:text-gray-800 transition cursor-pointer"
+            className="lg:hidden text-slate-600 hover:text-slate-900 transition-colors cursor-pointer p-1 -ml-1 rounded-md"
+            aria-label="Ouvrir le menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h1 className="font-display text-lg tracking-wide text-gray-900">
-            {navItems.find((n) => isActive(n.to, n.exact))?.label ?? "Administration"}
-          </h1>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 hidden sm:inline">Administration /</span>
+            <h1 className="text-sm font-semibold text-slate-900 tracking-tight">
+              {[...navItems, ...scannerNavItems].find((n) => isActive(n.to, n.exact))?.label ?? "Administration"}
+            </h1>
+          </div>
           {currentAdmin && (
-            <div className="ml-auto min-w-0 text-right">
-              <p className="truncate text-xs font-semibold text-slate-700">{currentAdmin.name}</p>
-              <p className="hidden truncate text-[10px] text-slate-400 sm:block">
-                {currentAdmin.email}
-              </p>
+            <div className="ml-auto min-w-0 flex items-center gap-2.5">
+              <div className="text-right">
+                <p className="truncate text-xs font-medium text-slate-800">{currentAdmin.name}</p>
+                <p className="hidden truncate text-[11px] text-slate-400 sm:block">
+                  {currentAdmin.email}
+                </p>
+              </div>
+              <div className="h-7 w-7 rounded-full bg-slate-100 border border-slate-200 grid place-items-center text-xs font-medium text-slate-700">
+                {currentAdmin.name.trim().charAt(0).toUpperCase()}
+              </div>
             </div>
           )}
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-auto">
           <Outlet />
         </main>
       </div>

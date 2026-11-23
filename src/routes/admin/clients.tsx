@@ -378,257 +378,257 @@ function AdminClients() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
             Base de données clients
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Base complète de chaque client et participant, avec ses coordonnées, sa chambre et sa
-            nationalité.
+          <p className="mt-1 text-xs text-slate-500">
+            Répertoire consolidé des clients et participants, coordonnées, chambres et origines.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => downloadClientsXlsx("morocco")}
             disabled={moroccanCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanCount})
+            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Maroc ({moroccanCount})
           </button>
           <button
             onClick={() => downloadClientsXlsx("international")}
             disabled={internationalCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalCount})
+            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Étranger ({internationalCount})
           </button>
           <button
             onClick={() => downloadClientsXlsx("all")}
             disabled={allClients.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-900 bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 XLSX Tous ({allClients.length})
+            <Download className="h-3.5 w-3.5 text-slate-300" /> Export Tous ({allClients.length})
           </button>
         </div>
       </div>
 
       {/* Database Warning */}
       {!guestDetailsReady && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 flex gap-3">
-          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-sm text-amber-800">
-            <p className="font-semibold text-amber-700">
-              Les informations par participant nécessitent une migration de la base de données
+        <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 p-4 flex gap-3 text-xs text-amber-900">
+          <AlertTriangle className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-amber-800">
+              Migration requise pour les informations détaillées par participant
             </p>
-            <p className="mt-1">
-              Les e-mails et téléphones personnalisés par participant ne peuvent pas encore être
-              enregistrés dans Supabase. Ouvrez le tableau de bord Supabase → Éditeur SQL et
-              exécutez{" "}
-              <code className="font-mono bg-amber-100 px-1 rounded">
+            <p className="mt-1 text-amber-700">
+              Les e-mails et téléphones personnalisés par participant nécessitent d'exécuter{" "}
+              <code className="font-mono bg-amber-100/80 px-1 py-0.5 rounded text-amber-900">
                 supabase/guest-details.sql
-              </code>
-              , puis actualisez cette page.
+              </code>{" "}
+              dans votre console Supabase.
             </p>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start justify-between gap-3">
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start justify-between gap-3 text-xs text-rose-700">
+          <p>{error}</p>
           <button
             onClick={() => setError("")}
-            className="text-red-400 hover:text-red-600 transition cursor-pointer shrink-0"
+            className="text-rose-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-3.5">
+      {/* Stats Summary - unslop clean metric cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Total clients</p>
-            <Users className="h-4 w-4 text-slate-600" />
+            <p className="text-xs font-medium text-slate-500">Total clients</p>
+            <Users className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-1 font-display text-2xl text-gray-900">{allClients.length}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+            {allClients.length}
+          </p>
         </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-sm p-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-emerald-700 font-semibold">
-              Morocco 🇲🇦
-            </p>
+            <p className="text-xs font-medium text-slate-500">Maroc</p>
             <UserCheck className="h-4 w-4 text-emerald-600" />
           </div>
-          <p className="mt-1 font-display text-2xl text-emerald-900">{moroccanCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+            {moroccanCount}
+          </p>
         </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50/30 shadow-sm p-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-blue-700 font-semibold">
-              Étranger 🌐
-            </p>
-            <UserCheck className="h-4 w-4 text-blue-600" />
+            <p className="text-xs font-medium text-slate-500">Étranger</p>
+            <UserCheck className="h-4 w-4 text-sky-600" />
           </div>
-          <p className="mt-1 font-display text-2xl text-blue-900">{internationalCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+            {internationalCount}
+          </p>
         </div>
-        <div className="rounded-xl border border-purple-200 bg-purple-50/40 shadow-sm p-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-purple-700 font-semibold">
-              Artistes 🎵
-            </p>
+            <p className="text-xs font-medium text-slate-500">Artistes</p>
             <Sparkles className="h-4 w-4 text-purple-600" />
           </div>
-          <p className="mt-1 font-display text-2xl text-purple-900">{artistCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+            {artistCount}
+          </p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50/30 shadow-sm p-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-amber-700 font-semibold">
-              Contacts manquants
-            </p>
-            <Mail className="h-4 w-4 text-amber-600" />
+            <p className="text-xs font-medium text-slate-500">Sans contact</p>
+            <Mail className="h-4 w-4 text-amber-500" />
           </div>
-          <p className="mt-1 font-display text-2xl text-amber-900">{missingContactCount}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+            {missingContactCount}
+          </p>
         </div>
       </div>
 
       {/* Filter Controls */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">
-            Filtrer par statut / origine :
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3">
+          <span className="text-xs font-medium text-slate-400 mr-1">
+            Filtre :
           </span>
           <button
             onClick={() => setOriginFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "all"
-                ? "bg-gray-900 text-white shadow-xs"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
             }`}
           >
-            Tous les clients ({allClients.length})
+            Tous ({allClients.length})
           </button>
           <button
             onClick={() => setOriginFilter("morocco")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "morocco"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
             }`}
           >
-            <span>🇲🇦</span> Morocco ({moroccanCount})
+            Maroc ({moroccanCount})
           </button>
           <button
             onClick={() => setOriginFilter("international")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "international"
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
             }`}
           >
-            <span>🌐</span> Étranger ({internationalCount})
+            Étranger ({internationalCount})
           </button>
           <button
             onClick={() => setOriginFilter("artist")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "artist"
-                ? "bg-purple-600 text-white shadow-xs"
-                : "bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100"
+                ? "bg-slate-900 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
             }`}
           >
-            <span>🎵</span> Artistes ({artistCount})
+            Artistes ({artistCount})
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher par nom, e-mail, téléphone, chambre ou code…"
-              className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+              className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
             />
           </div>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
+          <label className="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer shrink-0">
             <input
               type="checkbox"
               checked={missingContactOnly}
               onChange={(e) => setMissingContactOnly(e.target.checked)}
-              className="accent-amber-500"
+              className="accent-slate-900 rounded"
             />
-            Afficher les clients sans téléphone ou e-mail
+            Afficher uniquement les contacts manquants
           </label>
         </div>
       </div>
 
       {/* Clients Table */}
       {loading ? (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs px-5 py-16 text-center text-xs text-slate-400">
           Chargement de la base clients…
         </div>
       ) : filteredClients.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
-          <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
-          Aucun client ne correspond aux filtres.
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs px-5 py-16 text-center text-xs text-slate-400">
+          <Users className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+          Aucun client ne correspond aux critères de recherche.
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500 bg-slate-50">
+                <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
                   <th className="px-4 py-3 text-left font-medium">#</th>
                   <th className="px-4 py-3 text-left font-medium">Nom du client</th>
                   <th className="px-4 py-3 text-left font-medium">E-mail</th>
                   <th className="px-4 py-3 text-left font-medium">Téléphone</th>
-                  <th className="px-4 py-3 text-left font-medium">Nationalité / origine</th>
+                  <th className="px-4 py-3 text-left font-medium">Origine</th>
                   <th className="px-4 py-3 text-left font-medium">Chambre</th>
                   <th className="px-4 py-3 text-left font-medium">Forfait</th>
                   <th className="px-4 py-3 text-left font-medium">Partenaire</th>
-                  <th className="px-4 py-3 text-center font-medium">Action</th>
+                  <th className="px-4 py-3 text-center font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {filteredClients.map((client, idx) => (
-                  <tr key={client.id} className="hover:bg-slate-50 transition">
-                    <td className="px-4 py-3 text-xs text-gray-400">{idx + 1}</td>
-                    <td className="px-4 py-3 font-semibold text-gray-900">
-                      <div>
-                        {client.fullName}
+                  <tr key={client.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-4 py-3 text-slate-400 tabular-nums">{idx + 1}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">
+                      <div className="flex items-center gap-1.5">
+                        <span>{client.fullName}</span>
                         {client.guestIndex > 0 && (
-                          <span className="ml-1.5 text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded font-normal">
-                            Participant {client.guestIndex + 1}
+                          <span className="text-[10px] text-slate-500 bg-slate-100 border border-slate-200/60 px-1.5 py-0.2 rounded font-normal">
+                            Part. {client.guestIndex + 1}
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       {client.email ? (
-                        <span className="text-gray-700 flex items-center gap-1.5">
-                          <Mail className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="text-slate-600 flex items-center gap-1.5">
+                          <Mail className="h-3.5 w-3.5 text-slate-400" />
                           {client.email}
                         </span>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => openEditModal(client)}
-                          className="text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-slate-400 hover:text-slate-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
                         >
-                          + Ajouter un e-mail
+                          + Ajouter
                         </button>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {client.phone ? (
-                        <span className="text-gray-700 flex items-center gap-1.5">
-                          <Phone className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="text-slate-600 flex items-center gap-1.5 tabular-nums">
+                          <Phone className="h-3.5 w-3.5 text-slate-400" />
                           {client.phone}
                           {formatInternationalPhone(client.phone).replace(/\D/g, "") && (
                             <a
                               href={`https://wa.me/${formatInternationalPhone(client.phone).replace(/\D/g, "")}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="ml-1 p-1 rounded-md text-[#16a34a] hover:bg-green-50 transition"
+                              className="ml-1 p-0.5 rounded text-emerald-600 hover:bg-emerald-50 transition-colors"
                               title="Ouvrir WhatsApp"
                             >
                               <MessageCircle className="h-3.5 w-3.5" />
@@ -637,10 +637,11 @@ function AdminClients() {
                         </span>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => openEditModal(client)}
-                          className="text-xs text-amber-600 hover:text-amber-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
+                          className="text-xs text-slate-400 hover:text-slate-700 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
                         >
-                          + Ajouter un téléphone
+                          + Ajouter
                         </button>
                       )}
                     </td>
@@ -654,22 +655,18 @@ function AdminClients() {
                               e.target.value as "morocco" | "international",
                             )
                           }
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border focus:outline-none transition cursor-pointer ${
-                            client.origin === "morocco"
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                              : "bg-blue-50 text-blue-800 border-blue-200"
-                          }`}
+                          className="rounded-md px-2 py-0.5 text-xs font-medium border border-slate-200/80 bg-slate-50/60 text-slate-700 focus:outline-none focus:border-slate-400 transition-colors cursor-pointer"
                         >
-                          <option value="morocco">🇲🇦 Maroc</option>
-                          <option value="international">🌐 Étranger</option>
+                          <option value="morocco">Maroc</option>
+                          <option value="international">Étranger</option>
                         </select>
 
                         {client.isArtist ? (
                           <button
                             type="button"
                             onClick={() => handleToggleArtist(client)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-300 hover:bg-purple-200 transition cursor-pointer shadow-2xs"
-                            title="Artiste — Cliquer pour retirer le statut d'artiste"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200/80 hover:bg-purple-100 transition-colors cursor-pointer"
+                            title="Artiste — Cliquer pour retirer"
                           >
                             <Sparkles className="h-2.5 w-2.5 text-purple-600" />
                             Artiste ✓
@@ -678,8 +675,8 @@ function AdminClients() {
                           <button
                             type="button"
                             onClick={() => handleToggleArtist(client)}
-                            className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-1 font-medium"
-                            title="Marquer ce client comme Artiste"
+                            className="text-[10px] text-slate-400 hover:text-purple-600 hover:underline transition-colors cursor-pointer font-medium"
+                            title="Marquer comme Artiste"
                           >
                             + Artiste
                           </button>
@@ -689,33 +686,28 @@ function AdminClients() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       {client.roomNumber || client.roomType ? (
                         <span
-                          className={`font-semibold px-2 py-0.5 rounded border text-xs ${
+                          className={`font-medium px-2 py-0.5 rounded-md border text-xs ${
                             client.roomNumber
-                              ? "text-emerald-800 bg-emerald-50 border-emerald-200"
-                              : "text-amber-800 bg-amber-50 border-amber-200"
+                              ? "text-emerald-800 bg-emerald-50/70 border-emerald-200/70"
+                              : "text-slate-700 bg-slate-100 border-slate-200/80"
                           }`}
-                          title={
-                            client.roomNumber
-                              ? "Chambre d’hôtel attribuée"
-                              : "Type de chambre attribué ; numéro de chambre en attente"
-                          }
                         >
                           {client.roomNumber ? `Nº ${client.roomNumber}` : client.roomType}
                           {client.roomNumber && client.roomType ? ` · ${client.roomType}` : ""}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">Non attribuée</span>
+                        <span className="text-xs text-slate-400">Non attribuée</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-700">
-                      <div>{translateDynamicText(client.packName, "fr")}</div>
+                    <td className="px-4 py-3 text-xs text-slate-700">
+                      <div className="font-medium text-slate-800">{translateDynamicText(client.packName, "fr")}</div>
                       <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                        <code className="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.5 rounded font-mono">
+                        <code className="text-[10px] text-slate-600 bg-slate-100 border border-slate-200/60 px-1 py-0.2 rounded font-mono">
                           {client.ticketCode}
                         </code>
                         {client.arrivalDate && client.departureDate && (
-                          <span className="text-[10px] text-gray-500 font-medium inline-flex items-center gap-1 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">
-                            <Calendar className="h-2.5 w-2.5 text-amber-600" />
+                          <span className="text-[10px] text-slate-500 font-medium inline-flex items-center gap-1 bg-slate-50 border border-slate-200/60 px-1.5 py-0.2 rounded tabular-nums">
+                            <Calendar className="h-2.5 w-2.5 text-slate-400" />
                             {new Date(client.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
                             {new Date(client.departureDate).toLocaleDateString("fr-FR")}
                           </span>
@@ -742,80 +734,80 @@ function AdminClients() {
 
       {/* Edit Client Modal */}
       {editingClient && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in duration-150">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="font-display text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Pencil className="h-5 w-5 text-amber-600" /> Modifier les informations du client
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-slate-600" /> Modifier les informations du client
               </h3>
               <button
                 onClick={() => setEditingClient(null)}
-                className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="text-xs text-gray-500 bg-slate-50 p-2.5 rounded-lg flex items-center justify-between">
+            <div className="text-xs text-slate-500 bg-slate-50 border border-slate-200/60 p-2.5 rounded-lg flex items-center justify-between">
               <span>
                 Code du billet :{" "}
-                <code className="font-mono text-amber-800 font-bold">
+                <code className="font-mono text-slate-900 font-semibold">
                   {editingClient.ticketCode}
                 </code>
               </span>
-              <span>Forfait : {translateDynamicText(editingClient.packName, "fr")}</span>
+              <span className="font-medium text-slate-700">Forfait : {translateDynamicText(editingClient.packName, "fr")}</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Prénom</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Prénom</label>
                 <input
                   type="text"
                   value={editForm.firstName}
                   onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                   placeholder="John"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Nom</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">Nom</label>
                 <input
                   type="text"
                   value={editForm.lastName}
                   onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                   placeholder="Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Adresse e-mail
                 </label>
                 <input
                   type="email"
                   value={editForm.email}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                   placeholder="john.doe@gmail.com"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Numéro de téléphone
                 </label>
                 <input
                   type="text"
                   value={editForm.phone}
                   onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                   placeholder="+212 600 000 000"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Nationality / Origin
+                <label className="block text-xs font-medium text-slate-700 mb-1">
+                  Nationalité / Origine
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -827,13 +819,13 @@ function AdminClients() {
                         country: "Maroc",
                       }))
                     }
-                    className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition cursor-pointer flex items-center justify-center gap-2 ${
                       editForm.origin === "morocco"
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    <span>🇲🇦</span> Maroc
+                    Maroc
                   </button>
                   <button
                     type="button"
@@ -844,19 +836,19 @@ function AdminClients() {
                         country: countryForOrigin(current.country, "international"),
                       }))
                     }
-                    className={`px-4 py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer flex items-center justify-center gap-2 ${
+                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition cursor-pointer flex items-center justify-center gap-2 ${
                       editForm.origin === "international"
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    <span>🌐</span> Étranger
+                    Étranger
                   </button>
                 </div>
                 {editForm.origin === "international" && (
-                  <div className="mt-3">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Country / Nationality
+                  <div className="mt-2.5">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Pays / Nationalité
                     </label>
                     <input
                       type="text"
@@ -864,20 +856,20 @@ function AdminClients() {
                       onChange={(e) =>
                         setEditForm((current) => ({ ...current, country: e.target.value }))
                       }
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
-                      placeholder="e.g. Spain, France, United Kingdom"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
+                      placeholder="Ex: Espagne, France, Royaume-Uni"
                     />
                   </div>
                 )}
               </div>
 
-              <div className="col-span-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-2">
+              <div className="col-span-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
-                    <Calendar className="h-4 w-4 text-amber-600" /> Dates de la réservation (Hôtel & Réservation)
+                  <label className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-slate-600" /> Dates de la réservation (Hôtel & festival)
                   </label>
                   {editForm.arrivalDate && editForm.departureDate && (
-                    <span className="text-xs font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                    <span className="text-[11px] font-medium text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md tabular-nums">
                       {Math.max(
                         0,
                         Math.round(
@@ -892,18 +884,18 @@ function AdminClients() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
                       Date d’arrivée (Check-in)
                     </label>
                     <input
                       type="date"
                       value={editForm.arrivalDate}
                       onChange={(e) => setEditForm({ ...editForm, arrivalDate: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-600 mb-1">
                       Date de départ (Check-out)
                     </label>
                     <input
@@ -911,22 +903,22 @@ function AdminClients() {
                       value={editForm.departureDate}
                       min={editForm.arrivalDate || undefined}
                       onChange={(e) => setEditForm({ ...editForm, departureDate: e.target.value })}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition"
                     />
                   </div>
                 </div>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[11px] text-slate-500">
                   La modification des dates est synchronisée pour toute la réservation et s’applique immédiatement à l’hôtel et aux réservations.
                 </p>
               </div>
 
               {/* Statut Artiste */}
-              <div className="col-span-2 flex items-center justify-between p-3.5 rounded-xl border border-purple-200 bg-purple-50/70">
+              <div className="col-span-2 flex items-center justify-between p-3 rounded-xl border border-slate-200/80 bg-slate-50/70">
                 <div className="flex items-center gap-2.5">
-                  <Sparkles className="h-5 w-5 text-purple-600 shrink-0" />
+                  <Sparkles className="h-4 w-4 text-purple-600 shrink-0" />
                   <div>
-                    <p className="text-xs font-bold text-purple-950">Statut du participant : Artiste</p>
-                    <p className="text-[11px] text-purple-700">
+                    <p className="text-xs font-semibold text-slate-900">Statut du participant : Artiste</p>
+                    <p className="text-[11px] text-slate-500">
                       Comptabilisé dans les statistiques Artistes et synchronisé avec le bracelet Artiste
                     </p>
                   </div>
@@ -934,10 +926,10 @@ function AdminClients() {
                 <button
                   type="button"
                   onClick={() => setEditForm((prev) => ({ ...prev, isArtist: !prev.isArtist }))}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
                     editForm.isArtist
-                      ? "bg-purple-600 text-white shadow-xs"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                      ? "bg-purple-700 text-white shadow-xs"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                   }`}
                 >
                   {editForm.isArtist ? "✓ Artiste actif" : "Non-artiste"}
@@ -945,12 +937,12 @@ function AdminClients() {
               </div>
 
               {/* Tarification & Code Promo */}
-              <div className="col-span-2 rounded-xl border border-amber-200 bg-amber-50/50 p-3.5 space-y-3">
+              <div className="col-span-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Tag className="h-4 w-4 text-amber-700" />
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                      Tarification & Code Promo
+                    <Tag className="h-3.5 w-3.5 text-slate-600" />
+                    <h4 className="text-xs font-semibold text-slate-900">
+                      Tarification et code promo
                     </h4>
                   </div>
                   {(editForm.discountCode || Number(editForm.discountAmount) > 0) && (
@@ -963,7 +955,7 @@ function AdminClients() {
                           discountAmount: 0,
                         }))
                       }
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold text-red-700 bg-red-100/80 hover:bg-red-200 transition cursor-pointer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 transition cursor-pointer"
                     >
                       <Trash2 className="h-3 w-3" /> Supprimer la promo
                     </button>
@@ -972,7 +964,7 @@ function AdminClients() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-700 mb-1">
                       Prix du forfait par personne
                     </label>
                     <div className="flex gap-1.5">
@@ -984,7 +976,7 @@ function AdminClients() {
                         onChange={(e) =>
                           setEditForm({ ...editForm, unitPrice: e.target.value })
                         }
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-amber-500"
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-slate-400 tabular-nums"
                         placeholder="Ex: 180"
                       />
                       <select
@@ -995,7 +987,7 @@ function AdminClients() {
                             priceCurrency: e.target.value as "EUR" | "MAD",
                           })
                         }
-                        className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-semibold text-gray-800 focus:outline-none focus:border-amber-500 cursor-pointer"
+                        className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:border-slate-400 cursor-pointer"
                       >
                         <option value="EUR">€</option>
                         <option value="MAD">MAD</option>
@@ -1004,7 +996,7 @@ function AdminClients() {
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-700 mb-1">
                       Montant de la réduction ({editForm.priceCurrency})
                     </label>
                     <input
@@ -1015,30 +1007,30 @@ function AdminClients() {
                       onChange={(e) =>
                         setEditForm({ ...editForm, discountAmount: e.target.value })
                       }
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-amber-500"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-slate-400 tabular-nums"
                       placeholder="Ex: 50"
                     />
                   </div>
                 </div>
 
                 {editForm.discountCode && (
-                  <p className="text-[11px] text-amber-800 font-mono">
+                  <p className="text-[11px] text-slate-700 font-mono">
                     Code promo actuel : <strong>{editForm.discountCode}</strong> (-{editForm.discountAmount} {editForm.priceCurrency})
                   </p>
                 )}
-                <p className="text-[10px] text-gray-500">
+                <p className="text-[10px] text-slate-500">
                   Modifie le prix unitaire et la promo appliqués à la réservation ({editingClient.ticketCode}).
                 </p>
               </div>
 
               <div className="col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Parrainage / source de la réservation
                 </label>
                 <select
                   value={editForm.referral}
                   onChange={(e) => setEditForm({ ...editForm, referral: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition cursor-pointer"
                 >
                   <option value="website">Site web (sans parrainage)</option>
                   <option value="manual">Réservation manuelle (sans parrainage)</option>
@@ -1053,7 +1045,7 @@ function AdminClients() {
                       ))}
                   </optgroup>
                 </select>
-                <p className="text-[11px] text-gray-500 mt-1">
+                <p className="text-[11px] text-slate-500 mt-1">
                   S’applique à toute la réservation ({editingClient.ticketCode}) : la commission
                   passe au collaborateur choisi.
                   {editingClient.collaboratorName
@@ -1063,33 +1055,33 @@ function AdminClients() {
               </div>
 
               <div className="col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   Notes / commentaires
                 </label>
                 <textarea
                   rows={2}
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-amber-500 transition"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 transition"
                   placeholder="Notes supplémentaires concernant ce client…"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-3">
+            <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={() => setEditingClient(null)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer"
               >
                 Annuler
               </button>
               <button
                 type="button"
                 onClick={handleSaveClient}
-                className="px-5 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition cursor-pointer shadow-sm flex items-center gap-1.5"
+                className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition cursor-pointer shadow-xs flex items-center gap-1.5"
               >
-                <Check className="h-4 w-4" /> Enregistrer les informations
+                <Check className="h-3.5 w-3.5" /> Enregistrer les informations
               </button>
             </div>
           </div>

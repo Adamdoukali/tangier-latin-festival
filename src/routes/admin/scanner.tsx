@@ -669,50 +669,50 @@ function AdminScannerPage() {
       className={`p-4 md:p-8 space-y-6 ${fullScreen ? "fixed inset-0 z-50 bg-slate-900 overflow-y-auto" : ""}`}
     >
       {/* ─── Header & Top Actions ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-[#0d1a3d] via-[#13234d] to-[#1d3a7a] text-white p-6 rounded-2xl shadow-md border border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-xl shadow-xs border border-slate-800">
         <div>
-          <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold uppercase tracking-widest">
-            <ScanLine className="h-4 w-4" />
-            Contrôle d'accès & Check-in
+          <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
+            <ScanLine className="h-3.5 w-3.5 text-amber-400" />
+            Contrôle d’accès et check-in
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight mt-1 text-white">
-            Check-in Entrées Festival
+          <h1 className="text-xl font-semibold tracking-tight mt-1 text-white">
+            Check-in des entrées festival
           </h1>
-          <p className="text-sm text-slate-300 mt-1">
+          <p className="text-xs text-slate-400 mt-1 max-w-2xl">
             Validation rapide des billets, gestion des passes 2 personnes, complétion des coordonnées
             et attributions de chambres.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mt-3">
+          <div className="flex flex-wrap items-center gap-2 mt-3">
             {/* Bracelet Toggle (ON / OFF) */}
             <button
               type="button"
               onClick={() => setShowBracelets(!showBracelets)}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-2 transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-2 transition cursor-pointer ${
                 showBracelets
-                  ? "bg-fuchsia-500/25 text-fuchsia-200 border-fuchsia-400/40"
-                  : "bg-white/10 text-slate-300 border-white/15 hover:text-white"
+                  ? "bg-slate-800 text-white border-slate-700"
+                  : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-white"
               }`}
               title="Activer ou désactiver l'affichage des bracelets sur cet écran de check-in"
             >
               <Watch className="h-3.5 w-3.5" />
-              <span>Affichage Bracelets:</span>
+              <span>Affichage bracelets :</span>
               <span
-                className={`px-1.5 py-0.5 rounded text-[10px] uppercase font-bold ${
-                  showBracelets ? "bg-fuchsia-500 text-white" : "bg-black/30 text-slate-400"
+                className={`px-1.5 py-0.5 rounded text-[11px] font-medium ${
+                  showBracelets ? "bg-slate-700 text-slate-200" : "bg-slate-900 text-slate-500"
                 }`}
               >
-                {showBracelets ? "Activé" : "Désactivé (Check-in pur)"}
+                {showBracelets ? "Activé" : "Désactivé (pur)"}
               </span>
             </button>
 
             {/* Direct Link to Dedicated Bracelet Scanner Station */}
             <Link
               to="/admin/bracelet-scanner"
-              className="px-3 py-1.5 rounded-lg border border-fuchsia-400/30 bg-fuchsia-600/20 hover:bg-fuchsia-600/30 text-fuchsia-200 transition text-xs font-semibold flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition text-xs font-medium flex items-center gap-1.5"
             >
-              <Watch className="h-3.5 w-3.5 text-fuchsia-300" />
-              Ouvrir le Scanner Dédié aux Bracelets →
+              <Watch className="h-3.5 w-3.5 text-slate-300" />
+              Scanner dédié aux bracelets →
             </Link>
           </div>
         </div>
@@ -721,10 +721,10 @@ function AdminScannerPage() {
           <button
             type="button"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center gap-1.5 text-xs font-medium ${
+            className={`p-2 rounded-lg border transition cursor-pointer flex items-center gap-1.5 text-xs font-medium ${
               soundEnabled
-                ? "bg-amber-400/20 text-amber-300 border-amber-400/40"
-                : "bg-white/5 text-slate-400 border-white/10 hover:text-white"
+                ? "bg-slate-800 text-slate-200 border-slate-700"
+                : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-white"
             }`}
             title={soundEnabled ? "Sons activés" : "Sons coupés"}
           >
@@ -735,7 +735,7 @@ function AdminScannerPage() {
           <button
             type="button"
             onClick={() => setFullScreen(!fullScreen)}
-            className="p-2.5 rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+            className="p-2 rounded-lg border border-slate-800 bg-slate-950/60 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-medium"
             title={fullScreen ? "Quitter plein écran" : "Mode plein écran"}
           >
             {fullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -745,72 +745,72 @@ function AdminScannerPage() {
       </div>
 
       {/* ─── Real-time Statistics Grid ──────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-              Billets Confirmés
+            <span className="text-xs font-medium text-slate-500">
+              Billets confirmés
             </span>
             <Ticket className="h-4 w-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-900">{totalTickets}</span>
+            <span className="text-2xl font-semibold text-slate-900 tabular-nums">{totalTickets}</span>
             <span className="text-xs text-slate-500">billets</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-              Total Participants
+            <span className="text-xs font-medium text-slate-500">
+              Total participants
             </span>
-            <Users className="h-4 w-4 text-blue-500" />
+            <Users className="h-4 w-4 text-slate-400" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-blue-600">{totalGuestsCount}</span>
+            <span className="text-2xl font-semibold text-slate-900 tabular-nums">{totalGuestsCount}</span>
             <span className="text-xs text-slate-500">personnes</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">
-              Déjà Entrés
+            <span className="text-xs font-medium text-slate-500">
+              Déjà entrés
             </span>
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-700">{totalCheckedInGuests}</span>
-            <span className="text-xs text-emerald-600 font-medium">
-              / {totalGuestsCount} personnes
+            <span className="text-2xl font-semibold text-emerald-700 tabular-nums">{totalCheckedInGuests}</span>
+            <span className="text-xs text-slate-500">
+              / {totalGuestsCount}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-              En Attente d'Entrée
+            <span className="text-xs font-medium text-slate-500">
+              En attente d’entrée
             </span>
             <Clock className="h-4 w-4 text-amber-600" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-amber-700">
+            <span className="text-2xl font-semibold text-amber-700 tabular-nums">
               {Math.max(0, totalGuestsCount - totalCheckedInGuests)}
             </span>
-            <span className="text-xs text-amber-600 font-medium">restants</span>
+            <span className="text-xs text-slate-500">restants</span>
           </div>
         </div>
       </div>
 
       {/* ─── Scanner & Manual Lookup Card ───────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         {/* Left / Camera Box (7 cols) */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200/80 shadow-xs p-4.5 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Camera className="h-5 w-5 text-amber-500" />
-              <h2 className="font-bold text-slate-900 text-base">Caméra & Lecteur QR</h2>
+              <Camera className="h-4 w-4 text-slate-700" />
+              <h2 className="font-semibold text-slate-900 text-sm">Caméra & lecteur QR</h2>
             </div>
             <div className="flex items-center gap-2">
               {cameraActive && (
@@ -825,10 +825,10 @@ function AdminScannerPage() {
               <button
                 type="button"
                 onClick={toggleCamera}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
                   cameraActive
-                    ? "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100"
-                    : "bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow hover:brightness-105"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                    : "bg-slate-900 text-white hover:bg-slate-800"
                 }`}
               >
                 {cameraActive ? (
@@ -849,27 +849,27 @@ function AdminScannerPage() {
 
             {!cameraActive && (
               <div className="p-8 text-center space-y-3">
-                <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-amber-400">
-                  <QrCode className="h-8 w-8" />
+                <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-slate-300">
+                  <QrCode className="h-7 w-7" />
                 </div>
-                <h3 className="text-white font-medium text-sm">Caméra inactive</h3>
+                <h3 className="text-white font-medium text-xs">Caméra inactive</h3>
                 <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                  Cliquez sur "Démarrer la caméra" pour scanner un QR code ou saisissez le code
+                  Cliquez sur « Démarrer la caméra » pour scanner un QR code ou saisissez le code
                   ci-contre.
                 </p>
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-xs shadow-md hover:brightness-110 active:scale-95 transition cursor-pointer"
+                  className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-white text-slate-900 font-medium text-xs shadow-xs hover:bg-slate-100 active:scale-[0.99] transition cursor-pointer"
                 >
-                  <Camera className="h-4 w-4" />
+                  <Camera className="h-3.5 w-3.5" />
                   Activer la caméra
                 </button>
               </div>
             )}
 
             {cameraError && (
-              <div className="absolute inset-x-4 bottom-4 p-3 rounded-lg bg-red-500/90 text-white text-xs flex items-center gap-2">
+              <div className="absolute inset-x-4 bottom-4 p-3 rounded-lg bg-rose-600 text-white text-xs flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>{cameraError}</span>
               </div>
@@ -878,10 +878,10 @@ function AdminScannerPage() {
         </div>
 
         {/* Right / Manual Search Bar (5 cols) */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+        <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200/80 shadow-xs p-4.5 space-y-3">
           <div className="flex items-center gap-2">
-            <Search className="h-5 w-5 text-amber-500" />
-            <h2 className="font-bold text-slate-900 text-base">Recherche & Douchette</h2>
+            <Search className="h-4 w-4 text-slate-700" />
+            <h2 className="font-semibold text-slate-900 text-sm">Recherche et saisie manuelle</h2>
           </div>
 
           <form onSubmit={handleManualSearch} className="space-y-3">
@@ -899,10 +899,10 @@ function AdminScannerPage() {
                   value={manualCode}
                   onChange={(e) => setManualCode(e.target.value)}
                   placeholder="Ex: TLF-ABC12, URL ou nom..."
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-mono uppercase placeholder:normal-case placeholder:font-sans"
+                  className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 font-mono uppercase placeholder:normal-case placeholder:font-sans"
                   autoComplete="off"
                 />
-                <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+                <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
                 Compatible douchette code-barre (appuyez sur Entrée pour valider immédiatement).
@@ -912,10 +912,10 @@ function AdminScannerPage() {
             <button
               type="submit"
               disabled={!manualCode.trim() || processingAction}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-slate-900 to-[#13234d] text-white font-semibold text-sm shadow hover:brightness-110 active:scale-[0.99] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs shadow-xs active:scale-[0.99] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Search className="h-4 w-4 text-amber-400" />
-              Vérifier le Billet
+              <Search className="h-3.5 w-3.5 text-slate-300" />
+              Vérifier le billet
             </button>
           </form>
 
@@ -1600,12 +1600,12 @@ function AdminScannerPage() {
       )}
 
       {/* ─── LIVE TICKETS & PASSES DIRECTORY ─────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
-        <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden space-y-3">
+        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-              <Ticket className="h-5 w-5 text-amber-500" />
-              Répertoire de tous les billets & passes
+            <h3 className="font-semibold text-slate-900 text-sm flex items-center gap-2">
+              <Ticket className="h-4 w-4 text-slate-600" />
+              Répertoire des billets et passes
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Consultez et validez les billets directement depuis la liste des réservations.
@@ -1620,18 +1620,18 @@ function AdminScannerPage() {
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
                 placeholder="Rechercher nom, code, email..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-amber-500"
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400"
               />
               <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs">
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-xs">
               <button
                 type="button"
                 onClick={() => setTableFilter("all")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "all"
-                    ? "bg-white text-slate-900 shadow-sm font-semibold"
+                    ? "bg-white text-slate-900 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1640,9 +1640,9 @@ function AdminScannerPage() {
               <button
                 type="button"
                 onClick={() => setTableFilter("confirmed")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "confirmed"
-                    ? "bg-emerald-600 text-white font-semibold"
+                    ? "bg-white text-emerald-800 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1651,9 +1651,9 @@ function AdminScannerPage() {
               <button
                 type="button"
                 onClick={() => setTableFilter("checked-in")}
-                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md transition text-xs font-medium cursor-pointer ${
                   tableFilter === "checked-in"
-                    ? "bg-cyan-600 text-white font-semibold"
+                    ? "bg-white text-sky-800 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -1666,14 +1666,14 @@ function AdminScannerPage() {
         {/* Directory Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-100">
+            <thead className="bg-slate-50/75 text-slate-500 border-b border-slate-200/80">
               <tr>
-                <th className="px-5 py-3">Code Billet</th>
-                <th className="px-5 py-3">Participant(s)</th>
-                <th className="px-5 py-3">Formule / Pack</th>
-                <th className="px-5 py-3">Invités</th>
-                <th className="px-5 py-3">Statut Entrée</th>
-                <th className="px-5 py-3 text-right">Action</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Code billet</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Participant(s)</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Formule / pack</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Invités</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Statut entrée</th>
+                <th className="px-4 py-2.5 text-xs font-medium text-slate-500 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

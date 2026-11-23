@@ -297,31 +297,26 @@ function AdminPacks() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
             Gestion des forfaits
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Créez et gérez les forfaits du festival. Configurez le nombre de participants (1, 2, 3,
-            4+) et créez des{" "}
-            <span className="text-violet-600 font-medium">
-              forfaits privés accessibles par lien
-            </span>{" "}
-            à partager directement.
+          <p className="mt-1 text-xs text-slate-500">
+            Créez et gérez les forfaits du festival, forfaits sur mesure et liens de réservation directs.
           </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             onClick={openNewModifierPack}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-medium text-white hover:bg-blue-700 transition-colors cursor-pointer shadow-xs"
             title="Créer un forfait modifiable avec lien direct dédié à partager"
           >
             <Sparkles className="h-4 w-4" /> + Créer un Modifier Pack
           </button>
           <button
             onClick={openNew}
-            className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="h-4 w-4" /> Ajouter un forfait
           </button>
@@ -330,29 +325,28 @@ function AdminPacks() {
 
       {/* DB seed banner */}
       {dbEmpty && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-3">
+        <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <p className="text-sm text-amber-800 flex-1">
+            <p className="text-xs text-amber-800 flex-1">
               La base de données ne contient encore aucun forfait. Les forfaits ci-dessous sont les
-              valeurs par défaut intégrées et les modifications resteront sur cet appareil.
-              Envoyez-les vers la base de données pour les partager avec tout le site et tous les
-              administrateurs.
+              valeurs par défaut intégrées. Envoyez-les vers la base de données pour les partager
+              avec tout le site et tous les administrateurs.
             </p>
             <button
               onClick={handleSeed}
               disabled={seeding}
-              className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer disabled:opacity-50 self-start shrink-0"
+              className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50 self-start shrink-0"
             >
-              {seeding ? "Envoi…" : "Envoyer les forfaits vers la base de données"}
+              {seeding ? "Envoi…" : "Envoyer les forfaits vers la base"}
             </button>
           </div>
-          {seedError && <p className="text-sm font-medium text-red-600">{seedError}</p>}
+          {seedError && <p className="text-xs font-medium text-rose-600">{seedError}</p>}
         </div>
       )}
 
       {/* Ordering error */}
       {orderError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-700">
           {orderError}
         </div>
       )}
@@ -363,59 +357,59 @@ function AdminPacks() {
         return (
         <section
           key={cat}
-          className={`rounded-2xl border overflow-hidden shadow-sm ${
+          className={`rounded-xl border overflow-hidden shadow-xs ${
             isModifierCat
-              ? "border-blue-300 bg-blue-50/15 ring-1 ring-blue-300/30"
-              : "border-gray-200 bg-white/30"
+              ? "border-blue-300/80 bg-blue-50/20 ring-1 ring-blue-300/30"
+              : "border-slate-200/80 bg-white"
           }`}
         >
           {/* Category header */}
           <div
-            className={`flex items-center gap-3 px-5 py-4 border-b ${
+            className={`flex items-center gap-3 px-5 py-3.5 border-b ${
               isModifierCat
-                ? "bg-gradient-to-r from-blue-700 to-indigo-800 text-white border-blue-400"
-                : "border-gray-200 bg-slate-50"
+                ? "bg-blue-600 text-white border-blue-500"
+                : "border-slate-200/80 bg-slate-50/70"
             }`}
           >
             <div className="flex items-center gap-1">
               <button
                 onClick={() => moveCategory(cat, -1)}
                 disabled={catIdx === 0}
-                className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
-                title="Déplacer cette catégorie vers le haut"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                title="Déplacer vers le haut"
               >
                 <ChevronUp className="h-4 w-4" />
               </button>
               <button
                 onClick={() => moveCategory(cat, 1)}
                 disabled={catIdx === categories.length - 1}
-                className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
-                title="Déplacer cette catégorie vers le bas"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed"
+                title="Déplacer vers le bas"
               >
                 <ChevronDown className="h-4 w-4" />
               </button>
             </div>
             <h3
-              className={`font-display text-base tracking-wide uppercase ${
-                isModifierCat ? "text-white flex items-center gap-2" : "text-gray-900"
+              className={`text-xs font-semibold ${
+                isModifierCat ? "text-white flex items-center gap-2" : "text-slate-900"
               }`}
             >
-              {isModifierCat && <Sparkles className="h-4 w-4 text-blue-300" />}
+              {isModifierCat && <Sparkles className="h-4 w-4 text-blue-200" />}
               {formatCategoryTitle(cat)}
             </h3>
             <span
-              className={`text-xs ${isModifierCat ? "text-blue-200" : "text-gray-400"}`}
+              className={`text-xs ${isModifierCat ? "text-blue-100" : "text-slate-400"}`}
             >
               {groups[cat].length} forfait{groups[cat].length === 1 ? "" : "s"}
             </span>
             {isModifierCat && (
-              <span className="hidden sm:inline-block text-xs bg-blue-900/60 text-blue-200 border border-blue-400/40 px-2.5 py-0.5 rounded-full font-medium ml-2">
-                🔵 Forfaits sur mesure modifiables — lien direct dynamique
+              <span className="hidden sm:inline-block text-xs bg-blue-700 text-blue-100 border border-blue-400/40 px-2.5 py-0.5 rounded-md font-medium ml-2">
+                Forfaits sur mesure modifiables
               </span>
             )}
             <button
               onClick={() => setPreviewCategory(cat)}
-              className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-violet-700 bg-violet-50 border border-violet-200 hover:bg-violet-200 transition cursor-pointer"
+              className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-slate-700 bg-white/90 border border-slate-200/80 hover:bg-white transition-colors cursor-pointer shadow-xs"
               title="Prévisualiser cette catégorie sur le site"
             >
               <Eye className="h-3.5 w-3.5" /> Aperçu

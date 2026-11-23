@@ -109,95 +109,72 @@ function AdminDashboard() {
       label: "Chambres doubles",
       value: roomCounts.double,
       icon: BedDouble,
-      color: "from-blue-500 to-blue-700",
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
     },
     {
       label: "Chambres individuelles",
       value: roomCounts.single,
       icon: Bed,
-      color: "from-violet-500 to-violet-700",
-      iconBg: "bg-violet-100",
-      iconColor: "text-violet-600",
     },
     {
       label: "Pass complet",
       value: roomCounts.fullpass,
       icon: Ticket,
-      color: "from-cyan-500 to-cyan-700",
-      iconBg: "bg-cyan-100",
-      iconColor: "text-cyan-700",
     },
     {
       label: "Excursions (Asilah / Chaouen)",
       value: roomCounts.excursion,
       icon: Compass,
-      color: "from-teal-500 to-teal-700",
-      iconBg: "bg-teal-100",
-      iconColor: "text-teal-700",
     },
     {
-      label: "En attente",
+      label: "Réservations en attente",
       value: stats.pendingBookings,
       icon: Clock,
-      color: "from-amber-500 to-amber-700",
-      iconBg: "bg-amber-100",
-      iconColor: "text-amber-600",
     },
     {
-      label: "Nombre total de clients",
+      label: "Total participants",
       value: allClients.length,
       icon: Users,
-      color: "from-emerald-500 to-emerald-700",
-      iconBg: "bg-emerald-100",
-      iconColor: "text-emerald-600",
     },
     {
       label: "Forfaits actifs",
       value: stats.activePacks,
       icon: Package,
-      color: "from-pink-500 to-pink-700",
-      iconBg: "bg-pink-100",
-      iconColor: "text-pink-500",
     },
   ];
 
   const statusStyles: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-600 border-amber-200",
-    confirmed: "bg-emerald-100 text-emerald-600 border-emerald-200",
-    "checked-in": "bg-cyan-100 text-cyan-700 border-cyan-200",
-    declined: "bg-red-100 text-red-600 border-red-200",
+    pending: "bg-amber-50 text-amber-700 border-amber-200/80",
+    confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    "checked-in": "bg-sky-50 text-sky-700 border-sky-200/80",
+    declined: "bg-rose-50 text-rose-700 border-rose-200/80",
   };
 
   return (
-    <div className="space-y-8">
-      {/* Welcome */}
+    <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h2 className="font-display text-2xl tracking-wide text-gray-900">Welcome back</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Voici un aperçu de la gestion de votre festival.
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900">Tableau de bord</h2>
+        <p className="mt-1 text-xs text-slate-500">
+          Vue d’ensemble et indicateurs clés de la billetterie et des participants.
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Stats Cards - unslop clean numbers with quiet chrome */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm p-5 hover:border-gray-300 transition-all duration-300 group"
+            className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors"
           >
-            {/* Gradient accent */}
-            <div
-              className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${card.color} opacity-60 group-hover:opacity-100 transition`}
-            />
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs tracking-widest uppercase text-gray-500">{card.label}</p>
-                <p className="mt-2 font-display text-3xl text-gray-900">{card.value}</p>
+                <p className="text-xs font-medium text-slate-500">{card.label}</p>
+                <p className="mt-1.5 text-2xl font-semibold text-slate-900 tabular-nums tracking-tight">
+                  {card.value}
+                </p>
               </div>
-              <div className={`${card.iconBg} rounded-lg p-2.5`}>
-                <card.icon className={`h-5 w-5 ${card.iconColor}`} />
+              <div className="h-8 w-8 rounded-lg bg-slate-100 border border-slate-200/60 grid place-items-center text-slate-600 shrink-0">
+                <card.icon className="h-4 w-4" />
               </div>
             </div>
           </div>
@@ -217,13 +194,13 @@ function AdminDashboard() {
             key: "morocco",
             label: "Maroc",
             dot: "bg-emerald-500",
-            cls: "text-emerald-700",
+            cls: "text-slate-900 font-medium",
           },
           {
             key: "international",
             label: "International (étranger)",
-            dot: "bg-blue-500",
-            cls: "text-blue-700",
+            dot: "bg-sky-500",
+            cls: "text-slate-900 font-medium",
           },
         ].map((o) => {
           const mine = allClients.filter((c) => c.origin === o.key);
@@ -238,49 +215,49 @@ function AdminDashboard() {
         });
         const visible = rowsData;
         return (
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-              <h3 className="font-display text-sm tracking-wide text-gray-800">
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/70">
+              <h3 className="text-xs font-semibold text-slate-900">
                 Participants par origine
               </h3>
-              <span className="text-xs text-gray-400">personnes confirmées</span>
+              <span className="text-xs text-slate-500">Personnes confirmées</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-left text-[10px] tracking-widest uppercase text-gray-500 border-b border-gray-200">
-                    <th className="px-5 py-3">Origin</th>
-                    <th className="px-5 py-3 text-right">Chambres doubles</th>
-                    <th className="px-5 py-3 text-right">Chambres individuelles</th>
-                    <th className="px-5 py-3 text-right">Pass complet</th>
-                    <th className="px-5 py-3 text-right">Excursions</th>
-                    <th className="px-5 py-3 text-right">Total</th>
+                  <tr className="text-left text-slate-500 border-b border-slate-200/80 bg-slate-50/50">
+                    <th className="px-5 py-2.5 font-medium">Origine</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Chambres doubles</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Chambres individuelles</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Pass complet</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Excursions</th>
+                    <th className="px-5 py-2.5 text-right font-medium">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-100">
                   {visible.map((r) => (
-                    <tr key={r.key} className="hover:bg-gray-50 transition">
-                      <td className={`px-5 py-3 font-medium ${r.cls}`}>
+                    <tr key={r.key} className="hover:bg-slate-50/80 transition-colors">
+                      <td className={`px-5 py-3 ${r.cls}`}>
                         <span
                           className={`inline-block h-2 w-2 rounded-full mr-2 align-middle ${r.dot}`}
                         />
                         {r.label}
                       </td>
-                      <td className="px-5 py-3 text-right text-gray-800">{r.double}</td>
-                      <td className="px-5 py-3 text-right text-gray-800">{r.single}</td>
-                      <td className="px-5 py-3 text-right text-gray-800">{r.fullpass}</td>
-                      <td className="px-5 py-3 text-right text-teal-700 font-medium">{r.excursion}</td>
-                      <td className="px-5 py-3 text-right font-semibold text-gray-900">
+                      <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{r.double}</td>
+                      <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{r.single}</td>
+                      <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{r.fullpass}</td>
+                      <td className="px-5 py-3 text-right text-teal-700 font-medium tabular-nums">{r.excursion}</td>
+                      <td className="px-5 py-3 text-right font-semibold text-slate-900 tabular-nums">
                         {r.total}
                       </td>
                     </tr>
                   ))}
-                  <tr className="border-t border-gray-200 bg-gray-50/60">
-                    <td className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500">
+                  <tr className="border-t border-slate-200 bg-slate-50/80 font-medium text-slate-900">
+                    <td className="px-5 py-2.5 text-xs text-slate-600">
                       Total
                     </td>
                     {(["double", "single", "fullpass", "excursion", "total"] as const).map((k) => (
-                      <td key={k} className="px-5 py-3 text-right font-medium text-gray-900">
+                      <td key={k} className="px-5 py-2.5 text-right font-semibold text-slate-900 tabular-nums">
                         {rowsData.reduce((s, r) => s + r[k], 0)}
                       </td>
                     ))}
@@ -293,123 +270,123 @@ function AdminDashboard() {
       })()}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <Link
           to="/admin/packs"
-          className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white shadow-sm p-5 hover:border-amber-200 hover:bg-white shadow-sm transition-all duration-300 group"
+          className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 hover:bg-slate-50/50 transition-colors group"
         >
-          <div className="bg-amber-100 rounded-lg p-2.5">
-            <Package className="h-5 w-5 text-amber-600" />
+          <div className="bg-slate-100 border border-slate-200/60 rounded-lg p-2 text-slate-700">
+            <Package className="h-4.5 w-4.5" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Gérer les forfaits</p>
-            <p className="text-xs text-gray-500">Ajouter, modifier ou supprimer des forfaits</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-900 truncate">Gérer les forfaits</p>
+            <p className="text-[11px] text-slate-500 truncate">Ajouter, modifier ou supprimer des forfaits</p>
           </div>
-          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-amber-600 transition" />
+          <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
         </Link>
         <Link
           to="/admin/bookings"
-          className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white shadow-sm p-5 hover:border-blue-200 hover:bg-white shadow-sm transition-all duration-300 group"
+          className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 hover:bg-slate-50/50 transition-colors group"
         >
-          <div className="bg-blue-100 rounded-lg p-2.5">
-            <Ticket className="h-5 w-5 text-blue-600" />
+          <div className="bg-slate-100 border border-slate-200/60 rounded-lg p-2 text-slate-700">
+            <Ticket className="h-4.5 w-4.5" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Gérer les réservations</p>
-            <p className="text-xs text-gray-500">Afficher les billets et les statuts</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-900 truncate">Gérer les réservations</p>
+            <p className="text-[11px] text-slate-500 truncate">Afficher les billets et les statuts</p>
           </div>
-          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 transition" />
+          <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
         </Link>
         <Link
           to="/admin/invite"
-          className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white shadow-sm p-5 hover:border-violet-200 hover:bg-white shadow-sm transition-all duration-300 group"
+          className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 hover:bg-slate-50/50 transition-colors group"
         >
-          <div className="bg-violet-100 rounded-lg p-2.5">
-            <TrendingUp className="h-5 w-5 text-violet-600" />
+          <div className="bg-slate-100 border border-slate-200/60 rounded-lg p-2 text-slate-700">
+            <TrendingUp className="h-4.5 w-4.5" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">Générer des invitations</p>
-            <p className="text-xs text-gray-500">Codes QR et invitations en masse</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-900 truncate">Générer des invitations</p>
+            <p className="text-[11px] text-slate-500 truncate">Codes QR et invitations en masse</p>
           </div>
-          <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-violet-600 transition" />
+          <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
         </Link>
       </div>
 
       {/* Collaborator Leaderboard */}
       {collabStats.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-            <h3 className="font-display text-sm tracking-wide text-gray-800">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/70">
+            <h3 className="text-xs font-semibold text-slate-900">
               Ventes et commissions des collaborateurs
             </h3>
             <Link
               to="/admin/collaborators"
-              className="text-xs text-amber-600 hover:text-amber-700 tracking-widest uppercase transition"
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
             >
               Gérer →
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-[10px] tracking-widest uppercase text-gray-500 border-b border-gray-200">
-                  <th className="px-5 py-3">Collaborateur</th>
-                  <th className="px-5 py-3">Code</th>
-                  <th className="px-5 py-3 text-right">Chambres individuelles</th>
-                  <th className="px-5 py-3 text-right">Chambres doubles</th>
-                  <th className="px-5 py-3 text-right">Pass complet</th>
-                  <th className="px-5 py-3 text-right">Billets vendus</th>
-                  <th className="px-5 py-3 text-right">Ventes</th>
-                  <th className="px-5 py-3 text-right">Commission</th>
+                <tr className="text-left text-slate-500 border-b border-slate-200/80 bg-slate-50/50">
+                  <th className="px-5 py-2.5 font-medium">Collaborateur</th>
+                  <th className="px-5 py-2.5 font-medium">Code</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Chambres ind.</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Chambres doubles</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Pass complet</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Billets vendus</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Ventes</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Commission</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {collabStats.map((cs) => (
-                  <tr key={cs.collaborator.id} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-3 text-gray-800">{cs.collaborator.name}</td>
+                  <tr key={cs.collaborator.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-5 py-3 font-medium text-slate-900">{cs.collaborator.name}</td>
                     <td className="px-5 py-3">
-                      <span className="font-mono text-xs text-amber-600">
+                      <span className="font-mono text-xs bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded text-slate-700">
                         {cs.collaborator.code}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-700">{cs.singleRooms}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">{cs.doubleRooms}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">{cs.fullPass}</td>
-                    <td className="px-5 py-3 text-right text-gray-800">{cs.ticketsSold}</td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap text-emerald-600">
+                    <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{cs.singleRooms}</td>
+                    <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{cs.doubleRooms}</td>
+                    <td className="px-5 py-3 text-right text-slate-700 tabular-nums">{cs.fullPass}</td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-900 tabular-nums">{cs.ticketsSold}</td>
+                    <td className="px-5 py-3 text-right whitespace-nowrap text-slate-900 tabular-nums font-medium">
                       {formatForPartner(cs.revenue, cs.collaborator)}
                     </td>
-                    <td className="px-5 py-3 text-right whitespace-nowrap">
-                      <span className="text-amber-600">
+                    <td className="px-5 py-3 text-right whitespace-nowrap tabular-nums">
+                      <span className="font-medium text-emerald-700">
                         {formatForPartner(cs.commission, cs.collaborator)}
                       </span>
-                      <span className="ml-1.5 text-[10px] text-gray-500">
+                      <span className="ml-1 text-[11px] text-slate-400">
                         ({commissionLabel(cs.collaborator)})
                       </span>
                     </td>
                   </tr>
                 ))}
-                <tr className="border-t border-gray-300 bg-white shadow-sm">
+                <tr className="border-t border-slate-200 bg-slate-50/80 font-medium text-slate-900">
                   <td
-                    className="px-5 py-3 text-xs tracking-widest uppercase text-gray-500"
+                    className="px-5 py-2.5 text-xs text-slate-600"
                     colSpan={2}
                   >
                     Total
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-gray-900">
+                  <td className="px-5 py-2.5 text-right font-semibold text-slate-900 tabular-nums">
                     {collabStats.reduce((s, c) => s + c.singleRooms, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-gray-900">
+                  <td className="px-5 py-2.5 text-right font-semibold text-slate-900 tabular-nums">
                     {collabStats.reduce((s, c) => s + c.doubleRooms, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-gray-900">
+                  <td className="px-5 py-2.5 text-right font-semibold text-slate-900 tabular-nums">
                     {collabStats.reduce((s, c) => s + c.fullPass, 0)}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-gray-900">
+                  <td className="px-5 py-2.5 text-right font-semibold text-slate-900 tabular-nums">
                     {collabStats.reduce((s, c) => s + c.ticketsSold, 0)}
                   </td>
                   {/* Totals grouped by the partner's own currency */}
-                  <td className="px-5 py-3 text-right font-medium text-emerald-600 whitespace-nowrap">
+                  <td className="px-5 py-2.5 text-right font-semibold text-slate-900 whitespace-nowrap tabular-nums">
                     {formatMoneyPair({
                       eur: collabStats
                         .filter((c) => partnerCurrency(c.collaborator) === "EUR")
@@ -419,7 +396,7 @@ function AdminDashboard() {
                         .reduce((s, c) => s + moneyIn(c.revenue, "MAD"), 0),
                     })}
                   </td>
-                  <td className="px-5 py-3 text-right font-medium text-amber-600 whitespace-nowrap">
+                  <td className="px-5 py-2.5 text-right font-semibold text-emerald-700 whitespace-nowrap tabular-nums">
                     {formatMoneyPair({
                       eur: collabStats
                         .filter((c) => partnerCurrency(c.collaborator) === "EUR")
@@ -437,45 +414,45 @@ function AdminDashboard() {
       )}
 
       {/* Réservations récentes */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-          <h3 className="font-display text-sm tracking-wide text-gray-800">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/80 bg-slate-50/70">
+          <h3 className="text-xs font-semibold text-slate-900">
             Réservations récentes
           </h3>
           <Link
             to="/admin/bookings"
-            className="text-xs text-amber-600 hover:text-amber-700 tracking-widest uppercase transition"
+            className="text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
           >
             Tout afficher →
           </Link>
         </div>
         {recentBookings.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-gray-400">
+          <div className="px-5 py-12 text-center text-xs text-slate-400">
             Aucune réservation. Créez-en une depuis la{" "}
-            <Link to="/admin/bookings" className="text-amber-600 hover:underline">
+            <Link to="/admin/bookings" className="text-slate-700 underline underline-offset-2 hover:text-slate-900">
               page Réservations
             </Link>
             .
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {recentBookings.map((b) => (
               <div
                 key={b.id}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 transition"
+                className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50/80 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{b.customerName}</p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {translateDynamicText(b.packName, "fr")} · {b.ticketCode}
+                  <p className="text-xs font-medium text-slate-900 truncate">{b.customerName}</p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    {translateDynamicText(b.packName, "fr")} · <span className="font-mono text-slate-600">{b.ticketCode}</span>
                   </p>
                 </div>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles[b.status]}`}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${statusStyles[b.status]}`}
                 >
                   {b.status}
                 </span>
-                <span className="text-xs text-gray-400 whitespace-nowrap">
+                <span className="text-xs text-slate-400 whitespace-nowrap tabular-nums">
                   {new Date(b.createdAt).toLocaleDateString("fr-FR")}
                 </span>
               </div>

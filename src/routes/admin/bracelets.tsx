@@ -241,26 +241,26 @@ function AdminBracelets() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      {/* Stats - unslop clean metrics */}
+      <div className="grid grid-cols-3 gap-3.5">
         {CATEGORIES.map((cat) => {
           const mine = rows.filter((r) => r.bracelet === cat.key);
           const given = mine.filter((r) => r.given).length;
           return (
-            <div key={cat.key} className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+            <div key={cat.key} className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
               <div className="flex items-center justify-between">
-                <p className="text-xs tracking-widest uppercase text-gray-500">
+                <p className="text-xs font-medium text-slate-500">
                   {cat.key === "artist"
                     ? "Artistes"
                     : cat.key === "hotel"
                       ? "Hôtel"
                       : "Pass complet"}
                 </p>
-                <cat.icon className={`h-4 w-4 ${cat.accent}`} />
+                <cat.icon className="h-4 w-4 text-slate-400" />
               </div>
-              <p className="mt-1 font-display text-2xl text-gray-900">{mine.length}</p>
-              <p className="text-[11px] text-gray-400">
-                bracelets · <span className="text-emerald-600 font-medium">{given} remis</span>
+              <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{mine.length}</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Total · <span className="text-emerald-700 font-medium">{given} remis</span>
               </p>
             </div>
           );
@@ -270,33 +270,33 @@ function AdminBracelets() {
       {/* Search + filter */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[240px] max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par nom, réservation, pass ou partenaire…"
-            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+            className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
           />
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
-          <label className="inline-flex items-center gap-2 text-sm text-gray-600 cursor-pointer shrink-0">
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer shrink-0 font-medium">
             <input
               type="checkbox"
               checked={includePending}
               onChange={(e) => setIncludePending(e.target.checked)}
-              className="accent-amber-500"
+              className="accent-slate-900 rounded"
             />
             Inclure les réservations en attente
           </label>
-          <label className="inline-flex items-center gap-2 text-sm font-medium text-violet-700 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-lg cursor-pointer shrink-0 hover:bg-violet-100 transition">
+          <label className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200/80 px-2.5 py-1.5 rounded-lg cursor-pointer shrink-0 hover:bg-slate-50 shadow-xs transition-colors">
             <input
               type="checkbox"
               checked={onlyPrivate}
               onChange={(e) => setOnlyPrivate(e.target.checked)}
-              className="accent-violet-600"
+              className="accent-slate-900 rounded"
             />
-            <Lock className="h-3.5 w-3.5" />
+            <Lock className="h-3 w-3 text-slate-400" />
             Lien privé uniquement
           </label>
         </div>
@@ -304,7 +304,7 @@ function AdminBracelets() {
 
       {/* Category sections */}
       {loading ? (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm px-5 py-16 text-center text-sm text-gray-400">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs px-5 py-16 text-center text-xs text-slate-400">
           Chargement…
         </div>
       ) : (
@@ -313,38 +313,38 @@ function AdminBracelets() {
           return (
             <div
               key={cat.key}
-              className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden"
+              className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden"
             >
-              <div className="px-5 py-4 border-b border-gray-200 bg-[#13234d] flex items-center justify-between gap-3 flex-wrap">
-                <h3 className="font-display text-sm tracking-wide text-white flex items-center gap-2">
-                  <cat.icon className="h-4 w-4 text-amber-300" />
+              <div className="px-5 py-3 border-b border-slate-200/80 bg-slate-50/70 flex items-center justify-between gap-3 flex-wrap">
+                <h3 className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+                  <cat.icon className="h-4 w-4 text-slate-500" />
                   {cat.title}
                 </h3>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-slate-500">
                   {mine.length} bracelets ·{" "}
-                  <span className="text-emerald-300">
+                  <span className="text-emerald-700 font-medium">
                     {mine.filter((r) => r.given).length} remis
                   </span>
                 </p>
               </div>
               {mine.length === 0 ? (
-                <p className="px-5 py-8 text-center text-sm text-gray-400">
+                <p className="px-5 py-8 text-center text-xs text-slate-400">
                   Personne dans cette catégorie pour le moment.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
+                      <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/50">
                         <th className="px-4 py-2.5 text-left font-medium">Participant</th>
                         <th className="px-4 py-2.5 text-left font-medium">Forfait</th>
                         <th className="px-4 py-2.5 text-left font-medium">Partenaire</th>
-                        <th className="px-4 py-2.5 text-left font-medium">Reservation</th>
+                        <th className="px-4 py-2.5 text-left font-medium">Réservation</th>
                         <th className="px-4 py-2.5 text-left font-medium">Catégorie</th>
                         <th className="px-4 py-2.5 text-center font-medium">Remis</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-slate-100">
                       {mine.map((r) => (
                         <tr
                           key={`${r.booking.id}-${r.guestIndex}`}

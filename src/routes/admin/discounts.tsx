@@ -239,89 +239,84 @@ function AdminDiscounts() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <Tag className="h-6 w-6 text-amber-500" />
-            <h1 className="text-2xl font-bold text-gray-900">Codes de réduction</h1>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Créez des codes de réduction publics ou partenaires avec des commissions personnalisées.
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Codes de réduction</h2>
+          <p className="text-xs text-slate-500 mt-1">
+            Créez des codes promotionnels publics ou partenaires avec commissions personnalisées.
           </p>
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2.5 rounded-lg shadow-sm transition cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-3.5 py-2 rounded-lg text-xs shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" /> Nouveau code de réduction
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-lg bg-amber-50 grid place-items-center text-amber-600 shrink-0">
-            <Tag className="h-6 w-6" />
+      {/* Stats Cards - unslop clean metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors flex items-center gap-3.5">
+          <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200/60 grid place-items-center text-slate-600 shrink-0">
+            <Tag className="h-4.5 w-4.5" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              Total des codes de réduction
+            <p className="text-xs font-medium text-slate-500">
+              Total des codes
             </p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">{discounts.length}</p>
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 mt-0.5 tabular-nums">{discounts.length}</p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-lg bg-emerald-50 grid place-items-center text-emerald-600 shrink-0">
-            <Power className="h-6 w-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors flex items-center gap-3.5">
+          <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200/60 grid place-items-center text-slate-600 shrink-0">
+            <Power className="h-4.5 w-4.5" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <p className="text-xs font-medium text-slate-500">
               Codes actifs
             </p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">{totalActive}</p>
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 mt-0.5 tabular-nums">{totalActive}</p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-lg bg-blue-50 grid place-items-center text-blue-600 shrink-0">
-            <Users className="h-6 w-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-colors flex items-center gap-3.5">
+          <div className="h-9 w-9 rounded-lg bg-slate-100 border border-slate-200/60 grid place-items-center text-slate-600 shrink-0">
+            <Users className="h-4.5 w-4.5" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <p className="text-xs font-medium text-slate-500">
               Total des utilisations
             </p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">{totalUses}</p>
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 mt-0.5 tabular-nums">{totalUses}</p>
           </div>
         </div>
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un code de réduction ou une note…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:bg-white transition"
-          />
-        </div>
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Rechercher un code ou une note…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200/80 rounded-lg text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
+        />
       </div>
 
       {/* Codes de réduction Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600">
-            <thead className="bg-slate-50 text-gray-700 font-semibold border-b border-gray-200 uppercase text-xs tracking-wider">
+          <table className="w-full text-left text-xs text-slate-600">
+            <thead className="bg-slate-50/70 text-slate-500 font-medium border-b border-slate-200/80">
               <tr>
-                <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Réduction et portée</th>
-                <th className="px-6 py-4">Forfaits applicables</th>
-                <th className="px-6 py-4">Commission partenaire</th>
-                <th className="px-6 py-4">Utilisations</th>
-                <th className="px-6 py-4">Statut</th>
-                <th className="px-6 py-4">Notes</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-5 py-2.5">Code</th>
+                <th className="px-5 py-2.5">Réduction</th>
+                <th className="px-5 py-2.5">Forfaits</th>
+                <th className="px-5 py-2.5">Commission partenaire</th>
+                <th className="px-5 py-2.5">Utilisations</th>
+                <th className="px-5 py-2.5">Statut</th>
+                <th className="px-5 py-2.5">Notes</th>
+                <th className="px-5 py-2.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

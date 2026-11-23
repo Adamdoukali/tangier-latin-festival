@@ -549,10 +549,10 @@ Tangier Latin Festival`;
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const statusStyles: Record<string, string> = {
-    pending: "bg-amber-100 text-amber-600 border-amber-200",
-    confirmed: "bg-emerald-100 text-emerald-600 border-emerald-200",
-    "checked-in": "bg-cyan-100 text-cyan-700 border-cyan-200",
-    declined: "bg-red-100 text-red-600 border-red-200",
+    pending: "bg-amber-50 text-amber-700 border-amber-200/80",
+    confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    "checked-in": "bg-sky-50 text-sky-700 border-sky-200/80",
+    declined: "bg-rose-50 text-rose-700 border-rose-200/80",
   };
 
   return (
@@ -560,11 +560,11 @@ Tangier Latin Festival`;
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
             Gestion des réservations
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Gérez les billets, modifiez les statuts et générez les codes QR.
+          <p className="mt-1 text-xs text-slate-500">
+            Gérez les billets, modifiez les statuts et visualisez les codes QR.
           </p>
         </div>
         <button
@@ -572,7 +572,7 @@ Tangier Latin Festival`;
             resetForm();
             setShowForm(true);
           }}
-          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer self-start"
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer self-start"
         >
           <Plus className="h-4 w-4" /> Ajouter une réservation
         </button>
@@ -581,20 +581,20 @@ Tangier Latin Festival`;
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher par nom, e-mail, billet, forfait ou partenaire…"
-            className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+            className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
           />
         </div>
         <div className="relative">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as BookingStatus | "all")}
-            className="appearance-none rounded-lg border border-gray-300 bg-white px-4 pr-8 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition cursor-pointer"
+            className="appearance-none rounded-lg border border-slate-200/80 bg-white px-3 pr-8 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-400 shadow-xs transition-colors cursor-pointer"
           >
             <option value="all">Tous les statuts</option>
             <option value="pending">En attente</option>
@@ -602,17 +602,17 @@ Tangier Latin Festival`;
             <option value="checked-in">Arrivé</option>
             <option value="declined">Refusé</option>
           </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
         </div>
       </div>
 
       {/* Status change error (e.g. database constraint) */}
       {statusError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start justify-between gap-3">
-          <p className="text-sm text-red-700">{statusError}</p>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 flex items-start justify-between gap-3 text-xs text-rose-700">
+          <p>{statusError}</p>
           <button
             onClick={() => setStatusError("")}
-            className="text-red-600/70 hover:text-red-700 transition cursor-pointer shrink-0"
+            className="text-rose-400 hover:text-rose-600 transition-colors cursor-pointer shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
@@ -620,20 +620,20 @@ Tangier Latin Festival`;
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">
+          <div className="px-5 py-16 text-center text-xs text-slate-400">
             {bookings.length === 0
               ? "Aucune réservation. Cliquez sur « Ajouter une réservation » pour en créer une."
-              : "Aucune réservation ne correspond aux filtres."}
+              : "Aucune réservation ne correspond aux critères de recherche."}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
+                <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
                   <th className="px-5 py-3 text-left font-medium">Client</th>
-                  <th className="px-5 py-3 text-left font-medium">Ticket</th>
+                  <th className="px-5 py-3 text-left font-medium">Billet</th>
                   <th className="px-5 py-3 text-left font-medium">Forfait</th>
                   <th className="px-5 py-3 text-left font-medium">Source</th>
                   <th className="px-5 py-3 text-left font-medium">Statut</th>
@@ -641,7 +641,7 @@ Tangier Latin Festival`;
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((b) => (
                   <tr key={b.id} className="hover:bg-gray-50 transition">
                     <td className="px-5 py-3">
@@ -1149,7 +1149,7 @@ Tangier Latin Festival`;
                       0,
                       Math.round(
                         (new Date(form.departure).getTime() - new Date(form.arrival).getTime()) /
-                          (1000 * 60 * 60 * 24),
+                        (1000 * 60 * 60 * 24),
                       ),
                     )}{" "}
                     nuits

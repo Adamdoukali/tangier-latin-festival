@@ -667,23 +667,24 @@ function AdminShuttlePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-blue-600 text-white grid place-items-center shadow-xs">
-              <Bus className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="font-display text-2xl font-bold text-gray-900">
-                Gestion des navettes de transfert
-              </h1>
-              <p className="text-xs text-gray-500">
-                Gérez, regroupez, ajoutez et exportez les listes de passagers des navettes aéroport
-                et port.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Gestion des navettes de transfert
+          </h1>
+          <p className="mt-1 text-xs text-slate-500">
+            Gérez, regroupez, ajoutez et exportez les listes de passagers des navettes aéroport et port.
+          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xs transition cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Ajouter un transfert</span>
+          </button>
+
           <button
             type="button"
             onClick={() =>
@@ -692,21 +693,19 @@ function AdminShuttlePage() {
                 selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form",
               )
             }
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg shadow-xs transition cursor-pointer"
           >
             {copiedId ===
             (selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form") ? (
-              <Check className="h-4 w-4" />
+              <Check className="h-3.5 w-3.5 text-emerald-600" />
             ) : (
-              <Copy className="h-4 w-4" />
+              <Copy className="h-3.5 w-3.5" />
             )}
             <span>
               {copiedId ===
               (selectedPartner ? `transfer-form-${selectedPartner.id}` : "transfer-form")
-                ? "Lien du formulaire copié"
-                : selectedPartner
-                  ? `Copier le lien de ${selectedPartner.name}`
-                  : "Copier le lien du formulaire de transfert"}
+                ? "Lien copié"
+                : "Copier le lien"}
             </span>
           </button>
 
@@ -714,20 +713,11 @@ function AdminShuttlePage() {
             href={transferFormUrl(selectedPartner)}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-2.5 border border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold rounded-xl transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg shadow-xs transition"
           >
-            <ExternalLink className="h-4 w-4" />
-            Ouvrir le formulaire
+            <ExternalLink className="h-3.5 w-3.5" />
+            Ouvrir formulaire
           </a>
-
-          <button
-            type="button"
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Ajouter un transfert / une navette</span>
-          </button>
 
           <button
             onClick={() =>
@@ -737,22 +727,22 @@ function AdminShuttlePage() {
               )
             }
             disabled={!shuttleBookings.length}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg shadow-xs transition cursor-pointer disabled:opacity-50"
           >
-            <Download className="h-4 w-4" />
-            Exporter la sélection XLSX ({shuttleBookings.length})
+            <Download className="h-3.5 w-3.5" />
+            Export XLSX ({shuttleBookings.length})
           </button>
         </div>
       </div>
 
       {actionError && (
-        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
           <span>{actionError}</span>
           <button
             type="button"
             onClick={() => setActionError("")}
-            className="ml-auto rounded p-1 hover:bg-red-100"
+            className="ml-auto rounded p-1 hover:bg-rose-100"
             aria-label="Fermer l’erreur"
           >
             <X className="h-3.5 w-3.5" />
@@ -761,117 +751,117 @@ function AdminShuttlePage() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <p className="text-xs font-medium text-slate-500">
               Passagers
             </p>
-            <Users className="h-4 w-4 text-blue-600" />
+            <Users className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="font-display text-2xl font-bold text-gray-900 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
             {stats.totalPassengers}
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">
-            {stats.totalBookings} réservations au total
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            {stats.totalBookings} réservations confirmées
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+            <p className="text-xs font-medium text-slate-500">
               Arrivées
             </p>
-            <Calendar className="h-4 w-4 text-emerald-600" />
+            <Calendar className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="font-display text-2xl font-bold text-emerald-950 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
             {stats.arrivalsCount}
           </p>
-          <p className="text-[10px] text-emerald-700 mt-0.5">
+          <p className="text-[11px] text-slate-400 mt-0.5">
             {arrivalGroups.length} dates d’arrivée
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-purple-700">
+            <p className="text-xs font-medium text-slate-500">
               Départs
             </p>
-            <Calendar className="h-4 w-4 text-purple-600" />
+            <Calendar className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="font-display text-2xl font-bold text-purple-950 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
             {stats.departuresCount}
           </p>
-          <p className="text-[10px] text-purple-700 mt-0.5">
+          <p className="text-[11px] text-slate-400 mt-0.5">
             {departureGroups.length} dates de départ
           </p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <p className="text-xs font-medium text-slate-500">
               Port et aéroport
             </p>
-            <Ship className="h-4 w-4 text-amber-600" />
+            <Ship className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="font-display text-lg font-bold text-gray-900 mt-1">
-            {stats.portCount} <span className="text-xs font-normal text-gray-500">Port</span> ·{" "}
-            {stats.airportCount} <span className="text-xs font-normal text-gray-500">Air</span>
+          <p className="text-lg font-semibold tabular-nums text-slate-900 mt-1">
+            {stats.portCount} <span className="text-xs font-normal text-slate-500">Port</span> ·{" "}
+            {stats.airportCount} <span className="text-xs font-normal text-slate-500">Air</span>
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Répartition par point</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Répartition par point</p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs col-span-2 lg:col-span-1">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
+            <p className="text-xs font-medium text-slate-500">
               Revenu des navettes
             </p>
-            <TrendingUp className="h-4 w-4 text-amber-600" />
+            <TrendingUp className="h-4 w-4 text-emerald-600" />
           </div>
-          <p className="font-display text-2xl font-bold text-amber-700 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-emerald-700 mt-1">
             €{stats.totalRevenue}
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">
+          <p className="text-[11px] text-slate-400 mt-0.5">
             Environ {stats.totalRevenue * EUR_TO_MAD} MAD
           </p>
         </div>
       </div>
 
       {/* Controls & Search */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="rounded-xl border border-slate-200/80 bg-white p-3.5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Navigation Tabs */}
-        <div className="flex items-center bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg w-fit">
           <button
             onClick={() => setTab("arrivals")}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-medium rounded-md transition cursor-pointer flex items-center gap-1.5 ${
               tab === "arrivals"
-                ? "bg-white text-blue-700 shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Calendar className="h-3.5 w-3.5" />
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
             Groupes d’arrivée ({stats.arrivalsCount})
           </button>
           <button
             onClick={() => setTab("departures")}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-medium rounded-md transition cursor-pointer flex items-center gap-1.5 ${
               tab === "departures"
-                ? "bg-white text-purple-700 shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Calendar className="h-3.5 w-3.5" />
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
             Groupes de départ ({stats.departuresCount})
           </button>
           <button
             onClick={() => setTab("all")}
-            className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1 text-xs font-medium rounded-md transition cursor-pointer flex items-center gap-1.5 ${
               tab === "all"
-                ? "bg-white text-gray-900 shadow-xs"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs font-semibold"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Users className="h-3.5 w-3.5" />
+            <Users className="h-3.5 w-3.5 text-slate-400" />
             Tous les passagers ({shuttleBookings.length})
           </button>
         </div>
@@ -882,7 +872,7 @@ function AdminShuttlePage() {
           <select
             value={partnerFilter}
             onChange={(e) => setPartnerFilter(e.target.value)}
-            className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-900 focus:outline-none focus:border-blue-600 cursor-pointer"
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 cursor-pointer"
             title="Filtrer les transferts selon le lien de parrainage utilisé"
           >
             <option value="all">Tous les liens partenaires</option>
@@ -898,18 +888,18 @@ function AdminShuttlePage() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as any)}
-            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 cursor-pointer"
           >
             <option value="all">Tous les points (port et aéroport)</option>
-            <option value="port">🚢 Port uniquement</option>
-            <option value="airport">✈️ Aéroport uniquement</option>
+            <option value="port">Port uniquement</option>
+            <option value="airport">Aéroport uniquement</option>
           </select>
 
           {/* Status filter */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 cursor-pointer"
           >
             <option value="all">Tous les statuts</option>
             <option value="confirmed">Confirmé</option>
@@ -919,19 +909,19 @@ function AdminShuttlePage() {
           </select>
 
           {/* Search Box */}
-          <div className="relative min-w-[220px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+          <div className="relative min-w-[200px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un nom, téléphone ou code…"
-              className="w-full rounded-lg border border-gray-300 bg-white pl-8 pr-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-blue-500 placeholder:text-gray-400"
+              placeholder="Rechercher nom, tél, code…"
+              className="w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 placeholder:text-slate-400"
             />
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -965,24 +955,23 @@ function AdminShuttlePage() {
             return (
               <div
                 key={date}
-                className="rounded-2xl border border-emerald-200/90 bg-white shadow-2xs overflow-hidden"
+                className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden"
               >
                 {/* Group Header Banner */}
-                <div className="bg-gradient-to-r from-emerald-50 via-emerald-50/50 to-white px-5 py-3.5 border-b border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="bg-slate-50/75 px-4 py-3 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white grid place-items-center shadow-2xs font-bold text-xs">
-                      <Calendar className="h-4 w-4" />
+                    <div className="h-7 w-7 rounded-md bg-slate-900 text-white grid place-items-center text-xs">
+                      <Calendar className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <h3 className="font-display text-base font-bold text-gray-900">
-                        Date d’arrivée: <span className="text-emerald-800">{date}</span>
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        Date d’arrivée : <span className="text-slate-900 font-mono">{date}</span>
                       </h3>
-                      <p className="text-[11px] text-gray-500">
-                        {groupBookings.length} bookings ·{" "}
-                        <span className="font-bold text-emerald-800">
-                          {passengersInGroup} passengers
-                        </span>{" "}
-                        to pick up
+                      <p className="text-xs text-slate-500">
+                        {groupBookings.length} réservations ·{" "}
+                        <span className="font-semibold text-slate-900 tabular-nums">
+                          {passengersInGroup} passagers
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -995,10 +984,10 @@ function AdminShuttlePage() {
                           `tableau-transferts-arrivees-${date.replace(/[^a-zA-Z0-9]/g, "-")}`,
                         )
                       }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition shadow-xs cursor-pointer"
                     >
-                      <Download className="h-3.5 w-3.5 text-white" />
-                      Export Group XLSX
+                      <Download className="h-3.5 w-3.5 text-slate-500" />
+                      Export XLSX
                     </button>
                   </div>
                 </div>
@@ -1121,24 +1110,23 @@ function AdminShuttlePage() {
             return (
               <div
                 key={date}
-                className="rounded-2xl border border-purple-200/90 bg-white shadow-2xs overflow-hidden"
+                className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden"
               >
                 {/* Group Header Banner */}
-                <div className="bg-gradient-to-r from-purple-50 via-purple-50/50 to-white px-5 py-3.5 border-b border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="bg-slate-50/75 px-4 py-3 border-b border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-purple-600 text-white grid place-items-center shadow-2xs font-bold text-xs">
-                      <Calendar className="h-4 w-4" />
+                    <div className="h-7 w-7 rounded-md bg-slate-900 text-white grid place-items-center text-xs">
+                      <Calendar className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <h3 className="font-display text-base font-bold text-gray-900">
-                        Date de départ: <span className="text-purple-800">{date}</span>
+                      <h3 className="text-sm font-semibold text-slate-900">
+                        Date de départ : <span className="text-slate-900 font-mono">{date}</span>
                       </h3>
-                      <p className="text-[11px] text-gray-500">
-                        {groupBookings.length} bookings ·{" "}
-                        <span className="font-bold text-purple-800">
-                          {passengersInGroup} passengers
-                        </span>{" "}
-                        for return dropoff
+                      <p className="text-xs text-slate-500">
+                        {groupBookings.length} réservations ·{" "}
+                        <span className="font-semibold text-slate-900 tabular-nums">
+                          {passengersInGroup} passagers
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -1151,10 +1139,10 @@ function AdminShuttlePage() {
                           `tableau-transferts-departs-${date.replace(/[^a-zA-Z0-9]/g, "-")}`,
                         )
                       }
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 border border-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition shadow-xs cursor-pointer"
                     >
-                      <Download className="h-3.5 w-3.5 text-white" />
-                      Export Group XLSX
+                      <Download className="h-3.5 w-3.5 text-slate-500" />
+                      Export XLSX
                     </button>
                   </div>
                 </div>
@@ -1271,21 +1259,21 @@ function AdminShuttlePage() {
         </div>
       ) : (
         /* ALL TRANSFERS TABLE VIEW */
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-2xs overflow-hidden">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-700">
-              <thead className="bg-gray-50 border-b border-gray-200 text-[11px] font-bold uppercase tracking-wider text-gray-500">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500">
                 <tr>
-                  <th className="px-4 py-3.5">Code / Client</th>
-                  <th className="px-4 py-3.5">Lien partenaire</th>
-                  <th className="px-4 py-3.5">Lieu et type</th>
-                  <th className="px-4 py-3.5">Direction</th>
-                  <th className="px-4 py-3.5">Date d’arrivée</th>
-                  <th className="px-4 py-3.5">Date de départ</th>
-                  <th className="px-4 py-3.5">Détails (vol / bateau)</th>
-                  <th className="px-4 py-3.5">Coût</th>
-                  <th className="px-4 py-3.5">Statut</th>
-                  <th className="px-4 py-3.5 text-right">Actions</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Code / Client</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Lien partenaire</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Lieu et type</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Direction</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Date d’arrivée</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Date de départ</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Détails (vol / bateau)</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Coût</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Statut</th>
+                  <th className="px-4 py-2.5 text-xs font-medium text-slate-500 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

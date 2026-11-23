@@ -363,9 +363,9 @@ function AdminHotel() {
 
   const RoomTable = ({ list }: { list: Room[] }) => (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <thead>
-          <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
+          <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
             <th className="px-4 py-2.5 text-left font-medium">#</th>
             <th className="px-4 py-2.5 text-left font-medium">Nº de chambre</th>
             <th className="px-4 py-2.5 text-left font-medium">Type de chambre</th>
@@ -374,22 +374,22 @@ function AdminHotel() {
             <th className="px-4 py-2.5 text-left font-medium">Origine</th>
             <th className="px-4 py-2.5 text-left font-medium">Nuits</th>
             <th className="px-4 py-2.5 text-left font-medium">Arrivée → départ</th>
-            <th className="px-4 py-2.5 text-left font-medium">Arrivée</th>
-            <th className="px-4 py-2.5 text-left font-medium">Réservation</th>
+            <th className="px-4 py-2.5 text-left font-medium">Statut</th>
+            <th className="px-4 py-2.5 text-left font-medium">Billet</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100" key={resetKey}>
+        <tbody className="divide-y divide-slate-100" key={resetKey}>
           {list.map((r, i) => {
             const arrived = r.booking.status === "checked-in";
             return (
               <tr
                 key={r.booking.id}
-                className={`transition ${arrived ? "bg-cyan-50/50 hover:bg-cyan-50" : "hover:bg-gray-50"}`}
+                className={`transition-colors ${arrived ? "bg-sky-50/40 hover:bg-sky-50/70" : "hover:bg-slate-50/80"}`}
               >
-                <td className="px-4 py-2.5 text-gray-400">{i + 1}</td>
+                <td className="px-4 py-2.5 text-slate-400 tabular-nums">{i + 1}</td>
                 <td className="px-4 py-2.5">
                   <div className="relative w-24">
-                    <KeyRound className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-300 pointer-events-none" />
+                    <KeyRound className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
                     <input
                       type="text"
                       defaultValue={r.booking.roomNumber ?? ""}
@@ -398,9 +398,9 @@ function AdminHotel() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                       }}
-                      className={`w-24 rounded-md border pl-7 pr-2 py-1.5 text-sm font-semibold focus:outline-none focus:border-amber-500 transition ${r.booking.roomNumber
+                      className={`w-24 rounded-md border pl-7 pr-2 py-1 text-xs font-semibold focus:outline-none focus:border-slate-400 transition-colors ${r.booking.roomNumber
                         ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                        : "border-gray-300 bg-white text-gray-900"
+                        : "border-slate-200 bg-white text-slate-900"
                         }`}
                       title="Numéro de chambre d’hôtel — appuyez sur Entrée pour enregistrer"
                     />
@@ -410,40 +410,40 @@ function AdminHotel() {
                   <select
                     value={r.booking.roomType ?? ""}
                     onChange={(e) => saveRoomType(r.booking, e.target.value)}
-                    className={`rounded-md border px-2 py-1.5 text-xs font-semibold focus:outline-none focus:border-amber-500 transition cursor-pointer ${r.booking.roomType
-                      ? "border-amber-200 bg-amber-50 text-amber-900 font-bold"
-                      : "border-gray-300 bg-white text-gray-400 font-normal"
+                    className={`rounded-md border px-2 py-1 text-xs font-medium focus:outline-none focus:border-slate-400 transition-colors cursor-pointer ${r.booking.roomType
+                      ? "border-slate-300 bg-slate-50 text-slate-900 font-semibold"
+                      : "border-slate-200 bg-white text-slate-400 font-normal"
                       }`}
                     title="Sélectionner le type de chambre"
                   >
-                    <option value="" className="text-gray-400">
-                      — Sélectionner un type de chambre —
+                    <option value="" className="text-slate-400">
+                      — Type de chambre —
                     </option>
                     {ROOM_TYPES.map((rt) => (
-                      <option key={rt.id} value={rt.label} className="text-gray-900 font-normal">
+                      <option key={rt.id} value={rt.label} className="text-slate-900 font-normal">
                         {rt.label}
                         {rt.capacity ? ` (${rt.capacity})` : ""}
                       </option>
                     ))}
                   </select>
                 </td>
-                <td className="px-4 py-2.5 font-medium text-gray-900">
+                <td className="px-4 py-2.5 font-medium text-slate-900">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span>{r.guests[0] ?? "—"}</span>
                     {r.clients[0]?.isArtist ? (
                       <button
                         type="button"
                         onClick={() => handleToggleArtist(r.booking, 0, true)}
-                        className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer"
                         title="Artiste — Cliquer pour retirer le statut d'artiste"
                       >
-                        🎵 Artiste ✓
+                        <Sparkles className="h-2.5 w-2.5 text-purple-600" /> Artiste ✓
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleToggleArtist(r.booking, 0, false)}
-                        className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                        className="text-[10px] text-slate-400 hover:text-purple-700 hover:underline transition-colors cursor-pointer pl-0.5 font-medium"
                         title="Marquer comme Artiste"
                       >
                         + Artiste
@@ -451,7 +451,7 @@ function AdminHotel() {
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-2.5 text-gray-700">
+                <td className="px-4 py-2.5 text-slate-700">
                   {r.category === "double" ? (
                     r.guests.length > 2 ? (
                       <div>
@@ -461,16 +461,16 @@ function AdminHotel() {
                             <button
                               type="button"
                               onClick={() => handleToggleArtist(r.booking, 1, true)}
-                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer"
                               title="Artiste — Cliquer pour retirer le statut d'artiste"
                             >
-                              🎵 Artiste ✓
+                              <Sparkles className="h-2.5 w-2.5 text-purple-600" /> Artiste ✓
                             </button>
                           ) : (
                             <button
                               type="button"
                               onClick={() => handleToggleArtist(r.booking, 1, false)}
-                              className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                              className="text-[10px] text-slate-400 hover:text-purple-700 hover:underline transition-colors cursor-pointer pl-0.5 font-medium"
                               title="Marquer comme Artiste"
                             >
                               + Artiste
@@ -478,10 +478,10 @@ function AdminHotel() {
                           )}
                         </div>
                         <span
-                          className="mt-1 inline-block text-[11px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded font-medium"
+                          className="mt-1 inline-block text-[11px] bg-slate-100 text-slate-700 border border-slate-200 px-1.5 py-0.5 rounded font-medium"
                           title={r.guests.slice(2).join(" & ")}
                         >
-                          +{r.guests.length - 2} more ({r.guests.slice(2).join(", ")})
+                          +{r.guests.length - 2} autres ({r.guests.slice(2).join(", ")})
                         </span>
                       </div>
                     ) : (
@@ -491,16 +491,16 @@ function AdminHotel() {
                           <button
                             type="button"
                             onClick={() => handleToggleArtist(r.booking, 1, true)}
-                            className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition cursor-pointer"
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors cursor-pointer"
                             title="Artiste — Cliquer pour retirer le statut d'artiste"
                           >
-                            🎵 Artiste ✓
+                            <Sparkles className="h-2.5 w-2.5 text-purple-600" /> Artiste ✓
                           </button>
                         ) : (
                           <button
                             type="button"
                             onClick={() => handleToggleArtist(r.booking, 1, false)}
-                            className="text-[10px] text-gray-400 hover:text-purple-700 hover:underline transition cursor-pointer pl-0.5 font-medium"
+                            className="text-[10px] text-slate-400 hover:text-purple-700 hover:underline transition-colors cursor-pointer pl-0.5 font-medium"
                             title="Marquer comme Artiste"
                           >
                             + Artiste
@@ -514,43 +514,43 @@ function AdminHotel() {
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
                   {roomOrigin(r) === "morocco" ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <span>🇲🇦</span> Maroc
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                      Maroc
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                      <span>🌐</span> {roomCountries(r)}
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200/60">
+                      {roomCountries(r)}
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2.5 text-gray-600">{nightsOf(r)}</td>
-                <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                <td className="px-4 py-2.5 text-slate-600">{nightsOf(r)}</td>
+                <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
                   <button
                     type="button"
                     onClick={() => openEditDates(r.booking)}
-                    className="inline-flex items-center gap-1.5 hover:text-amber-700 hover:bg-amber-50 px-2 py-1 rounded-md border border-transparent hover:border-amber-200 transition cursor-pointer text-left group"
+                    className="inline-flex items-center gap-1.5 hover:text-slate-900 hover:bg-slate-100 px-2 py-1 rounded-md border border-transparent hover:border-slate-200 transition-colors cursor-pointer text-left tabular-nums"
                     title="Cliquer pour modifier les dates d’arrivée et de départ"
                   >
-                    <Calendar className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                    <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <span>
                       {fmtDate(r.booking.arrivalDate)} → {fmtDate(r.booking.departureDate)}
                     </span>
-                    <Pencil className="h-3 w-3 text-gray-400 group-hover:text-amber-600 transition" />
+                    <Pencil className="h-3 w-3 text-slate-400 hover:text-slate-600 transition-colors" />
                   </button>
                 </td>
                 <td className="px-4 py-2.5 whitespace-nowrap">
                   {r.booking.status === "pending" ? (
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] tracking-widest uppercase font-medium border ${statusStyles.pending}`}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${statusStyles.pending}`}
                     >
-                      pending
+                      En attente
                     </span>
                   ) : (
                     <button
                       onClick={() => toggleArrived(r.booking)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] tracking-wide uppercase font-semibold border transition cursor-pointer ${arrived
-                        ? "bg-cyan-100 text-cyan-700 border-cyan-300 hover:bg-cyan-200"
-                        : "bg-white text-gray-600 border-gray-300 hover:border-cyan-400 hover:text-cyan-700"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors cursor-pointer ${arrived
+                        ? "bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100"
+                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                         }`}
                       title={
                         arrived
@@ -559,12 +559,12 @@ function AdminHotel() {
                       }
                     >
                       <UserCheck className="h-3.5 w-3.5" />
-                      {arrived ? "Arrived ✓" : "Check in"}
+                      {arrived ? "Arrivé ✓" : "Check in"}
                     </button>
                   )}
                 </td>
                 <td className="px-4 py-2.5">
-                  <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                  <code className="text-xs font-mono text-slate-700 bg-slate-100 border border-slate-200/60 px-1.5 py-0.5 rounded">
                     {r.booking.ticketCode}
                   </code>
                 </td>
@@ -581,39 +581,37 @@ function AdminHotel() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">
             Répartition des chambres d’hôtel
           </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Toutes les chambres réservées avec leurs participants, regroupées par partenaire, prêtes
-            à être transmises au Kenzi Solazur.
+          <p className="mt-1 text-xs text-slate-500">
+            Attribution des chambres pour le Kenzi Solazur et rooming list par partenaire.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           <button
             onClick={() => downloadRoomingXlsx("morocco")}
             disabled={moroccanRooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
             title="Télécharger le fichier Excel contenant uniquement les participants marocains"
           >
-            <Download className="h-3.5 w-3.5" /> 🇲🇦 XLSX Maroc ({moroccanGuests} participants)
+            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Maroc ({moroccanGuests})
           </button>
           <button
             onClick={() => downloadRoomingXlsx("international")}
             disabled={internationalRooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
             title="Télécharger le fichier Excel contenant uniquement les participants étrangers"
           >
-            <Download className="h-3.5 w-3.5" /> 🌐 XLSX Étranger ({internationalGuests}{" "}
-            participants)
+            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Étranger ({internationalGuests})
           </button>
           <button
             onClick={() => downloadRoomingXlsx("all")}
             disabled={rooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 transition cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-900 bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
             title="Télécharger le fichier Excel contenant toutes les chambres et tous les participants"
           >
-            <Download className="h-3.5 w-3.5" /> 📁 XLSX Tous ({totalGuests} participants)
+            <Download className="h-3.5 w-3.5 text-slate-300" /> Export Tous ({totalGuests})
           </button>
         </div>
       </div>
@@ -666,49 +664,48 @@ function AdminHotel() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+      {/* Stats - unslop clean metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Chambres doubles</p>
-            <BedDouble className="h-4 w-4 text-blue-500" />
+            <p className="text-xs font-medium text-slate-500">Chambres doubles</p>
+            <BedDouble className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-1 font-display text-2xl text-gray-900">{doubles.length}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{doubles.length}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">
+            <p className="text-xs font-medium text-slate-500">
               Chambres individuelles
             </p>
-            <Bed className="h-4 w-4 text-violet-500" />
+            <Bed className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-1 font-display text-2xl text-gray-900">{singles.length}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{singles.length}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Participants</p>
-            <Users className="h-4 w-4 text-emerald-500" />
+            <p className="text-xs font-medium text-slate-500">Participants</p>
+            <Users className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-1 font-display text-2xl text-gray-900">{totalGuests}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{totalGuests}</p>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs tracking-widest uppercase text-gray-500">Arrivé</p>
-            <UserCheck className="h-4 w-4 text-cyan-600" />
+            <p className="text-xs font-medium text-slate-500">Arrivés</p>
+            <UserCheck className="h-4 w-4 text-emerald-600" />
           </div>
-          <p className="mt-1 font-display text-2xl text-gray-900">
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {rooms.filter((r) => r.booking.status === "checked-in").length}
-            <span className="text-sm text-gray-400 font-normal"> / {rooms.length}</span>
+            <span className="text-xs text-slate-400 font-normal"> / {rooms.length}</span>
           </p>
         </div>
       </div>
 
       {/* Type de chambre Inventory Allocation Overview */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-700 flex items-center gap-2">
-            <Hotel className="h-4 w-4 text-amber-600" /> Attribution et inventaire des types de
-            chambres
+          <h4 className="text-xs font-semibold text-slate-900 flex items-center gap-2">
+            <Hotel className="h-4 w-4 text-slate-500" /> Attribution et inventaire des types de chambres
           </h4>
           <span className="text-xs text-slate-500">
             {rooms.filter((r) => r.booking.roomType).length} sur {rooms.length} chambres attribuées
@@ -721,24 +718,24 @@ function AdminHotel() {
             return (
               <div
                 key={rt.id}
-                className={`p-2.5 rounded-lg border flex flex-col justify-between transition ${count > 0 ? "border-amber-200 bg-amber-50/40" : "border-gray-100 bg-gray-50/50"
+                className={`p-2.5 rounded-lg border flex flex-col justify-between transition-colors ${count > 0 ? "border-slate-200 bg-slate-50/70" : "border-slate-100 bg-slate-50/30"
                   }`}
               >
-                <span className="font-medium text-gray-800 truncate">{rt.label}</span>
+                <span className="font-medium text-slate-800 truncate">{rt.label}</span>
                 <div className="mt-1 flex items-baseline justify-between">
                   <span
-                    className={`font-bold text-sm ${isOver ? "text-red-600" : count > 0 ? "text-amber-700" : "text-gray-400"}`}
+                    className={`font-semibold text-sm tabular-nums ${isOver ? "text-rose-600" : count > 0 ? "text-slate-900" : "text-slate-400"}`}
                   >
                     {count}
                   </span>
                   {rt.capacity !== undefined ? (
                     <span
-                      className={`text-[11px] font-mono ${isOver ? "text-red-500 font-bold" : "text-gray-400"}`}
+                      className={`text-[11px] font-mono tabular-nums ${isOver ? "text-rose-500 font-semibold" : "text-slate-400"}`}
                     >
                       / {rt.capacity} max
                     </span>
                   ) : (
-                    <span className="text-[11px] text-gray-300 font-mono">—</span>
+                    <span className="text-[11px] text-slate-300 font-mono">—</span>
                   )}
                 </div>
               </div>
@@ -750,38 +747,36 @@ function AdminHotel() {
       {/* Search + filter */}
       <div className="flex flex-col gap-3">
         {/* Origin Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 mr-2">
-            Filtrer par origine :
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200/80 pb-3">
+          <span className="text-xs font-medium text-slate-400 mr-1">
+            Filtre :
           </span>
           <button
             onClick={() => setOriginFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${originFilter === "all"
-              ? "bg-gray-900 text-white shadow-xs"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "all"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
               }`}
           >
-            Toutes les chambres ({rooms.length} chambres ·{" "}
-            {rooms.reduce((s, r) => s + bookingPeopleCount(r.booking, packs), 0)} participants)
+            Toutes les chambres ({rooms.length})
           </button>
           <button
             onClick={() => setOriginFilter("morocco")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${originFilter === "morocco"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "morocco"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
               }`}
           >
-            <span>🇲🇦</span> Maroc ({moroccanRooms.length} chambres · {moroccanGuests} participants)
+            Maroc ({moroccanRooms.length})
           </button>
           <button
             onClick={() => setOriginFilter("international")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${originFilter === "international"
-              ? "bg-blue-600 text-white shadow-xs"
-              : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "international"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
               }`}
           >
-            <span>🌐</span> Étranger ({internationalRooms.length} chambres · {internationalGuests}{" "}
-            participants)
+            Étranger ({internationalRooms.length})
           </button>
         </div>
 

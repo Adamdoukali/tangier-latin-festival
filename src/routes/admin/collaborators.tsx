@@ -417,76 +417,72 @@ function AdminCollaborators() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl tracking-wide text-gray-900">Collaborateurs</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Partenaires qui vendent des billets ou distribuent des invitations. Chaque vente et
-            invitation est attribuée au collaborateur concerné.
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">Collaborateurs</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Partenaires et promoteurs du festival, liens d'affiliation, ventes et commissions.
           </p>
         </div>
         <button
           onClick={openNew}
-          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-amber-400 transition cursor-pointer self-start"
+          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer self-start"
         >
           <Plus className="h-4 w-4" /> Ajouter un collaborateur
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center justify-between">
-            Partenaires
-            <Users className="h-4 w-4 text-violet-500" />
-          </p>
-          <p className="mt-2 text-2xl font-bold font-display text-gray-900">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-500">Partenaires</p>
+            <Users className="h-4 w-4 text-slate-400" />
+          </div>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {stats.filter((s) => s.collaborator.active).length}
-            <span className="text-xs font-normal text-gray-400 ml-1.5">/ {stats.length} total</span>
+            <span className="text-xs font-normal text-slate-400 ml-1.5">/ {stats.length} total</span>
           </p>
-          <p className="text-xs text-gray-500 mt-1">comptes collaborateurs</p>
+          <p className="text-[11px] text-slate-400 mt-1">Comptes collaborateurs</p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center justify-between">
-            Billets vendus
-            <Ticket className="h-4 w-4 text-blue-500" />
-          </p>
-          <p className="mt-2 text-2xl font-bold font-display text-gray-900">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-500">Billets vendus</p>
+            <Ticket className="h-4 w-4 text-slate-400" />
+          </div>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {totalConfirmedTickets}
             {totalPendingTickets > 0 && (
-              <span className="text-xs font-semibold text-amber-600 ml-1.5">
+              <span className="text-xs font-medium text-amber-600 ml-1.5">
                 (+{totalPendingTickets} en attente)
               </span>
             )}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {totalConfirmedPasses} pass · {totalConfirmedExcursions} excursion{totalConfirmedExcursions > 1 ? "s" : ""}
-            {totalPendingPasses + totalPendingExcursions > 0
-              ? ` (+${totalPendingPasses + totalPendingExcursions} att.)`
-              : ""}
           </p>
         </div>
 
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700 flex items-center justify-between">
-            Ventes confirmées
-            <CreditCard className="h-4 w-4 text-emerald-600" />
-          </p>
-          <p className="mt-2 text-2xl font-bold font-display text-emerald-700">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-500">Ventes confirmées</p>
+            <CreditCard className="h-4 w-4 text-slate-400" />
+          </div>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {formatMoneyPair(totalConfirmedRevenue)}
           </p>
-          <p className="text-xs text-emerald-600/80 mt-1">chiffre d’affaires payé</p>
+          <p className="text-[11px] text-slate-400 mt-1">Chiffre d’affaires payé</p>
         </div>
 
-        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 shadow-xs">
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-700 flex items-center justify-between">
-            Paiements en attente
-            <Clock className="h-4 w-4 text-amber-600" />
-          </p>
-          <p className="mt-2 text-2xl font-bold font-display text-amber-800">
+        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-slate-500">Paiements en attente</p>
+            <Clock className="h-4 w-4 text-slate-400" />
+          </div>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
             {formatMoneyPair(totalPendingRevenue)}
           </p>
-          <p className="text-xs text-amber-700 mt-1">
-            {totalPendingTickets} billet(s) en attente de paiement
+          <p className="text-[11px] text-slate-400 mt-1">
+            {totalPendingTickets} billet(s) en attente
           </p>
         </div>
       </div>
@@ -639,35 +635,35 @@ function AdminCollaborators() {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un collaborateur par nom, code, identifiant, e-mail ou téléphone…"
-          className="w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
+          placeholder="Rechercher par nom, code, identifiant, e-mail ou téléphone…"
+          className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
         />
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
         {loading ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">Chargement…</div>
+          <div className="px-5 py-16 text-center text-xs text-slate-400">Chargement…</div>
         ) : visibleStats.length === 0 ? (
-          <div className="px-5 py-16 text-center text-sm text-gray-400">
-            <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+          <div className="px-5 py-16 text-center text-xs text-slate-400">
+            <Users className="h-8 w-8 mx-auto mb-2 text-slate-300" />
             Aucun collaborateur. Cliquez sur « Ajouter un collaborateur » pour créer le premier.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-gray-200 text-xs tracking-widest uppercase text-gray-500">
-                  <th className="px-5 py-3 text-left font-medium">Partenaire / e-mail</th>
+                <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
+                  <th className="px-5 py-3 text-left font-medium">Partenaire</th>
                   <th className="px-5 py-3 text-left font-medium">Code / lien</th>
-                  <th className="px-5 py-3 text-right font-medium">Chambres individuelles</th>
+                  <th className="px-5 py-3 text-right font-medium">Chambres ind.</th>
                   <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
-                  <th className="px-5 py-3 text-right font-medium">Pass complet / Forfaits</th>
+                  <th className="px-5 py-3 text-right font-medium">Pass complet</th>
                   <th className="px-5 py-3 text-right font-medium">Excursions</th>
                   <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
                   <th className="px-5 py-3 text-right font-medium">Ventes</th>
@@ -678,7 +674,7 @@ function AdminCollaborators() {
                   <th className="px-5 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-slate-100">
                 {visibleStats.map(({ collaborator: c, ...s }) => {
                   const mission = collaboratorMissionProgress(c, bookings);
                   return (
