@@ -503,12 +503,12 @@ function AdminTourismPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-indigo-600 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">
               Total participants
             </span>
-            <Users className="h-4 w-4 text-slate-400" />
+            <Users className="h-4 w-4 text-indigo-600" />
           </div>
           <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
             {stats.totalGuests}
@@ -516,10 +516,10 @@ function AdminTourismPage() {
           <span className="text-[11px] text-slate-400">Passagers confirmés</span>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-sky-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">Excursion Tanger</span>
-            <MapPin className="h-4 w-4 text-slate-400" />
+            <MapPin className="h-4 w-4 text-sky-600" />
           </div>
           <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
             {stats.tangierGuests}
@@ -527,10 +527,10 @@ function AdminTourismPage() {
           <span className="text-[11px] text-slate-500">Sam. 9 janv. (15 €)</span>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-amber-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">Excursion Asilah</span>
-            <MapPin className="h-4 w-4 text-slate-400" />
+            <MapPin className="h-4 w-4 text-amber-600" />
           </div>
           <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
             {stats.asilahGuests}
@@ -540,23 +540,23 @@ function AdminTourismPage() {
           </span>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-indigo-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">Chefchaouen</span>
-            <MapPin className="h-4 w-4 text-slate-400" />
+            <MapPin className="h-4 w-4 text-indigo-600" />
           </div>
-          <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-indigo-950">
             {stats.chefchaouenGuests}
           </p>
           <span className="text-[11px] text-slate-500">Dim. 10 janv. (30 €)</span>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-rose-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">
               Commissions
             </span>
-            <Users className="h-4 w-4 text-slate-400" />
+            <Users className="h-4 w-4 text-rose-600" />
           </div>
           <p className="mt-2 text-2xl font-semibold tabular-nums text-slate-900">
             {stats.partnerCommissions} €
@@ -564,7 +564,7 @@ function AdminTourismPage() {
           <span className="text-[11px] text-slate-500">5 € / participant</span>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-emerald-600 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-medium text-slate-500">Revenu total</span>
             <TrendingUp className="h-4 w-4 text-emerald-600" />

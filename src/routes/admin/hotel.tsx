@@ -664,37 +664,37 @@ function AdminHotel() {
         </div>
       )}
 
-      {/* Stats - unslop clean metrics */}
+      {/* Stats - unslop clean metrics with Mediterranean azure accents */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-blue-500 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">Chambres doubles</p>
-            <BedDouble className="h-4 w-4 text-slate-400" />
+            <BedDouble className="h-4 w-4 text-blue-600" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{doubles.length}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-blue-900 tabular-nums">{doubles.length}</p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-sky-500 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Chambres individuelles
             </p>
-            <Bed className="h-4 w-4 text-slate-400" />
+            <Bed className="h-4 w-4 text-sky-600" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{singles.length}</p>
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-sky-950 tabular-nums">{singles.length}</p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-indigo-500 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">Participants</p>
-            <Users className="h-4 w-4 text-slate-400" />
+            <Users className="h-4 w-4 text-indigo-600" />
           </div>
           <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{totalGuests}</p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-emerald-500 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">Arrivés</p>
             <UserCheck className="h-4 w-4 text-emerald-600" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-emerald-700 tabular-nums">
             {rooms.filter((r) => r.booking.status === "checked-in").length}
             <span className="text-xs text-slate-400 font-normal"> / {rooms.length}</span>
           </p>
@@ -763,8 +763,8 @@ function AdminHotel() {
           <button
             onClick={() => setOriginFilter("morocco")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "morocco"
-              ? "bg-slate-900 text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+              ? "bg-rose-600 text-white shadow-xs"
+              : "bg-rose-50/70 text-rose-700 border border-rose-200/80 hover:bg-rose-100/70"
               }`}
           >
             Maroc ({moroccanRooms.length})
@@ -772,8 +772,8 @@ function AdminHotel() {
           <button
             onClick={() => setOriginFilter("international")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "international"
-              ? "bg-slate-900 text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+              ? "bg-slate-800 text-white shadow-xs"
+              : "bg-slate-100 text-slate-700 border border-slate-200/80 hover:bg-slate-200/60"
               }`}
           >
             Étranger ({internationalRooms.length})

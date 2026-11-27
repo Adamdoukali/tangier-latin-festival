@@ -17,6 +17,9 @@ import {
   Tag,
   Trash2,
   Sparkles,
+  Ticket,
+  Plane,
+  Compass,
 } from "lucide-react";
 import {
   getBookings,
@@ -44,6 +47,71 @@ import { downloadXlsx } from "@/lib/spreadsheet-export";
 export const Route = createFileRoute("/admin/clients")({
   component: AdminClients,
 });
+
+function getClientPackBadge(packName: string = "") {
+  const p = (packName || "").toLowerCase();
+  if (p.includes("modifier") || p.includes("modifiable")) {
+    return {
+      style: "bg-sky-50 text-blue-900 border-blue-300 shadow-2xs font-semibold",
+      icon: "modifier" as const,
+    };
+  }
+  if (
+    p.includes("hotel") ||
+    p.includes("chambre") ||
+    p.includes("single") ||
+    p.includes("double") ||
+    p.includes("triple") ||
+    p.includes("quad") ||
+    p.includes("room") ||
+    p.includes("solazur")
+  ) {
+    return {
+      style: "bg-blue-50/80 text-blue-800 border-blue-200/90 font-medium",
+      icon: "hotel" as const,
+    };
+  }
+  if (
+    p.includes("navette") ||
+    p.includes("transfer") ||
+    p.includes("shuttle") ||
+    p.includes("aéroport") ||
+    p.includes("airport")
+  ) {
+    return {
+      style: "bg-emerald-50 text-emerald-800 border-emerald-200/90 font-medium",
+      icon: "transfer" as const,
+    };
+  }
+  if (
+    p.includes("excursion") ||
+    p.includes("tour") ||
+    p.includes("chefchaouen") ||
+    p.includes("asilah") ||
+    p.includes("visite")
+  ) {
+    return {
+      style: "bg-indigo-50 text-indigo-800 border-indigo-200/90 font-medium",
+      icon: "excursion" as const,
+    };
+  }
+  if (
+    p.includes("pass") ||
+    p.includes("full") ||
+    p.includes("party") ||
+    p.includes("soirée") ||
+    p.includes("day")
+  ) {
+    return {
+      style: "bg-amber-50 text-amber-800 border-amber-200/90 font-medium",
+      icon: "pass" as const,
+    };
+  }
+  return {
+    style: "bg-slate-50 text-slate-700 border-slate-200/90 font-medium",
+    icon: "default" as const,
+  };
+}
 
 function AdminClients() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -510,8 +578,8 @@ function AdminClients() {
             onClick={() => setOriginFilter("morocco")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "morocco"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                ? "bg-rose-600 text-white shadow-xs"
+                : "bg-rose-50/70 text-rose-700 border border-rose-200/80 hover:bg-rose-100/70"
             }`}
           >
             Maroc ({moroccanCount})
@@ -520,8 +588,8 @@ function AdminClients() {
             onClick={() => setOriginFilter("international")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "international"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                ? "bg-slate-800 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 border border-slate-200/80 hover:bg-slate-200/60"
             }`}
           >
             Étranger ({internationalCount})
@@ -530,8 +598,8 @@ function AdminClients() {
             onClick={() => setOriginFilter("artist")}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
               originFilter === "artist"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+                ? "bg-purple-700 text-white shadow-xs"
+                : "bg-purple-50 text-purple-700 border border-purple-200/80 hover:bg-purple-100/70"
             }`}
           >
             Artistes ({artistCount})
@@ -686,12 +754,13 @@ function AdminClients() {
                     <td className="px-4 py-3 whitespace-nowrap">
                       {client.roomNumber || client.roomType ? (
                         <span
-                          className={`font-medium px-2 py-0.5 rounded-md border text-xs ${
+                          className={`font-medium px-2 py-0.5 rounded-md border text-xs inline-flex items-center gap-1.5 ${
                             client.roomNumber
-                              ? "text-emerald-800 bg-emerald-50/70 border-emerald-200/70"
+                              ? "text-blue-800 bg-blue-50/80 border-blue-200/80"
                               : "text-slate-700 bg-slate-100 border-slate-200/80"
                           }`}
                         >
+                          <Building2 className="h-3 w-3 text-blue-600 shrink-0" />
                           {client.roomNumber ? `Nº ${client.roomNumber}` : client.roomType}
                           {client.roomNumber && client.roomType ? ` · ${client.roomType}` : ""}
                         </span>
@@ -700,19 +769,45 @@ function AdminClients() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-700">
-                      <div className="font-medium text-slate-800">{translateDynamicText(client.packName, "fr")}</div>
-                      <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                        <code className="text-[10px] text-slate-600 bg-slate-100 border border-slate-200/60 px-1 py-0.2 rounded font-mono">
-                          {client.ticketCode}
-                        </code>
-                        {client.arrivalDate && client.departureDate && (
-                          <span className="text-[10px] text-slate-500 font-medium inline-flex items-center gap-1 bg-slate-50 border border-slate-200/60 px-1.5 py-0.2 rounded tabular-nums">
-                            <Calendar className="h-2.5 w-2.5 text-slate-400" />
-                            {new Date(client.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
-                            {new Date(client.departureDate).toLocaleDateString("fr-FR")}
-                          </span>
-                        )}
-                      </div>
+                      {(() => {
+                        const packBadge = getClientPackBadge(client.packName);
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs border ${packBadge.style}`}
+                            >
+                              {packBadge.icon === "modifier" && (
+                                <Sparkles className="h-3 w-3 text-blue-600 shrink-0" />
+                              )}
+                              {packBadge.icon === "hotel" && (
+                                <Building2 className="h-3 w-3 text-blue-600 shrink-0" />
+                              )}
+                              {packBadge.icon === "pass" && (
+                                <Ticket className="h-3 w-3 text-amber-600 shrink-0" />
+                              )}
+                              {packBadge.icon === "transfer" && (
+                                <Plane className="h-3 w-3 text-emerald-600 shrink-0" />
+                              )}
+                              {packBadge.icon === "excursion" && (
+                                <Compass className="h-3 w-3 text-indigo-600 shrink-0" />
+                              )}
+                              <span>{translateDynamicText(client.packName, "fr")}</span>
+                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                              <code className="text-[10px] text-slate-600 bg-slate-100 border border-slate-200/60 px-1 py-0.2 rounded font-mono">
+                                {client.ticketCode}
+                              </code>
+                              {client.arrivalDate && client.departureDate && (
+                                <span className="text-[10px] text-slate-500 font-medium inline-flex items-center gap-1 bg-slate-50 border border-slate-200/60 px-1.5 py-0.2 rounded tabular-nums">
+                                  <Calendar className="h-2.5 w-2.5 text-slate-400" />
+                                  {new Date(client.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
+                                  {new Date(client.departureDate).toLocaleDateString("fr-FR")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-600">{client.collaboratorName}</td>
                     <td className="px-4 py-3 text-center">

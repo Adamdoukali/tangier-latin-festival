@@ -20,6 +20,8 @@ import {
   Copy,
   Link as LinkIcon,
   Sparkles,
+  Building2,
+  Ticket,
 } from "lucide-react";
 import {
   getPacks,
@@ -50,6 +52,48 @@ function formatCategoryTitle(cat: string): string {
   if (c === "Hotel Packs (Single)") return "Chambre individuelle";
   if (c === "Hotel Packs (Double)") return "Chambre double";
   return c;
+}
+
+function getCategoryDesign(cat: string) {
+  const c = (cat || "").toLowerCase();
+  if (c.includes("modifier") || c.includes("modifiable")) {
+    return {
+      headerBg: "bg-blue-600 text-white border-blue-500",
+      headerText: "text-white",
+      badge: "bg-blue-100 text-blue-900 border-blue-300",
+      cardBorder: "border-blue-400 border-l-4 border-l-blue-600 bg-blue-50/40 ring-1 ring-blue-300/40 hover:border-blue-500 shadow-md",
+      priceText: "text-blue-700 font-bold",
+      type: "modifier" as const,
+    };
+  }
+  if (c.includes("hotel") || c.includes("chambre") || c.includes("single") || c.includes("double") || c.includes("room")) {
+    return {
+      headerBg: "bg-blue-50/80 text-blue-950 border-blue-200/90",
+      headerText: "text-blue-950",
+      badge: "bg-blue-100/90 text-blue-800 border-blue-200",
+      cardBorder: "border-slate-200/90 border-l-4 border-l-blue-500 bg-white hover:border-blue-300 shadow-xs",
+      priceText: "text-blue-700 font-bold",
+      type: "hotel" as const,
+    };
+  }
+  if (c.includes("pass")) {
+    return {
+      headerBg: "bg-amber-50/80 text-amber-950 border-amber-200/90",
+      headerText: "text-amber-950",
+      badge: "bg-amber-100/90 text-amber-800 border-amber-200",
+      cardBorder: "border-slate-200/90 border-l-4 border-l-amber-500 bg-white hover:border-amber-300 shadow-xs",
+      priceText: "text-amber-700 font-bold",
+      type: "pass" as const,
+    };
+  }
+  return {
+    headerBg: "bg-emerald-50/80 text-emerald-950 border-emerald-200/90",
+    headerText: "text-emerald-950",
+    badge: "bg-emerald-100/90 text-emerald-800 border-emerald-200",
+    cardBorder: "border-slate-200/90 border-l-4 border-l-emerald-500 bg-white hover:border-emerald-300 shadow-xs",
+    priceText: "text-emerald-700 font-bold",
+    type: "special" as const,
+  };
 }
 
 interface PackFormData {
@@ -354,22 +398,23 @@ function AdminPacks() {
       {/* Category sections */}
       {categories.map((cat, catIdx) => {
         const isModifierCat = cat === "Modifier Pack" || formatCategoryTitle(cat) === "Modifier Pack";
+        const catDesign = getCategoryDesign(cat);
         return (
         <section
           key={cat}
           className={`rounded-xl border overflow-hidden shadow-xs ${
             isModifierCat
               ? "border-blue-300/80 bg-blue-50/20 ring-1 ring-blue-300/30"
-              : "border-slate-200/80 bg-white"
+              : catDesign.type === "hotel"
+                ? "border-blue-200/80 bg-white"
+                : catDesign.type === "pass"
+                  ? "border-amber-200/80 bg-white"
+                  : "border-emerald-200/80 bg-white"
           }`}
         >
           {/* Category header */}
           <div
-            className={`flex items-center gap-3 px-5 py-3.5 border-b ${
-              isModifierCat
-                ? "bg-blue-600 text-white border-blue-500"
-                : "border-slate-200/80 bg-slate-50/70"
-            }`}
+            className={`flex items-center gap-3 px-5 py-3.5 border-b ${catDesign.headerBg} ${catDesign.headerBorder}`}
           >
             <div className="flex items-center gap-1">
               <button
@@ -390,15 +435,16 @@ function AdminPacks() {
               </button>
             </div>
             <h3
-              className={`text-xs font-semibold ${
-                isModifierCat ? "text-white flex items-center gap-2" : "text-slate-900"
-              }`}
+              className={`text-xs font-semibold flex items-center gap-2 ${catDesign.headerText}`}
             >
               {isModifierCat && <Sparkles className="h-4 w-4 text-blue-200" />}
+              {catDesign.type === "hotel" && <Building2 className="h-4 w-4 text-blue-600" />}
+              {catDesign.type === "pass" && <Ticket className="h-4 w-4 text-amber-600" />}
+              {catDesign.type === "special" && <Sparkles className="h-4 w-4 text-emerald-600" />}
               {formatCategoryTitle(cat)}
             </h3>
             <span
-              className={`text-xs ${isModifierCat ? "text-blue-100" : "text-slate-400"}`}
+              className={`text-xs ${isModifierCat ? "text-blue-100" : "text-slate-500"}`}
             >
               {groups[cat].length} forfait{groups[cat].length === 1 ? "" : "s"}
             </span>
@@ -425,10 +471,10 @@ function AdminPacks() {
                 key={pack.id}
                 className={`relative rounded-xl border p-5 transition-all duration-300 ${
                   isModifier
-                    ? "border-blue-400 bg-blue-50/30 ring-2 ring-blue-400/30 hover:border-blue-500 shadow-md"
+                    ? "border-blue-400 border-l-4 border-l-blue-600 bg-blue-50/40 ring-1 ring-blue-300/40 hover:border-blue-500 shadow-md"
                     : pack.active
-                      ? "border-gray-200 bg-white hover:border-gray-300 shadow-sm"
-                      : "border-gray-100 bg-white opacity-60"
+                      ? catDesign.cardBorder
+                      : "border-slate-100 bg-white opacity-60"
                 }`}
               >
                 {/* Position + badges + order controls */}
@@ -504,7 +550,7 @@ function AdminPacks() {
                 <p className="text-xs text-gray-500 tracking-wide uppercase mt-0.5">
                   {translateDynamicText(pack.sub, "fr")}
                 </p>
-                <p className={`mt-3 font-display text-3xl ${isModifier ? "text-blue-600 font-bold" : "text-amber-600"}`}>
+                <p className={`mt-3 font-display text-3xl tabular-nums ${isModifier ? "text-blue-700 font-bold" : catDesign.priceText}`}>
                   {pack.price}{" "}
                   <span className="text-xs text-gray-500 font-normal tracking-widest uppercase">
                     {pack.currency || "€"}

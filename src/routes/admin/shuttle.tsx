@@ -750,14 +750,14 @@ function AdminShuttlePage() {
         </div>
       )}
 
-      {/* KPI Cards */}
+      {/* KPI Cards with transit emerald/teal/amber accents */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-emerald-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Passagers
             </p>
-            <Users className="h-4 w-4 text-slate-400" />
+            <Users className="h-4 w-4 text-emerald-600" />
           </div>
           <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
             {stats.totalPassengers}
@@ -767,14 +767,14 @@ function AdminShuttlePage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-teal-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Arrivées
             </p>
-            <Calendar className="h-4 w-4 text-slate-400" />
+            <Calendar className="h-4 w-4 text-teal-600" />
           </div>
-          <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-teal-950 mt-1">
             {stats.arrivalsCount}
           </p>
           <p className="text-[11px] text-slate-400 mt-0.5">
@@ -782,14 +782,14 @@ function AdminShuttlePage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-amber-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Départs
             </p>
-            <Calendar className="h-4 w-4 text-slate-400" />
+            <Calendar className="h-4 w-4 text-amber-600" />
           </div>
-          <p className="text-2xl font-semibold tabular-nums text-slate-900 mt-1">
+          <p className="text-2xl font-semibold tabular-nums text-amber-950 mt-1">
             {stats.departuresCount}
           </p>
           <p className="text-[11px] text-slate-400 mt-0.5">
@@ -797,12 +797,12 @@ function AdminShuttlePage() {
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-blue-500 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Port et aéroport
             </p>
-            <Ship className="h-4 w-4 text-slate-400" />
+            <Ship className="h-4 w-4 text-blue-600" />
           </div>
           <p className="text-lg font-semibold tabular-nums text-slate-900 mt-1">
             {stats.portCount} <span className="text-xs font-normal text-slate-500">Port</span> ·{" "}
@@ -811,7 +811,7 @@ function AdminShuttlePage() {
           <p className="text-[11px] text-slate-400 mt-0.5">Répartition par point</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs col-span-2 lg:col-span-1">
+        <div className="rounded-xl border border-slate-200/80 border-l-4 border-l-emerald-600 bg-white p-4 shadow-xs col-span-2 lg:col-span-1 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
               Revenu des navettes
