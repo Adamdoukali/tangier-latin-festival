@@ -566,11 +566,10 @@ function AdminClients() {
           </span>
           <button
             onClick={() => setOriginFilter("all")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              originFilter === "all"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${originFilter === "all"
+              ? "bg-slate-900 text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50"
+              }`}
           >
             Tous ({allClients.length})
           </button>
