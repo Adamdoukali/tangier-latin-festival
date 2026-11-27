@@ -34,7 +34,14 @@ const DEFAULT_ADMIN_ACCOUNTS: ServerAdminAccount[] = [
     id: "admin-nouha",
     name: "Nouha",
     email: "berradanouha4@gmail.com",
-    passwordHash: "2f84208517bb4fac3f9539370429fe3f4bfa1a6f7c01ac20f0d89a9d325dc63a",
+    passwordHash: "358d29c3d0ef676cfddb8e8fd80f634035acd22632d786dc4c49120a8a606c2f",
+    role: "admin",
+  },
+  {
+    id: "admin-nouha-alt",
+    name: "Nouha",
+    email: "nouhaberrada411@gmail.com",
+    passwordHash: "c3584165005b94ce618ad1954b8aab06ebc56e6256b433065b5dd23014d26c89",
     role: "admin",
   },
   {
