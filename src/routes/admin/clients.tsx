@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Users,
   Search,
@@ -114,6 +115,7 @@ function getClientPackBadge(packName: string = "") {
 }
 
 function AdminClients() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -457,23 +459,23 @@ function AdminClients() {
           <button
             onClick={() => downloadClientsXlsx("morocco")}
             disabled={moroccanCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-900 hover:bg-emerald-100 transition shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Maroc ({moroccanCount})
+            <Download className="h-3.5 w-3.5 text-emerald-700" /> Export Maroc ({moroccanCount})
           </button>
           <button
             onClick={() => downloadClientsXlsx("international")}
             disabled={internationalCount === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5 text-slate-400" /> Export Étranger ({internationalCount})
+            <Download className="h-3.5 w-3.5 text-blue-700" /> Export Étranger ({internationalCount})
           </button>
           <button
             onClick={() => downloadClientsXlsx("all")}
             disabled={allClients.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-900 bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition shadow-xs cursor-pointer disabled:opacity-40"
           >
-            <Download className="h-3.5 w-3.5 text-slate-300" /> Export Tous ({allClients.length})
+            <Download className="h-3.5 w-3.5 text-zinc-950" /> Export Tous ({allClients.length})
           </button>
         </div>
       </div>
@@ -509,50 +511,60 @@ function AdminClients() {
         </div>
       )}
 
-      {/* Stats Summary - unslop clean metric cards */}
+      {/* Stats Summary - rich functional colors */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-blue-200 bg-blue-50/40 shadow-xs p-4 hover:border-blue-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Total clients</p>
-            <Users className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-semibold text-blue-900">Total clients</p>
+            <div className="h-7 w-7 rounded-lg bg-blue-100 grid place-items-center text-blue-700">
+              <Users className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-blue-950 tabular-nums">
             {allClients.length}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 shadow-xs p-4 hover:border-emerald-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Maroc</p>
-            <UserCheck className="h-4 w-4 text-emerald-600" />
+            <p className="text-xs font-semibold text-emerald-900">Maroc</p>
+            <div className="h-7 w-7 rounded-lg bg-emerald-100 grid place-items-center text-emerald-700">
+              <UserCheck className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-emerald-950 tabular-nums">
             {moroccanCount}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 shadow-xs p-4 hover:border-indigo-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Étranger</p>
-            <UserCheck className="h-4 w-4 text-sky-600" />
+            <p className="text-xs font-semibold text-indigo-900">Étranger</p>
+            <div className="h-7 w-7 rounded-lg bg-indigo-100 grid place-items-center text-indigo-700">
+              <UserCheck className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-indigo-950 tabular-nums">
             {internationalCount}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-purple-200 bg-purple-50/40 shadow-xs p-4 hover:border-purple-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Artistes</p>
-            <Sparkles className="h-4 w-4 text-purple-600" />
+            <p className="text-xs font-semibold text-purple-900">Artistes</p>
+            <div className="h-7 w-7 rounded-lg bg-purple-100 grid place-items-center text-purple-700">
+              <Sparkles className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-purple-950 tabular-nums">
             {artistCount}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs p-4 hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/40 shadow-xs p-4 hover:border-amber-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Sans contact</p>
-            <Mail className="h-4 w-4 text-amber-500" />
+            <p className="text-xs font-semibold text-amber-900">Sans contact</p>
+            <div className="h-7 w-7 rounded-lg bg-amber-100 grid place-items-center text-amber-700">
+              <Mail className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-amber-950 tabular-nums">
             {missingContactCount}
           </p>
         </div>
@@ -639,9 +651,11 @@ function AdminClients() {
           Aucun client ne correspond aux critères de recherche.
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+        <div className="space-y-1.5">
+          <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement clients" />
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
                   <th className="px-4 py-3 text-left font-medium">#</th>
@@ -824,6 +838,7 @@ function AdminClients() {
             </table>
           </div>
         </div>
+      </div>
       )}
 
       {/* Edit Client Modal */}

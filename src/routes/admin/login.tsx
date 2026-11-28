@@ -63,7 +63,7 @@ function AdminLogin() {
       <div className="w-full max-w-sm">
         {/* Brand header */}
         <div className="text-center mb-8">
-          <div className="h-10 w-10 mx-auto rounded-xl bg-slate-900 border border-slate-800 text-white font-semibold text-sm grid place-items-center shadow-xs">
+          <div className="h-10 w-10 mx-auto rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 border border-amber-300 text-zinc-950 font-bold text-sm grid place-items-center shadow-xs">
             TLF
           </div>
           <h1 className="mt-3 text-lg font-semibold tracking-tight text-slate-900">
@@ -134,7 +134,7 @@ function AdminLogin() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 px-4 text-xs font-medium shadow-xs transition-colors cursor-pointer disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-lg py-2.5 px-4 text-xs shadow-md transition cursor-pointer disabled:opacity-60"
               >
                 {submitting ? "Connexion…" : "Se connecter"}
                 <ArrowRight className="h-3.5 w-3.5" />

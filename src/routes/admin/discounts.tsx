@@ -246,7 +246,7 @@ function AdminDiscounts() {
         </div>
         <button
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-3.5 py-2 rounded-lg text-xs shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-4 py-2 rounded-lg text-xs shadow-xs transition cursor-pointer self-start sm:self-auto"
         >
           <Plus className="h-4 w-4" /> Nouveau code de réduction
         </button>

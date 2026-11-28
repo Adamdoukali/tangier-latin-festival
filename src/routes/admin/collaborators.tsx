@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Plus,
   Pencil,
@@ -152,6 +153,7 @@ function tourismReferralUrl(code: string, lang?: PartnerLanguage): string {
 }
 
 function AdminCollaborators() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
@@ -424,64 +426,72 @@ function AdminCollaborators() {
         </div>
         <button
           onClick={openNew}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer self-start"
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition shadow-xs cursor-pointer self-start"
         >
-          <Plus className="h-4 w-4" /> Ajouter un collaborateur
+          <Plus className="h-4 w-4 text-zinc-950" /> Ajouter un collaborateur
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - rich partner colors */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-violet-200 bg-violet-50/50 p-4 shadow-xs hover:border-violet-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Partenaires</p>
-            <Users className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-semibold text-violet-900">Partenaires</p>
+            <div className="h-7 w-7 rounded-lg bg-violet-100 grid place-items-center text-violet-700">
+              <Users className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-violet-950 tabular-nums">
             {stats.filter((s) => s.collaborator.active).length}
-            <span className="text-xs font-normal text-slate-400 ml-1.5">/ {stats.length} total</span>
+            <span className="text-xs font-normal text-violet-600 ml-1.5">/ {stats.length} total</span>
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Comptes collaborateurs</p>
+          <p className="text-[11px] text-violet-600 mt-1">Comptes collaborateurs</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 shadow-xs hover:border-blue-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Billets vendus</p>
-            <Ticket className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-semibold text-blue-900">Billets vendus</p>
+            <div className="h-7 w-7 rounded-lg bg-blue-100 grid place-items-center text-blue-700">
+              <Ticket className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-blue-950 tabular-nums">
             {totalConfirmedTickets}
             {totalPendingTickets > 0 && (
-              <span className="text-xs font-medium text-amber-600 ml-1.5">
+              <span className="text-xs font-bold text-amber-700 ml-1.5">
                 (+{totalPendingTickets} en attente)
               </span>
             )}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-blue-600 mt-1">
             {totalConfirmedPasses} pass · {totalConfirmedExcursions} excursion{totalConfirmedExcursions > 1 ? "s" : ""}
           </p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-xs hover:border-emerald-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Ventes confirmées</p>
-            <CreditCard className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-semibold text-emerald-900">Ventes confirmées</p>
+            <div className="h-7 w-7 rounded-lg bg-emerald-100 grid place-items-center text-emerald-700">
+              <CreditCard className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-emerald-950 tabular-nums">
             {formatMoneyPair(totalConfirmedRevenue)}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">Chiffre d’affaires payé</p>
+          <p className="text-[11px] text-emerald-600 mt-1">Chiffre d’affaires payé</p>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs hover:border-slate-300 transition-colors">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 shadow-xs hover:border-amber-300 transition-colors">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-slate-500">Paiements en attente</p>
-            <Clock className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-semibold text-amber-900">Paiements en attente</p>
+            <div className="h-7 w-7 rounded-lg bg-amber-100 grid place-items-center text-amber-700">
+              <Clock className="h-4 w-4" />
+            </div>
           </div>
-          <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+          <p className="mt-1.5 text-2xl font-bold tracking-tight text-amber-950 tabular-nums">
             {formatMoneyPair(totalPendingRevenue)}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-amber-600 mt-1">
             {totalPendingTickets} billet(s) en attente
           </p>
         </div>
@@ -646,17 +656,19 @@ function AdminCollaborators() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="px-5 py-16 text-center text-xs text-slate-400">Chargement…</div>
-        ) : visibleStats.length === 0 ? (
-          <div className="px-5 py-16 text-center text-xs text-slate-400">
-            <Users className="h-8 w-8 mx-auto mb-2 text-slate-300" />
-            Aucun collaborateur. Cliquez sur « Ajouter un collaborateur » pour créer le premier.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+      <div className="space-y-1.5">
+        <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement collaborateurs" />
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+          {loading ? (
+            <div className="px-5 py-16 text-center text-xs text-slate-400">Chargement…</div>
+          ) : visibleStats.length === 0 ? (
+            <div className="px-5 py-16 text-center text-xs text-slate-400">
+              <Users className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+              Aucun collaborateur. Cliquez sur « Ajouter un collaborateur » pour créer le premier.
+            </div>
+          ) : (
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
                   <th className="px-5 py-3 text-left font-medium">Partenaire</th>
@@ -985,6 +997,7 @@ function AdminCollaborators() {
             </table>
           </div>
         )}
+      </div>
       </div>
 
       {/* Supplied collaborator summary and detailed financial templates. */}

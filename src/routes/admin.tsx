@@ -110,30 +110,30 @@ function AdminLayout() {
         />
       )}
 
-      {/* Sidebar — unslop quiet dark graphite chrome */}
+      {/* Sidebar — classic navy blue like the partner and exhibitor portal */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0a0e17] border-r border-slate-800/80 flex flex-col transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:self-start shrink-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#13234d] border-r border-white/10 flex flex-col transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:self-start shrink-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-5 h-14 border-b border-slate-800/80 shrink-0">
+        <div className="flex items-center justify-between px-5 h-14 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700/80 grid place-items-center text-white font-semibold text-xs shadow-xs">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 grid place-items-center text-zinc-950 font-bold text-xs shadow-xs">
               {currentAdmin?.name.trim().charAt(0).toUpperCase() || "T"}
             </div>
             <div className="min-w-0 leading-tight">
-              <div className="max-w-36 truncate text-xs font-semibold text-slate-100">
+              <div className="max-w-36 truncate text-xs font-semibold text-white">
                 {currentAdmin?.name || "TLF Admin"}
               </div>
-              <div className="text-[11px] text-slate-400 font-normal">
+              <div className="text-[10px] tracking-widest text-slate-300 uppercase font-medium">
                 Administration
               </div>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-md"
+            className="lg:hidden text-slate-300 hover:text-white transition-colors cursor-pointer p-1 rounded-md"
             aria-label="Fermer le menu"
           >
             <X className="h-4 w-4" />
@@ -142,7 +142,7 @@ function AdminLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <div className="px-2 pt-1 pb-1 text-[11px] font-medium text-slate-400">
+          <div className="px-2 pt-1 pb-1 text-[10px] font-semibold tracking-wider uppercase text-slate-400">
             Gestion du festival
           </div>
           {(!currentAdmin
@@ -159,17 +159,17 @@ function AdminLayout() {
                 onClick={() => setSidebarOpen(false)}
                 className={`h-9 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium transition-colors duration-150 ${
                   active
-                    ? "bg-slate-800 text-white border border-slate-700/80 shadow-xs"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent"
+                    ? "bg-white/10 text-amber-300 border border-amber-400/40 shadow-xs font-semibold"
+                    : "text-slate-300 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
-                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-100" : "text-slate-400"}`} />
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-amber-300" : "text-slate-300"}`} />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
           })}
 
-          <div className="px-2 pt-5 pb-1 text-[11px] font-medium text-slate-400">
+          <div className="px-2 pt-5 pb-1 text-[10px] font-semibold tracking-wider uppercase text-slate-400">
             Contrôle d’accès
           </div>
           {scannerNavItems.map((item) => {
@@ -181,11 +181,11 @@ function AdminLayout() {
                 onClick={() => setSidebarOpen(false)}
                 className={`h-9 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium transition-colors duration-150 ${
                   active
-                    ? "bg-slate-800 text-white border border-slate-700/80 shadow-xs"
-                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 border border-transparent"
+                    ? "bg-white/10 text-amber-300 border border-amber-400/40 shadow-xs font-semibold"
+                    : "text-slate-300 hover:text-white hover:bg-white/5 border border-transparent"
                 }`}
               >
-                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-slate-100" : "text-slate-400"}`} />
+                <item.icon className={`h-4 w-4 shrink-0 ${active ? "text-amber-300" : "text-slate-300"}`} />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -193,10 +193,10 @@ function AdminLayout() {
         </nav>
 
         {/* Back to site */}
-        <div className="px-3 py-3 border-t border-slate-800/80 space-y-1 shrink-0">
+        <div className="px-3 py-3 border-t border-white/10 space-y-1 shrink-0">
           <Link
             to="/"
-            className="h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-colors"
+            className="h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
             Retour au site
@@ -206,7 +206,7 @@ function AdminLayout() {
               logoutAdmin();
               navigate({ to: "/admin/login", replace: true });
             }}
-            className="w-full h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-rose-400/90 hover:text-rose-300 hover:bg-rose-950/30 transition-colors cursor-pointer"
+            className="w-full h-8.5 flex items-center gap-2.5 px-2.5 rounded-lg text-xs font-medium text-red-300 hover:text-red-200 hover:bg-red-500/10 transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Déconnexion
@@ -239,7 +239,7 @@ function AdminLayout() {
                   {currentAdmin.email}
                 </p>
               </div>
-              <div className="h-7 w-7 rounded-full bg-slate-100 border border-slate-200 grid place-items-center text-xs font-medium text-slate-700">
+              <div className="h-7 w-7 rounded-full bg-amber-500 border border-amber-400 grid place-items-center text-xs font-bold text-zinc-950 shadow-2xs">
                 {currentAdmin.name.trim().charAt(0).toUpperCase()}
               </div>
             </div>

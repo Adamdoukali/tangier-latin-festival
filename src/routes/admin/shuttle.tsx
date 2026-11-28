@@ -679,7 +679,7 @@ function AdminShuttlePage() {
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium rounded-lg shadow-xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold rounded-lg shadow-xs transition cursor-pointer border border-amber-400"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Ajouter un transfert</span>

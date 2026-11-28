@@ -572,7 +572,7 @@ Tangier Latin Festival`;
             resetForm();
             setShowForm(true);
           }}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer self-start"
+          className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition shadow-xs cursor-pointer self-start"
         >
           <Plus className="h-4 w-4" /> Ajouter une réservation
         </button>

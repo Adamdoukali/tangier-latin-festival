@@ -404,16 +404,16 @@ function AdminInvite() {
           <button
             onClick={handleGenerateOne}
             disabled={!selectedPackId}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-xs font-medium text-white hover:bg-slate-800 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
           >
-            <Plus className="h-3.5 w-3.5" /> Générer 1 invitation
+            <Plus className="h-3.5 w-3.5 text-zinc-950" /> Générer 1 invitation
           </button>
           <button
             onClick={() => setShowBulk(true)}
             disabled={!selectedPackId}
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
           >
-            <Zap className="h-3.5 w-3.5" /> Générer en masse
+            <Zap className="h-3.5 w-3.5 text-blue-600" /> Générer en masse
           </button>
         </div>
       </div>

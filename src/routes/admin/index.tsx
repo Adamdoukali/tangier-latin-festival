@@ -109,44 +109,72 @@ function AdminDashboard() {
       label: "Chambres doubles",
       value: roomCounts.double,
       icon: BedDouble,
+      cardCls: "border-blue-200 bg-blue-50/40 hover:border-blue-300",
+      labelCls: "text-blue-900 font-semibold",
+      numCls: "text-blue-950 font-bold",
+      iconCls: "bg-blue-100 text-blue-700 border-blue-200/60",
     },
     {
       label: "Chambres individuelles",
       value: roomCounts.single,
       icon: Bed,
+      cardCls: "border-violet-200 bg-violet-50/40 hover:border-violet-300",
+      labelCls: "text-violet-900 font-semibold",
+      numCls: "text-violet-950 font-bold",
+      iconCls: "bg-violet-100 text-violet-700 border-violet-200/60",
     },
     {
       label: "Pass complet",
       value: roomCounts.fullpass,
       icon: Ticket,
+      cardCls: "border-cyan-200 bg-cyan-50/40 hover:border-cyan-300",
+      labelCls: "text-cyan-900 font-semibold",
+      numCls: "text-cyan-950 font-bold",
+      iconCls: "bg-cyan-100 text-cyan-700 border-cyan-200/60",
     },
     {
       label: "Excursions (Asilah / Chaouen)",
       value: roomCounts.excursion,
       icon: Compass,
+      cardCls: "border-teal-200 bg-teal-50/40 hover:border-teal-300",
+      labelCls: "text-teal-900 font-semibold",
+      numCls: "text-teal-950 font-bold",
+      iconCls: "bg-teal-100 text-teal-700 border-teal-200/60",
     },
     {
       label: "Réservations en attente",
       value: stats.pendingBookings,
       icon: Clock,
+      cardCls: "border-amber-200 bg-amber-50/50 hover:border-amber-300",
+      labelCls: "text-amber-900 font-semibold",
+      numCls: "text-amber-950 font-bold",
+      iconCls: "bg-amber-100 text-amber-700 border-amber-200/60",
     },
     {
       label: "Total participants",
       value: allClients.length,
       icon: Users,
+      cardCls: "border-emerald-200 bg-emerald-50/50 hover:border-emerald-300",
+      labelCls: "text-emerald-900 font-semibold",
+      numCls: "text-emerald-950 font-bold",
+      iconCls: "bg-emerald-100 text-emerald-700 border-emerald-200/60",
     },
     {
       label: "Forfaits actifs",
       value: stats.activePacks,
       icon: Package,
+      cardCls: "border-pink-200 bg-pink-50/40 hover:border-pink-300",
+      labelCls: "text-pink-900 font-semibold",
+      numCls: "text-pink-950 font-bold",
+      iconCls: "bg-pink-100 text-pink-700 border-pink-200/60",
     },
   ];
 
   const statusStyles: Record<string, string> = {
-    pending: "bg-amber-50 text-amber-700 border-amber-200/80",
-    confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
-    "checked-in": "bg-sky-50 text-sky-700 border-sky-200/80",
-    declined: "bg-rose-50 text-rose-700 border-rose-200/80",
+    pending: "bg-amber-100 text-amber-800 border-amber-300 font-semibold",
+    confirmed: "bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold",
+    "checked-in": "bg-cyan-100 text-cyan-800 border-cyan-300 font-semibold",
+    declined: "bg-rose-100 text-rose-800 border-rose-300 font-semibold",
   };
 
   return (
@@ -159,21 +187,21 @@ function AdminDashboard() {
         </p>
       </div>
 
-      {/* Stats Cards - unslop clean numbers with quiet chrome */}
+      {/* Stats Cards - rich functional category colors */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-xl border border-slate-200/80 bg-white p-4.5 shadow-xs hover:border-slate-300 transition-colors"
+            className={`rounded-xl border p-4.5 shadow-xs transition-colors ${card.cardCls}`}
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-slate-500">{card.label}</p>
-                <p className="mt-1.5 text-2xl font-semibold text-slate-900 tabular-nums tracking-tight">
+                <p className={`text-xs ${card.labelCls}`}>{card.label}</p>
+                <p className={`mt-1.5 text-2xl tabular-nums tracking-tight ${card.numCls}`}>
                   {card.value}
                 </p>
               </div>
-              <div className="h-8 w-8 rounded-lg bg-slate-100 border border-slate-200/60 grid place-items-center text-slate-600 shrink-0">
+              <div className={`h-8 w-8 rounded-lg border grid place-items-center shrink-0 ${card.iconCls}`}>
                 <card.icon className="h-4 w-4" />
               </div>
             </div>

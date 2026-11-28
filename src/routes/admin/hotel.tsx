@@ -608,10 +608,10 @@ function AdminHotel() {
           <button
             onClick={() => downloadRoomingXlsx("all")}
             disabled={rooms.length === 0}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-900 bg-slate-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 transition-colors shadow-xs cursor-pointer disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500 bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition shadow-xs cursor-pointer disabled:opacity-40"
             title="Télécharger le fichier Excel contenant toutes les chambres et tous les participants"
           >
-            <Download className="h-3.5 w-3.5 text-slate-300" /> Export Tous ({totalGuests})
+            <Download className="h-3.5 w-3.5 text-zinc-950" /> Export Tous ({totalGuests})
           </button>
         </div>
       </div>
