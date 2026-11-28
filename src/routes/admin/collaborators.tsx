@@ -340,9 +340,9 @@ function AdminCollaborators() {
       res.emailSent
         ? { kind: "ok", text: `E-mail de création de mot de passe envoyé à ${email} (${name}). Lien copié dans le presse-papiers.` }
         : {
-            kind: "error",
-            text: `L’e-mail n’a PAS pu être envoyé à ${email} (${name}). Le lien a été copié dans le presse-papiers : envoyez-le par WhatsApp.`,
-          },
+          kind: "error",
+          text: `L’e-mail n’a PAS pu être envoyé à ${email} (${name}). Le lien a été copié dans le presse-papiers : envoyez-le par WhatsApp.`,
+        },
     );
   };
 
@@ -376,7 +376,7 @@ function AdminCollaborators() {
           );
           reportResetEmail(created.name, created.email, res);
           if (res.success && "resetUrl" in res && res.resetUrl) {
-            navigator.clipboard?.writeText(res.resetUrl).catch(() => {});
+            navigator.clipboard?.writeText(res.resetUrl).catch(() => { });
           }
         }
       }
@@ -405,7 +405,7 @@ function AdminCollaborators() {
       setResetSentId(c.id);
       setTimeout(() => setResetSentId(null), 3000);
       if ("resetUrl" in res && res.resetUrl) {
-        navigator.clipboard?.writeText(res.resetUrl).catch(() => {});
+        navigator.clipboard?.writeText(res.resetUrl).catch(() => { });
       }
     }
   };
@@ -578,11 +578,10 @@ function AdminCollaborators() {
       {/* Result of the last password-link e-mail */}
       {emailNotice && (
         <div
-          className={`rounded-xl border p-4 flex gap-3 text-sm ${
-            emailNotice.kind === "ok"
+          className={`rounded-xl border p-4 flex gap-3 text-sm ${emailNotice.kind === "ok"
               ? "border-emerald-200 bg-emerald-50 text-emerald-800"
               : "border-red-200 bg-red-50 text-red-800"
-          }`}
+            }`}
         >
           {emailNotice.kind === "ok" ? (
             <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
@@ -747,335 +746,330 @@ function AdminCollaborators() {
           ) : (
             <div ref={tableContainerRef} className="overflow-x-auto">
               <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
-                  <th className="px-5 py-3 text-left font-medium">Partenaire</th>
-                  <th className="px-5 py-3 text-left font-medium">Code / lien</th>
-                  <th className="px-5 py-3 text-right font-medium">Chambres ind.</th>
-                  <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
-                  <th className="px-5 py-3 text-right font-medium">Pass complet</th>
-                  <th className="px-5 py-3 text-right font-medium">Excursions</th>
-                  <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
-                  <th className="px-5 py-3 text-right font-medium">Ventes</th>
-                  <th className="px-5 py-3 text-right font-medium">Commission</th>
-                  <th className="px-5 py-3 text-right font-medium">Mission</th>
-                  <th className="px-5 py-3 text-left font-medium">Dernière activité</th>
-                  <th className="px-5 py-3 text-center font-medium">Statut</th>
-                  <th className="px-5 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {visibleStats.map(({ collaborator: c, ...s }) => {
-                  const mission = collaboratorMissionProgress(c, bookings);
-                  return (
-                    <tr key={c.id} className="hover:bg-gray-50 transition">
-                      <td className="px-5 py-3">
-                        <p className="font-medium text-gray-800">{c.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {c.email ? (
-                            <span className="text-gray-600 font-mono">{c.email}</span>
-                          ) : (
-                            <span className="text-red-400">no email specified</span>
-                          )}
-                          <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
-                        </p>
-                      </td>
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
-                            {c.code}
-                          </code>
-                          <button
-                            onClick={() => copyLink(c)}
-                            className={`p-1 rounded transition cursor-pointer ${
-                              copiedId === c.id
-                                ? "text-emerald-600"
-                                : "text-gray-400 hover:text-gray-700"
-                            }`}
-                            title={`Copier le lien de parrainage: ${referralUrl(c.code, c.language)}`}
-                          >
-                            {copiedId === c.id ? (
-                              <CheckCircle2 className="h-3.5 w-3.5" />
+                <thead>
+                  <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
+                    <th className="px-5 py-3 text-left font-medium">Partenaire</th>
+                    <th className="px-5 py-3 text-left font-medium">Code / lien</th>
+                    <th className="px-5 py-3 text-right font-medium">Chambres ind.</th>
+                    <th className="px-5 py-3 text-right font-medium">Chambres doubles</th>
+                    <th className="px-5 py-3 text-right font-medium">Pass complet</th>
+                    <th className="px-5 py-3 text-right font-medium">Excursions</th>
+                    <th className="px-5 py-3 text-right font-medium">Billets vendus</th>
+                    <th className="px-5 py-3 text-right font-medium">Ventes</th>
+                    <th className="px-5 py-3 text-right font-medium">Commission</th>
+                    <th className="px-5 py-3 text-right font-medium">Mission</th>
+                    <th className="px-5 py-3 text-left font-medium">Dernière activité</th>
+                    <th className="px-5 py-3 text-center font-medium">Statut</th>
+                    <th className="px-5 py-3 text-right font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {visibleStats.map(({ collaborator: c, ...s }) => {
+                    const mission = collaboratorMissionProgress(c, bookings);
+                    return (
+                      <tr key={c.id} className="hover:bg-gray-50 transition">
+                        <td className="px-5 py-3">
+                          <p className="font-medium text-gray-800">{c.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {c.email ? (
+                              <span className="text-gray-600 font-mono">{c.email}</span>
                             ) : (
-                              <Link2 className="h-3.5 w-3.5" />
+                              <span className="text-red-400">no email specified</span>
                             )}
-                          </button>
-                          <button
-                            onClick={() => copyTransferLink(c)}
-                            className={`p-1 rounded transition cursor-pointer ${
-                              copiedId === `transfer-${c.id}`
-                                ? "text-emerald-600"
-                                : "text-blue-500 hover:text-blue-800"
-                            }`}
-                            title={`Copier le lien de transfert du partenaire: ${transferReferralUrl(c.code, c.language)}`}
-                          >
-                            {copiedId === `transfer-${c.id}` ? (
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                            ) : (
-                              <Bus className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => copyTourismLink(c)}
-                            className={`p-1 rounded transition cursor-pointer ${
-                              copiedId === `tourism-${c.id}`
-                                ? "text-emerald-600"
-                                : "text-teal-600 hover:text-teal-800"
-                            }`}
-                            title={`Copier le lien d'excursion du partenaire: ${tourismReferralUrl(c.code, c.language)}`}
-                          >
-                            {copiedId === `tourism-${c.id}` ? (
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                            ) : (
-                              <Compass className="h-3.5 w-3.5" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <span className="text-gray-700">{s.singleRooms}</span>
-                        {s.pendingSingleRooms > 0 && (
-                          <span className="block text-[11px] text-amber-600 font-normal">
-                            +{s.pendingSingleRooms} en attente
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <span className="text-gray-700">{s.doubleRooms}</span>
-                        {s.pendingDoubleRooms > 0 && (
-                          <span className="block text-[11px] text-amber-600 font-normal">
-                            +{s.pendingDoubleRooms} en attente
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex flex-col items-end">
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <span className="text-gray-900 font-bold">{s.fullPass || s.allPassesCount}</span>
-                            {s.pendingPassesCount > 0 && (
-                              <span
-                                className="text-amber-600 font-semibold text-xs"
-                                title={`${s.pendingPassesCount} pass avec paiement en attente`}
-                              >
-                                (+{s.pendingPassesCount} att.)
-                              </span>
-                            )}
+                            <span className="text-gray-400 uppercase"> · {c.language ?? "en"}</span>
+                          </p>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <code className="text-xs font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                              {c.code}
+                            </code>
                             <button
-                              type="button"
-                              onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
-                              className="p-1 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
-                              title="Voir tous les pass en détail"
+                              onClick={() => copyLink(c)}
+                              className={`p-1 rounded transition cursor-pointer ${copiedId === c.id
+                                  ? "text-emerald-600"
+                                  : "text-gray-400 hover:text-gray-700"
+                                }`}
+                              title={`Copier le lien de parrainage: ${referralUrl(c.code, c.language)}`}
                             >
-                              <Eye className="h-3.5 w-3.5" />
+                              {copiedId === c.id ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <Link2 className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => copyTransferLink(c)}
+                              className={`p-1 rounded transition cursor-pointer ${copiedId === `transfer-${c.id}`
+                                  ? "text-emerald-600"
+                                  : "text-blue-500 hover:text-blue-800"
+                                }`}
+                              title={`Copier le lien de transfert du partenaire: ${transferReferralUrl(c.code, c.language)}`}
+                            >
+                              {copiedId === `transfer-${c.id}` ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <Bus className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => copyTourismLink(c)}
+                              className={`p-1 rounded transition cursor-pointer ${copiedId === `tourism-${c.id}`
+                                  ? "text-emerald-600"
+                                  : "text-teal-600 hover:text-teal-800"
+                                }`}
+                              title={`Copier le lien d'excursion du partenaire: ${tourismReferralUrl(c.code, c.language)}`}
+                            >
+                              {copiedId === `tourism-${c.id}` ? (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              ) : (
+                                <Compass className="h-3.5 w-3.5" />
+                              )}
                             </button>
                           </div>
-                          {/* Itemized Pass Breakdown */}
-                          {s.passesDetail && s.passesDetail.length > 0 && (
-                            <div className="mt-1 flex flex-col items-end gap-1">
-                              {s.passesDetail.map((p, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700"
-                                  title={`${p.packName} : ${p.confirmedCount} confirmé(s), ${p.pendingCount} en attente`}
-                                >
-                                  <span className="font-semibold text-slate-900">{p.packName}:</span>
-                                  <span>{p.confirmedCount}</span>
-                                  {p.pendingCount > 0 && (
-                                    <span className="text-amber-600 font-semibold">
-                                      (+{p.pendingCount})
-                                    </span>
-                                  )}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex flex-col items-end">
-                          <div className="flex items-center gap-1.5 justify-end">
-                            <span className="text-teal-900 font-bold">{s.excursions || 0}</span>
-                            {(s.pendingExcursions || 0) > 0 && (
-                              <span
-                                className="text-amber-600 font-semibold text-xs"
-                                title={`${s.pendingExcursions} excursion(s) avec paiement en attente`}
-                              >
-                                (+{s.pendingExcursions} att.)
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => openDetailsModal({ collaborator: c, ...s }, "excursions")}
-                              className="p-1 rounded text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition cursor-pointer"
-                              title="Voir les excursions de ce collaborateur en détail"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                          {/* Itemized Excursion Breakdown */}
-                          {s.excursionsDetail && s.excursionsDetail.length > 0 && (
-                            <div className="mt-1 flex flex-col items-end gap-1">
-                              {s.excursionsDetail.map((e, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center gap-1 rounded bg-teal-50 border border-teal-200 px-1.5 py-0.5 text-[10px] text-teal-800"
-                                  title={`${e.tourName} : ${e.confirmedCount} confirmé(s), ${e.pendingCount} en attente`}
-                                >
-                                  <span className="font-semibold text-teal-950">{e.tourName}:</span>
-                                  <span>{e.confirmedCount}</span>
-                                  {e.pendingCount > 0 && (
-                                    <span className="text-amber-600 font-semibold">
-                                      (+{e.pendingCount})
-                                    </span>
-                                  )}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-right font-medium text-gray-800">
-                        <span>{s.ticketsSold}</span>
-                        {s.pendingTicketsSold > 0 && (
-                          <span className="block text-[11px] text-amber-600 font-normal">
-                            +{s.pendingTicketsSold} en attente
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right whitespace-nowrap">
-                        <span className="text-emerald-600 font-semibold">{formatForPartner(s.revenue, c)}</span>
-                        {(s.pendingRevenue?.eur > 0 || s.pendingRevenue?.mad > 0) && (
-                          <div className="text-[11px] text-amber-600 font-medium flex items-center justify-end gap-1 mt-0.5">
-                            <Clock className="h-3 w-3 shrink-0" />
-                            <span>+{formatForPartner(s.pendingRevenue, c)} en attente</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right whitespace-nowrap">
-                        <span className="text-amber-600 font-semibold">{formatForPartner(s.commission, c)}</span>
-                        <span className="ml-1.5 text-[10px] text-gray-500">
-                          ({commissionLabel(c)}
-                          {mission.complete ? " + mission reward" : ""})
-                        </span>
-                        {(s.pendingCommission?.eur > 0 || s.pendingCommission?.mad > 0) && (
-                          <div className="text-[10px] text-amber-600/80 font-normal mt-0.5">
-                            +{formatForPartner(s.pendingCommission, c)} si payé
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-right whitespace-nowrap">
-                        {mission.goal ? (
-                          <span
-                            className={mission.complete ? "text-emerald-600" : "text-gray-700"}
-                            title={`Bring ${mission.goal} personnes → gagner ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
-                          >
-                            {mission.complete ? "✓ " : ""}
-                            {mission.creditedParticipants}/{mission.goal}
-                            <span className="ml-1.5 text-[10px] text-gray-500">
-                              ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <span className="text-gray-700">{s.singleRooms}</span>
+                          {s.pendingSingleRooms > 0 && (
+                            <span className="block text-[11px] text-amber-600 font-normal">
+                              +{s.pendingSingleRooms} en attente
                             </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <span className="text-gray-700">{s.doubleRooms}</span>
+                          {s.pendingDoubleRooms > 0 && (
+                            <span className="block text-[11px] text-amber-600 font-normal">
+                              +{s.pendingDoubleRooms} en attente
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="text-gray-900 font-bold">{s.fullPass || s.allPassesCount}</span>
+                              {s.pendingPassesCount > 0 && (
+                                <span
+                                  className="text-amber-600 font-semibold text-xs"
+                                  title={`${s.pendingPassesCount} pass avec paiement en attente`}
+                                >
+                                  (+{s.pendingPassesCount} att.)
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
+                                className="p-1 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                                title="Voir tous les pass en détail"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            {/* Itemized Pass Breakdown */}
+                            {s.passesDetail && s.passesDetail.length > 0 && (
+                              <div className="mt-1 flex flex-col items-end gap-1">
+                                {s.passesDetail.map((p, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center gap-1 rounded bg-slate-100 border border-slate-200 px-1.5 py-0.5 text-[10px] text-slate-700"
+                                    title={`${p.packName} : ${p.confirmedCount} confirmé(s), ${p.pendingCount} en attente`}
+                                  >
+                                    <span className="font-semibold text-slate-900">{p.packName}:</span>
+                                    <span>{p.confirmedCount}</span>
+                                    {p.pendingCount > 0 && (
+                                      <span className="text-amber-600 font-semibold">
+                                        (+{p.pendingCount})
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex flex-col items-end">
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="text-teal-900 font-bold">{s.excursions || 0}</span>
+                              {(s.pendingExcursions || 0) > 0 && (
+                                <span
+                                  className="text-amber-600 font-semibold text-xs"
+                                  title={`${s.pendingExcursions} excursion(s) avec paiement en attente`}
+                                >
+                                  (+{s.pendingExcursions} att.)
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => openDetailsModal({ collaborator: c, ...s }, "excursions")}
+                                className="p-1 rounded text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition cursor-pointer"
+                                title="Voir les excursions de ce collaborateur en détail"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            {/* Itemized Excursion Breakdown */}
+                            {s.excursionsDetail && s.excursionsDetail.length > 0 && (
+                              <div className="mt-1 flex flex-col items-end gap-1">
+                                {s.excursionsDetail.map((e, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center gap-1 rounded bg-teal-50 border border-teal-200 px-1.5 py-0.5 text-[10px] text-teal-800"
+                                    title={`${e.tourName} : ${e.confirmedCount} confirmé(s), ${e.pendingCount} en attente`}
+                                  >
+                                    <span className="font-semibold text-teal-950">{e.tourName}:</span>
+                                    <span>{e.confirmedCount}</span>
+                                    {e.pendingCount > 0 && (
+                                      <span className="text-amber-600 font-semibold">
+                                        (+{e.pendingCount})
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 text-right font-medium text-gray-800">
+                          <span>{s.ticketsSold}</span>
+                          {s.pendingTicketsSold > 0 && (
+                            <span className="block text-[11px] text-amber-600 font-normal">
+                              +{s.pendingTicketsSold} en attente
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          <span className="text-emerald-600 font-semibold">{formatForPartner(s.revenue, c)}</span>
+                          {(s.pendingRevenue?.eur > 0 || s.pendingRevenue?.mad > 0) && (
+                            <div className="text-[11px] text-amber-600 font-medium flex items-center justify-end gap-1 mt-0.5">
+                              <Clock className="h-3 w-3 shrink-0" />
+                              <span>+{formatForPartner(s.pendingRevenue, c)} en attente</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          <span className="text-amber-600 font-semibold">{formatForPartner(s.commission, c)}</span>
+                          <span className="ml-1.5 text-[10px] text-gray-500">
+                            ({commissionLabel(c)}
+                            {mission.complete ? " + mission reward" : ""})
                           </span>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
-                        {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString("fr-FR") : "jamais"}
-                      </td>
-                      <td className="px-5 py-3 text-center">
-                        <button
-                          onClick={() => toggleActive(c)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                            c.active
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                              : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
-                          }`}
-                          title={
-                            c.active
-                              ? "Cliquer pour désactiver le compte"
-                              : "Cliquer pour activer le compte"
-                          }
-                        >
-                          {c.active ? (
-                            <>
-                              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Actif
-                            </>
+                          {(s.pendingCommission?.eur > 0 || s.pendingCommission?.mad > 0) && (
+                            <div className="text-[10px] text-amber-600/80 font-normal mt-0.5">
+                              +{formatForPartner(s.pendingCommission, c)} si payé
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-5 py-3 text-right whitespace-nowrap">
+                          {mission.goal ? (
+                            <span
+                              className={mission.complete ? "text-emerald-600" : "text-gray-700"}
+                              title={`Bring ${mission.goal} personnes → gagner ${formatMoney(c.missionReward ?? 0, c.missionCurrency)}`}
+                            >
+                              {mission.complete ? "✓ " : ""}
+                              {mission.creditedParticipants}/{mission.goal}
+                              <span className="ml-1.5 text-[10px] text-gray-500">
+                                ({formatMoney(c.missionReward ?? 0, c.missionCurrency)})
+                              </span>
+                            </span>
                           ) : (
-                            <>
-                              <ShieldAlert className="h-3.5 w-3.5 text-amber-600" /> Inactif
-                            </>
+                            <span className="text-gray-400">—</span>
                           )}
-                        </button>
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {c.email && (
-                            <button
-                              onClick={() => handleSendResetEmail(c)}
-                              className={`p-1.5 rounded-lg transition cursor-pointer ${
-                                resetSentId === c.id
-                                  ? "text-emerald-600 bg-emerald-50"
-                                  : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
+                        </td>
+                        <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
+                          {c.lastSeenAt ? new Date(c.lastSeenAt).toLocaleString("fr-FR") : "jamais"}
+                        </td>
+                        <td className="px-5 py-3 text-center">
+                          <button
+                            onClick={() => toggleActive(c)}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${c.active
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                : "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
                               }`}
-                              title={
-                                resetSentId === c.id
-                                  ? "Lien copié — voir le résultat de l’envoi en haut de page"
-                                  : "Envoyer le lien de création du mot de passe par e-mail et le copier"
-                              }
-                            >
-                              <KeyRound className="h-4 w-4" />
-                            </button>
-                          )}
-                          {canViewAsPartner(getCurrentAdmin()) && (
+                            title={
+                              c.active
+                                ? "Cliquer pour désactiver le compte"
+                                : "Cliquer pour activer le compte"
+                            }
+                          >
+                            {c.active ? (
+                              <>
+                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Actif
+                              </>
+                            ) : (
+                              <>
+                                <ShieldAlert className="h-3.5 w-3.5 text-amber-600" /> Inactif
+                              </>
+                            )}
+                          </button>
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {c.email && (
+                              <button
+                                onClick={() => handleSendResetEmail(c)}
+                                className={`p-1.5 rounded-lg transition cursor-pointer ${resetSentId === c.id
+                                    ? "text-emerald-600 bg-emerald-50"
+                                    : "text-gray-500 hover:text-violet-600 hover:bg-violet-50"
+                                  }`}
+                                title={
+                                  resetSentId === c.id
+                                    ? "Lien copié — voir le résultat de l’envoi en haut de page"
+                                    : "Envoyer le lien de création du mot de passe par e-mail et le copier"
+                                }
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </button>
+                            )}
+                            {canViewAsPartner(getCurrentAdmin()) && (
+                              <button
+                                onClick={() => {
+                                  if (!startPartnerImpersonation(c.id)) return;
+                                  recordAdminAction({
+                                    action: "update",
+                                    section: "Collaborators",
+                                    entityId: c.id,
+                                    entityLabel: c.name,
+                                    summary: `Opened the partner portal as ${c.name} (view as)`,
+                                  });
+                                  window.open("/partner", "_blank", "noopener");
+                                }}
+                                className="p-1.5 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition cursor-pointer"
+                                title="Voir le portail partenaire en tant que ce collaborateur"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            )}
                             <button
-                              onClick={() => {
-                                if (!startPartnerImpersonation(c.id)) return;
-                                recordAdminAction({
-                                  action: "update",
-                                  section: "Collaborators",
-                                  entityId: c.id,
-                                  entityLabel: c.name,
-                                  summary: `Opened the partner portal as ${c.name} (view as)`,
-                                });
-                                window.open("/partner", "_blank", "noopener");
-                              }}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-violet-600 hover:bg-violet-50 transition cursor-pointer"
-                              title="Voir le portail partenaire en tant que ce collaborateur"
+                              onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                              title="Voir tous les pass et détails des ventes"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Ticket className="h-4 w-4" />
                             </button>
-                          )}
-                          <button
-                            onClick={() => openDetailsModal({ collaborator: c, ...s }, "passes")}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
-                            title="Voir tous les pass et détails des ventes"
-                          >
-                            <Ticket className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => openEdit(c)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
-                            title="Modifier"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirm(c.id)}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                            <button
+                              onClick={() => openEdit(c)}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                              title="Modifier"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(c.id)}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Supplied collaborator summary and detailed financial templates. */}
@@ -1589,11 +1583,10 @@ function AdminCollaborators() {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("passes")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    detailsTab === "passes"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${detailsTab === "passes"
                       ? "bg-amber-500 text-zinc-950 font-bold"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   Tous les Pass (
                   {
@@ -1616,11 +1609,10 @@ function AdminCollaborators() {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("excursions")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
-                    detailsTab === "excursions"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${detailsTab === "excursions"
                       ? "bg-teal-600 text-white font-bold"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   <Compass className="h-3 w-3" />
                   Excursions (
@@ -1642,11 +1634,10 @@ function AdminCollaborators() {
                 <button
                   type="button"
                   onClick={() => setDetailsTab("all")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    detailsTab === "all"
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${detailsTab === "all"
                       ? "bg-amber-500 text-zinc-950 font-bold"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   Toutes les réservations (
                   {
@@ -1668,15 +1659,14 @@ function AdminCollaborators() {
                     key={filterVal}
                     type="button"
                     onClick={() => setDetailsStatusFilter(filterVal)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${
-                      detailsStatusFilter === filterVal
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition cursor-pointer ${detailsStatusFilter === filterVal
                         ? filterVal === "pending"
                           ? "bg-amber-600 text-white font-semibold"
                           : filterVal === "confirmed"
                             ? "bg-emerald-600 text-white font-semibold"
                             : "bg-gray-800 text-white font-semibold"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {filterVal === "all"
                       ? "Tous"

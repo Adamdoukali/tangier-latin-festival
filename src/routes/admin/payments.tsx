@@ -21,6 +21,7 @@ import {
   Loader2,
   AlertTriangle,
   Receipt,
+  Users,
 } from "lucide-react";
 import {
   getBookings,
@@ -82,9 +83,40 @@ const emptyForm = () => ({
   sendReceipt: true,
 });
 
+function getBookingPartner(booking: Booking, collaborators: Collaborator[]): Collaborator | undefined {
+  if (booking.collaboratorId) {
+    const cid = booking.collaboratorId.trim();
+    const found = collaborators.find(
+      (c) =>
+        c.id === cid ||
+        (c.code && c.code.toLowerCase() === cid.toLowerCase()) ||
+        (c.name && c.name.toLowerCase() === cid.toLowerCase())
+    );
+    if (found) return found;
+  }
+  if (booking.inviteCode) {
+    const code = booking.inviteCode.trim().toLowerCase();
+    const found = collaborators.find((c) => (c.code || "").trim().toLowerCase() === code);
+    if (found) return found;
+  }
+  if (booking.notes) {
+    const n = booking.notes.toLowerCase();
+    const found = collaborators.find((c) => {
+      const code = (c.code || "").trim().toLowerCase();
+      const name = (c.name || "").trim().toLowerCase();
+      if (code && (n.includes(`referral: ${code}`) || n.includes(`ref: ${code}`) || n.includes(code))) return true;
+      if (name && n.includes(name)) return true;
+      return false;
+    });
+    if (found) return found;
+  }
+  return undefined;
+}
+
 interface Row {
   booking: Booking;
   pack?: Pack;
+  partner?: Collaborator;
   payments: BookingPayment[];
   due: number;
   received: number;
@@ -102,6 +134,7 @@ function AdminPayments() {
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">("all");
+  const [partnerFilter, setPartnerFilter] = useState<string>("all");
   const [showDeclined, setShowDeclined] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -148,12 +181,14 @@ function AdminPayments() {
       .filter((b) => showDeclined || b.status !== "declined")
       .map((b) => {
         const pack = packs.find((p) => p.id === b.packId);
+        const partner = getBookingPartner(b, collaborators);
         const list = payments.filter((p) => p.bookingId === b.id);
         const due = bookingAmountDueMad(b, pack);
         const received = list.reduce((sum, p) => sum + p.amountMad, 0);
         return {
           booking: b,
           pack,
+          partner,
           payments: list,
           due,
           received,
@@ -162,23 +197,35 @@ function AdminPayments() {
         };
       })
       .sort((a, b) => b.booking.createdAt.localeCompare(a.booking.createdAt));
-  }, [bookings, packs, payments, showDeclined]);
+  }, [bookings, packs, payments, collaborators, showDeclined]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false;
+      if (partnerFilter !== "all") {
+        if (partnerFilter === "none") {
+          if (r.partner) return false;
+        } else {
+          if (!r.partner || r.partner.id !== partnerFilter) return false;
+        }
+      }
       if (!q) return true;
       const b = r.booking;
+      const partnerName = r.partner?.name?.toLowerCase() || "";
+      const partnerCode = r.partner?.code?.toLowerCase() || "";
       return (
         b.customerName.toLowerCase().includes(q) ||
         b.email.toLowerCase().includes(q) ||
         b.phone.toLowerCase().includes(q) ||
         b.ticketCode.toLowerCase().includes(q) ||
-        b.packName.toLowerCase().includes(q)
+        b.packName.toLowerCase().includes(q) ||
+        partnerName.includes(q) ||
+        partnerCode.includes(q) ||
+        (b.inviteCode && b.inviteCode.toLowerCase().includes(q))
       );
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, statusFilter, partnerFilter]);
 
   const totals = useMemo(() => {
     const active = rows.filter((r) => r.booking.status !== "declined");
@@ -444,11 +491,10 @@ function AdminPayments() {
 
       {notice && (
         <div
-          className={`mb-4 rounded-lg border px-4 py-3 text-sm flex items-start gap-2 ${
-            notice.kind === "ok"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-red-50 border-red-200 text-red-800"
-          }`}
+          className={`mb-4 rounded-lg border px-4 py-3 text-sm flex items-start gap-2 ${notice.kind === "ok"
+            ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+            : "bg-red-50 border-red-200 text-red-800"
+            }`}
         >
           {notice.kind === "ok" ? (
             <Check className="h-4 w-4 mt-0.5 shrink-0" />
@@ -510,11 +556,10 @@ function AdminPayments() {
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                statusFilter === s
-                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                  : "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${statusFilter === s
+                ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                : "bg-white text-slate-600 border-slate-200/80 hover:bg-slate-50"
+                }`}
             >
               {s === "all"
                 ? `Tous (${rows.filter((r) => r.booking.status !== "declined").length})`
@@ -522,14 +567,59 @@ function AdminPayments() {
             </button>
           ))}
         </div>
+
+        {/* Partner Filter */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium text-slate-400 hidden sm:inline">Partenaire :</span>
+          <select
+            value={partnerFilter}
+            onChange={(e) => setPartnerFilter(e.target.value)}
+            className="rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:border-slate-400 shadow-xs cursor-pointer"
+          >
+            <option value="all">Tous les partenaires</option>
+            <option value="none">Direct (sans partenaire)</option>
+            {collaborators
+              .slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((c) => {
+                const count = rows.filter((r) => r.partner?.id === c.id).length;
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.code}){count > 0 ? ` (${count})` : ""}
+                  </option>
+                );
+              })}
+          </select>
+          {partnerFilter !== "all" && (
+            <button
+              type="button"
+              onClick={() => setPartnerFilter("all")}
+              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              title="Réinitialiser le filtre partenaire"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
         <div className="relative flex-1 min-w-[240px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher par nom, e-mail, téléphone, billet ou forfait…"
-            className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
+            placeholder="Rechercher par client, partenaire, billet, téléphone ou forfait…"
+            className="w-full rounded-lg border border-slate-200/80 bg-white pl-9 pr-8 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 shadow-xs transition-colors"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-700 transition cursor-pointer"
+              title="Effacer la recherche"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
         <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer font-medium">
           <input
@@ -562,6 +652,7 @@ function AdminPayments() {
                   <th className="px-4 py-2.5 text-left font-medium w-8"></th>
                   <th className="px-4 py-2.5 text-left font-medium">Client</th>
                   <th className="px-4 py-2.5 text-left font-medium">Forfait</th>
+                  <th className="px-4 py-2.5 text-left font-medium">Partenaire</th>
                   <th className="px-4 py-2.5 text-right font-medium">Montant dû</th>
                   <th className="px-4 py-2.5 text-right font-medium">Reçu</th>
                   <th className="px-4 py-3 text-right font-medium">Reste</th>
@@ -630,6 +721,32 @@ function AdminPayments() {
                             {row.pack ? ` · ${row.pack.price} ${row.pack.currency}` : ""}
                             {b.discountAmount ? ` · -€${b.discountAmount}` : ""}
                           </p>
+                        </td>
+                        <td className="px-4 py-3 align-top">
+                          {row.partner ? (
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => setPartnerFilter(row.partner!.id)}
+                                className="inline-flex items-center gap-1 font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-md text-xs cursor-pointer transition-colors text-left"
+                                title={`Filtrer uniquement les paiements de ${row.partner.name}`}
+                              >
+                                <Users className="h-3 w-3 text-blue-600 shrink-0" />
+                                <span>{row.partner.name}</span>
+                              </button>
+                              {row.partner.code && (
+                                <span className="block text-[10px] font-mono text-slate-400 mt-0.5">
+                                  {row.partner.code}
+                                </span>
+                              )}
+                            </div>
+                          ) : b.inviteCode ? (
+                            <span className="inline-flex items-center gap-1 font-medium text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-md text-[11px]">
+                              Invité: {b.inviteCode}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 italic text-xs">Direct / Aucun</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 align-top text-right whitespace-nowrap">
                           {editingDue?.id === b.id ? (
@@ -707,13 +824,12 @@ function AdminPayments() {
                         </td>
                         <td className="px-4 py-3 align-top">
                           <span
-                            className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] tracking-widest uppercase font-medium border ${
-                              b.status === "confirmed" || b.status === "checked-in"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : b.status === "declined"
-                                  ? "bg-gray-100 text-gray-500 border-gray-200"
-                                  : "bg-amber-50 text-amber-800 border-amber-200"
-                            }`}
+                            className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] tracking-widest uppercase font-medium border ${b.status === "confirmed" || b.status === "checked-in"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : b.status === "declined"
+                                ? "bg-gray-100 text-gray-500 border-gray-200"
+                                : "bg-amber-50 text-amber-800 border-amber-200"
+                              }`}
                           >
                             {b.status === "pending"
                               ? "En attente"
@@ -736,7 +852,7 @@ function AdminPayments() {
                       {isOpen && (
                         <tr className="bg-slate-50/70">
                           <td></td>
-                          <td colSpan={8} className="px-4 py-3">
+                          <td colSpan={9} className="px-4 py-3">
                             {row.payments.length === 0 ? (
                               <p className="text-xs text-gray-500">
                                 Aucun paiement enregistré pour cette réservation.
@@ -888,6 +1004,12 @@ function AdminPayments() {
                     · <code className="font-mono text-amber-800">{modalBooking.ticketCode}</code>
                   </p>
                   <p>Forfait : {translateDynamicText(modalBooking.packName, "fr")}</p>
+                  {row?.partner && (
+                    <p className="text-blue-900 font-semibold flex items-center gap-1">
+                      <Users className="h-3 w-3 text-blue-600" />
+                      Partenaire : {row.partner.name} ({row.partner.code})
+                    </p>
+                  )}
                   {row && (
                     <p>
                       Dû : <strong>{formatMad(row.due)}</strong> · Reçu : {formatMad(row.received)}{" "}
