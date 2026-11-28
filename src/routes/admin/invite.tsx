@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import QRCode from "qrcode";
 import {
   QrCode,
@@ -14,6 +14,7 @@ import {
   Link2,
   User,
   Users,
+  Search,
 } from "lucide-react";
 import {
   getInvites,
@@ -39,6 +40,142 @@ function getRedeemUrl(code: string): string {
     return `${window.location.origin}/redeem?code=${code}`;
   }
   return `/redeem?code=${code}`;
+}
+
+function CollaboratorCombobox({
+  collaborators,
+  value,
+  onChange,
+}: {
+  collaborators: Collaborator[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const selected = collaborators.find((c) => c.id === value);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      const timer = setTimeout(() => searchInputRef.current?.focus(), 50);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+        clearTimeout(timer);
+      };
+    }
+  }, [open]);
+
+  const activeCollabs = collaborators.filter((c) => c.active);
+  const filtered = activeCollabs.filter(
+    (c) =>
+      c.name.toLowerCase().includes(query.toLowerCase()) ||
+      c.code.toLowerCase().includes(query.toLowerCase()),
+  );
+
+  return (
+    <div ref={containerRef} className="relative flex-1 min-w-[200px]">
+      <button
+        type="button"
+        onClick={() => {
+          setOpen((v) => !v);
+          setQuery("");
+        }}
+        className="w-full flex items-center justify-between gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 hover:border-slate-300 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition cursor-pointer text-left"
+        title="Attribuer ces invitations à un collaborateur"
+      >
+        <span className={`truncate ${selected ? "font-medium text-slate-900" : "text-slate-500"}`}>
+          {selected ? `${selected.name} (${selected.code})` : "Aucun collaborateur"}
+        </span>
+        <div className="flex items-center gap-1 shrink-0 text-slate-400">
+          {selected && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange("");
+              }}
+              className="p-0.5 hover:text-slate-700 cursor-pointer rounded"
+              title="Désélectionner"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          )}
+          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-lg border border-slate-200 bg-white shadow-lg py-1.5 min-w-[240px]">
+          <div className="px-2 pb-1.5 border-b border-slate-100">
+            <div className="relative flex items-center">
+              <Search className="absolute left-2.5 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher nom ou code..."
+                className="w-full rounded-md border border-slate-200 bg-slate-50 pl-8 pr-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-slate-400 transition"
+              />
+            </div>
+          </div>
+
+          <div className="max-h-56 overflow-y-auto pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                onChange("");
+                setOpen(false);
+              }}
+              className={`w-full text-left px-3 py-1.5 text-xs transition flex items-center justify-between cursor-pointer ${
+                !value ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              <span>Aucun collaborateur</span>
+              {!value && <CheckCircle2 className="h-3.5 w-3.5 text-slate-900" />}
+            </button>
+
+            {filtered.length === 0 ? (
+              <div className="px-3 py-3 text-center text-xs text-slate-400">
+                Aucun collaborateur trouvé
+              </div>
+            ) : (
+              filtered.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(c.id);
+                    setOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 text-xs transition flex items-center justify-between cursor-pointer ${
+                    value === c.id
+                      ? "bg-slate-100 font-semibold text-slate-900"
+                      : "text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="truncate">{c.name}</span>
+                  <span className="ml-2 font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
+                    {c.code}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function AdminInvite() {
@@ -245,25 +382,12 @@ function AdminInvite() {
             <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Collaborator select */}
-          <div className="relative flex-1 min-w-[180px]">
-            <select
-              value={selectedCollabId}
-              onChange={(e) => setSelectedCollabId(e.target.value)}
-              className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 pr-8 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400 transition cursor-pointer"
-              title="Attribuer ces invitations à un collaborateur"
-            >
-              <option value="">Aucun collaborateur</option>
-              {collaborators
-                .filter((c) => c.active)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.code})
-                  </option>
-                ))}
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-          </div>
+          {/* Collaborator search dropdown */}
+          <CollaboratorCombobox
+            collaborators={collaborators}
+            value={selectedCollabId}
+            onChange={setSelectedCollabId}
+          />
 
           {/* Assignee Input */}
           <div className="flex-1 min-w-[200px]">

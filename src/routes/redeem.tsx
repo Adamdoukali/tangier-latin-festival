@@ -58,9 +58,9 @@ function RedeemPage() {
     guests: [{ firstName: "", lastName: "" }],
     email: "",
     phone: "",
-    country: "Morocco",
-    arrival: "2027-01-07",
-    departure: "2027-01-11",
+    country: "",
+    arrival: "",
+    departure: "",
     notes: "",
   });
   const departureLimits = pack ? packDepartureDateLimits(form.arrival, pack) : null;
@@ -109,7 +109,9 @@ function RedeemPage() {
           firstName: "",
           lastName: "",
         })),
-        departure: constrainPackDepartureDate(f.arrival, f.departure, foundPack),
+        departure: f.departure
+          ? constrainPackDepartureDate(f.arrival, f.departure, foundPack)
+          : "",
       }));
     })();
     return () => {
@@ -131,13 +133,15 @@ function RedeemPage() {
       form.phone,
       String(submittedData.get("Phone Country Code") || "+212"),
     );
-    const departureDate = pack
-      ? constrainPackDepartureDate(form.arrival, form.departure, pack)
-      : form.departure;
+    const departureDate =
+      pack && form.arrival
+        ? constrainPackDepartureDate(form.arrival, form.departure, pack)
+        : form.departure;
     if (
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
       !form.email.trim() ||
       !form.phone.trim() ||
+      !form.country.trim() ||
       !form.arrival.trim() ||
       !departureDate.trim()
     )
@@ -572,7 +576,7 @@ function RedeemPage() {
                   required
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
-                  placeholder="Morocco"
+                  placeholder="e.g. Morocco, France, Spain..."
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -590,14 +594,12 @@ function RedeemPage() {
                   value={form.arrival}
                   min="2027-01-01"
                   max="2027-01-30"
-                  onFocus={() => {
-                    if (!form.arrival) setForm((f) => ({ ...f, arrival: "2027-01-01" }));
-                  }}
                   onChange={(e) => {
                     const arrival = e.target.value;
-                    const departure = pack
-                      ? constrainPackDepartureDate(arrival, form.departure, pack)
-                      : form.departure;
+                    const departure =
+                      arrival && form.departure && pack
+                        ? constrainPackDepartureDate(arrival, form.departure, pack)
+                        : form.departure;
                     setForm({ ...form, arrival, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
@@ -613,18 +615,11 @@ function RedeemPage() {
                   value={form.departure}
                   min={departureLimits?.min || form.arrival || "2027-01-01"}
                   max={departureLimits?.max || "2027-01-30"}
-                  onFocus={() => {
-                    if (!form.departure) {
-                      setForm((f) => ({
-                        ...f,
-                        departure: departureLimits?.max || form.arrival || "2027-01-11",
-                      }));
-                    }
-                  }}
                   onChange={(e) => {
-                    const departure = pack
-                      ? constrainPackDepartureDate(form.arrival, e.target.value, pack)
-                      : e.target.value;
+                    const departure =
+                      form.arrival && e.target.value && pack
+                        ? constrainPackDepartureDate(form.arrival, e.target.value, pack)
+                        : e.target.value;
                     setForm({ ...form, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"

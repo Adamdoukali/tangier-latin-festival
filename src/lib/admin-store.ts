@@ -392,6 +392,7 @@ export function packDepartureDateLimits(
   arrivalDate: string,
   pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
 ): { min: string; max: string } | null {
+  if (!arrivalDate || !arrivalDate.trim()) return null;
   const departure = packDepartureDate(arrivalDate, pack);
   return departure ? { min: departure, max: departure } : null;
 }
@@ -402,6 +403,9 @@ export function constrainPackDepartureDate(
   departureDate: string,
   pack: { name?: string; sub?: string; category?: string; features?: string[] } | null | undefined,
 ): string {
+  if (!arrivalDate || !arrivalDate.trim() || !departureDate || !departureDate.trim()) {
+    return departureDate;
+  }
   const limits = packDepartureDateLimits(arrivalDate, pack);
   if (!limits) return departureDate;
   if (!departureDate) return limits.max;

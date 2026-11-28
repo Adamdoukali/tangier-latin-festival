@@ -148,11 +148,9 @@ export function PackBookingModal({
   const currency = unit.currency === "MAD" ? "MAD" : pack.currency || "€";
   // Transfers are priced in euros; show them in dirhams next to a dirham price
   const priceRate = unit.currency === "MAD" && !/mad|dh/i.test(pack.currency || "") ? EUR_TO_MAD : 1;
-  const [arrivalDate, setArrivalDate] = useState("2027-01-07");
-  const [departureDate, setDepartureDate] = useState(() =>
-    constrainPackDepartureDate("2027-01-07", "2027-01-11", pack),
-  );
-  const departureLimits = packDepartureDateLimits(arrivalDate, pack);
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const departureLimits = arrivalDate ? packDepartureDateLimits(arrivalDate, pack) : null;
 
   // Shuttle Transfer State
   const [needsTransfer, setNeedsTransfer] = useState(false);
@@ -605,11 +603,22 @@ export function PackBookingModal({
               setIsSubmitting(true);
               setError("");
               const formData = new FormData(e.currentTarget);
-              const savedDepartureDate = constrainPackDepartureDate(
-                arrivalDate,
-                departureDate,
-                pack,
-              );
+              const savedDepartureDate =
+                arrivalDate && departureDate
+                  ? constrainPackDepartureDate(arrivalDate, departureDate, pack)
+                  : departureDate;
+
+              if (!arrivalDate.trim() || !savedDepartureDate.trim()) {
+                alert(
+                  lang === "fr"
+                    ? "Veuillez sélectionner vos dates d'arrivée et de départ."
+                    : lang === "es"
+                      ? "Por favor seleccione sus fechas de llegada y salida."
+                      : "Please select your arrival and departure dates.",
+                );
+                setIsSubmitting(false);
+                return;
+              }
 
               // Attribute the booking to a collaborator if the visitor
               // arrived via a referral link (/packs?ref=CODE).
@@ -934,9 +943,16 @@ export function PackBookingModal({
               <select
                 name="Country"
                 required
-                defaultValue="Morocco"
+                defaultValue=""
                 className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 h-[46px] text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition cursor-pointer"
               >
+                <option value="" disabled>
+                  {lang === "fr"
+                    ? "Sélectionnez votre pays..."
+                    : lang === "es"
+                      ? "Seleccione su país..."
+                      : "Select your country..."}
+                </option>
                 {filteredCountries.map((c) => (
                   <option key={c.code} value={c.name}>
                     {c.name}
@@ -967,7 +983,9 @@ export function PackBookingModal({
                     const arrival = event.target.value;
                     setArrivalDate(arrival);
                     setDepartureDate((current) =>
-                      constrainPackDepartureDate(arrival, current, pack),
+                      arrival && current
+                        ? constrainPackDepartureDate(arrival, current, pack)
+                        : current,
                     );
                   }}
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
@@ -989,11 +1007,14 @@ export function PackBookingModal({
                   value={departureDate}
                   min={departureLimits?.min || arrivalDate || "2027-01-01"}
                   max={departureLimits?.max || "2027-01-30"}
-                  onChange={(event) =>
+                  onChange={(event) => {
+                    const dep = event.target.value;
                     setDepartureDate(
-                      constrainPackDepartureDate(arrivalDate, event.target.value, pack),
-                    )
-                  }
+                      arrivalDate && dep
+                        ? constrainPackDepartureDate(arrivalDate, dep, pack)
+                        : dep,
+                    );
+                  }}
                   className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
                 />
               </div>

@@ -239,6 +239,27 @@ function AdminPacks() {
     setShowForm(true);
   };
 
+  const duplicateAsNewModifierPack = (pack: Pack) => {
+    setEditingId(null);
+    setForm({
+      name: pack.name,
+      sub: pack.sub,
+      category: "Modifier Pack",
+      price: pack.price,
+      currency: pack.currency || "€",
+      features: pack.features.length ? [...pack.features] : [""],
+      popular: pack.popular,
+      active: true,
+      numGuests:
+        pack.numGuests ??
+        (/double|doble|couple/i.test(`${pack.name} ${pack.sub} ${pack.category}`) ? 2 : 1),
+      isPrivate: !!pack.isPrivate,
+      partnerPriceEur: pack.partnerPriceEur != null ? String(pack.partnerPriceEur) : "",
+      partnerPriceMad: pack.partnerPriceMad != null ? String(pack.partnerPriceMad) : "",
+    });
+    setShowForm(true);
+  };
+
   const openEdit = (pack: Pack) => {
     setEditingId(pack.id);
     setForm({
@@ -260,7 +281,7 @@ function AdminPacks() {
     setShowForm(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (updateInPlace: boolean = true) => {
     const cleanFeatures = form.features.filter((f) => f.trim() !== "");
     if (!form.name.trim() || !form.price.trim() || cleanFeatures.length === 0) return;
 
@@ -283,7 +304,7 @@ function AdminPacks() {
       partnerPriceEur: toPrice(form.partnerPriceEur),
       partnerPriceMad: toPrice(form.partnerPriceMad),
     };
-    if (editingId) {
+    if (updateInPlace && editingId) {
       await updatePack(editingId, clean);
     } else {
       await addPack(clean);
@@ -337,6 +358,12 @@ function AdminPacks() {
       setTimeout(() => setCopiedPackId(null), 2000);
     });
   };
+
+  const editingPack = editingId ? packs.find((p) => p.id === editingId) : null;
+  const isEditingModifier =
+    (editingPack ? isModifierPack(editingPack) : false) ||
+    form.category === "Modifier Pack" ||
+    /modifier\s*pack|pack\s*modifiable/i.test(form.name);
 
   return (
     <div className="space-y-6">
@@ -590,12 +617,31 @@ function AdminPacks() {
 
                 {/* Actions */}
                 <div className="mt-5 pt-4 border-t border-gray-200 flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => openEdit(pack)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition cursor-pointer"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> Modifier
-                  </button>
+                  {isModifier ? (
+                    <>
+                      <button
+                        onClick={() => duplicateAsNewModifierPack(pack)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-100/90 hover:bg-blue-200 border border-blue-300 transition cursor-pointer"
+                        title="Créer un nouveau lien personnalisé sans altérer ce lien actuel"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-blue-600" /> Nouveau lien client
+                      </button>
+                      <button
+                        onClick={() => openEdit(pack)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition cursor-pointer"
+                        title="Modifier ce lien existant"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Modifier ce lien
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => openEdit(pack)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition cursor-pointer"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Modifier
+                    </button>
+                  )}
                   <button
                     onClick={() => copyPackLink(pack.id)}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer border ${
@@ -756,8 +802,15 @@ function AdminPacks() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg text-gray-900">
-                {editingId ? "Modifier le forfait" : "Nouveau forfait"}
+              <h3 className="font-display text-lg text-gray-900 flex items-center gap-2">
+                {isEditingModifier && <Sparkles className="h-5 w-5 text-blue-600 shrink-0" />}
+                {editingId
+                  ? isEditingModifier
+                    ? "Modifier le forfait personnalisé"
+                    : "Modifier le forfait"
+                  : isEditingModifier
+                    ? "Nouveau devis (Modifier Pack)"
+                    : "Nouveau forfait"}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
@@ -1038,20 +1091,60 @@ function AdminPacks() {
             </div>
 
             {/* Save */}
-            <div className="mt-6 flex items-center gap-3 justify-end">
-              <button
-                onClick={() => setShowForm(false)}
-                className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleSave}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-amber-500 text-zinc-950 hover:bg-amber-400 transition cursor-pointer"
-              >
-                <Check className="h-4 w-4" />
-                {editingId ? "Mettre à jour le forfait" : "Créer le forfait"}
-              </button>
+            <div className="mt-6 flex flex-col gap-3">
+              {editingId && isEditingModifier && (
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-blue-950">Personnalisation pour un client</p>
+                    <p className="text-blue-800 mt-0.5">
+                      Pour créer une nouvelle offre pour un client <strong>sans modifier le lien déjà envoyé au client précédent</strong>, choisissez <em>« Enregistrer comme NOUVEAU lien »</em>. L&apos;ancien lien conservera toutes ses informations d&apos;origine intactes.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 justify-end flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+                >
+                  Annuler
+                </button>
+
+                {editingId && isEditingModifier ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleSave(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition cursor-pointer"
+                      title="Écrase ce lien spécifique (correction d'erreur avant envoi)"
+                    >
+                      <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                      Mettre à jour ce lien existant
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSave(false)}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-xs transition cursor-pointer"
+                      title="Enregistre comme un nouveau pack avec son propre lien unique"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Enregistrer comme NOUVEAU lien (Recommandé)
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSave(!!editingId)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-semibold bg-amber-500 text-zinc-950 hover:bg-amber-400 shadow-xs transition cursor-pointer"
+                  >
+                    <Check className="h-4 w-4" />
+                    {editingId ? "Mettre à jour le forfait" : "Créer le forfait"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

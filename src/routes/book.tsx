@@ -133,8 +133,8 @@ function BookPage() {
     email: "",
     phone: "",
     country: "",
-    arrival: "2027-01-07",
-    departure: "2027-01-11",
+    arrival: "",
+    departure: "",
     notes: "",
   });
   const departureLimits = selected ? packDepartureDateLimits(form.arrival, selected) : null;
@@ -153,7 +153,7 @@ function BookPage() {
               setForm((f) => ({
                 ...f,
                 guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
-                departure: constrainPackDepartureDate(f.arrival, f.departure, p),
+                departure: f.departure ? constrainPackDepartureDate(f.arrival, f.departure, p) : "",
               }));
             }
           });
@@ -312,7 +312,7 @@ function BookPage() {
     setForm((f) => ({
       ...f,
       guests: Array.from({ length: count }, () => ({ firstName: "", lastName: "" })),
-      departure: constrainPackDepartureDate(f.arrival, f.departure, p),
+      departure: f.departure ? constrainPackDepartureDate(f.arrival, f.departure, p) : "",
     }));
     if (appliedDiscount) {
       if (!isDiscountApplicableToPack(appliedDiscount, p.id)) {
@@ -342,14 +342,16 @@ function BookPage() {
       form.phone,
       String(submittedData.get("Phone Country Code") || "+212"),
     );
-    const departureDate = selected
-      ? constrainPackDepartureDate(form.arrival, form.departure, selected)
-      : form.departure;
+    const departureDate =
+      selected && form.arrival
+        ? constrainPackDepartureDate(form.arrival, form.departure, selected)
+        : form.departure;
     if (
       !selected ||
       form.guests.some((g) => !g.firstName.trim() || !g.lastName.trim()) ||
       !form.email.trim() ||
       !form.phone.trim() ||
+      !form.country.trim() ||
       !form.arrival.trim() ||
       !departureDate.trim()
     )
@@ -750,7 +752,7 @@ function BookPage() {
                   required
                   value={form.country}
                   onChange={(e) => setForm({ ...form, country: e.target.value })}
-                  placeholder="Morocco"
+                  placeholder={tr("e.g. Morocco, France, Spain...", "Ex: Maroc, France, Espagne...", "Ej: Marruecos, Francia, España...")}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-500 transition"
                 />
               </div>
@@ -768,14 +770,12 @@ function BookPage() {
                   value={form.arrival}
                   min="2027-01-01"
                   max="2027-01-30"
-                  onFocus={() => {
-                    if (!form.arrival) setForm((f) => ({ ...f, arrival: "2027-01-01" }));
-                  }}
                   onChange={(e) => {
                     const arrival = e.target.value;
-                    const departure = selected
-                      ? constrainPackDepartureDate(arrival, form.departure, selected)
-                      : form.departure;
+                    const departure =
+                      arrival && form.departure && selected
+                        ? constrainPackDepartureDate(arrival, form.departure, selected)
+                        : form.departure;
                     setForm({ ...form, arrival, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
@@ -792,18 +792,11 @@ function BookPage() {
                   value={form.departure}
                   min={departureLimits?.min || form.arrival || "2027-01-01"}
                   max={departureLimits?.max || "2027-01-30"}
-                  onFocus={() => {
-                    if (!form.departure) {
-                      setForm((f) => ({
-                        ...f,
-                        departure: departureLimits?.max || form.arrival || "2027-01-11",
-                      }));
-                    }
-                  }}
                   onChange={(e) => {
-                    const departure = selected
-                      ? constrainPackDepartureDate(form.arrival, e.target.value, selected)
-                      : e.target.value;
+                    const departure =
+                      form.arrival && e.target.value && selected
+                        ? constrainPackDepartureDate(form.arrival, e.target.value, selected)
+                        : e.target.value;
                     setForm({ ...form, departure });
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 transition"
