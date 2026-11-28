@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Compass,
   MapPin,
@@ -134,6 +135,7 @@ function parseGuests(b: Booking): string[] {
 }
 
 function AdminTourismPage() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -719,8 +721,10 @@ function AdminTourismPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="space-y-1.5">
+            <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement excursions" />
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-slate-200/80 bg-slate-50/75 text-slate-500">
                   <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Billet / client principal</th>
@@ -902,6 +906,7 @@ function AdminTourismPage() {
               </tbody>
             </table>
           </div>
+        </div>
         )}
       </div>
 

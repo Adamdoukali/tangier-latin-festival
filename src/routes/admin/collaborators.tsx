@@ -152,6 +152,84 @@ function tourismReferralUrl(code: string, lang?: PartnerLanguage): string {
   return partnerTourismShareLink(code, lang);
 }
 
+function CollaboratorBookingsModalTable({ partnerBookings }: { partnerBookings: Booking[] }) {
+  const modalTableRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className="space-y-1.5">
+      <TopHorizontalScrollbar targetRef={modalTableRef} label="Défilement réservations" stickyTop="top-0" />
+      <div className="border border-gray-200 rounded-xl overflow-hidden">
+        <div ref={modalTableRef} className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
+                <th className="px-4 py-2.5 text-left">Participant / Client</th>
+                <th className="px-4 py-2.5 text-left">Forfait / Pass</th>
+                <th className="px-4 py-2.5 text-left">Dates du séjour</th>
+                <th className="px-4 py-2.5 text-left">Billet</th>
+                <th className="px-4 py-2.5 text-center">Personnes</th>
+                <th className="px-4 py-2.5 text-center">Statut paiement</th>
+                <th className="px-4 py-2.5 text-right">Date création</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {partnerBookings.map((b) => {
+                const isPend = b.status === "pending";
+                return (
+                  <tr key={b.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-900">{b.customerName}</p>
+                      <p className="text-xs text-gray-500">
+                        {b.email || b.phone || "—"}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-semibold text-gray-800">
+                        {translateDynamicText(b.packName, "fr")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                      {b.arrivalDate && b.departureDate ? (
+                        <span>
+                          {new Date(b.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
+                          {new Date(b.departureDate).toLocaleDateString("fr-FR")}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <code className="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
+                        {b.ticketCode}
+                      </code>
+                    </td>
+                    <td className="px-4 py-3 text-center font-semibold text-gray-700">
+                      {b.numPeople || 1}
+                    </td>
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      {isPend ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                          <Clock className="h-3 w-3" /> Paiement en attente
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                          <Check className="h-3 w-3" /> Confirmé
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right text-xs text-gray-500 whitespace-nowrap">
+                      {new Date(b.createdAt).toLocaleDateString("fr-FR")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminCollaborators() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [stats, setStats] = useState<CollaboratorStats[]>([]);
@@ -1659,73 +1737,7 @@ function AdminCollaborators() {
                 }
 
                 return (
-                  <div className="border border-gray-200 rounded-xl overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500">
-                          <th className="px-4 py-2.5 text-left">Participant / Client</th>
-                          <th className="px-4 py-2.5 text-left">Forfait / Pass</th>
-                          <th className="px-4 py-2.5 text-left">Dates du séjour</th>
-                          <th className="px-4 py-2.5 text-left">Billet</th>
-                          <th className="px-4 py-2.5 text-center">Personnes</th>
-                          <th className="px-4 py-2.5 text-center">Statut paiement</th>
-                          <th className="px-4 py-2.5 text-right">Date création</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {partnerBookings.map((b) => {
-                          const isPend = b.status === "pending";
-                          return (
-                            <tr key={b.id} className="hover:bg-gray-50 transition">
-                              <td className="px-4 py-3">
-                                <p className="font-medium text-gray-900">{b.customerName}</p>
-                                <p className="text-xs text-gray-500">
-                                  {b.email || b.phone || "—"}
-                                </p>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="font-semibold text-gray-800">
-                                  {translateDynamicText(b.packName, "fr")}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                                {b.arrivalDate && b.departureDate ? (
-                                  <span>
-                                    {new Date(b.arrivalDate).toLocaleDateString("fr-FR")} →{" "}
-                                    {new Date(b.departureDate).toLocaleDateString("fr-FR")}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">—</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <code className="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded">
-                                  {b.ticketCode}
-                                </code>
-                              </td>
-                              <td className="px-4 py-3 text-center font-semibold text-gray-700">
-                                {b.numPeople || 1}
-                              </td>
-                              <td className="px-4 py-3 text-center whitespace-nowrap">
-                                {isPend ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                                    <Clock className="h-3 w-3" /> Paiement en attente
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                    <Check className="h-3 w-3" /> Confirmé
-                                  </span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-right text-xs text-gray-500 whitespace-nowrap">
-                                {new Date(b.createdAt).toLocaleDateString("fr-FR")}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                  <CollaboratorBookingsModalTable partnerBookings={partnerBookings} />
                 );
               })()}
             </div>

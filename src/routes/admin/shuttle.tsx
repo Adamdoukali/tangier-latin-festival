@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Bus,
   Plane,
@@ -109,6 +110,7 @@ function TransferPartnerBadge({
 }
 
 function AdminShuttlePage() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -1259,9 +1261,11 @@ function AdminShuttlePage() {
         </div>
       ) : (
         /* ALL TRANSFERS TABLE VIEW */
-        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-700">
+        <div className="space-y-1.5">
+          <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement navettes" />
+          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50/75 border-b border-slate-200/80 text-slate-500">
                 <tr>
                   <th className="px-4 py-2.5 text-xs font-medium text-slate-500">Code / Client</th>
@@ -1365,6 +1369,7 @@ function AdminShuttlePage() {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       )}
 

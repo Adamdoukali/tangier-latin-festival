@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import QRCode from "qrcode";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Plus,
   Search,
@@ -95,6 +96,7 @@ export const Route = createFileRoute("/admin/bookings")({
 });
 
 function AdminBookings() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -620,16 +622,18 @@ Tangier Latin Festival`;
       )}
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-        {filtered.length === 0 ? (
-          <div className="px-5 py-16 text-center text-xs text-slate-400">
-            {bookings.length === 0
-              ? "Aucune réservation. Cliquez sur « Ajouter une réservation » pour en créer une."
-              : "Aucune réservation ne correspond aux critères de recherche."}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+      <div className="space-y-1.5">
+        <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement réservations" />
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+          {filtered.length === 0 ? (
+            <div className="px-5 py-16 text-center text-xs text-slate-400">
+              {bookings.length === 0
+                ? "Aucune réservation. Cliquez sur « Ajouter une réservation » pour en créer une."
+                : "Aucune réservation ne correspond aux critères de recherche."}
+            </div>
+          ) : (
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
                   <th className="px-5 py-3 text-left font-medium">Client</th>
@@ -826,6 +830,7 @@ Tangier Latin Festival`;
             </table>
           </div>
         )}
+        </div>
       </div>
 
       {/* Ajouter une réservation Modal */}

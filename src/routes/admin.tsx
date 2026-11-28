@@ -247,7 +247,7 @@ function AdminLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-auto">
+        <main className="flex-1 p-5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
       </div>

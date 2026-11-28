@@ -4,9 +4,11 @@ import { ChevronLeft, ChevronRight, MoveHorizontal } from "lucide-react";
 export function TopHorizontalScrollbar({
   targetRef,
   label = "Défilement tableau",
+  stickyTop = "top-14",
 }: {
   targetRef: React.RefObject<HTMLDivElement | null>;
   label?: string;
+  stickyTop?: string;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollWidth, setScrollWidth] = useState(0);
@@ -78,7 +80,9 @@ export function TopHorizontalScrollbar({
   };
 
   return (
-    <div className="sticky top-14 z-20 flex items-center gap-2.5 bg-blue-50/95 backdrop-blur-md border border-blue-200/80 rounded-lg px-3 py-1.5 mb-2 shadow-xs">
+    <div
+      className={`sticky ${stickyTop} z-20 flex items-center gap-2.5 bg-blue-50/95 backdrop-blur-md border border-blue-200/90 rounded-lg px-3 py-1.5 mb-2 shadow-xs transition-all`}
+    >
       <div className="flex items-center gap-1.5 shrink-0 text-xs font-semibold text-blue-900">
         <MoveHorizontal className="h-4 w-4 text-blue-600" />
         <span className="hidden sm:inline">{label} :</span>

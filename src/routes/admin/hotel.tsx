@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   BedDouble,
   Bed,
@@ -361,9 +362,13 @@ function AdminHotel() {
     "checked-in": "bg-cyan-100 text-cyan-700 border-cyan-200",
   };
 
-  const RoomTable = ({ list }: { list: Room[] }) => (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+  const RoomTable = ({ list, label = "Défilement chambres" }: { list: Room[]; label?: string }) => {
+    const tableRef = useRef<HTMLDivElement>(null);
+    return (
+      <div className="space-y-1.5 mt-2">
+        <TopHorizontalScrollbar targetRef={tableRef} label={label} />
+        <div ref={tableRef} className="overflow-x-auto">
+          <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-slate-200/80 text-slate-500 bg-slate-50/70">
             <th className="px-4 py-2.5 text-left font-medium">#</th>
@@ -574,7 +579,9 @@ function AdminHotel() {
         </tbody>
       </table>
     </div>
+    </div>
   );
+};
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { TopHorizontalScrollbar } from "@/components/TopHorizontalScrollbar";
 import {
   Wallet,
   Search,
@@ -92,6 +93,7 @@ interface Row {
 }
 
 function AdminPayments() {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
@@ -541,18 +543,20 @@ function AdminPayments() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="p-10 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> Chargement…
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-xs text-slate-400">
-            Aucun client marocain ne correspond à ce filtre.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+      <div className="space-y-1.5">
+        <TopHorizontalScrollbar targetRef={tableContainerRef} label="Défilement paiements" />
+        <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs overflow-hidden">
+          {loading ? (
+            <div className="p-10 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> Chargement…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-10 text-center text-xs text-slate-400">
+              Aucun client marocain ne correspond à ce filtre.
+            </div>
+          ) : (
+            <div ref={tableContainerRef} className="overflow-x-auto">
+              <table className="w-full text-xs">
               <thead className="bg-slate-50/70 border-b border-slate-200/80 text-slate-500 font-medium">
                 <tr>
                   <th className="px-4 py-2.5 text-left font-medium w-8"></th>
@@ -858,6 +862,7 @@ function AdminPayments() {
             </table>
           </div>
         )}
+        </div>
       </div>
 
       {/* Add payment modal */}

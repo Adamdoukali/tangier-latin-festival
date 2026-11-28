@@ -30,6 +30,8 @@ import {
   Tag,
   TrendingUp,
   Building2,
+  MessageSquare,
+  AlertCircle,
 } from "lucide-react";
 import {
   partnerLogin,
@@ -68,6 +70,12 @@ import {
   type DiscountCode,
   createPartnerAccount,
   normalizePhone,
+  getPayments,
+  bookingAmountDueMad,
+  formatMad,
+  guestOrigin,
+  EUR_TO_MAD,
+  type BookingPayment,
 } from "@/lib/admin-store";
 import { savePartnerSession, clearPartnerSession, restorePartnerSession } from "@/lib/partner-auth";
 import { getPartnerImpersonation } from "@/lib/auth-store";
@@ -893,6 +901,12 @@ interface UnifiedClientBooking {
   totalAmount: number;
   totalCommission: number;
   allNotes: string[];
+
+  isMoroccanBooking?: boolean;
+  dueMad?: number;
+  paidMad?: number;
+  remainingMad?: number;
+  paymentsList?: BookingPayment[];
 }
 
 function bookingMatchNames(booking: Booking): string[] {
@@ -950,6 +964,7 @@ function buildUnifiedReservations(
   partner: Collaborator,
   discounts: DiscountCode[],
   L: Language,
+  payments: BookingPayment[] = [],
 ): UnifiedClientBooking[] {
   const displayCurrency = partnerCurrency(partner);
   const fromEur = (value: number) => moneyIn({ eur: value, mad: 0 }, displayCurrency);
@@ -1044,6 +1059,22 @@ function buildUnifiedReservations(
 
     const roomNumber = fb.roomNumber || matchingTours.find((b) => b.roomNumber)?.roomNumber || null;
 
+    // Moroccan Payment Calculation
+    const isMadAccount = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
+    const isMoroccan = isMadAccount || guestOrigin(fb) === "morocco" || /mad|dh/i.test(fb.packName || "");
+    const festDueMad = bookingAmountDueMad(fb, pack);
+    const toursDueMad = matchingTours.reduce((sum, tb) => {
+      const numPeople = tb.numPeople || 1;
+      const unitPrice = getTourismPrice(tb.packId || tb.packName);
+      const grossEur = unitPrice * numPeople;
+      return sum + Math.round(grossEur * EUR_TO_MAD);
+    }, 0);
+    const dueMad = festDueMad + toursDueMad;
+    const bookingIds = [fb.id, ...matchingTours.map((t) => t.id)];
+    const paymentsList = payments.filter((p) => bookingIds.includes(p.bookingId));
+    const paidMad = paymentsList.reduce((sum, p) => sum + p.amountMad, 0);
+    const remainingMad = Math.max(0, dueMad - paidMad);
+
     return {
       id: fb.id,
       ticketCode: fb.ticketCode,
@@ -1073,6 +1104,11 @@ function buildUnifiedReservations(
       totalAmount,
       totalCommission,
       allNotes,
+      isMoroccanBooking: isMoroccan,
+      dueMad,
+      paidMad,
+      remainingMad,
+      paymentsList,
     };
   });
 
@@ -1105,6 +1141,15 @@ function buildUnifiedReservations(
 
       const allNotes = tb.notes ? [tb.notes] : [];
 
+      const isMadAccount = partnerCurrency(partner) === "MAD" || partner.commissionCurrency === "MAD";
+      const isMoroccan = isMadAccount || guestOrigin(tb) === "morocco" || /mad|dh/i.test(tb.packName || "");
+      const tourUnitPriceEur = getTourismPrice(tb.packId || tb.packName);
+      const grossEur = tourUnitPriceEur * numPeople;
+      const dueMad = Math.round(grossEur * EUR_TO_MAD);
+      const paymentsList = payments.filter((p) => p.bookingId === tb.id);
+      const paidMad = paymentsList.reduce((sum, p) => sum + p.amountMad, 0);
+      const remainingMad = Math.max(0, dueMad - paidMad);
+
       return {
         id: tb.id,
         ticketCode: tb.ticketCode,
@@ -1134,6 +1179,11 @@ function buildUnifiedReservations(
         totalAmount: gross,
         totalCommission: comm,
         allNotes,
+        isMoroccanBooking: isMoroccan,
+        dueMad,
+        paidMad,
+        remainingMad,
+        paymentsList,
       };
     });
 
@@ -1159,6 +1209,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
 
   const [allPacks, setAllPacks] = useState<Pack[]>([]);
   const [allDiscounts, setAllDiscounts] = useState<DiscountCode[]>([]);
+  const [allPayments, setAllPayments] = useState<BookingPayment[]>([]);
   const [myBookings, setMyBookings] = useState<Booking[]>([]);
   const [allFestivalBookings, setAllFestivalBookings] = useState<Booking[]>([]);
   const [ticketsSold, setTicketsSold] = useState(0);
@@ -1172,13 +1223,15 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
   const [filterTab, setFilterTab] = useState<"all" | "hotel" | "tours">("all");
 
   const reload = useCallback(async () => {
-    const [packs, allBookings, discounts] = await Promise.all([
+    const [packs, allBookings, discounts, payments] = await Promise.all([
       getPacks(),
       getBookings(),
       getDiscountCodes(),
+      getPayments(),
     ]);
     setAllPacks(packs);
     setAllDiscounts(discounts);
+    setAllPayments(payments);
     const festBookings = allBookings.filter((b) => !isTourismBooking(b) && !isTransferBooking(b));
     setAllFestivalBookings(festBookings);
 
@@ -1360,6 +1413,7 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
     partner,
     allDiscounts,
     L as Language,
+    allPayments,
   );
 
   // Festival metrics — only confirmed tickets count towards sold rooms, passes and sales
@@ -2292,6 +2346,31 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                               ))}
                             </span>
                           )}
+
+                          {/* Moroccan MAD Payment Status Pill */}
+                          {res.isMoroccanBooking && res.dueMad !== undefined && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {res.dueMad > 0 && res.paidMad !== undefined && res.paidMad >= res.dueMad ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                  <span>{tr("Paid 100%", "Payé à 100%", "Pagado 100%")} ({formatMad(res.paidMad)})</span>
+                                </span>
+                              ) : res.paidMad !== undefined && res.paidMad > 0 ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-amber-50 text-amber-950 border-2 border-amber-400 shadow-2xs">
+                                  <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                                  <span>
+                                    {tr("Deposit", "Acompte", "Abono")} {res.dueMad > 0 ? `${Math.round((res.paidMad / res.dueMad) * 100)}%` : ""} ({formatMad(res.paidMad)})
+                                    <span className="ml-1 text-amber-800 font-extrabold">· {tr("Remaining:", "Reste :", "Resta:")} {formatMad(res.remainingMad || 0)}</span>
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-300 shadow-2xs">
+                                  <AlertCircle className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                                  <span>{tr("Unpaid", "Non payé", "Sin pagar")} · {tr("Due:", "À régler :", "A pagar:")} {formatMad(res.dueMad)}</span>
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -2377,6 +2456,236 @@ function Portal({ partner, onSignOut }: { partner: Collaborator; onSignOut: () =
                             </span>
                           </div>
                         </div>
+                        {/* Moroccan Payment Details Box */}
+                        {res.isMoroccanBooking && res.dueMad !== undefined && (
+                          <div className="bg-gradient-to-br from-amber-50/70 via-white to-amber-50/40 p-4 sm:p-5 rounded-2xl border-2 border-amber-300 shadow-xs space-y-3.5">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div className="flex items-center gap-2.5">
+                                <div className="h-8 w-8 rounded-xl bg-amber-500 text-zinc-950 font-black text-xs grid place-items-center shadow-xs">
+                                  MAD
+                                </div>
+                                <div>
+                                  <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                                    <span>{tr("Moroccan Payment Details (MAD)", "Détail du paiement en Dirhams (MAD)", "Detalle de pago en MAD")}</span>
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                                      {res.dueMad > 0 && res.paidMad !== undefined && res.paidMad >= res.dueMad
+                                        ? tr("Settled", "Soldé", "Liquidado")
+                                        : res.paidMad !== undefined && res.paidMad > 0
+                                          ? tr("Partial Deposit", "Acompte versé", "Depósito parcial")
+                                          : tr("Awaiting payment", "En attente", "Pendiente")}
+                                    </span>
+                                  </h4>
+                                  <p className="text-[11px] text-slate-500">
+                                    {tr(
+                                      "Suivi du règlement du client · Espèces / Virement bancaire",
+                                      "Suivi du règlement du client · Espèces / Virement bancaire",
+                                      "Seguimiento del pago · Efectivo / Transferencia",
+                                    )}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Quick WhatsApp Contact Button */}
+                              {(() => {
+                                const rawPhone = res.phone || res.festivalBooking?.phone || "";
+                                const cleanPhone = rawPhone.replace(/[^0-9]/g, "").replace(/^0/, "212");
+                                const paid = res.paidMad || 0;
+                                const remaining = res.remainingMad || 0;
+                                const due = res.dueMad;
+                                const packName = res.festivalLabel || "Pass Tangier Latin Festival";
+                                const clientName = res.customerName || "Participant";
+                                const msg =
+                                  paid > 0 && remaining > 0
+                                    ? `Bonjour ${clientName}, concernant votre réservation Tangier Latin Festival (${packName}, billet #${res.ticketCode}) : nous avons bien reçu votre acompte de ${formatMad(paid)}. Il vous reste un solde de ${formatMad(remaining)} à régler. Merci !`
+                                    : paid >= due
+                                      ? `Bonjour ${clientName}, votre réservation Tangier Latin Festival (${packName}, billet #${res.ticketCode}) est intégralement réglée (${formatMad(paid)}). Au plaisir de vous accueillir !`
+                                      : `Bonjour ${clientName}, concernant votre réservation Tangier Latin Festival (${packName}, billet #${res.ticketCode}) : le montant total à régler est de ${formatMad(due)}. Merci de bien vouloir nous confirmer votre règlement. À très bientôt !`;
+                                const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}` : "";
+
+                                return (
+                                  <div className="flex items-center gap-2">
+                                    {cleanPhone ? (
+                                      <a
+                                        href={waLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition cursor-pointer"
+                                        title={tr(
+                                          "Contacter ou relancer le client sur WhatsApp avec message pré-rempli",
+                                          "Contacter ou relancer le client sur WhatsApp avec message pré-rempli",
+                                          "Contactar por WhatsApp",
+                                        )}
+                                      >
+                                        <MessageSquare className="h-4 w-4" />
+                                        <span>
+                                          {remaining > 0
+                                            ? tr("Relancer sur WhatsApp", "Relancer sur WhatsApp", "Recordar por WhatsApp")
+                                            : tr("Message WhatsApp", "Message WhatsApp", "Mensaje WhatsApp")}
+                                        </span>
+                                      </a>
+                                    ) : null}
+                                    {rawPhone && (
+                                      <a
+                                        href={`tel:${rawPhone}`}
+                                        className="p-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition"
+                                        title={`Appeler ${rawPhone}`}
+                                      >
+                                        <Phone className="h-4 w-4" />
+                                      </a>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Metric cards: Total Due, Paid (Acompte), Remaining (Reste) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                                <p className="text-[10px] uppercase font-bold text-slate-400">
+                                  {tr("Total Due", "Montant total dû", "Total debido")}
+                                </p>
+                                <p className="text-base font-extrabold text-slate-900 mt-0.5">
+                                  {formatMad(res.dueMad)}
+                                </p>
+                              </div>
+                              <div className="bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
+                                <p className="text-[10px] uppercase font-bold text-emerald-700">
+                                  {tr("Paid Deposit", "Montant payé (Acompte)", "Pagado (Depósito)")}
+                                </p>
+                                <p className="text-base font-extrabold text-emerald-700 mt-0.5">
+                                  {formatMad(res.paidMad || 0)}
+                                  {res.dueMad > 0 && (
+                                    <span className="text-xs font-semibold text-emerald-600 ml-1.5">
+                                      ({Math.round(((res.paidMad || 0) / res.dueMad) * 100)}%)
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                              <div
+                                className={`p-3 rounded-xl border shadow-2xs ${
+                                  (res.remainingMad || 0) > 0
+                                    ? "bg-amber-100/70 border-amber-300"
+                                    : "bg-white border-slate-200"
+                                }`}
+                              >
+                                <p
+                                  className={`text-[10px] uppercase font-bold ${
+                                    (res.remainingMad || 0) > 0 ? "text-amber-900" : "text-slate-400"
+                                  }`}
+                                >
+                                  {tr("Remaining Balance", "Reste à payer", "Saldo pendiente")}
+                                </p>
+                                <p
+                                  className={`text-base font-black mt-0.5 ${
+                                    (res.remainingMad || 0) > 0 ? "text-amber-950" : "text-slate-500"
+                                  }`}
+                                >
+                                  {formatMad(res.remainingMad || 0)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Progress bar */}
+                            <div className="space-y-1">
+                              <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-300 ${
+                                    (res.paidMad || 0) >= res.dueMad && res.dueMad > 0
+                                      ? "bg-emerald-500"
+                                      : (res.paidMad || 0) > 0
+                                        ? "bg-amber-500"
+                                        : "bg-rose-400"
+                                  }`}
+                                  style={{
+                                    width: `${
+                                      res.dueMad > 0
+                                        ? Math.min(
+                                            100,
+                                            Math.max(
+                                              0,
+                                              Math.round(((res.paidMad || 0) / res.dueMad) * 100),
+                                            ),
+                                          )
+                                        : 0
+                                    }%`,
+                                  }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-[11px] font-medium text-slate-500">
+                                <span>
+                                  {(res.paidMad || 0) >= res.dueMad && res.dueMad > 0
+                                    ? tr("Paid in full ✓", "Payé intégralement ✓", "Pagado 100% ✓")
+                                    : (res.paidMad || 0) > 0
+                                      ? `${tr("Deposit paid", "Acompte réglé", "Depósito pagado")} (${Math.round(((res.paidMad || 0) / res.dueMad) * 100)}%)`
+                                      : tr(
+                                          "No payment received yet",
+                                          "Aucun versement enregistré",
+                                          "Sin pagos registrados",
+                                        )}
+                                </span>
+                                <span className="font-bold text-slate-700">
+                                  {(res.remainingMad || 0) > 0
+                                    ? `${tr("Remaining:", "Reste :", "Resta:")} ${formatMad(res.remainingMad || 0)}`
+                                    : tr("Balance 0 MAD", "Solde 0 MAD", "Saldo 0 MAD")}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Payment Transactions Log */}
+                            {res.paymentsList && res.paymentsList.length > 0 && (
+                              <div className="border border-slate-200 bg-white rounded-xl overflow-hidden">
+                                <div className="bg-slate-100/80 px-3 py-1.5 border-b border-slate-200 text-xs font-bold text-slate-700 flex justify-between">
+                                  <span>
+                                    {tr(
+                                      "Payment transactions",
+                                      "Versements enregistrés",
+                                      "Pagos registrados",
+                                    )}
+                                  </span>
+                                  <span className="text-slate-500 font-normal">
+                                    {res.paymentsList.length} versement(s)
+                                  </span>
+                                </div>
+                                <div className="divide-y divide-slate-100 text-xs">
+                                  {res.paymentsList.map((p) => (
+                                    <div
+                                      key={p.id}
+                                      className="px-3 py-2 flex items-center justify-between gap-2"
+                                    >
+                                      <div>
+                                        <span className="font-bold text-slate-900">
+                                          +{formatMad(p.amountMad)}
+                                        </span>
+                                        <span className="ml-2 text-slate-600 font-medium">
+                                          {p.method === "cash"
+                                            ? tr("Cash", "Espèces", "Efectivo")
+                                            : p.method === "rib"
+                                              ? tr(
+                                                  "Bank transfer (RIB)",
+                                                  "Virement bancaire (RIB)",
+                                                  "Transferencia",
+                                                )
+                                              : p.method === "deposit"
+                                                ? tr("Bank deposit", "Versement agence", "Depósito")
+                                                : p.method}
+                                        </span>
+                                        {p.note && (
+                                          <span className="ml-2 text-slate-400 italic">
+                                            ({p.note})
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="text-slate-400 font-mono text-[11px]">
+                                        {p.paidAt}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="grid sm:grid-cols-2 gap-3.5">
                           {/* 1. Yellowish Box — Hotel & Room Accommodation */}
                           <div className="bg-amber-50/90 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-1.5">
